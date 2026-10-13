@@ -1,0 +1,15 @@
+[
+  {
+    "relation": [
+      "delegate_permission/common.handle_all_urls"
+    ],
+    "target": {
+      "namespace": "android_app",
+      "package_name": "com.linkdole.ddong",
+      "sha256_cert_fingerprints": [
+        "03:C7:E0:B4:AA:DF:D0:AE:C2:19:5B:D2:36:06:7A:8A:49:DA:57:A4:A8:BD:62:B1:9D:2C:F5:4A:E2:A6:27:C2",
+        "21:D6:89:D8:A7:F3:27:DC:DA:DB:65:F3:D3:3D:24:7C:54:6E:15:DC:29:9A:5C:CF:42:7D:31:F2:70:E1:A6:0B"
+      ]
+    }
+  }
+]
