@@ -3457,6 +3457,23 @@ input[type='date'], input[type='datetime-local'], input[type='time'] {
 input[type='date']::-webkit-date-and-time-value {
   text-align: left;
 }
+html:has(.fixed.inset-0), body:has(.fixed.inset-0) {
+  overflow: hidden;
+  overscroll-behavior: none;
+}
+.fixed.inset-0 {
+  overscroll-behavior: contain;
+  overflow-x: hidden;
+}
+html, body, body * {
+  touch-action: pan-y;
+}
+.overflow-x-auto, .overflow-x-auto * {
+  touch-action: pan-x pan-y;
+}
+.leaflet-container, .leaflet-container * {
+  touch-action: none;
+}
 @property --tw-translate-x {
   syntax: "*";
   inherits: false;
