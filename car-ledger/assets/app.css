@@ -1344,6 +1344,12 @@
       border-color: color-mix(in oklab, var(--color-rose-500) 40%, transparent);
     }
   }
+  .border-rose-500\/50 {
+    border-color: color-mix(in srgb, oklch(64.5% 0.246 16.439) 50%, transparent);
+    @supports (color: color-mix(in lab, red, red)) {
+      border-color: color-mix(in oklab, var(--color-rose-500) 50%, transparent);
+    }
+  }
   .border-rose-600\/60 {
     border-color: color-mix(in srgb, oklch(58.6% 0.253 17.585) 60%, transparent);
     @supports (color: color-mix(in lab, red, red)) {
