@@ -1,30 +1,30 @@
 {
-  "id": "./?app=car-ledger-v2",
-  "name": "스마트 차계부 - Smart Car Logbook",
+  "id": "./?app=car-ledger-v3",
+  "name": "스마트차계부",
   "short_name": "스마트차계부",
   "description": "차량 주유 및 정비 이력 기록, 구간 연비 자동 산출, 소모품 알림 및 지출 통계",
   "theme_color": "#0f172a",
   "background_color": "#0f172a",
   "display": "standalone",
-  "start_url": "./",
+  "start_url": "./?home=v3",
   "scope": "./",
   "lang": "ko",
   "orientation": "portrait",
   "icons": [
     {
-      "src": "pwa-192x192.png?v=2",
+      "src": "car-icon-192.png",
       "sizes": "192x192",
       "type": "image/png",
       "purpose": "any"
     },
     {
-      "src": "pwa-512x512.png?v=2",
+      "src": "car-icon-512.png",
       "sizes": "512x512",
       "type": "image/png",
       "purpose": "any"
     },
     {
-      "src": "pwa-maskable-512x512.png?v=2",
+      "src": "car-icon-maskable-512.png",
       "sizes": "512x512",
       "type": "image/png",
       "purpose": "maskable"

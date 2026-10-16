@@ -1,5 +1,5 @@
-const C='car-ledger-mvagegyh';
-const SHELL=['./','./index.html','./assets/app.js','./assets/app.css','./manifest.webmanifest','./pwa-192x192.png?v=2','./pwa-512x512.png?v=2','./apple-touch-icon.png?v=2'];
+const C='car-ledger-mvagjjsf';
+const SHELL=['./','./index.html','./assets/app.js','./assets/app.css','./app-v3.webmanifest','./car-icon-192.png','./car-icon-512.png'];
 self.addEventListener('install',e=>e.waitUntil(caches.open(C).then(c=>c.addAll(SHELL)).then(()=>self.skipWaiting())));
 self.addEventListener('activate',e=>e.waitUntil(caches.keys().then(ks=>Promise.all(ks.filter(k=>k!==C).map(k=>caches.delete(k)))).then(()=>self.clients.claim())));
 self.addEventListener('fetch',e=>{const r=e.request;if(r.method!=='GET')return;const u=new URL(r.url);
