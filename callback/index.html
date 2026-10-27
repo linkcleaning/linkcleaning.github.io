@@ -257,6 +257,8 @@ const DEFAULT_TEMPLATES = () => [
     body:'안녕하세요, 링크클린입니다. 현재 현장 작업 중이라 전화를 받지 못했습니다. 문의주신 내용을 문자로 남겨주시면 작업 종료 후 가장 먼저 연락드리겠습니다. 감사합니다!' },
   { id:'t_move', icon:'🏠', name:'입주/이사청소', type:'수신', title:'입주청소안내', sign:true, imgs:[],
     body:'안녕하세요, 링크클린입니다. 문의주신 입주/이사청소는 친환경 세제와 전문 장비를 사용해 보이지 않는 곳까지 꼼꼼하게 케어합니다. 작업 전후 사진과 안내는 아래에서 확인해 주세요.' },
+  { id:'t_waste', icon:'🚛', name:'폐기물·특수청소', type:'수신', title:'링크클린', sign:true, imgs:[],
+    body:'안녕하세요, 제주 청소업체 링크클린입니다. 문의주신 폐기물 처리·특수청소는 현장 상황에 맞춰 신속하고 깔끔하게 치워드립니다. 유품정리 시 귀중품·서류·사진 등은 꼭 유족분께 전달해 드립니다. 편하게 상담 주세요.' },
 ];
 const TYPES = ['수신','발신','부재중','기타'];
 const TYPE_COLOR = { '수신':'text-brand-700 bg-brand-50', '발신':'text-emerald-700 bg-emerald-50', '부재중':'text-red-600 bg-red-50', '기타':'text-slate-600 bg-slate-100' };
@@ -322,16 +324,28 @@ async function loadImgs() {
     }
   } catch (e) {}
 }
-// 링크클린 로고를 '수신 감사' 문자의 기본 사진으로 한 번만 넣기
-async function seedLogo() {
-  if (S.logoSeeded) return;
+// 기본 홍보 사진 넣기 (버전이 오르면 한 번만 다시 적용)
+const SEED_V = 2;
+const PROMO = { img_thanks:'promo/thanks.jpg', img_services:'promo/services.jpg', img_move:'promo/move.jpg', img_waste:'promo/waste.jpg' };
+const PROMO_MAP = { t_in:['img_thanks','img_services'], t_out:['img_thanks','img_services'], t_miss:['img_services'], t_move:['img_move'], t_waste:['img_waste'] };
+async function seedPromo() {
+  if ((S.seedV || 0) >= SEED_V) return;
   try {
-    const blob = await (await fetch('logo.jpg')).blob();
-    const url = await new Promise((res, rej) => { const r = new FileReader(); r.onload = () => res(r.result); r.onerror = rej; r.readAsDataURL(blob); });
-    await IDB.set('img_logo', url); imgCache['img_logo'] = url;
-    const t = S.templates.find(x => x.id === 't_in');
-    if (t && !t.imgs.includes('img_logo') && t.imgs.length < 3) t.imgs.unshift('img_logo');
-    S.logoSeeded = true; save();
+    for (const [id, url] of Object.entries(PROMO)) {
+      if (imgCache[id]) continue;
+      const blob = await (await fetch(url)).blob();
+      const du = await new Promise((res, rej) => { const r = new FileReader(); r.onload = () => res(r.result); r.onerror = rej; r.readAsDataURL(blob); });
+      await IDB.set(id, du); imgCache[id] = du;
+    }
+    // 예전 버전에서 빠진 기본 문자 추가
+    DEFAULT_TEMPLATES().forEach(d => { if (!S.templates.some(t => t.id === d.id)) S.templates.push(d); });
+    // 사진을 직접 넣지 않은 기본 문자에만 홍보 사진 넣기
+    for (const t of S.templates) {
+      const m = PROMO_MAP[t.id]; if (!m) continue;
+      const own = t.imgs.filter(x => x !== 'img_logo');
+      if (!own.length) t.imgs = [...m];
+    }
+    S.seedV = SEED_V; save(); cleanupImgs();
   } catch (e) {}
 }
 const tplImgs = t => (t ? t.imgs.map(id => imgCache[id]).filter(Boolean) : []);
@@ -638,8 +652,8 @@ async function cleanupImgs() {
 }
 $('btnAddTpl').onclick = () => openEditor(null);
 $('btnResetTpl').onclick = async () => {
-  if (!confirm('문자 목록을 처음 기본 문자 4개로 되돌릴까요?\n(직접 만든 문자와 사진은 지워져요)')) return;
-  S.templates = DEFAULT_TEMPLATES(); S.selectedId = 't_in'; S.logoSeeded = false; save(); await seedLogo(); cleanupImgs(); renderAll(); toast('↩ 기본 문자로 되돌렸어요');
+  if (!confirm('문자 목록을 처음 기본 문자 5개로 되돌릴까요?\n(직접 만든 문자와 사진은 지워져요)')) return;
+  S.templates = DEFAULT_TEMPLATES(); S.selectedId = 't_in'; S.seedV = 0; save(); await seedPromo(); cleanupImgs(); renderAll(); toast('↩ 기본 문자로 되돌렸어요');
 };
 
 /* ============ 발송내역 ============ */
@@ -718,7 +732,7 @@ $('restoreInput').onchange = async e => {
 $('btnResetAll').onclick = async () => {
   if (!confirm('문자·사진·발송내역·설정을 모두 지울까요?\n되돌릴 수 없어요.')) return;
   try { localStorage.removeItem(KEY); await IDB.clear(); } catch (e) {}
-  Object.keys(imgCache).forEach(k => delete imgCache[k]); S = defaults(); save(); await seedLogo(); renderAll(); go('send'); toast('⚠️ 전체 초기화했어요');
+  Object.keys(imgCache).forEach(k => delete imgCache[k]); S = defaults(); save(); await seedPromo(); renderAll(); go('send'); toast('⚠️ 전체 초기화했어요');
 };
 
 /* ============ 탭 / 시트 ============ */
@@ -747,7 +761,7 @@ function renderAll() { renderChips(); renderSendImgs(); setDraftFromTpl(); rende
   save();
   if (!S.templates.some(t => t.id === S.selectedId)) S.selectedId = S.templates[0].id;
   renderAll(); go('send');
-  await loadImgs(); await seedLogo(); renderAll();
+  await loadImgs(); await seedPromo(); renderAll();
 })();
 if ('serviceWorker' in navigator) window.addEventListener('load', () => navigator.serviceWorker.register('sw.js').catch(() => {}));
 setInterval(renderRecent, 60000);
