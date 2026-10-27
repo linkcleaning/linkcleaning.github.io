@@ -121,12 +121,13 @@ https://www.instagram.com/linkcleaning
     const val KEY_USE_KAKAO = "sign_use_kakao"
     const val KEY_USE_HOME = "sign_use_home"
     const val KEY_USE_MAG = "sign_use_mag"
+    const val KEY_SAFE_TEXT = "safe_text"
 
     /** 백업에 포함할 설정 키 */
     val BACKUP_KEYS = listOf(
         KEY_BLACKLIST, KEY_SEND_INCOMING, KEY_SEND_MISSED, KEY_MOBILE_ONLY, KEY_COOLDOWN_H, KEY_DAILY_LIMIT,
         KEY_SELECTED, KEY_AUTO_IN, KEY_AUTO_MISS, KEY_TITLE_ON, KEY_SIGN_PHONE, KEY_SIGN_KAKAO, KEY_SIGN_HOME,
-        KEY_SIGN_MAG, KEY_USE_PHONE, KEY_USE_KAKAO, KEY_USE_HOME, KEY_USE_MAG, "templates"
+        KEY_SIGN_MAG, KEY_USE_PHONE, KEY_USE_KAKAO, KEY_USE_HOME, KEY_USE_MAG, KEY_SAFE_TEXT, "templates"
     )
     private const val SENT_PREFIX = "sent_"
 
@@ -205,6 +206,8 @@ https://www.instagram.com/linkcleaning
     fun autoMissId(c: Context): String = sp(c).getString(KEY_AUTO_MISS, "t_miss") ?: "t_miss"
     fun selectedId(c: Context): String = sp(c).getString(KEY_SELECTED, "t_in") ?: "t_in"
     fun titleOn(c: Context) = sp(c).getBoolean(KEY_TITLE_ON, false)
+    /** 아이폰 보정 (이모지 빼고 보내기) – 기본 켜짐 */
+    fun safeText(c: Context) = sp(c).getBoolean(KEY_SAFE_TEXT, true)
     fun signPhone(c: Context) = sp(c).getString(KEY_SIGN_PHONE, "064-763-4545") ?: ""
     fun signKakao(c: Context) = sp(c).getString(KEY_SIGN_KAKAO, "https://pf.kakao.com/_xfxdrxmM") ?: ""
     fun signHome(c: Context) = sp(c).getString(KEY_SIGN_HOME, "www.linkclean.co.kr") ?: ""

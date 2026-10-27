@@ -735,7 +735,7 @@ class MainActivity : AppCompatActivity() {
         val num = PhoneUtil.normalize(phoneEdit.text.toString())
         if (num.length < 9) { toast("① 고객 전화번호를 입력해 주세요", "err"); phoneEdit.requestFocus(); return }
         if (!has(Manifest.permission.SEND_SMS)) { permLauncher.launch(requiredPerms); return }
-        val text = draftEdit.text.toString().trim()
+        val text = Compose.finalize(this, draftEdit.text.toString().trim())
         if (text.isEmpty()) { toast("보낼 문자가 비어 있어요", "err"); return }
         if (Templates.TOKEN_RE.containsMatchIn(text)) { toast("📝 예약 정보 빈칸을 채워 주세요", "err"); return }
         val t = selectedTpl()
@@ -1147,7 +1147,13 @@ class MainActivity : AppCompatActivity() {
         tor.addView(ui.check("📌 제목을 문자 첫 줄에 [제목]으로 넣기", Prefs.titleOn(this)) {
             sp.edit().putBoolean(Prefs.KEY_TITLE_ON, it).apply(); if (!draftDirty) setDraftFromTpl()
         }, ui.lp())
-        sc.addView(tor)
+        sc.addView(tor, ui.lp(bottom = 8))
+        val sfr = ui.col().apply { background = ui.rect(Col.B50, 16f, Col.B200, 1f); setPadding(ui.dp(10), ui.dp(4), ui.dp(10), ui.dp(8)) }
+        sfr.addView(ui.check("📱 아이폰 링크 보정 (이모지 빼고 보내기)", Prefs.safeText(this)) {
+            sp.edit().putBoolean(Prefs.KEY_SAFE_TEXT, it).apply(); if (!draftDirty) setDraftFromTpl()
+        })
+        sfr.addView(ui.text("아이폰에서 전화번호·링크 밑줄이 밀리는 문제를 막아요. 앱 화면의 아이콘은 그대로이고, 나가는 문자에서만 ✅→-, ☎→Tel. 처럼 바뀌어요.", 12f, Col.S500).apply { setPadding(ui.dp(8), 0, 0, 0) })
+        sc.addView(sfr)
         b.addView(sc)
 
         // 🚫 발송제외 번호

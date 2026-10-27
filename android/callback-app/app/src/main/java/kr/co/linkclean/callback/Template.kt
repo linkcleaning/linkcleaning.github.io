@@ -121,7 +121,47 @@ object Compose {
         sb.append(fill(t.body.trim(), fields))
         val sg = if (t.sign) signText(c) else ""
         if (sg.isNotEmpty()) sb.append("\n\n").append(sg)
-        return sb.toString()
+        return finalize(c, sb.toString())
+    }
+
+    /** 보내기 직전 최종 처리 – '아이폰 보정'이 켜져 있으면 이모지·특수기호를 일반 글자로 */
+    fun finalize(c: Context, text: String): String = if (Prefs.safeText(c)) safe(text) else text
+
+    /**
+     * 아이폰 링크 밀림 방지: 한글·영문·숫자·기본 문장부호만 남기고
+     * 이모지·장식 기호는 비슷한 일반 글자로 바꾸거나 뺀다.
+     */
+    fun safe(text: String): String {
+        val map = mapOf(
+            0x2705 to "-", 0x2714 to "-", 0x2611 to "-", 0x2713 to "-",
+            0x260E to "Tel.", 0x1F4DE to "Tel.", 0x1F4F1 to "Tel.",
+            0x25B6 to "■", 0x25BA to "■", 0x27A1 to "→", 0x1F449 to "■", 0x1F4CD to "■", 0x1F4F8 to "■",
+            0x1F9F9 to "■", 0x2B50 to "*", 0x2605 to "*", 0x2606 to "*", 0x25B7 to "■"
+        )
+        val sb = StringBuilder()
+        var i = 0
+        while (i < text.length) {
+            val cp = text.codePointAt(i)
+            i += Character.charCount(cp)
+            val keep = cp == '\n'.code || cp in 0x20..0x7E ||
+                cp in 0xAC00..0xD7A3 || cp in 0x3131..0x318E || cp in 0x1100..0x11FF ||   // 한글
+                cp == 0x00B7 || cp == 0x2022 || cp == 0x203B || cp == 0x2192 ||           // · • ※ →
+                cp in 0x2018..0x201D || cp == 0x2026 || cp in 0x3000..0x3011 ||           // ‘’“” … 「」【】
+                cp == 0x25A0 || cp == 0x25A1 || cp == 0x25CB || cp == 0x25CF ||           // ■ □ ○ ●
+                cp == 0x00D7 || cp == 0xFF5E || cp == 0x2015
+            when {
+                map.containsKey(cp) -> sb.append(map[cp])
+                cp == 0x2500 || cp == 0x2501 || cp == 0x2014 -> sb.append('-')              // ─ 줄 → -
+                keep -> sb.appendCodePoint(cp)
+                else -> {} // 그 밖의 이모지·기호는 뺌
+            }
+        }
+        return sb.toString().lines().joinToString("\n") { line ->
+            line.replace(Regex(" {2,}"), " ").trim().let { l ->
+                // "- " 로 시작하도록 정리 (예: "-입주" → "- 입주")
+                if (l.startsWith("-") && l.length > 1 && l[1] != '-' && l[1] != ' ') "- " + l.substring(1) else l
+            }
+        }.replace(Regex("\n{3,}"), "\n\n").trim()
     }
 
     fun fill(text: String, fields: Map<String, String>): String =
