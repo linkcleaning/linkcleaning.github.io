@@ -46,7 +46,7 @@
       <img src="logo-sm.png" alt="링크클린 로고" class="h-14 w-14 shrink-0 rounded-full bg-white p-0.5 shadow-md ring-2 ring-white/60" />
       <div>
         <p class="text-[13px] font-medium text-brand-100">링크클린</p>
-        <h1 id="pageTitle" class="text-[22px] font-extrabold tracking-tight">📞 콜백 문자 보내기</h1>
+        <h1 id="pageTitle" class="text-[22px] font-extrabold tracking-tight">📞 콜백 문자 보내기<span class="ml-1 align-middle text-[11px] font-medium text-brand-100">(아이폰)</span></h1>
       </div>
     </div>
   </header>
@@ -842,12 +842,12 @@ $('btnResetAll').onclick = async () => {
 };
 
 /* ============ 탭 / 시트 ============ */
-const TITLES = { send: '📞 콜백 문자 보내기', msgs: '✉️ 문자 설정', history: '📋 발송 내역', settings: '⚙️ 설정' };
+const TITLES = { send: '📞 콜백 문자 보내기<span class="ml-1 align-middle text-[11px] font-medium text-brand-100">(아이폰)</span>', msgs: '✉️ 문자 설정', history: '📋 발송 내역', settings: '⚙️ 설정' };
 function go(tab) {
   document.querySelectorAll('.tab-page').forEach(p => p.classList.toggle('hidden', p.id !== 'tab-' + tab));
   document.querySelectorAll('.tabbtn').forEach(b => { const on = b.dataset.tab === tab; b.classList.toggle('text-brand-700', on); b.classList.toggle('text-slate-400', !on); });
   $('sendBar').classList.toggle('hidden', tab !== 'send');
-  $('pageTitle').textContent = TITLES[tab];
+  $('pageTitle').innerHTML = TITLES[tab];
   if (tab === 'msgs') { renderCommon(); renderTplList(); } if (tab === 'history') renderHistory(); if (tab === 'settings') renderSettings();
   window.scrollTo({ top: 0 });
   try { sessionStorage.setItem('cb_tab', tab); } catch (e) {}
