@@ -122,6 +122,7 @@ https://www.instagram.com/linkcleaning
     const val KEY_USE_HOME = "sign_use_home"
     const val KEY_USE_MAG = "sign_use_mag"
     const val KEY_SAFE_TEXT = "safe_text"
+    const val KEY_LAST_EVENT = "last_event"
     const val KEY_SEND_OUTGOING = "send_outgoing"
     const val KEY_AUTO_OUT = "auto_out_tpl"
     const val KEY_SKIP_CONTACTS = "skip_contacts"
@@ -289,6 +290,16 @@ https://www.instagram.com/linkcleaning
     fun lastSent(c: Context, num: String) = sp(c).getLong(SENT_PREFIX + num, 0L)
     fun markSent(c: Context, num: String, t: Long) { sp(c).edit().putLong(SENT_PREFIX + num, t).commit() }
     fun clearSent(c: Context, num: String) { sp(c).edit().remove(SENT_PREFIX + num).commit() }
+    fun clearAllSent(c: Context) {
+        val e = sp(c).edit(); sp(c).all.keys.filter { it.startsWith(SENT_PREFIX) }.forEach { e.remove(it) }; e.commit()
+    }
+
+    /** 자동 콜백 마지막 감지 결과 (점검용) */
+    fun setLastEvent(c: Context, msg: String) {
+        val t = java.text.SimpleDateFormat("MM/dd HH:mm:ss", java.util.Locale.KOREA).format(java.util.Date())
+        sp(c).edit().putString(KEY_LAST_EVENT, "$t  $msg").apply()
+    }
+    fun lastEvent(c: Context): String = sp(c).getString(KEY_LAST_EVENT, "") ?: ""
 
     /** 7일 지난 쿨타임 기록 정리 */
     fun pruneCooldowns(c: Context) {

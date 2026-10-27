@@ -103,7 +103,7 @@ class MainActivity : AppCompatActivity() {
     private lateinit var updateText: TextView
 
     private val prefListener = SharedPreferences.OnSharedPreferenceChangeListener { _, key ->
-        if (key == Prefs.KEY_HISTORY || key == Prefs.KEY_ENABLED) runOnUiThread {
+        if (key == Prefs.KEY_HISTORY || key == Prefs.KEY_ENABLED || key == Prefs.KEY_LAST_EVENT) runOnUiThread {
             renderAuto(); renderRecent(); if (tab == 2) renderHistory()
         }
     }
@@ -497,6 +497,8 @@ class MainActivity : AppCompatActivity() {
                 "· 같은 번호는 ${CallbackProcessor.periodLabel(Prefs.cooldownHours(this))} 안에 다시 안 보내요"
         } else "켜 두면 전화(수신·부재중·발신)가 끝날 때마다\n아래 버튼을 누르지 않아도 문자가 자동으로 나가요"
         todayText.text = "${Prefs.todaySuccess(this)}건"
+        val ev = Prefs.lastEvent(this)
+        if (on) autoInfo.append("\n\n🔍 마지막 감지: " + ev.ifEmpty { "아직 감지된 통화 없음" })
 
         val problems = mutableListOf<String>()
         if (missingCorePerms().isNotEmpty()) problems.add("• 전화·통화기록·문자 권한이 필요해요")
@@ -1225,6 +1227,9 @@ class MainActivity : AppCompatActivity() {
             }, ui.lp(0, ui.WRAP, 1f, end = if (i < 4) 6 else 0))
         }
         pc.addView(prow)
+        pc.addView(ui.button("🔄 재발송 금지 기록 지우기 (테스트할 때)", Col.S100, Col.S600, 44, 14f, radius = 12f) {
+            Prefs.clearAllSent(this); toast("모든 번호에 다시 보낼 수 있어요", "ok")
+        }, ui.lp(top = 10))
         b.addView(pc)
 
         // ✍️ 서명

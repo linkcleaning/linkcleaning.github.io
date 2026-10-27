@@ -33,21 +33,27 @@ object CallbackProcessor {
     fun onCallEnded(context: Context, done: (() -> Unit)? = null) {
         val app = context.applicationContext
         val now = System.currentTimeMillis()
-        if (!Prefs.enabled(app) || now - lastTrigger < 5000) {
-            done?.invoke(); return
-        }
+        if (!Prefs.enabled(app)) { done?.invoke(); return }
+        if (now - lastTrigger < 5000) { done?.invoke(); return }
         lastTrigger = now
+        Prefs.setLastEvent(app, "통화 끝남 감지 → 통화기록 확인 중")
         executor.execute {
+            var finished = false
             try {
-                // 통화기록이 DB에 기록되기까지 1~3초 걸리므로 몇 번 재시도
-                for (i in 0 until 4) {
+                // 통화기록이 저장되기까지 시간이 걸릴 수 있어 최대 약 20초 동안 재시도
+                var found = 0
+                for (i in 0 until 10) {
                     Thread.sleep(if (i == 0) 1500 else 2000)
-                    if (checkNewCalls(app) > 0) break
+                    found = checkNewCalls(app)
+                    if (i == 3 && !finished) { finished = true; done?.invoke() } // 리시버는 8초 안에 풀어줌
+                    if (found > 0) break
                 }
+                if (found == 0) Prefs.setLastEvent(app, "통화 끝남 감지 → 새 통화기록을 찾지 못함")
             } catch (e: Exception) {
                 Log.e(TAG, "check failed", e)
+                Prefs.setLastEvent(app, "오류: ${e.javaClass.simpleName} ${e.message ?: ""}")
             } finally {
-                done?.invoke()
+                if (!finished) done?.invoke()
             }
         }
     }
@@ -112,14 +118,17 @@ object CallbackProcessor {
             CallLog.Calls.INCOMING_TYPE -> if (e.duration > 0) KIND_IN else KIND_MISSED
             CallLog.Calls.MISSED_TYPE, CallLog.Calls.REJECTED_TYPE -> KIND_MISSED
             // 내가 건 전화: 실제로 통화가 연결된 경우만 (안 받은 발신에는 안 보냄)
-            CallLog.Calls.OUTGOING_TYPE -> if (e.duration > 0) KIND_OUT else return
-            else -> return // OUTGOING(발신), BLOCKED(차단), VOICEMAIL 등은 무시
+            CallLog.Calls.OUTGOING_TYPE -> if (e.duration > 0) KIND_OUT else {
+                Prefs.setLastEvent(c, "내가 건 전화 · 상대가 안 받음 → 안 보냄"); return
+            }
+            else -> { Prefs.setLastEvent(c, "차단·기타 통화 → 안 보냄"); return }
         }
-        if (kind == KIND_IN && !Prefs.sendIncoming(c)) return
-        if (kind == KIND_MISSED && !Prefs.sendMissed(c)) return
-        if (kind == KIND_OUT && !Prefs.sendOutgoing(c)) return
-
         val num = PhoneUtil.normalize(e.number)
+        val who = PhoneUtil.pretty(num.ifEmpty { "번호없음" })
+        if ((kind == KIND_IN && !Prefs.sendIncoming(c)) || (kind == KIND_MISSED && !Prefs.sendMissed(c)) || (kind == KIND_OUT && !Prefs.sendOutgoing(c))) {
+            Prefs.setLastEvent(c, "$kind $who → 설정에서 '$kind' 자동 발송이 꺼져 있음"); return
+        }
+
         val now = System.currentTimeMillis()
         val hours = Prefs.cooldownHours(c)
         val reason: String? = when {
@@ -146,10 +155,12 @@ object CallbackProcessor {
         val id = Prefs.newId()
         if (reason != null) {
             Prefs.addHistory(c, SendRecord(id, now, num.ifEmpty { "알 수 없음" }, kind, "제외: $reason", tpl.name, true))
+            Prefs.setLastEvent(c, "$kind $who → 안 보냄 ($reason)")
             return
         }
         Prefs.markSent(c, num, now) // 발송 전에 먼저 기록 → 동시에 두 번 나가는 것 방지
         Prefs.addHistory(c, SendRecord(id, now, num, kind, "발송중", tpl.name, true))
+        Prefs.setLastEvent(c, "$kind $who → [${tpl.name}] 보내는 중")
         MmsSender.send(c, num, id, Compose.build(c, tpl), tpl.title, tpl.useImages)
         CallMonitorService.refreshNotification(c)
     }
