@@ -159,7 +159,7 @@ object Compose {
     }
 
     /** 한글 2바이트 기준 바이트 수 (90바이트 초과 = 장문) */
-    fun byteLen(s: String): Int = s.sumOf { if (it.code > 127) 2 else 1 }
+    fun byteLen(s: String): Int = s.fold(0) { a, ch -> a + if (ch.code > 127) 2 else 1 }
 
     fun kind(text: String, withImages: Boolean): String = when {
         withImages -> "MMS(사진)"
