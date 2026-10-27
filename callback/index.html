@@ -52,7 +52,7 @@
   </header>
 
   <!-- ===================== 보내기 ===================== -->
-  <main id="tab-send" class="tab-page flex-1 space-y-4 px-4 pb-[190px] pt-4">
+  <main id="tab-send" class="tab-page flex-1 space-y-4 px-4 pb-[280px] pt-4">
     <section class="rounded-3xl bg-white p-4 shadow-sm ring-1 ring-slate-200">
       <label for="phone" class="mb-2 block text-[15px] font-bold text-slate-600">① 고객 전화번호</label>
       <div class="relative">
@@ -431,18 +431,23 @@ function toPng(u) {
   });
 }
 function loadImg(u) { return new Promise((res, rej) => { const im = new Image(); im.onload = () => res(im); im.onerror = rej; im.src = u; }); }
-// 여러 장을 세로로 이어 붙여 한 장(PNG Blob)으로 만들기
+// 여러 장을 세로로 이어 붙여 한 장(PNG Blob)으로 만들기 (아이폰 한계 때문에 전체 높이 3600px 이하로 축소)
 async function combinePng(urls) {
   if (urls.length === 1) return toPng(urls[0]);
   const ims = await Promise.all(urls.map(loadImg));
-  const W = Math.max(...ims.map(i => i.naturalWidth));
-  const gap = Math.round(W * 0.02);
-  const scaled = ims.map(i => ({ w: W, h: Math.round(i.naturalHeight * W / i.naturalWidth), im: i }));
-  const H = scaled.reduce((a, s) => a + s.h, 0) + gap * (ims.length - 1);
+  const W0 = Math.max(...ims.map(i => i.naturalWidth));
+  const gap0 = Math.round(W0 * 0.02);
+  const hs0 = ims.map(i => Math.round(i.naturalHeight * W0 / i.naturalWidth));
+  const totalH = hs0.reduce((a, h) => a + h, 0) + gap0 * (ims.length - 1);
+  const MAXH = 3600;
+  const scale = Math.min(1, MAXH / totalH);
+  const W = Math.round(W0 * scale), gap = Math.round(gap0 * scale);
+  const hs = hs0.map(h => Math.round(h * scale));
+  const H = hs.reduce((a, h) => a + h, 0) + gap * (ims.length - 1);
   const c = document.createElement('canvas'); c.width = W; c.height = H;
   const x = c.getContext('2d'); x.fillStyle = '#fff'; x.fillRect(0, 0, W, H);
   let y = 0;
-  for (const s of scaled) { x.drawImage(s.im, 0, y, s.w, s.h); y += s.h + gap; }
+  for (let i = 0; i < ims.length; i++) { x.drawImage(ims[i], 0, y, W, hs[i]); y += hs[i] + gap; }
   return new Promise((res, rej) => c.toBlob(b => b ? res(b) : rej(), 'image/png'));
 }
 function resize(file, max = 1280, q = 0.85) {
@@ -661,6 +666,12 @@ if ($('btnImgSms')) $('btnImgSms').onclick = async () => {
   } catch (e) { toast("사진 복사에 실패했어요. '📤 공유'로 보내 주세요", 'err'); }
 };
 $('btnOpenSms').onclick = () => { location.href = smsHref(); };
+
+// 문자 편집 중에는 하단 버튼을 숨겨 입력칸을 가리지 않게
+$('draft').addEventListener('focus', () => $('sendBar').classList.add('hidden'));
+$('draft').addEventListener('blur', () => { if (document.querySelector('.tab-page:not(.hidden)')?.id === 'tab-send') $('sendBar').classList.remove('hidden'); });
+// 문자 앱에 갔다 돌아오면 안내 창 자동으로 닫기
+document.addEventListener('visibilitychange', () => { if (!document.hidden) $('pasteSheet').classList.add('hidden'); });
 
 if ($('btnShare')) $('btnShare').onclick = async () => {
   const text = message(); if (!text) { toast('💬 문자 내용이 비어 있어요', 'err'); return; }
