@@ -30,7 +30,11 @@ jobs:
           VERSION_CODE: ${{ github.run_number }}
         run: |
           chmod +x gradlew
-          ./gradlew --no-daemon :app:assembleRelease
+          set -o pipefail
+          if ! ./gradlew --no-daemon :app:assembleRelease 2>&1 | tee build.log; then
+            grep -E "^e: |error:|What went wrong|ERROR" -A2 build.log | head -40 | while IFS= read -r l; do echo "::error::$l"; done
+            exit 1
+          fi
           cp app/build/outputs/apk/release/app-release.apk ../../linkclean-callback.apk
 
       - name: Make QR code for install page
