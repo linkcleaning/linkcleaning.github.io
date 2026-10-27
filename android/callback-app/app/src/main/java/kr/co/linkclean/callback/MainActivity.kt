@@ -464,8 +464,9 @@ class MainActivity : AppCompatActivity() {
             "통화가 끝나면 자동으로 보내고 있어요\n" +
                 "· 받은 전화 → " + (if (Prefs.sendIncoming(this)) "[${tin?.name ?: "-"}]" else "보내지 않음") + "\n" +
                 "· 부재중 전화 → " + (if (Prefs.sendMissed(this)) "[${tmiss?.name ?: "-"}]" else "보내지 않음") + "\n" +
+                "· 내가 건 전화 → " + (if (Prefs.sendOutgoing(this)) "[${Templates.find(this, Prefs.autoOutId(this))?.name ?: "-"}]" else "보내지 않음") + "\n" +
                 "· 같은 번호는 ${CallbackProcessor.periodLabel(Prefs.cooldownHours(this))} 안에 다시 안 보내요"
-        } else "켜 두면 손님 전화(수신·부재중)가 끝날 때마다\n아래 버튼을 누르지 않아도 문자가 자동으로 나가요"
+        } else "켜 두면 전화(수신·부재중·발신)가 끝날 때마다\n아래 버튼을 누르지 않아도 문자가 자동으로 나가요"
         todayText.text = "${Prefs.todaySuccess(this)}건"
 
         val problems = mutableListOf<String>()
@@ -833,7 +834,7 @@ class MainActivity : AppCompatActivity() {
 
         b.addView(hint("문자를 눌러 제목·본문을 고칠 수 있어요. 🤖 표시는 자동 콜백에 쓰는 문자예요."), ui.lp(bottom = 10, start = 4))
 
-        val inId = Prefs.autoInId(this); val missId = Prefs.autoMissId(this)
+        val inId = Prefs.autoInId(this); val missId = Prefs.autoMissId(this); val outId = Prefs.autoOutId(this)
         Templates.load(this).forEach { t ->
             val c = ui.card().apply {
                 gravity = Gravity.CENTER_HORIZONTAL
@@ -847,6 +848,7 @@ class MainActivity : AppCompatActivity() {
             hr.addView(ui.badge(t.type, fg, bg))
             if (t.id == inId) hr.addView(ui.badge("🤖 자동·수신", Col.GREEN700, Col.GREEN50), ui.lp(ui.WRAP, ui.WRAP, start = 6))
             if (t.id == missId) hr.addView(ui.badge("🤖 자동·부재중", Col.GREEN700, Col.GREEN50), ui.lp(ui.WRAP, ui.WRAP, start = 6))
+            if (t.id == outId) hr.addView(ui.badge("🤖 자동·발신", Col.GREEN700, Col.GREEN50), ui.lp(ui.WRAP, ui.WRAP, start = 6))
             c.addView(hr)
             c.addView(ui.text("제목: " + t.title.ifBlank { "(없음)" } + (if (t.useImages) " · 📷 사진 포함" else "") + (if (t.sign) " · ✍️ 서명" else ""), 13f, Col.S500).apply { gravity = Gravity.CENTER }, ui.lp(top = 8))
             c.addView(ui.text(t.body.replace("\n", " "), 14f, Col.S600).apply {
@@ -860,7 +862,7 @@ class MainActivity : AppCompatActivity() {
             AlertDialog.Builder(this).setMessage("문자 6종을 처음 상태로 되돌릴까요?\n(직접 추가한 문자는 지워져요)")
                 .setPositiveButton("되돌리기") { _, _ ->
                     Templates.save(this, Templates.defaults())
-                    Prefs.sp(this).edit().putString(Prefs.KEY_SELECTED, "t_in").putString(Prefs.KEY_AUTO_IN, "t_in").putString(Prefs.KEY_AUTO_MISS, "t_miss").apply()
+                    Prefs.sp(this).edit().putString(Prefs.KEY_SELECTED, "t_in").putString(Prefs.KEY_AUTO_IN, "t_in").putString(Prefs.KEY_AUTO_MISS, "t_miss").putString(Prefs.KEY_AUTO_OUT, "t_out").apply()
                     renderMsgs(); setDraftFromTpl(); toast("기본 문자로 되돌렸어요")
                 }.setNegativeButton("취소", null).show()
         })
@@ -927,10 +929,12 @@ class MainActivity : AppCompatActivity() {
 
         var autoIn = Prefs.autoInId(this) == t.id
         var autoMiss = Prefs.autoMissId(this) == t.id
+        var autoOut = Prefs.autoOutId(this) == t.id
         val autoBox = ui.col().apply { background = ui.rect(Col.GREEN50, 16f, 0xFFA7F3D0.toInt(), 1f); setPadding(ui.dp(12), ui.dp(8), ui.dp(12), ui.dp(8)) }
         autoBox.addView(ui.text("🤖 자동 콜백에 이 문자 사용", 14f, Col.GREEN700, true))
         autoBox.addView(ui.check("받은 전화가 끝나면", autoIn) { autoIn = it })
         autoBox.addView(ui.check("부재중·거절 전화 후", autoMiss) { autoMiss = it })
+        autoBox.addView(ui.check("내가 건 전화가 끝나면", autoOut) { autoOut = it })
         b.addView(autoBox, ui.lp(bottom = 14))
 
         if (!isNew) b.addView(ui.button("🗑️ 이 문자 삭제", Col.RED50, Col.RED, 48, 15f, radius = 12f) {
@@ -944,6 +948,7 @@ class MainActivity : AppCompatActivity() {
                     val e = Prefs.sp(this).edit()
                     if (Prefs.autoInId(this) == t.id) e.putString(Prefs.KEY_AUTO_IN, first)
                     if (Prefs.autoMissId(this) == t.id) e.putString(Prefs.KEY_AUTO_MISS, first)
+                    if (Prefs.autoOutId(this) == t.id) e.putString(Prefs.KEY_AUTO_OUT, first)
                     if (Prefs.selectedId(this) == t.id) e.putString(Prefs.KEY_SELECTED, rest.first().id)
                     e.apply()
                     dlg.dismiss(); renderMsgs(); setDraftFromTpl(); toast("삭제했어요")
@@ -957,7 +962,7 @@ class MainActivity : AppCompatActivity() {
             if (body.isEmpty()) { toast("본문을 입력해 주세요", "err"); return@button }
             val doSave = { finalBody: String ->
                 val nt = Tpl(t.id, eIcon.text.toString().trim().ifEmpty { "💬" }, name, type, eTitle.text.toString().trim(), finalBody, sign, useImg)
-                if ((autoIn || autoMiss) && nt.hasTokens) {
+                if ((autoIn || autoMiss || autoOut) && nt.hasTokens) {
                     toast("빈칸 {..}이 있는 문자는 자동 발송에 쓸 수 없어요", "err")
                 } else {
                     val list = Templates.load(this)
@@ -967,6 +972,7 @@ class MainActivity : AppCompatActivity() {
                     val e = Prefs.sp(this).edit()
                     if (autoIn) e.putString(Prefs.KEY_AUTO_IN, nt.id)
                     if (autoMiss) e.putString(Prefs.KEY_AUTO_MISS, nt.id)
+                    if (autoOut) e.putString(Prefs.KEY_AUTO_OUT, nt.id)
                     e.apply()
                     dlg.dismiss(); renderMsgs(); if (!draftDirty) setDraftFromTpl()
                     toast("💾 저장했어요", "ok")
@@ -1116,6 +1122,9 @@ class MainActivity : AppCompatActivity() {
         }
         autoRow("받은 전화", Prefs.KEY_SEND_INCOMING, Prefs.sendIncoming(this), Prefs.KEY_AUTO_IN, Prefs.autoInId(this))
         autoRow("부재중·거절", Prefs.KEY_SEND_MISSED, Prefs.sendMissed(this), Prefs.KEY_AUTO_MISS, Prefs.autoMissId(this))
+        autoRow("내가 건 전화", Prefs.KEY_SEND_OUTGOING, Prefs.sendOutgoing(this), Prefs.KEY_AUTO_OUT, Prefs.autoOutId(this))
+        ac.addView(ui.text("※ 내가 건 전화는 상대가 받아서 통화가 된 경우에만 보내요.", 12f, Col.S500).apply { setPadding(ui.dp(6), 0, 0, ui.dp(6)) })
+        ac.addView(ui.check("주소록에 저장된 번호(가족·지인·거래처)는 빼기", Prefs.skipContacts(this)) { sp.edit().putBoolean(Prefs.KEY_SKIP_CONTACTS, it).apply() })
         ac.addView(ui.check("휴대폰 번호(010 등)에만 보내기", Prefs.mobileOnly(this)) { sp.edit().putBoolean(Prefs.KEY_MOBILE_ONLY, it).apply() })
         val lr = ui.row().apply { setPadding(ui.dp(4), ui.dp(4), 0, 0) }
         lr.addView(ui.text("하루 최대 자동 발송", 15f, Col.S700, true), ui.lp(0, ui.WRAP, 1f))
@@ -1254,7 +1263,7 @@ class MainActivity : AppCompatActivity() {
         val hc = ui.card()
         hc.addView(h2("❓ 사용 안내", 16f, Col.S800), ui.lp(bottom = 8))
         listOf(
-            "🤖 자동 콜백: 보내기 탭의 큰 버튼을 ON으로 두면 손님 전화(수신·부재중)가 끝날 때 지정한 문자가 자동으로 나가요. 내가 건 전화(발신)에는 안 나가요.",
+            "🤖 자동 콜백: 보내기 탭의 큰 버튼을 ON으로 두면 전화가 끝날 때 지정한 문자가 자동으로 나가요. 받은 전화·부재중·내가 건 전화(통화된 경우)마다 문자를 따로 정할 수 있어요.",
             "📞 방금 통화: 누르면 가장 최근 통화 번호가 들어가고, 통화 종류(수신·발신·부재중)에 맞는 문자로 바뀌어요.",
             "💬 문자만 보내기: 글만 보내요. 길면 장문(LMS)으로 가요.",
             "🖼️ 사진+문자 보내기: 공통 홍보 사진과 글을 사진문자(MMS) 한 통으로 보내요. 모바일 데이터가 켜져 있어야 해요.",

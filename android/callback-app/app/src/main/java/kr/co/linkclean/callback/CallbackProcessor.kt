@@ -19,12 +19,13 @@ object CallbackProcessor {
     private const val TAG = "CallbackProcessor"
     const val KIND_IN = "수신"
     const val KIND_MISSED = "부재중"
+    const val KIND_OUT = "발신"
 
     private val executor = Executors.newSingleThreadExecutor()
     private val lock = Any()
     @Volatile private var lastTrigger = 0L
 
-    private data class Entry(val id: Long, val number: String, val type: Int, val date: Long, val duration: Long) {
+    private data class Entry(val id: Long, val number: String, val type: Int, val date: Long, val duration: Long, val name: String = "") {
         val key get() = "$id:$date"
     }
 
@@ -66,7 +67,7 @@ object CallbackProcessor {
         val since = System.currentTimeMillis() - 3L * 3600_000 // 최근 3시간
         val proj = arrayOf(
             CallLog.Calls._ID, CallLog.Calls.NUMBER, CallLog.Calls.TYPE,
-            CallLog.Calls.DATE, CallLog.Calls.DURATION
+            CallLog.Calls.DATE, CallLog.Calls.DURATION, CallLog.Calls.CACHED_NAME
         )
         val out = mutableListOf<Entry>()
         try {
@@ -76,7 +77,7 @@ object CallbackProcessor {
                 "${CallLog.Calls.DATE} ASC"
             )?.use { cur ->
                 while (cur.moveToNext()) {
-                    out.add(Entry(cur.getLong(0), cur.getString(1) ?: "", cur.getInt(2), cur.getLong(3), cur.getLong(4)))
+                    out.add(Entry(cur.getLong(0), cur.getString(1) ?: "", cur.getInt(2), cur.getLong(3), cur.getLong(4), cur.getString(5) ?: ""))
                 }
             }
         } catch (e: Exception) {
@@ -110,10 +111,13 @@ object CallbackProcessor {
         val kind = when (e.type) {
             CallLog.Calls.INCOMING_TYPE -> if (e.duration > 0) KIND_IN else KIND_MISSED
             CallLog.Calls.MISSED_TYPE, CallLog.Calls.REJECTED_TYPE -> KIND_MISSED
+            // 내가 건 전화: 실제로 통화가 연결된 경우만 (안 받은 발신에는 안 보냄)
+            CallLog.Calls.OUTGOING_TYPE -> if (e.duration > 0) KIND_OUT else return
             else -> return // OUTGOING(발신), BLOCKED(차단), VOICEMAIL 등은 무시
         }
         if (kind == KIND_IN && !Prefs.sendIncoming(c)) return
         if (kind == KIND_MISSED && !Prefs.sendMissed(c)) return
+        if (kind == KIND_OUT && !Prefs.sendOutgoing(c)) return
 
         val num = PhoneUtil.normalize(e.number)
         val now = System.currentTimeMillis()
@@ -122,13 +126,18 @@ object CallbackProcessor {
             num.length < 7 -> "발신번호 표시제한"
             Prefs.mobileOnly(c) && !PhoneUtil.isMobile(num) -> "휴대폰 번호 아님"
             num in Prefs.blacklist(c) -> "제외 번호"
+            Prefs.skipContacts(c) && e.name.isNotBlank() -> "주소록 저장 번호 (${e.name})"
             hours > 0 && now - Prefs.lastSent(c, num) < hours * 3600_000L -> "${periodLabel(hours)} 내 이미 발송"
             Prefs.todayAttempts(c) >= Prefs.dailyLimit(c) -> "하루 한도 초과"
             else -> null
         }
 
         // 수신 / 부재중 별로 지정된 문자 사용 (빈칸 {..}이 있는 문자는 자동 발송 불가)
-        val tplId = if (kind == KIND_IN) Prefs.autoInId(c) else Prefs.autoMissId(c)
+        val tplId = when (kind) {
+            KIND_IN -> Prefs.autoInId(c)
+            KIND_OUT -> Prefs.autoOutId(c)
+            else -> Prefs.autoMissId(c)
+        }
         val tpl = Templates.find(c, tplId)?.takeIf { !it.hasTokens }
             ?: Templates.load(c).firstOrNull { !it.hasTokens && it.type == kind }
             ?: Templates.load(c).firstOrNull { !it.hasTokens }

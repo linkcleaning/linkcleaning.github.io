@@ -94,7 +94,7 @@ https://www.instagram.com/linkcleaning
     const val DEFAULT_SUBJECT = ""  // 제목 없음
     const val MAX_IMAGES = 3
     private const val KEY_SEED_VER = "seed_ver"
-    private const val SEED_VER = 5
+    private const val SEED_VER = 6
 
     const val KEY_ENABLED = "enabled"
     const val KEY_MESSAGE = "message"
@@ -122,12 +122,15 @@ https://www.instagram.com/linkcleaning
     const val KEY_USE_HOME = "sign_use_home"
     const val KEY_USE_MAG = "sign_use_mag"
     const val KEY_SAFE_TEXT = "safe_text"
+    const val KEY_SEND_OUTGOING = "send_outgoing"
+    const val KEY_AUTO_OUT = "auto_out_tpl"
+    const val KEY_SKIP_CONTACTS = "skip_contacts"
     const val KEY_SIGN_TEXT = "sign_text"
 
     /** 백업에 포함할 설정 키 */
     val BACKUP_KEYS = listOf(
         KEY_BLACKLIST, KEY_SEND_INCOMING, KEY_SEND_MISSED, KEY_MOBILE_ONLY, KEY_COOLDOWN_H, KEY_DAILY_LIMIT,
-        KEY_SELECTED, KEY_AUTO_IN, KEY_AUTO_MISS, KEY_TITLE_ON, KEY_SIGN_PHONE, KEY_SIGN_KAKAO, KEY_SIGN_HOME,
+        KEY_SELECTED, KEY_AUTO_IN, KEY_AUTO_MISS, KEY_AUTO_OUT, KEY_SEND_OUTGOING, KEY_SKIP_CONTACTS, KEY_TITLE_ON, KEY_SIGN_PHONE, KEY_SIGN_KAKAO, KEY_SIGN_HOME,
         KEY_SIGN_MAG, KEY_USE_PHONE, KEY_USE_KAKAO, KEY_USE_HOME, KEY_USE_MAG, KEY_SAFE_TEXT, KEY_SIGN_TEXT, "templates"
     )
     private const val SENT_PREFIX = "sent_"
@@ -148,6 +151,10 @@ https://www.instagram.com/linkcleaning
 
     fun sendIncoming(c: Context) = sp(c).getBoolean(KEY_SEND_INCOMING, true)
     fun sendMissed(c: Context) = sp(c).getBoolean(KEY_SEND_MISSED, true)
+    /** 내가 건 전화(통화 연결된 경우) 후 자동 발송 */
+    fun sendOutgoing(c: Context) = sp(c).getBoolean(KEY_SEND_OUTGOING, true)
+    /** 주소록에 저장된 번호(가족·지인·거래처)는 자동 발송 제외 */
+    fun skipContacts(c: Context) = sp(c).getBoolean(KEY_SKIP_CONTACTS, false)
     fun mobileOnly(c: Context) = sp(c).getBoolean(KEY_MOBILE_ONLY, true)
     fun cooldownHours(c: Context) = sp(c).getInt(KEY_COOLDOWN_H, 24)
     fun dailyLimit(c: Context) = sp(c).getInt(KEY_DAILY_LIMIT, 100)
@@ -214,12 +221,24 @@ https://www.instagram.com/linkcleaning
             upgrade("t_miss", Templates.CARD_MISS)
             Templates.save(c, list)
         }
+        // v6: 발신 인사도 명함 링크 문구로 (기본 문구 그대로일 때만)
+        if (sp.getInt(KEY_SEED_VER, 0) < 6 && sp.getString(Templates.KEY, null) != null) {
+            val list = Templates.load(c).toMutableList()
+            val i = list.indexOfFirst { it.id == "t_out" }
+            if (i >= 0 && list[i].body.trim() == Templates.OLD_OUT) {
+                list[i] = list[i].copy(body = Templates.CARD_OUT, title = "", sign = false, useImages = true)
+                Templates.save(c, list)
+            } else if (i < 0) {
+                Templates.defaults().firstOrNull { it.id == "t_out" }?.let { list.add(1, it); Templates.save(c, list) }
+            }
+        }
         sp.edit().putInt(KEY_SEED_VER, SEED_VER).commit()
     }
 
     // ---------- 자동 콜백 문자 / 서명 ----------
     fun autoInId(c: Context): String = sp(c).getString(KEY_AUTO_IN, "t_in") ?: "t_in"
     fun autoMissId(c: Context): String = sp(c).getString(KEY_AUTO_MISS, "t_miss") ?: "t_miss"
+    fun autoOutId(c: Context): String = sp(c).getString(KEY_AUTO_OUT, "t_out") ?: "t_out"
     fun selectedId(c: Context): String = sp(c).getString(KEY_SELECTED, "t_in") ?: "t_in"
     fun titleOn(c: Context) = sp(c).getBoolean(KEY_TITLE_ON, false)
     /** 아이폰 보정 (이모지 빼고 보내기) – 기본 켜짐 */
