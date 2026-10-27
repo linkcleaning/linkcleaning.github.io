@@ -122,12 +122,13 @@ https://www.instagram.com/linkcleaning
     const val KEY_USE_HOME = "sign_use_home"
     const val KEY_USE_MAG = "sign_use_mag"
     const val KEY_SAFE_TEXT = "safe_text"
+    const val KEY_SIGN_TEXT = "sign_text"
 
     /** 백업에 포함할 설정 키 */
     val BACKUP_KEYS = listOf(
         KEY_BLACKLIST, KEY_SEND_INCOMING, KEY_SEND_MISSED, KEY_MOBILE_ONLY, KEY_COOLDOWN_H, KEY_DAILY_LIMIT,
         KEY_SELECTED, KEY_AUTO_IN, KEY_AUTO_MISS, KEY_TITLE_ON, KEY_SIGN_PHONE, KEY_SIGN_KAKAO, KEY_SIGN_HOME,
-        KEY_SIGN_MAG, KEY_USE_PHONE, KEY_USE_KAKAO, KEY_USE_HOME, KEY_USE_MAG, KEY_SAFE_TEXT, "templates"
+        KEY_SIGN_MAG, KEY_USE_PHONE, KEY_USE_KAKAO, KEY_USE_HOME, KEY_USE_MAG, KEY_SAFE_TEXT, KEY_SIGN_TEXT, "templates"
     )
     private const val SENT_PREFIX = "sent_"
 
@@ -231,6 +232,8 @@ https://www.instagram.com/linkcleaning
     fun signUseKakao(c: Context) = sp(c).getBoolean(KEY_USE_KAKAO, true)
     fun signUseHome(c: Context) = sp(c).getBoolean(KEY_USE_HOME, true)
     fun signUseMag(c: Context) = sp(c).getBoolean(KEY_USE_MAG, false)
+    /** 직접 쓴 서명 (null 이면 기본 서명) */
+    fun signCustom(c: Context): String? = sp(c).getString(KEY_SIGN_TEXT, null)
 
     /** 발송제외 번호 목록 (번호, 메모) – 한 줄에 "번호 메모" */
     fun excludes(c: Context): List<Pair<String, String>> = blacklistRaw(c).lines().mapNotNull { line ->

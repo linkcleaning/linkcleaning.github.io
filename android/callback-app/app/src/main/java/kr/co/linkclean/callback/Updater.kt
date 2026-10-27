@@ -12,8 +12,7 @@ import java.net.URL
 
 /**
  * 앱 안에서 업데이트 – GitHub 릴리스의 version.json 을 확인하고
- * 새 APK를 받아서 시스템 설치기(PackageInstaller)로 바로 설치한다.
- * (한 번 이 앱으로 업데이트하면, 안드로이드 12+ 에서는 다음부터 확인 창 없이 설치될 수 있음)
+ * 새 APK를 받아서 시스템 설치 화면을 바로 띄운다.
  */
 object Updater {
     private const val BASE = "https://github.com/linkcleaning/linkcleaning.github.io/releases/download/callback-apk/"
@@ -65,21 +64,14 @@ object Updater {
         return f
     }
 
-    /** 시스템 설치기로 설치 – 결과는 InstallReceiver 로 옴 */
+    /** 시스템 설치 화면 열기 – '업데이트하시겠습니까?' 창에서 [업데이트]만 누르면 됨 */
     fun install(c: Context, apk: File) {
-        val pi = c.packageManager.packageInstaller
-        val params = PackageInstaller.SessionParams(PackageInstaller.SessionParams.MODE_FULL_INSTALL).apply {
-            setAppPackageName(c.packageName)
-            if (Build.VERSION.SDK_INT >= 31) setRequireUserAction(PackageInstaller.SessionParams.USER_ACTION_NOT_REQUIRED)
+        val uri = androidx.core.content.FileProvider.getUriForFile(c, "${c.packageName}.files", apk)
+        val i = Intent(Intent.ACTION_VIEW).apply {
+            setDataAndType(uri, "application/vnd.android.package-archive")
+            addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION or Intent.FLAG_ACTIVITY_NEW_TASK)
+            putExtra(Intent.EXTRA_NOT_UNKNOWN_SOURCE, true)
         }
-        val id = pi.createSession(params)
-        pi.openSession(id).use { s ->
-            apk.inputStream().use { input ->
-                s.openWrite("base.apk", 0, apk.length()).use { out -> input.copyTo(out); s.fsync(out) }
-            }
-            val intent = Intent(c, InstallReceiver::class.java).setAction(ACTION_INSTALL)
-            val flags = PendingIntent.FLAG_UPDATE_CURRENT or (if (Build.VERSION.SDK_INT >= 31) PendingIntent.FLAG_MUTABLE else 0)
-            s.commit(PendingIntent.getBroadcast(c, 77, intent, flags).intentSender)
-        }
+        c.startActivity(i)
     }
 }

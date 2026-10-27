@@ -138,6 +138,11 @@ object Compose {
     private val WEEK = arrayOf("일", "월", "화", "수", "목", "금", "토")
 
     fun signText(c: Context): String {
+        Prefs.signCustom(c)?.let { return it.trim() }
+        return defaultSign(c)
+    }
+
+    fun defaultSign(c: Context): String {
         val l = mutableListOf<String>()
         val p = Prefs.signPhone(c).trim(); val k = Prefs.signKakao(c).trim()
         val h = Prefs.signHome(c).trim(); val m = Prefs.signMag(c).trim()

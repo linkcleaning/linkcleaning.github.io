@@ -202,10 +202,11 @@ class MainActivity : AppCompatActivity() {
         Thread {
             try {
                 val apk = Updater.download(this) { p -> runOnUiThread { msg.text = "새 버전을 받는 중… $p%" } }
-                runOnUiThread { msg.text = "설치 준비 중…\n'업데이트' 창이 뜨면 [업데이트]를 눌러 주세요" }
-                Updater.install(this, apk)
-                Thread.sleep(1500)
-                runOnUiThread { try { dlg.dismiss() } catch (_: Exception) { } }
+                runOnUiThread {
+                    try { dlg.dismiss() } catch (_: Exception) { }
+                    try { Updater.install(this, apk) } catch (e: Exception) { toast("설치 화면을 열지 못했어요", "err") }
+                    toast("'업데이트' 창에서 [업데이트]를 눌러 주세요")
+                }
             } catch (e: Exception) {
                 runOnUiThread {
                     try { dlg.dismiss() } catch (_: Exception) { }
@@ -1143,25 +1144,27 @@ class MainActivity : AppCompatActivity() {
         // ✍️ 서명
         val sc = ui.card()
         sc.addView(h2("✍️ 문자 하단 서명 (공통)", 16f, Col.S800))
-        sc.addView(hint("'서명 붙이기'를 켠 문자 끝에 자동으로 들어가요."), ui.lp(top = 2, bottom = 10))
-        fun signRow(label: String, useKey: String, use: Boolean, valKey: String, v: String, ph: String) {
-            val r = ui.row().apply { background = ui.rect(Col.S50, 16f, Col.S200, 1f); setPadding(ui.dp(6), ui.dp(4), ui.dp(12), ui.dp(4)) }
-            r.addView(ui.check("", use) { sp.edit().putBoolean(useKey, it).apply(); if (!draftDirty) setDraftFromTpl() }, ui.lp(ui.WRAP, ui.WRAP))
-            val c = ui.col()
-            c.addView(ui.text(label, 13f, Col.S500, true))
-            val e = EditText(this).apply {
-                setText(v); hint = ph; setHintTextColor(Col.S300); background = null; setPadding(0, 0, 0, ui.dp(4))
-                setTextColor(Col.S800); textSize = 16f; typeface = android.graphics.Typeface.DEFAULT_BOLD; isSingleLine = true
-            }
-            e.addTextChangedListener(watcher { s -> sp.edit().putString(valKey, s).apply(); if (!draftDirty) setDraftFromTpl() })
-            c.addView(e, ui.lp())
-            r.addView(c, ui.lp(0, ui.WRAP, 1f))
-            sc.addView(r, ui.lp(bottom = 8))
+        sc.addView(hint("아래에 쓴 내용이 체크한 문자 끝에 자동으로 붙어요."), ui.lp(top = 2, bottom = 10))
+        val signEdit = ui.input("서명 내용", multi = true).apply {
+            setText(Prefs.signCustom(this@MainActivity) ?: Compose.defaultSign(this@MainActivity)); minLines = 4
         }
-        signRow("☎ 대표번호", Prefs.KEY_USE_PHONE, Prefs.signUsePhone(this), Prefs.KEY_SIGN_PHONE, Prefs.signPhone(this), "064-763-4545")
-        signRow("💬 카카오톡 상담", Prefs.KEY_USE_KAKAO, Prefs.signUseKakao(this), Prefs.KEY_SIGN_KAKAO, Prefs.signKakao(this), "https://pf.kakao.com/...")
-        signRow("🏠 홈페이지", Prefs.KEY_USE_HOME, Prefs.signUseHome(this), Prefs.KEY_SIGN_HOME, Prefs.signHome(this), "www.linkclean.co.kr")
-        signRow("📖 온라인 매거진 / 작업사례", Prefs.KEY_USE_MAG, Prefs.signUseMag(this), Prefs.KEY_SIGN_MAG, Prefs.signMag(this), "링크 주소 붙여넣기")
+        signEdit.addTextChangedListener(watcher { t -> sp.edit().putString(Prefs.KEY_SIGN_TEXT, t).apply(); if (!draftDirty) setDraftFromTpl() })
+        sc.addView(signEdit, ui.lp(bottom = 6))
+        sc.addView(ui.text("예) Tel. 064-763-4545 / 카카오톡 상담: 링크 / 영업시간 등 자유롭게 쓰세요. 고치면 바로 저장돼요.", 12f, Col.S400), ui.lp(bottom = 8))
+        sc.addView(ui.button("↩ 기본 서명으로 되돌리기", Col.S100, Col.S500, 40, 13f, radius = 12f) {
+            sp.edit().remove(Prefs.KEY_SIGN_TEXT).apply(); renderSettings(); if (!draftDirty) setDraftFromTpl()
+        }, ui.lp(bottom = 12))
+        sc.addView(ui.text("서명을 붙일 문자", 14f, Col.S700, true), ui.lp(bottom = 4))
+        val signBox = ui.col().apply { background = ui.rect(Col.S50, 16f, Col.S200, 1f); setPadding(ui.dp(8), ui.dp(4), ui.dp(8), ui.dp(4)) }
+        Templates.load(this).forEach { t ->
+            signBox.addView(ui.check("${t.icon} ${t.name}", t.sign) { on ->
+                val list = Templates.load(this)
+                val idx = list.indexOfFirst { it.id == t.id }
+                if (idx >= 0) { list[idx] = list[idx].copy(sign = on); Templates.save(this, list) }
+                if (!draftDirty) setDraftFromTpl()
+            })
+        }
+        sc.addView(signBox, ui.lp(bottom = 8))
         val tor = ui.row().apply { background = ui.rect(Col.S50, 16f, Col.S200, 1f); setPadding(ui.dp(10), ui.dp(4), ui.dp(10), ui.dp(4)) }
         tor.addView(ui.check("📌 제목을 문자 첫 줄에 [제목]으로 넣기", Prefs.titleOn(this)) {
             sp.edit().putBoolean(Prefs.KEY_TITLE_ON, it).apply(); if (!draftDirty) setDraftFromTpl()
