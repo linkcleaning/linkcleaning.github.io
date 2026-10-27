@@ -103,7 +103,7 @@
   <!-- 보내기 하단 버튼 -->
   <div id="sendBar" class="fixed left-1/2 z-40 w-full max-w-md -translate-x-1/2 border-t border-slate-200 bg-white/95 px-4 pb-2 pt-3 backdrop-blur" style="bottom:calc(env(safe-area-inset-bottom) + 64px)">
     <button id="btnSms" class="press mb-2 flex h-16 w-full items-center justify-center gap-2 rounded-2xl bg-brand-600 text-[19px] font-extrabold text-white shadow-lg shadow-brand-600/30">💬 문자만 보내기 <span class="rounded-full bg-white/25 px-2 py-0.5 text-[12px]">글만</span></button>
-    <button id="btnShareAll" class="press flex h-16 w-full items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-sky-500 to-cyan-500 text-[18px] font-extrabold text-white shadow-lg shadow-sky-500/30">🖼️ 사진 전부 + 문자 보내기</button>
+    <button id="btnShareAll" class="press flex h-16 w-full items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-sky-500 to-cyan-500 text-[18px] font-extrabold text-white shadow-lg shadow-sky-500/30">🖼️ 사진+문자 보내기</button>
   </div>
 
   <!-- ===================== 문자설정 ===================== -->
@@ -182,7 +182,7 @@
         <li>• <b>자동 발송은 안 돼요.</b> 웹앱은 통화 종료를 감지할 수 없어서, 통화 후 앱을 열고 버튼을 눌러 보내는 방식이에요. (대신 아이폰·안드로이드 모두 쓸 수 있어요)</li>
         <li>• <b>번호 복사:</b> 최근 통화 목록에서 번호를 꾹 눌러 복사한 뒤 '📋 붙여넣기'를 누르세요.</li>
         <li>• <b>💬 문자만 보내기:</b> 번호와 글이 바로 채워져 빠르게 전송돼요. 단, 아이폰은 문자에 사진을 붙일 수 없어 <b>글만</b> 나가요.</li>
-        <li>• <b>🖼️ 사진 전부 + 문자 보내기:</b> 공유 창이 열리면 <b>메시지</b>(또는 카톡)를 선택하세요. 등록한 사진이 전부 글과 함께 들어가요. (받는 번호는 직접 넣거나 고르면 돼요)</li>
+        <li>• <b>🖼️ 사진+문자 보내기:</b> 사진을 복사하고 바로 문자 앱이 열려요(번호·글 자동 입력). 입력창을 꾹 눌러 <b>'붙여넣기'</b>만 하면 사진이 들어가요. 사진 여러 장은 한 장으로 합쳐져 한 번에 들어가요. 카톡으로 넘어가지 않아요.</li>
         <li>• 문자 요금은 휴대폰 요금제의 기본 문자(무료 문자)로 나가요.</li>
       </ul>
       <button id="btnResetAll" class="mt-4 h-12 w-full rounded-xl bg-red-50 text-[14px] font-bold text-red-600">⚠️ 전체 초기화</button>
@@ -249,7 +249,7 @@
       <li>2. <b>'붙여넣기'</b>를 누르면 사진이 들어가요</li>
       <li>3. 문구는 채워져 있으니 <b>전송</b>만!</li>
     </ol>
-    <p id="pasteMore" class="mt-2 hidden text-center text-[13px] text-slate-500">사진이 여러 장이면 '📤 공유'로 한 번에 보낼 수 있어요.</p>
+    <p id="pasteMore" class="mt-2 hidden text-center text-[13px] text-slate-500">사진 여러 장은 한 장으로 합쳐서 복사했어요. 붙여넣기 한 번이면 끝!</p>
     <button id="btnOpenSms" class="press mt-4 h-16 w-full rounded-2xl bg-brand-600 text-[18px] font-extrabold text-white">💬 문자 앱 열기</button>
     <button data-close="pasteSheet" class="mt-2 h-12 w-full text-[16px] font-bold text-slate-500">닫기</button>
   </div>
@@ -430,6 +430,21 @@ function toPng(u) {
     im.onerror = rej; im.src = u;
   });
 }
+function loadImg(u) { return new Promise((res, rej) => { const im = new Image(); im.onload = () => res(im); im.onerror = rej; im.src = u; }); }
+// 여러 장을 세로로 이어 붙여 한 장(PNG Blob)으로 만들기
+async function combinePng(urls) {
+  if (urls.length === 1) return toPng(urls[0]);
+  const ims = await Promise.all(urls.map(loadImg));
+  const W = Math.max(...ims.map(i => i.naturalWidth));
+  const gap = Math.round(W * 0.02);
+  const scaled = ims.map(i => ({ w: W, h: Math.round(i.naturalHeight * W / i.naturalWidth), im: i }));
+  const H = scaled.reduce((a, s) => a + s.h, 0) + gap * (ims.length - 1);
+  const c = document.createElement('canvas'); c.width = W; c.height = H;
+  const x = c.getContext('2d'); x.fillStyle = '#fff'; x.fillRect(0, 0, W, H);
+  let y = 0;
+  for (const s of scaled) { x.drawImage(s.im, 0, y, s.w, s.h); y += s.h + gap; }
+  return new Promise((res, rej) => c.toBlob(b => b ? res(b) : rej(), 'image/png'));
+}
 function resize(file, max = 1280, q = 0.85) {
   return new Promise((res, rej) => {
     const r = new FileReader();
@@ -608,21 +623,24 @@ $('sendImgs').onclick = e => { if (e.target.closest('[data-goto-edit]')) { if (u
 
 $('btnSms').onclick = () => { if (!guard()) return; vib(); record('문자'); location.href = smsHref(); };
 
-// 아이폰: 사진은 문자(sms)에 못 붙으므로, 공유 시트로 사진 전부 + 문자 한 번에 보내기
+// 아이폰: 사진을 복사해 두고 문자 앱(번호·글 자동 입력)을 열어, 붙여넣기만 하면 전송 — 카톡으로 안 넘어감
 $('btnShareAll').onclick = async () => {
   if (!guard()) return;
   const imgs = tplImgs(curTpl());
   if (!imgs.length) { toast('🖼️ 등록된 사진이 없어요. 공통 홍보 사진을 넣어주세요'); if (usesCommon(curTpl())) go('msgs'); else openEditor(curTpl().id); return; }
-  const text = message();
-  if (!navigator.share) { toast('이 브라우저는 사진 보내기를 지원하지 않아요', 'err'); return; }
+  if (!navigator.clipboard || !window.ClipboardItem) { toast('이 브라우저는 사진 복사를 지원하지 않아요', 'err'); return; }
   vib();
   try {
-    const files = imgs.map((u, i) => { const b = dataUrlToBlob(u); return new File([b], `linkclean_${i + 1}.jpg`, { type: b.type }); });
-    if (!(navigator.canShare && navigator.canShare({ files }))) { toast('이 기기는 사진 공유를 지원하지 않아요', 'err'); return; }
-    await navigator.share({ files, text });
+    // iOS Safari는 Promise를 그대로 넘겨야 터치 동작으로 인정됨
+    const blobP = combinePng(imgs);
+    const item = isIOS ? new ClipboardItem({ 'image/png': blobP }) : new ClipboardItem({ 'image/png': await blobP });
+    await navigator.clipboard.write([item]);
     record('사진+문자');
-    toast('📤 공유 창에서 메시지 또는 카톡을 선택하세요', 'ok');
-  } catch (e) { if (e?.name !== 'AbortError') toast('공유에 실패했어요. 다시 시도해 주세요', 'err'); }
+    $('pasteMore').classList.toggle('hidden', imgs.length < 2);
+    $('pasteSheet').classList.remove('hidden');
+    toast('📋 사진 복사 완료!', 'ok');
+    location.href = smsHref();
+  } catch (e) { toast('사진 복사에 실패했어요. 다시 시도해 주세요', 'err'); }
 };
 
 if ($('btnImgSms')) $('btnImgSms').onclick = async () => {
