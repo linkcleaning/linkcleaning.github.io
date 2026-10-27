@@ -648,8 +648,11 @@ class MainActivity : AppCompatActivity() {
             }
         } else {
             val w = resources.displayMetrics.widthPixels - ui.dp(64)
-            sendImgs.addView(ui.button("📷 이 문자에 사진이 없어요 · 눌러서 추가", Col.WHITE, Col.S400, 72, 13f, Col.S300, 12f, dashed = true) {
-                selectTab(1)
+            val msg = if (files.isEmpty()) "📷 등록된 홍보 사진이 없어요 · 눌러서 추가"
+                else "📝 글만 보내는 문자예요\n사진도 보내려면 [사진+문자 보내기]를 누르세요"
+            sendImgs.addView(ui.button(msg, Col.S50, Col.S500, 72, 13f, Col.S300, 12f, dashed = true) {
+                if (files.isEmpty()) selectTab(1)
+                else toast("이 문자에 항상 사진을 붙이려면: 문자설정 → 문자 편집 → '📷 사진 같이 보내기' 체크")
             }, LinearLayout.LayoutParams(w, ui.dp(76)))
         }
     }
