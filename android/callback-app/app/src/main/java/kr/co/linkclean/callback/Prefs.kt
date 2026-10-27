@@ -94,7 +94,7 @@ https://www.instagram.com/linkcleaning
     const val DEFAULT_SUBJECT = ""  // 제목 없음
     const val MAX_IMAGES = 3
     private const val KEY_SEED_VER = "seed_ver"
-    private const val SEED_VER = 4
+    private const val SEED_VER = 5
 
     const val KEY_ENABLED = "enabled"
     const val KEY_MESSAGE = "message"
@@ -196,6 +196,21 @@ https://www.instagram.com/linkcleaning
             if (!custom.isNullOrBlank() && custom != DEFAULT_MESSAGE) {
                 list[0] = list[0].copy(body = custom, title = sp.getString(KEY_SUBJECT, "") ?: "")
             }
+            Templates.save(c, list)
+        }
+        // v5: 수신 감사·부재중 안내를 '모바일 명함 링크' 문구로 교체 (직접 고친 문구는 '(이전)' 문자로 보관)
+        if (sp.getInt(KEY_SEED_VER, 0) < 5 && sp.getString(Templates.KEY, null) != null) {
+            val list = Templates.load(c).toMutableList()
+            val known = setOf(DEFAULT_MESSAGE, OLD_DEFAULT_MESSAGE, OLD_DEFAULT_MESSAGE_V2, Templates.OLD_MISS, Templates.CARD_IN, Templates.CARD_MISS)
+            fun upgrade(id: String, body: String) {
+                val i = list.indexOfFirst { it.id == id }
+                if (i < 0) { Templates.defaults().firstOrNull { it.id == id }?.let { list.add(it) }; return }
+                val old = list[i]
+                if (old.body.trim() !in known) list.add(i + 1, old.copy(id = id + "_old", name = old.name + "(이전)"))
+                list[i] = old.copy(body = body, title = "", sign = false, useImages = true)
+            }
+            upgrade("t_in", Templates.CARD_IN)
+            upgrade("t_miss", Templates.CARD_MISS)
             Templates.save(c, list)
         }
         sp.edit().putInt(KEY_SEED_VER, SEED_VER).commit()
