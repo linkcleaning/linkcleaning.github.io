@@ -60,6 +60,8 @@ class MainActivity : AppCompatActivity() {
     private lateinit var ui: Ui
     private lateinit var titleView: TextView
     private lateinit var sendBar: View
+    private lateinit var navBar: View
+    private var keyboardOpen = false
     private lateinit var toastView: TextView
     private val pages = arrayOfNulls<ScrollView>(4)
     private val bodies = arrayOfNulls<LinearLayout>(4)
@@ -272,7 +274,8 @@ class MainActivity : AppCompatActivity() {
         main.addView(bar, ui.lp())
 
         // 하단 탭바
-        main.addView(View(this).apply { setBackgroundColor(Col.S200) }, ui.lp(h = ui.dp(1)))
+        val navWrap = ui.col()
+        navWrap.addView(View(this).apply { setBackgroundColor(Col.S200) }, ui.lp(h = ui.dp(1)))
         val nav = ui.row().apply { setBackgroundColor(Col.WHITE) }
         listOf("📞" to "보내기", "✉️" to "문자설정", "📋" to "발송내역", "⚙️" to "설정").forEachIndexed { i, (ic, lb) ->
             val item = ui.col().apply {
@@ -287,7 +290,9 @@ class MainActivity : AppCompatActivity() {
             nav.addView(item, ui.lp(0, ui.dp(64), 1f))
             navIcons.add(icv); navLabels.add(lbv)
         }
-        main.addView(nav, ui.lp())
+        navWrap.addView(nav, ui.lp())
+        navBar = navWrap
+        main.addView(navWrap, ui.lp())
         root.addView(main, FrameLayout.LayoutParams(ui.MATCH, ui.MATCH))
 
         // 상단 토스트 (웹앱과 같은 알림)
@@ -301,6 +306,18 @@ class MainActivity : AppCompatActivity() {
             setMargins(ui.dp(14), ui.dp(12), ui.dp(14), 0)
         })
         setContentView(root)
+
+        // 키보드가 올라오면 아래 버튼·탭바를 숨겨서 입력칸을 넓게
+        root.viewTreeObserver.addOnGlobalLayoutListener {
+            val r = android.graphics.Rect()
+            root.getWindowVisibleDisplayFrame(r)
+            val open = root.rootView.height - r.bottom > ui.dp(180)
+            if (open != keyboardOpen) {
+                keyboardOpen = open
+                navBar.visibility = if (open) View.GONE else View.VISIBLE
+                sendBar.visibility = if (!open && tab == 0) View.VISIBLE else View.GONE
+            }
+        }
     }
 
     private fun selectTab(i: Int) {
@@ -309,7 +326,7 @@ class MainActivity : AppCompatActivity() {
         pages.forEachIndexed { idx, p -> p?.visibility = if (idx == i) View.VISIBLE else View.GONE }
         navIcons.forEachIndexed { idx, v -> v.alpha = if (idx == i) 1f else 0.45f }
         navLabels.forEachIndexed { idx, v -> v.setTextColor(if (idx == i) Col.B700 else Col.S400) }
-        sendBar.visibility = if (i == 0) View.VISIBLE else View.GONE
+        sendBar.visibility = if (i == 0 && !keyboardOpen) View.VISIBLE else View.GONE
         titleView.text = when (i) {
             0 -> android.text.SpannableString("📞 콜백 문자 보내기 (안드로이드)").apply {
                 val st = indexOf("(안드로이드)")
@@ -434,8 +451,16 @@ class MainActivity : AppCompatActivity() {
         dc.addView(dh, ui.lp(bottom = 8))
         sendImgs = ui.row()
         dc.addView(HorizontalScrollView(this).apply { isHorizontalScrollBarEnabled = false; addView(sendImgs) }, ui.lp(bottom = 8))
-        draftEdit = ui.input("", multi = true).apply { minLines = 9 }
+        draftEdit = ui.input("", multi = true).apply {
+            minLines = 9
+            // 좁은 칸에서 고치지 않도록: 누르면 전체 화면 수정 창
+            isFocusable = false; isFocusableInTouchMode = false; isLongClickable = false
+            setOnClickListener {
+                openBigEditor("보낼 문자 고치기 (이번만)", text.toString()) { t -> setText(t) }
+            }
+        }
         dc.addView(draftEdit, ui.lp())
+        dc.addView(ui.text("✏️ 글씨 칸을 누르면 크게 열려서 고칠 수 있어요", 12f, Col.S400), ui.lp(top = 4))
         charInfo = ui.text("", 13f, Col.S400, true).apply { gravity = Gravity.END; setPadding(0, ui.dp(4), 0, 0) }
         dc.addView(charInfo, ui.lp())
         draftEdit.addTextChangedListener(watcher {
@@ -746,6 +771,47 @@ class MainActivity : AppCompatActivity() {
     }
 
     // ---------- 직접 보내기 ----------
+    /** 전체 화면 글씨 수정 창 */
+    private fun openBigEditor(title: String, text: String, onDone: (String) -> Unit) {
+        val d = android.app.Dialog(this, android.R.style.Theme_Material_Light_NoActionBar)
+        val e = EditText(this).apply {
+            setText(text)
+            gravity = Gravity.TOP or Gravity.START
+            textSize = 18f
+            setTextColor(Col.S900)
+            setLineSpacing(0f, 1.3f)
+            inputType = InputType.TYPE_CLASS_TEXT or InputType.TYPE_TEXT_FLAG_MULTI_LINE
+            background = null
+            setPadding(ui.dp(18), ui.dp(16), ui.dp(18), ui.dp(16))
+        }
+        val col = ui.col().apply { setBackgroundColor(Col.WHITE) }
+        val top = ui.row().apply {
+            background = GradientDrawable(GradientDrawable.Orientation.TL_BR, intArrayOf(Col.B700, Col.B500))
+            setPadding(ui.dp(10), ui.dp(10), ui.dp(10), ui.dp(10))
+        }
+        top.addView(ui.button("취소", Col.B700, Col.WHITE, 44, 16f, radius = 12f) { d.dismiss() }, ui.lp(ui.WRAP, ui.WRAP))
+        top.addView(ui.text(title, 17f, Col.WHITE, true).apply { gravity = Gravity.CENTER }, ui.lp(0, ui.WRAP, 1f))
+        top.addView(ui.button("✓ 완료", Col.WHITE, Col.B700, 44, 16f, radius = 12f) {
+            onDone(e.text.toString()); d.dismiss()
+        }, ui.lp(ui.WRAP, ui.WRAP))
+        col.addView(top, ui.lp())
+        val sv = ScrollView(this).apply { isFillViewport = true; addView(e, FrameLayout.LayoutParams(ui.MATCH, ui.WRAP)) }
+        col.addView(sv, ui.lp(h = 0, weight = 1f))
+        val info = ui.text("", 13f, Col.S400, true).apply { gravity = Gravity.END; setPadding(ui.dp(16), ui.dp(6), ui.dp(16), ui.dp(8)); setBackgroundColor(Col.S50) }
+        fun count() { val m = e.text.toString().trim(); info.text = "${m.length}자 · ${Compose.byteLen(m)}바이트" }
+        e.addTextChangedListener(watcher { count() }); count()
+        col.addView(info, ui.lp())
+        d.setContentView(col)
+        d.window?.apply {
+            setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_ADJUST_RESIZE or WindowManager.LayoutParams.SOFT_INPUT_STATE_VISIBLE)
+            statusBarColor = Col.B700
+            setLayout(ui.MATCH, ui.MATCH)
+        }
+        d.show()
+        e.requestFocus()
+        e.setSelection(e.text.length)
+    }
+
     /** 키보드 내리기 + 입력칸 선택 해제 */
     private fun hideKeyboard() {
         val v = currentFocus ?: window.decorView
@@ -923,7 +989,11 @@ class MainActivity : AppCompatActivity() {
 
         b.addView(ui.text("본문", 13f, Col.S500, true))
         b.addView(ui.text("빈칸 넣기: {청소날짜} {도착시간} {청소비용} {계약금} {잔금} — 보낼 때 입력칸이 생겨요 (빈칸이 있는 문자는 자동 발송에는 못 써요)", 12f, Col.S400), ui.lp(top = 2, bottom = 4))
-        val eBody = ui.input("", multi = true).apply { setText(t.body); minLines = 10 }
+        val eBody = ui.input("", multi = true).apply {
+            setText(t.body); minLines = 10
+            isFocusable = false; isFocusableInTouchMode = false; isLongClickable = false
+            setOnClickListener { openBigEditor("본문 고치기", text.toString()) { v -> setText(v) } }
+        }
         b.addView(eBody, ui.lp(bottom = 14))
 
         var sign = t.sign
