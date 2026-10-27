@@ -33,12 +33,18 @@ jobs:
           ./gradlew --no-daemon :app:assembleRelease
           cp app/build/outputs/apk/release/app-release.apk ../../linkclean-callback.apk
 
+      - name: Make QR code for install page
+        working-directory: .
+        run: |
+          pip install -q "qrcode[pil]"
+          python -c "import qrcode; qrcode.make('https://linkcleaning.github.io/callback-app/', box_size=12, border=2).save('qr.png')"
+
       - name: Publish release (callback-apk)
         working-directory: .
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
           gh release delete callback-apk -y --cleanup-tag || true
-          gh release create callback-apk linkclean-callback.apk \
+          gh release create callback-apk linkclean-callback.apk qr.png \
             --title "링크클린 자동콜백 앱 v1.0.${{ github.run_number }}" \
             --notes "휴대폰에서 linkclean-callback.apk 를 눌러 다운로드 → 설치하세요."

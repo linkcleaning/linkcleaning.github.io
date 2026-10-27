@@ -263,6 +263,18 @@
                 android:text="앱 정보 열기 (권한·제한된 설정)" />
         </LinearLayout>
 
+        <!-- 공유 -->
+        <LinearLayout style="@style/Card">
+            <TextView style="@style/CardTitle" android:text="다른 폰에 설치하기" />
+            <TextView style="@style/Hint" android:layout_marginBottom="6dp" android:text="설치 링크를 카톡·문자로 보내면 받는 분이 눌러서 바로 설치할 수 있어요" />
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/btnShareApp"
+                android:layout_width="match_parent"
+                android:layout_height="64dp"
+                android:text="앱 공유하기 (카톡·문자)"
+                android:textSize="17sp" />
+        </LinearLayout>
+
         <TextView
             android:id="@+id/versionText"
             style="@style/Hint"
