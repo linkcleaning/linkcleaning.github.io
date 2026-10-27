@@ -110,11 +110,25 @@ class MainActivity : AppCompatActivity() {
         findViewById<View>(R.id.btnSaveMessage).setOnClickListener {
             val msg = editMessage.text.toString().trim()
             if (msg.isEmpty()) { toast("문구를 입력해 주세요"); return@setOnClickListener }
-            Prefs.sp(this).edit()
-                .putString(Prefs.KEY_MESSAGE, msg)
-                .putString(Prefs.KEY_SUBJECT, editSubject.text.toString().trim())
-                .apply()
-            toast("문구 저장됨")
+            val save = { text: String ->
+                Prefs.sp(this).edit()
+                    .putString(Prefs.KEY_MESSAGE, text)
+                    .putString(Prefs.KEY_SUBJECT, editSubject.text.toString().trim())
+                    .apply()
+                toast("문구 저장됨")
+            }
+            val wide = Prefs.countWideEmoji(msg)
+            if (wide > 0) {
+                AlertDialog.Builder(this)
+                    .setTitle("아이폰 링크 밀림 주의")
+                    .setMessage("문구에 아이폰에서 전화번호·링크 밑줄을 밀리게 하는 이모지가 ${wide}개 있어요.\n(예: 🏠 📞 📍 📸)\n\n자동으로 바꿔서 저장할까요? (✅ ✨ ☎ ▶ 같은 기호는 괜찮아요)")
+                    .setPositiveButton("바꿔서 저장") { _, _ ->
+                        val fixed = Prefs.stripWideEmoji(msg)
+                        editMessage.setText(fixed); save(fixed)
+                    }
+                    .setNegativeButton("그대로 저장") { _, _ -> save(msg) }
+                    .show()
+            } else save(msg)
         }
 
         findViewById<View>(R.id.btnSaveOptions).setOnClickListener {

@@ -27,7 +27,39 @@ object Prefs {
     private const val OLD_DEFAULT_MESSAGE =
         "안녕하세요, 제주 청소 전문 기업 링크클린입니다. 방금 통화 감사드리며, 상세 작업 사례와 안내는 아래 이미지를 참고해 주세요. 문의: 064-763-4545"
 
+    // 아이폰은 4바이트 이모지(🏠📞📍 등)가 있으면 링크·전화번호 밑줄 위치가 밀리는 문제가 있어
+    // 기본 문구에는 2바이트 기호(✨ ✅ ■ ☎ ▶)만 사용
     val DEFAULT_MESSAGE = """
+✨ 링크클린 상담 연결 안내 ✨
+
+안녕하세요 고객님,
+제주도 청소전문업체입니다
+
+전화 주셔서 진심으로 감사드립니다.
+
+─────────────
+■ 서비스 안내
+─────────────
+✅ 입주·이사·준공 청소
+✅ 거주·부분·상가 청소
+✅ 사무실 청소
+✅ 폐기물 처리
+✅ 쓰레기집 청소
+
+언제나 고객 만족 100%를 약속드립니다!
+
+──────────────
+☎ 064-763-4545
+──────────────
+
+▶ 네이버플레이스
+https://m.place.naver.com/place/37742213/home
+
+▶ 인스타그램
+https://www.instagram.com/linkcleaning
+""".trim()
+
+    private val OLD_DEFAULT_MESSAGE_V2 = """
 ✨ 링크클린 상담 연결 안내 ✨
 
 안녕하세요 고객님,
@@ -59,7 +91,7 @@ https://www.instagram.com/linkcleaning
     const val DEFAULT_SUBJECT = ""  // 제목 없음
     const val MAX_IMAGES = 3
     private const val KEY_SEED_VER = "seed_ver"
-    private const val SEED_VER = 2
+    private const val SEED_VER = 3
 
     const val KEY_ENABLED = "enabled"
     const val KEY_MESSAGE = "message"
@@ -128,9 +160,10 @@ https://www.instagram.com/linkcleaning
         val sp = sp(c)
         if (sp.getInt(KEY_SEED_VER, 0) >= SEED_VER) return
         File(c.filesDir, "promo.jpg").delete() // 1.0 버전의 단일 사진
-        if (imageFiles(c).isEmpty()) restoreDefaultImages(c)
+        if (sp.getInt(KEY_SEED_VER, 0) < 2 && imageFiles(c).isEmpty()) restoreDefaultImages(c)
         val e = sp.edit()
-        if (sp.getString(KEY_MESSAGE, null) == OLD_DEFAULT_MESSAGE) e.remove(KEY_MESSAGE)
+        val saved = sp.getString(KEY_MESSAGE, null)
+        if (saved == OLD_DEFAULT_MESSAGE || saved == OLD_DEFAULT_MESSAGE_V2) e.remove(KEY_MESSAGE)
         if (sp.getString(KEY_SUBJECT, null) == "링크클린") e.remove(KEY_SUBJECT)
         e.putInt(KEY_SEED_VER, SEED_VER).commit()
     }
@@ -206,5 +239,29 @@ https://www.instagram.com/linkcleaning
     fun todayAttempts(c: Context): Int {
         val s = startOfToday()
         return history(c).count { it.time >= s && it.isAttempt && it.kind != "테스트" }
+    }
+
+    // ---------- 아이폰 링크 밀림 방지 ----------
+    /** 4바이트(보조 평면) 이모지 개수 */
+    fun countWideEmoji(text: String): Int {
+        var n = 0; var i = 0
+        while (i < text.length) { val cp = text.codePointAt(i); if (cp > 0xFFFF) n++; i += Character.charCount(cp) }
+        return n
+    }
+
+    /** 4바이트 이모지 제거 (자주 쓰는 것은 비슷한 2바이트 기호로 교체) */
+    fun stripWideEmoji(text: String): String {
+        val map = mapOf(0x1F4DE to "☎", 0x1F4F1 to "☎", 0x1F4CD to "▶", 0x1F4F8 to "▶", 0x1F449 to "▶", 0x1F9F9 to "■", 0x1F3E0 to "", 0x1F3E1 to "")
+        val sb = StringBuilder(); var i = 0
+        while (i < text.length) {
+            val cp = text.codePointAt(i)
+            when {
+                cp > 0xFFFF -> sb.append(map[cp] ?: "")
+                cp == 0xFE0F || cp == 0x200D -> {} // 이모지 꼬리표 제거
+                else -> sb.appendCodePoint(cp)
+            }
+            i += Character.charCount(cp)
+        }
+        return sb.toString().lines().joinToString("\n") { it.trimEnd() }.replace(Regex("(?m)^ +"), "")
     }
 }
