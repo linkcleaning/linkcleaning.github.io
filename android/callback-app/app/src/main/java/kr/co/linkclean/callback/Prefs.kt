@@ -94,7 +94,7 @@ https://www.instagram.com/linkcleaning
     const val DEFAULT_SUBJECT = ""  // 제목 없음
     const val MAX_IMAGES = 3
     private const val KEY_SEED_VER = "seed_ver"
-    private const val SEED_VER = 7
+    private const val SEED_VER = 8
 
     const val KEY_ENABLED = "enabled"
     const val KEY_MESSAGE = "message"
@@ -209,7 +209,7 @@ https://www.instagram.com/linkcleaning
         // v5: 수신 감사·부재중 안내를 '모바일 명함 링크' 문구로 교체 (직접 고친 문구는 '(이전)' 문자로 보관)
         if (sp.getInt(KEY_SEED_VER, 0) < 5 && sp.getString(Templates.KEY, null) != null) {
             val list = Templates.load(c).toMutableList()
-            val known = setOf(DEFAULT_MESSAGE, OLD_DEFAULT_MESSAGE, OLD_DEFAULT_MESSAGE_V2, Templates.OLD_MISS, Templates.CARD_IN, Templates.CARD_MISS, Templates.CARD_IN_LONG, Templates.CARD_MISS_LONG)
+            val known = setOf(DEFAULT_MESSAGE, OLD_DEFAULT_MESSAGE, OLD_DEFAULT_MESSAGE_V2, Templates.OLD_MISS, Templates.CARD_IN, Templates.CARD_MISS, Templates.CARD_IN_SHORT, Templates.CARD_MISS_SHORT)
             fun upgrade(id: String, body: String) {
                 val i = list.indexOfFirst { it.id == id }
                 if (i < 0) { Templates.defaults().firstOrNull { it.id == id }?.let { list.add(it) }; return }
@@ -233,12 +233,14 @@ https://www.instagram.com/linkcleaning
             }
         }
         // v7: 자동 문자 3종을 짧은 버전으로 (예전 기본 문구 그대로일 때만 – 직접 고친 문구는 유지)
-        if (sp.getInt(KEY_SEED_VER, 0) < 7 && sp.getString(Templates.KEY, null) != null) {
+        if (sp.getInt(KEY_SEED_VER, 0) < 8 && sp.getString(Templates.KEY, null) != null) {
             val list = Templates.load(c).toMutableList()
             val swap = mapOf(
-                "t_in" to (setOf(Templates.CARD_IN_LONG) to Templates.CARD_IN),
-                "t_miss" to (setOf(Templates.CARD_MISS_LONG) to Templates.CARD_MISS),
-                "t_out" to (setOf(Templates.CARD_OUT_LONG) to Templates.CARD_OUT)
+                // v8: 짧게 줄였던 3종은 원래 문구로 되돌리고, 계약 확정만 짧게
+                "t_in" to (setOf(Templates.CARD_IN_SHORT) to Templates.CARD_IN),
+                "t_miss" to (setOf(Templates.CARD_MISS_SHORT) to Templates.CARD_MISS),
+                "t_out" to (setOf(Templates.CARD_OUT_SHORT) to Templates.CARD_OUT),
+                "t_contract" to (setOf(Templates.CONTRACT_OLD) to Templates.CONTRACT)
             )
             var changed = false
             list.forEachIndexed { i, t ->
