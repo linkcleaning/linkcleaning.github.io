@@ -4,7 +4,7 @@
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, maximum-scale=1, user-scalable=no" />
 <title>링크클린 콜백문자</title>
-<meta name="description" content="통화 후 원클릭 감사·홍보 문자 발송 — 링크클린 · 클린앤스카이" />
+<meta name="description" content="통화 후 원클릭 감사·홍보 문자 발송 — 링크클린" />
 <meta name="theme-color" content="#0369a1" />
 <meta name="apple-mobile-web-app-capable" content="yes" />
 <meta name="mobile-web-app-capable" content="yes" />
@@ -42,7 +42,7 @@
 <div class="mx-auto flex min-h-screen max-w-md flex-col bg-slate-50 shadow-xl">
 
   <header class="sticky top-0 z-30 bg-gradient-to-br from-brand-700 to-brand-500 px-5 pb-4 pt-3 text-white">
-    <p class="text-[13px] font-medium text-brand-100">링크클린 · 클린앤스카이</p>
+    <p class="text-[13px] font-medium text-brand-100">링크클린 · 제주 청소 전문</p>
     <h1 id="pageTitle" class="text-[22px] font-extrabold tracking-tight">📞 콜백 문자 보내기</h1>
   </header>
 
@@ -252,8 +252,6 @@ const DEFAULT_TEMPLATES = () => [
     body:'안녕하세요, 링크클린입니다. 현재 현장 작업 중이라 전화를 받지 못했습니다. 문의주신 내용을 문자로 남겨주시면 작업 종료 후 가장 먼저 연락드리겠습니다. 감사합니다!' },
   { id:'t_move', icon:'🏠', name:'입주/이사청소', type:'수신', title:'입주청소안내', sign:true, imgs:[],
     body:'안녕하세요, 링크클린입니다. 문의주신 입주/이사청소는 친환경 세제와 전문 장비를 사용해 보이지 않는 곳까지 꼼꼼하게 케어합니다. 작업 전후 사진과 안내는 아래에서 확인해 주세요.' },
-  { id:'t_sky', icon:'🏢', name:'외벽·고소작업', type:'기타', title:'클린앤스카이', sign:true, imgs:[],
-    body:'안녕하세요, 고소작업 및 외벽청소 전문 클린앤스카이입니다. 스카이차 및 전문 로프 장비를 통해 안전하고 완벽한 외벽 세척을 약속드립니다. 상세 작업 모습은 아래 링크를 참고해 주세요.' },
 ];
 const TYPES = ['수신','발신','부재중','기타'];
 const TYPE_COLOR = { '수신':'text-brand-700 bg-brand-50', '발신':'text-emerald-700 bg-emerald-50', '부재중':'text-red-600 bg-red-50', '기타':'text-slate-600 bg-slate-100' };
@@ -623,7 +621,7 @@ async function cleanupImgs() {
 }
 $('btnAddTpl').onclick = () => openEditor(null);
 $('btnResetTpl').onclick = () => {
-  if (!confirm('문자 목록을 처음 기본 문자 5개로 되돌릴까요?\n(직접 만든 문자와 사진은 지워져요)')) return;
+  if (!confirm('문자 목록을 처음 기본 문자 4개로 되돌릴까요?\n(직접 만든 문자와 사진은 지워져요)')) return;
   S.templates = DEFAULT_TEMPLATES(); S.selectedId = 't_in'; save(); cleanupImgs(); renderAll(); toast('↩ 기본 문자로 되돌렸어요');
 };
 
@@ -727,6 +725,9 @@ function renderAll() { renderChips(); renderSendImgs(); setDraftFromTpl(); rende
 
 /* ============ 시작 ============ */
 (async () => {
+  S.templates = S.templates.filter(t => t.id !== 't_sky' && !/클린앤스카이/.test(t.title + t.body));
+  if (!S.templates.length) S.templates = DEFAULT_TEMPLATES();
+  save();
   if (!S.templates.some(t => t.id === S.selectedId)) S.selectedId = S.templates[0].id;
   renderAll(); go('send');
   await loadImgs(); renderAll();
