@@ -311,7 +311,11 @@ class MainActivity : AppCompatActivity() {
         navLabels.forEachIndexed { idx, v -> v.setTextColor(if (idx == i) Col.B700 else Col.S400) }
         sendBar.visibility = if (i == 0) View.VISIBLE else View.GONE
         titleView.text = when (i) {
-            0 -> "📞 콜백 문자 보내기"
+            0 -> android.text.SpannableString("📞 콜백 문자 보내기 (안드로이드)").apply {
+                val st = indexOf("(안드로이드)")
+                setSpan(android.text.style.RelativeSizeSpan(0.55f), st, length, 0)
+                setSpan(android.text.style.ForegroundColorSpan(Col.B100), st, length, 0)
+            }
             1 -> "✉️ 문자 설정"
             2 -> "📋 발송 내역"
             else -> "⚙️ 설정"
