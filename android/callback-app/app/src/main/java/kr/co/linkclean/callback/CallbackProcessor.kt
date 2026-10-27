@@ -113,7 +113,20 @@ object CallbackProcessor {
         else -> "${h}시간"
     }
 
-    private fun evaluate(c: Context, e: Entry) {
+    private val main = android.os.Handler(android.os.Looper.getMainLooper())
+
+    /** [시험] 가장 최근 통화로 자동 발송을 바로 실행 (재발송 금지·하루 한도 무시) */
+    fun testLatest(c: Context, onResult: (String) -> Unit) {
+        val app = c.applicationContext
+        executor.execute {
+            val last = synchronized(lock) { queryRecent(app).lastOrNull() }
+            val msg = if (last == null) "최근 3시간 안에 통화 기록이 없어요 (통화기록 권한 확인)"
+            else { evaluate(app, last, force = true); Prefs.lastEvent(app) }
+            main.post { onResult(msg) }
+        }
+    }
+
+    private fun evaluate(c: Context, e: Entry, force: Boolean = false) {
         val kind = when (e.type) {
             CallLog.Calls.INCOMING_TYPE -> if (e.duration > 0) KIND_IN else KIND_MISSED
             CallLog.Calls.MISSED_TYPE, CallLog.Calls.REJECTED_TYPE -> KIND_MISSED
@@ -136,8 +149,8 @@ object CallbackProcessor {
             Prefs.mobileOnly(c) && !PhoneUtil.isMobile(num) -> "휴대폰 번호 아님"
             num in Prefs.blacklist(c) -> "제외 번호"
             Prefs.skipContacts(c) && e.name.isNotBlank() -> "주소록 저장 번호 (${e.name})"
-            hours > 0 && now - Prefs.lastSent(c, num) < hours * 3600_000L -> "${periodLabel(hours)} 내 이미 발송"
-            Prefs.todayAttempts(c) >= Prefs.dailyLimit(c) -> "하루 한도 초과"
+            !force && hours > 0 && now - Prefs.lastSent(c, num) < hours * 3600_000L -> "${periodLabel(hours)} 내 이미 발송"
+            !force && Prefs.todayAttempts(c) >= Prefs.dailyLimit(c) -> "하루 한도 초과"
             else -> null
         }
 
@@ -150,7 +163,7 @@ object CallbackProcessor {
         val tpl = Templates.find(c, tplId)?.takeIf { !it.hasTokens }
             ?: Templates.load(c).firstOrNull { !it.hasTokens && it.type == kind }
             ?: Templates.load(c).firstOrNull { !it.hasTokens }
-            ?: return
+            ?: run { Prefs.setLastEvent(c, "$kind $who → 보낼 문자가 없음 (문자설정 확인)"); return }
 
         val id = Prefs.newId()
         if (reason != null) {
@@ -161,7 +174,17 @@ object CallbackProcessor {
         Prefs.markSent(c, num, now) // 발송 전에 먼저 기록 → 동시에 두 번 나가는 것 방지
         Prefs.addHistory(c, SendRecord(id, now, num, kind, "발송중", tpl.name, true))
         Prefs.setLastEvent(c, "$kind $who → [${tpl.name}] 보내는 중")
-        MmsSender.send(c, num, id, Compose.build(c, tpl), tpl.title, tpl.useImages)
-        CallMonitorService.refreshNotification(c)
+        val text = Compose.build(c, tpl)
+        // 직접 보내기와 똑같이 메인 스레드에서 발송 (삼성폰 백그라운드 발송 실패 방지)
+        main.post {
+            try {
+                MmsSender.send(c, num, id, text, tpl.title, tpl.useImages)
+            } catch (ex: Exception) {
+                Prefs.updateStatus(c, id, "실패: ${ex.javaClass.simpleName}")
+                Prefs.setLastEvent(c, "$kind $who → 발송 오류 ${ex.javaClass.simpleName} ${ex.message ?: ""}")
+                Prefs.clearSent(c, num)
+            }
+            CallMonitorService.refreshNotification(c)
+        }
     }
 }

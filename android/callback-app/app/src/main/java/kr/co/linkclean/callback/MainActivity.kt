@@ -403,6 +403,18 @@ class MainActivity : AppCompatActivity() {
         todayText = ui.text("0건", 26f, Col.B700, true)
         tr.addView(todayText)
         ac.addView(tr)
+        ac.addView(ui.button("🧪 방금 통화로 자동 발송 시험하기", Col.B50, Col.B700, 46, 14f, Col.B200, 12f) {
+            if (!has(Manifest.permission.READ_CALL_LOG) || !has(Manifest.permission.SEND_SMS)) { permLauncher.launch(requiredPerms); return@button }
+            AlertDialog.Builder(this).setTitle("자동 발송 시험")
+                .setMessage("가장 최근 통화한 번호에 자동 문자를 지금 바로 보내 봐요.\n(재발송 금지 기간은 무시)\n\n최근 통화가 손님 번호라면 실제로 문자가 나가니, 내 다른 폰으로 통화한 뒤 눌러 주세요.")
+                .setPositiveButton("시험하기") { _, _ ->
+                    toast("🧪 시험 중…")
+                    CallbackProcessor.testLatest(this) { r ->
+                        AlertDialog.Builder(this).setTitle("🧪 시험 결과").setMessage(r).setPositiveButton("확인", null).show()
+                        renderAuto(); renderRecent()
+                    }
+                }.setNegativeButton("취소", null).show()
+        }, ui.lp(top = 10))
         b.addView(ac)
 
         // ① 고객 전화번호
