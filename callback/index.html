@@ -275,8 +275,8 @@ const DEFAULT_TEMPLATES = () => [
     body:'안녕하세요, 링크클린입니다. 문의주신 입주/이사청소는 친환경 세제와 전문 장비를 사용해 보이지 않는 곳까지 꼼꼼하게 케어합니다. 작업 전후 사진과 안내는 아래에서 확인해 주세요.' },
   { id:'t_waste', icon:'🚛', name:'폐기물·특수청소', type:'수신', title:'링크클린', sign:true, imgs:[],
     body:'안녕하세요, 제주 청소업체 링크클린입니다. 문의주신 폐기물 처리·특수청소는 현장 상황에 맞춰 신속하고 깔끔하게 치워드립니다. 유품정리 시 귀중품·서류·사진 등은 꼭 유족분께 전달해 드립니다. 편하게 상담 주세요.' },
-  { id:'t_contract', icon:'🤝', name:'계약 확정', type:'기타', title:'예약확정', sign:false, useCommon:false, imgs:[],
-    body:`[링크클린] 청소 예약 확정 안내\n\n안녕하세요, 제주 청소 전문 "링크클린"입니다.\n소중한 인연을 맺어주셔서 진심으로 감사드립니다. 🙏\n\n${LINE}\n📅 청소 일정 : {청소날짜}\n⏰ 도착 시간 : {도착시간}경\n💰 청소 비용 : {청소비용}\n💳 계약금 : {계약금}\n💵 잔금 : {잔금}\n${LINE}\n\n🏦 계약금 입금 계좌\n토스뱅크 1000-1626-3066\n예금주 : 한승우\n\n✔ 계약금 입금이 확인되면 예약이 최종 확정됩니다.\n✔ 정확한 주소와 동·호수를 문자로 남겨주세요.\n✔ 현관 비밀번호가 있다면 함께 알려주시면 편리합니다.\n\n깨끗한 공간으로 보답하겠습니다. 감사합니다!\n📞 064-763-4545` },
+  { id:'t_contract', icon:'🤝', name:'계약 확정', type:'기타', title:'링크클린', sign:false, useCommon:false, imgs:[],
+    body:`[링크클린]\n\n안녕하세요, 제주 청소 전문 "링크클린"입니다.\n소중한 인연을 맺어주셔서 진심으로 감사드립니다. 🙏\n\n${LINE}\n📅 청소 일정 : {청소날짜}\n⏰ 도착 시간 : {도착시간}경\n💰 청소 비용 : {청소비용}\n💳 계약금 : {계약금}\n${LINE}\n\n🏦 계약금 입금 계좌\n토스뱅크 1000-1626-3066\n예금주 : 한승우\n\n✔ 계약금 입금이 확인되면 예약이 최종 확정됩니다.\n✔ 정확한 주소와 동·호수를 문자로 남겨주세요.\n✔ 현관 비밀번호가 있다면 함께 알려주시면 편리합니다.\n\n깨끗한 공간으로 보답하겠습니다. 감사합니다!\n📞 064-763-4545` },
 ];
 const TYPES = ['수신','발신','부재중','기타'];
 const TYPE_COLOR = { '수신':'text-brand-700 bg-brand-50', '발신':'text-emerald-700 bg-emerald-50', '부재중':'text-red-600 bg-red-50', '기타':'text-slate-600 bg-slate-100' };
@@ -344,7 +344,7 @@ async function loadImgs() {
   } catch (e) {}
 }
 // 기본 홍보 사진 넣기 (버전이 오르면 한 번만 다시 적용)
-const SEED_V = 4;
+const SEED_V = 5;
 const COMMON_DEFAULT = ['img_thanks','img_services','img_waste'];
 const PROMO = { img_thanks:'promo/thanks.jpg', img_services:'promo/services.jpg', img_move:'promo/move.jpg', img_waste:'promo/waste.jpg' };
 const PROMO_MAP = { t_in:['img_thanks','img_services'], t_out:['img_thanks','img_services'], t_miss:['img_services'], t_move:['img_move'], t_waste:['img_waste'] };
@@ -369,6 +369,11 @@ async function seedPromo() {
     if ((S.seedV || 0) < 3) {
       if (!S.commonImgs || !S.commonImgs.length) S.commonImgs = [...COMMON_DEFAULT];
       S.templates.forEach(t => { if (t.useCommon !== false) t.useCommon = true; });
+    }
+    // v5: 계약 확정 문자 — 잔금 삭제, 첫 줄 [링크클린]
+    if ((S.seedV || 0) < 5) {
+      const c = S.templates.find(t => t.id === 't_contract'), d = DEFAULT_TEMPLATES().find(t => t.id === 't_contract');
+      if (c && c.body.includes('{잔금}')) { c.body = d.body; c.title = d.title; }
     }
     S.seedV = SEED_V; save(); cleanupImgs();
   } catch (e) {}
