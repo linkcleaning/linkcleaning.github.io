@@ -182,7 +182,7 @@
         <li>• <b>자동 발송은 안 돼요.</b> 웹앱은 통화 종료를 감지할 수 없어서, 통화 후 앱을 열고 버튼을 눌러 보내는 방식이에요. (대신 아이폰·안드로이드 모두 쓸 수 있어요)</li>
         <li>• <b>번호 복사:</b> 최근 통화 목록에서 번호를 꾹 눌러 복사한 뒤 '📋 붙여넣기'를 누르세요.</li>
         <li>• <b>💬 문자만 보내기:</b> 번호와 글이 바로 채워져 빠르게 전송돼요. 단, 아이폰은 문자에 사진을 붙일 수 없어 <b>글만</b> 나가요.</li>
-        <li>• <b>🖼️ 사진+문자 보내기:</b> 사진을 복사하고 바로 문자 앱이 열려요(번호·글 자동 입력). 입력창을 꾹 눌러 <b>'붙여넣기'</b>만 하면 사진이 들어가요. 사진 여러 장은 한 장으로 합쳐져 한 번에 들어가요. 카톡으로 넘어가지 않아요.</li>
+        <li>• <b>🖼️ 사진+문자 보내기:</b> 누르면 사진이 복사돼요. 안내 창에서 <b>'💬 문자 앱 열기'</b>를 누른 뒤, 입력창을 꾹 눌러 <b>'붙여넣기'</b>만 하면 사진이 들어가요(번호·글은 자동). 사진 여러 장은 한 장으로 합쳐져 한 번에 들어가요. 카톡으로 넘어가지 않아요.</li>
         <li>• 문자 요금은 휴대폰 요금제의 기본 문자(무료 문자)로 나가요.</li>
       </ul>
       <button id="btnResetAll" class="mt-4 h-12 w-full rounded-xl bg-red-50 text-[14px] font-bold text-red-600">⚠️ 전체 초기화</button>
@@ -245,9 +245,9 @@
     <p class="text-center text-5xl">✅</p>
     <h3 class="mt-2 text-center text-[20px] font-extrabold">홍보 사진이 복사되었어요</h3>
     <ol class="mt-4 space-y-2 rounded-2xl bg-brand-50 p-4 text-[16px] font-semibold text-slate-700">
-      <li>1. 문자 앱에서 <b>입력창을 꾹 누르세요</b></li>
-      <li>2. <b>'붙여넣기'</b>를 누르면 사진이 들어가요</li>
-      <li>3. 문구는 채워져 있으니 <b>전송</b>만!</li>
+      <li>1. 아래 <b>'💬 문자 앱 열기'</b>를 누르세요</li>
+      <li>2. 문자 앱에서 <b>입력창을 꾹 누르세요</b></li>
+      <li>3. <b>'붙여넣기'</b>를 누르면 사진이 들어가요 → <b>전송</b>!</li>
     </ol>
     <p id="pasteMore" class="mt-2 hidden text-center text-[13px] text-slate-500">사진 여러 장은 한 장으로 합쳐서 복사했어요. 붙여넣기 한 번이면 끝!</p>
     <button id="btnOpenSms" class="press mt-4 h-16 w-full rounded-2xl bg-brand-600 text-[18px] font-extrabold text-white">💬 문자 앱 열기</button>
@@ -553,7 +553,19 @@ function renderSendImgs() {
   $('sendImgs').innerHTML = imgs.length
     ? imgs.map(u => `<img src="${u}" class="h-20 w-20 rounded-xl object-cover ring-1 ring-slate-200"/>`).join('')
     : `<button data-goto-edit="1" class="flex h-20 w-full items-center justify-center rounded-xl border-2 border-dashed border-slate-300 text-[13px] font-semibold text-slate-400">📷 이 문자에 사진이 없어요 · 눌러서 추가</button>`;
+  prebuildCombined();
 }
+// 사진을 미리 한 장으로 합쳐 둔다 (복사 순간 사파리가 멈추지 않도록)
+let _combined = { key: '', blob: null };
+function combinedKey() { return tplImgIds(curTpl()).join(','); }
+async function currentCombined() {
+  const key = combinedKey();
+  if (_combined.key === key && _combined.blob) return _combined.blob;
+  const blob = await combinePng(tplImgs(curTpl()));
+  _combined = { key, blob };
+  return blob;
+}
+function prebuildCombined() { if (tplImgs(curTpl()).length) currentCombined().catch(() => {}); }
 function setDraftFromTpl() { $('draft').value = composeFromTpl(curTpl()); draftDirty = false; $('btnRestore').classList.add('hidden'); renderCount(); }
 function renderCount() {
   const m = message(); const bytes = [...m].reduce((a, c) => a + (c.charCodeAt(0) > 127 ? 2 : 1), 0);
@@ -628,7 +640,7 @@ $('sendImgs').onclick = e => { if (e.target.closest('[data-goto-edit]')) { if (u
 
 $('btnSms').onclick = () => { if (!guard()) return; vib(); record('문자'); location.href = smsHref(); };
 
-// 아이폰: 사진을 복사해 두고 문자 앱(번호·글 자동 입력)을 열어, 붙여넣기만 하면 전송 — 카톡으로 안 넘어감
+// 아이폰: 미리 합쳐 둔 사진을 복사. 복사가 끝난 뒤 사용자가 직접 '문자 앱 열기'를 눌러야 복사가 취소되지 않음
 $('btnShareAll').onclick = async () => {
   if (!guard()) return;
   const imgs = tplImgs(curTpl());
@@ -636,15 +648,14 @@ $('btnShareAll').onclick = async () => {
   if (!navigator.clipboard || !window.ClipboardItem) { toast('이 브라우저는 사진 복사를 지원하지 않아요', 'err'); return; }
   vib();
   try {
-    // iOS Safari는 Promise를 그대로 넘겨야 터치 동작으로 인정됨
-    const blobP = combinePng(imgs);
-    const item = isIOS ? new ClipboardItem({ 'image/png': blobP }) : new ClipboardItem({ 'image/png': await blobP });
+    // iOS: Promise를 그대로 넘겨야 터치 동작으로 인정됨. 미리 합쳐 둬서 거의 즉시 완료됨
+    const item = new ClipboardItem({ 'image/png': currentCombined() });
     await navigator.clipboard.write([item]);
     record('사진+문자');
     $('pasteMore').classList.toggle('hidden', imgs.length < 2);
     $('pasteSheet').classList.remove('hidden');
-    toast('📋 사진 복사 완료!', 'ok');
-    location.href = smsHref();
+    toast('📋 사진 복사 완료! 아래 버튼을 누르세요', 'ok');
+    // 여기서 문자 앱을 바로 열면 사파리가 숨겨져 복사가 취소됨 → 사용자가 '문자 앱 열기'를 누르게 함
   } catch (e) { toast('사진 복사에 실패했어요. 다시 시도해 주세요', 'err'); }
 };
 
