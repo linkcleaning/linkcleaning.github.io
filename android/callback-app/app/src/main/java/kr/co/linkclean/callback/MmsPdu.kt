@@ -5,11 +5,11 @@ import java.io.ByteArrayOutputStream
 /**
  * MMS 'M-Send.req' PDU 인코더 (OMA MMS Encapsulation 1.2 / WAP-230 WSP).
  * SmsManager.sendMultimediaMessage()에 넘길 바이너리를 직접 만든다.
- * 구성: SMIL + (이미지) + 텍스트  → multipart/related
+ * 구성: SMIL + 이미지 0~3장 + 텍스트  → multipart/related
  */
 object MmsPdu {
 
-    fun build(to: String, subject: String, text: String, image: ByteArray?): ByteArray {
+    fun build(to: String, subject: String, text: String, images: List<ByteArray>): ByteArray {
         val out = ByteArrayOutputStream()
 
         // ---- 헤더 (앞 3개는 순서 고정) ----
@@ -34,8 +34,8 @@ object MmsPdu {
 
         // ---- 본문 (multipart) ----
         val parts = mutableListOf<Part>()
-        parts.add(smilPart(image != null))
-        if (image != null) parts.add(imagePart(image))
+        parts.add(smilPart(images.size))
+        images.forEachIndexed { i, img -> parts.add(imagePart(img, i)) }
         parts.add(textPart(text))
 
         writeUintvar(out, parts.size)
@@ -58,30 +58,29 @@ object MmsPdu {
         return h.toByteArray()
     }
 
-    private fun smilPart(hasImage: Boolean): Part {
-        val smil = if (hasImage) {
-            "<smil><head><layout><root-layout/>" +
-                "<region id=\"Image\" fit=\"meet\" top=\"0\" left=\"0\" height=\"80%\" width=\"100%\"/>" +
-                "<region id=\"Text\" top=\"80%\" left=\"0\" height=\"20%\" width=\"100%\"/>" +
-                "</layout></head><body><par dur=\"5000ms\">" +
-                "<img src=\"image.jpg\" region=\"Image\"/><text src=\"text.txt\" region=\"Text\"/>" +
-                "</par></body></smil>"
-        } else {
-            "<smil><head><layout><root-layout/>" +
-                "<region id=\"Text\" top=\"0\" left=\"0\" height=\"100%\" width=\"100%\"/>" +
-                "</layout></head><body><par dur=\"5000ms\"><text src=\"text.txt\" region=\"Text\"/></par></body></smil>"
+    private fun smilPart(imageCount: Int): Part {
+        val sb = StringBuilder()
+        sb.append("<smil><head><layout><root-layout/>")
+        sb.append("<region id=\"Image\" fit=\"meet\" top=\"0\" left=\"0\" height=\"80%\" width=\"100%\"/>")
+        sb.append("<region id=\"Text\" top=\"80%\" left=\"0\" height=\"20%\" width=\"100%\"/>")
+        sb.append("</layout></head><body>")
+        for (i in 0 until imageCount) {
+            sb.append("<par dur=\"5000ms\"><img src=\"image$i.jpg\" region=\"Image\"/></par>")
         }
+        sb.append("<par dur=\"5000ms\"><text src=\"text.txt\" region=\"Text\"/></par>")
+        sb.append("</body></smil>")
         val ct = ByteArrayOutputStream().also { writeText(it, "application/smil") }.toByteArray()
-        return Part(partHeaders(ct, "smil", "smil.xml"), smil.toByteArray(Charsets.UTF_8))
+        return Part(partHeaders(ct, "smil", "smil.xml"), sb.toString().toByteArray(Charsets.UTF_8))
     }
 
-    private fun imagePart(image: ByteArray): Part {
+    private fun imagePart(image: ByteArray, index: Int): Part {
+        val name = "image$index.jpg"
         val inner = ByteArrayOutputStream()
-        inner.write(0x9E)                         // image/jpeg
-        inner.write(0x85); writeText(inner, "image.jpg") // Name
+        inner.write(0x9E)                     // image/jpeg
+        inner.write(0x85); writeText(inner, name) // Name
         val ct = ByteArrayOutputStream()
         writeValueLength(ct, inner.size()); inner.writeTo(ct)
-        return Part(partHeaders(ct.toByteArray(), "image", "image.jpg"), image)
+        return Part(partHeaders(ct.toByteArray(), "image$index", name), image)
     }
 
     private fun textPart(text: String): Part {

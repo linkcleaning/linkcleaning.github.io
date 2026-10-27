@@ -28,8 +28,8 @@ object MmsSender {
     fun send(c: Context, number: String, recordId: Long) {
         val app = c.applicationContext
         try {
-            val img = Prefs.imageFile(app).takeIf { it.exists() && it.length() > 0 }?.readBytes()
-            val pdu = MmsPdu.build(number, Prefs.subject(app), Prefs.message(app), img)
+            val images = Prefs.imageFiles(app).map { it.readBytes() }
+            val pdu = MmsPdu.build(number, Prefs.subject(app), Prefs.message(app), images)
 
             val dir = File(app.cacheDir, "mms").apply { mkdirs() }
             val f = File(dir, "send_$recordId.dat")

@@ -114,25 +114,42 @@
                 android:layout_height="wrap_content"
                 android:gravity="top"
                 android:inputType="textMultiLine"
-                android:minLines="4"
+                android:minLines="6"
+                android:maxLines="18"
                 android:textSize="15sp" />
-            <com.google.android.material.button.MaterialButton
-                android:id="@+id/btnSaveMessage"
+            <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:text="문구 저장" />
+                android:orientation="horizontal">
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/btnSaveMessage"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_marginEnd="6dp"
+                    android:layout_weight="2"
+                    android:text="문구 저장" />
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/btnResetMessage"
+                    style="@style/Widget.Material3.Button.OutlinedButton"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:text="기본 문구" />
+            </LinearLayout>
         </LinearLayout>
 
         <!-- 사진 -->
         <LinearLayout style="@style/Card">
-            <TextView style="@style/CardTitle" android:text="홍보 사진" />
-            <ImageView
-                android:id="@+id/imgPreview"
+            <TextView style="@style/CardTitle" android:text="홍보 사진 (최대 3장)" />
+            <HorizontalScrollView
                 android:layout_width="match_parent"
-                android:layout_height="220dp"
-                android:background="#EEF1F5"
-                android:contentDescription="홍보 사진"
-                android:scaleType="fitCenter" />
+                android:layout_height="wrap_content">
+                <LinearLayout
+                    android:id="@+id/imgRow"
+                    android:layout_width="wrap_content"
+                    android:layout_height="170dp"
+                    android:orientation="horizontal" />
+            </HorizontalScrollView>
             <TextView
                 android:id="@+id/imgInfo"
                 style="@style/Hint"
@@ -147,15 +164,23 @@
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
                     android:layout_marginEnd="6dp"
-                    android:layout_weight="2"
-                    android:text="사진 교체" />
+                    android:layout_weight="1"
+                    android:text="사진 추가" />
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/btnRestoreImages"
+                    style="@style/Widget.Material3.Button.OutlinedButton"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_marginEnd="6dp"
+                    android:layout_weight="1"
+                    android:text="기본 사진" />
                 <com.google.android.material.button.MaterialButton
                     android:id="@+id/btnRemoveImage"
                     style="@style/Widget.Material3.Button.OutlinedButton"
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
                     android:layout_weight="1"
-                    android:text="사진 빼기" />
+                    android:text="모두 빼기" />
             </LinearLayout>
         </LinearLayout>
 

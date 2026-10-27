@@ -38,7 +38,7 @@ class MainActivity : AppCompatActivity() {
     private lateinit var historyList: LinearLayout
     private lateinit var warnBox: View
     private lateinit var warnText: TextView
-    private lateinit var imgPreview: ImageView
+    private lateinit var imgRow: LinearLayout
     private lateinit var imgInfo: TextView
     private lateinit var batteryInfo: TextView
 
@@ -73,13 +73,14 @@ class MainActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
+        Prefs.seedDefaults(this) // 기본 문구·사진 3장 세팅 (첫 실행 시)
 
         btnToggle = findViewById(R.id.btnToggle)
         todayCount = findViewById(R.id.todayCount)
         historyList = findViewById(R.id.historyList)
         warnBox = findViewById(R.id.warnBox)
         warnText = findViewById(R.id.warnText)
-        imgPreview = findViewById(R.id.imgPreview)
+        imgRow = findViewById(R.id.imgRow)
         imgInfo = findViewById(R.id.imgInfo)
         batteryInfo = findViewById(R.id.batteryInfo)
 
@@ -135,10 +136,22 @@ class MainActivity : AppCompatActivity() {
             toast("제외 번호 ${Prefs.blacklist(this).size}개 저장됨")
         }
 
-        findViewById<View>(R.id.btnPickImage).setOnClickListener { pickImage.launch("image/*") }
+        findViewById<View>(R.id.btnPickImage).setOnClickListener {
+            if (Prefs.imageFiles(this).size >= Prefs.MAX_IMAGES) {
+                toast("사진은 최대 ${Prefs.MAX_IMAGES}장입니다. 사진을 눌러 하나 지운 뒤 추가하세요")
+            } else pickImage.launch("image/*")
+        }
+        findViewById<View>(R.id.btnRestoreImages).setOnClickListener {
+            Prefs.restoreDefaultImages(this); refreshImage(); toast("기본 홍보 사진 3장으로 되돌림")
+        }
         findViewById<View>(R.id.btnRemoveImage).setOnClickListener {
-            Prefs.imageFile(this).delete()
+            Prefs.clearImages(this)
             refreshImage()
+        }
+        findViewById<View>(R.id.btnResetMessage).setOnClickListener {
+            editMessage.setText(Prefs.DEFAULT_MESSAGE)
+            editSubject.setText(Prefs.DEFAULT_SUBJECT)
+            toast("기본 문구를 불러왔어요. '문구 저장'을 눌러야 적용됩니다")
         }
 
         findViewById<View>(R.id.btnTest).setOnClickListener {
@@ -280,10 +293,12 @@ class MainActivity : AppCompatActivity() {
                     bmp.compress(Bitmap.CompressFormat.JPEG, q, bos)
                     bytes = bos.toByteArray()
                     q -= 8
-                } while (bytes.size > 300 * 1024 && q > 20)
-                Prefs.imageFile(this).writeBytes(bytes)
+                } while (bytes.size > 230 * 1024 && q > 20)
+                val slot = Prefs.imageFiles(this).size
+                if (slot >= Prefs.MAX_IMAGES) throw IllegalStateException("사진은 최대 3장")
+                Prefs.imageSlot(this, slot).writeBytes(bytes)
                 Prefs.sp(this).edit().putLong(Prefs.KEY_IMAGE_VER, System.currentTimeMillis()).apply()
-                runOnUiThread { refreshImage(); toast("사진 교체됨 (${bytes.size / 1024}KB)") }
+                runOnUiThread { refreshImage(); toast("사진 추가됨 (${bytes.size / 1024}KB)") }
             } catch (e: Exception) {
                 runOnUiThread { toast("사진을 불러오지 못했습니다: ${e.message}") }
             }
@@ -312,13 +327,33 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun refreshImage() {
-        val f = Prefs.imageFile(this)
-        if (f.exists() && f.length() > 0) {
-            imgPreview.setImageBitmap(BitmapFactory.decodeFile(f.absolutePath))
-            imgInfo.text = "사진 + 문구를 사진문자(MMS)로 보냅니다 · ${f.length() / 1024}KB"
-        } else {
-            imgPreview.setImageDrawable(null)
-            imgInfo.text = "사진 없음 – 글자만 보냅니다 (사진 교체를 눌러 등록)"
+        imgRow.removeAllViews()
+        val files = Prefs.imageFiles(this)
+        val dp = resources.displayMetrics.density
+        files.forEachIndexed { i, f ->
+            val opts = BitmapFactory.Options().apply { inSampleSize = 4 }
+            val iv = ImageView(this).apply {
+                setImageBitmap(BitmapFactory.decodeFile(f.absolutePath, opts))
+                scaleType = ImageView.ScaleType.FIT_CENTER
+                adjustViewBounds = true
+                setBackgroundColor(0xFFEEF1F5.toInt())
+                layoutParams = LinearLayout.LayoutParams(LinearLayout.LayoutParams.WRAP_CONTENT, (170 * dp).toInt())
+                    .apply { marginEnd = (8 * dp).toInt() }
+                setOnClickListener {
+                    AlertDialog.Builder(this@MainActivity)
+                        .setMessage("${i + 1}번째 사진을 뺄까요?")
+                        .setPositiveButton("빼기") { _, _ -> Prefs.removeImage(this@MainActivity, i); refreshImage() }
+                        .setNegativeButton("취소", null)
+                        .show()
+                }
+            }
+            imgRow.addView(iv)
+        }
+        val totalKb = files.sumOf { it.length() } / 1024
+        imgInfo.text = when {
+            files.isEmpty() -> "사진 없음 – 글자만 보냅니다 ('사진 추가' 또는 '기본 사진')"
+            totalKb > 900 -> "⚠️ ${files.size}장 · 총 ${totalKb}KB – 용량이 커서 통신사에 따라 실패할 수 있어요"
+            else -> "사진 ${files.size}장 + 문구를 사진문자로 보냅니다 · 총 ${totalKb}KB (사진을 누르면 삭제)"
         }
     }
 
