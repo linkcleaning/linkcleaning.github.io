@@ -1,0 +1,46 @@
+name: Build 링크클린 자동콜백 APK
+
+on:
+  push:
+    branches: [ main ]
+    paths:
+      - 'android/callback-app/**'
+      - '.github/workflows/callback-apk.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: android/callback-app
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 17
+
+      - uses: android-actions/setup-android@v3
+
+      - name: Build release APK
+        env:
+          VERSION_CODE: ${{ github.run_number }}
+        run: |
+          chmod +x gradlew
+          ./gradlew --no-daemon :app:assembleRelease
+          cp app/build/outputs/apk/release/app-release.apk ../../linkclean-callback.apk
+
+      - name: Publish release (callback-apk)
+        working-directory: .
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release delete callback-apk -y --cleanup-tag || true
+          gh release create callback-apk linkclean-callback.apk \
+            --title "링크클린 자동콜백 앱 v1.0.${{ github.run_number }}" \
+            --notes "휴대폰에서 linkclean-callback.apk 를 눌러 다운로드 → 설치하세요."

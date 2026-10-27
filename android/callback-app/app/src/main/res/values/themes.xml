@@ -1,0 +1,30 @@
+<resources>
+    <style name="Theme.LinkCallback" parent="Theme.Material3.Light.NoActionBar">
+        <item name="colorPrimary">@color/brand</item>
+        <item name="colorOnPrimary">#FFFFFF</item>
+        <item name="android:statusBarColor">@color/brand_dark</item>
+        <item name="android:windowBackground">@color/bg</item>
+    </style>
+    <style name="Card">
+        <item name="android:layout_width">match_parent</item>
+        <item name="android:layout_height">wrap_content</item>
+        <item name="android:orientation">vertical</item>
+        <item name="android:background">@drawable/card_bg</item>
+        <item name="android:padding">16dp</item>
+        <item name="android:layout_marginBottom">12dp</item>
+    </style>
+    <style name="CardTitle">
+        <item name="android:layout_width">match_parent</item>
+        <item name="android:layout_height">wrap_content</item>
+        <item name="android:textSize">16sp</item>
+        <item name="android:textStyle">bold</item>
+        <item name="android:textColor">@color/text_main</item>
+        <item name="android:layout_marginBottom">8dp</item>
+    </style>
+    <style name="Hint">
+        <item name="android:layout_width">match_parent</item>
+        <item name="android:layout_height">wrap_content</item>
+        <item name="android:textSize">13sp</item>
+        <item name="android:textColor">@color/text_sub</item>
+    </style>
+</resources>
