@@ -249,7 +249,11 @@ class MainActivity : AppCompatActivity() {
         val frame = FrameLayout(this)
         for (i in 0..3) {
             val sv = ScrollView(this).apply { isFillViewport = true; visibility = View.GONE }
-            val body = ui.col().apply { setPadding(ui.dp(16), ui.dp(16), ui.dp(16), ui.dp(24)) }
+            val body = ui.col().apply {
+                setPadding(ui.dp(16), ui.dp(16), ui.dp(16), ui.dp(24))
+                isClickable = true; isFocusableInTouchMode = true
+                setOnClickListener { hideKeyboard() } // 빈 곳을 누르면 키보드 내림
+            }
             sv.addView(body)
             frame.addView(sv, FrameLayout.LayoutParams(ui.MATCH, ui.MATCH))
             pages[i] = sv; bodies[i] = body
@@ -299,6 +303,7 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun selectTab(i: Int) {
+        if (::toastView.isInitialized) hideKeyboard()
         tab = i
         pages.forEachIndexed { idx, p -> p?.visibility = if (idx == i) View.VISIBLE else View.GONE }
         navIcons.forEachIndexed { idx, v -> v.alpha = if (idx == i) 1f else 0.45f }
@@ -381,7 +386,11 @@ class MainActivity : AppCompatActivity() {
         // ① 고객 전화번호
         val pc = ui.card()
         pc.addView(h2("① 고객 전화번호"), ui.lp(bottom = 8))
-        phoneEdit = ui.input("010-0000-0000", big = true, type = InputType.TYPE_CLASS_PHONE).apply { letterSpacing = 0.04f }
+        phoneEdit = ui.input("010-0000-0000", big = true, type = InputType.TYPE_CLASS_PHONE).apply {
+            letterSpacing = 0.04f
+            imeOptions = android.view.inputmethod.EditorInfo.IME_ACTION_DONE
+            setOnEditorActionListener { _, _, _ -> hideKeyboard(); true }
+        }
         pc.addView(phoneEdit, ui.lp())
         phoneWarn = ui.text("", 14f, Col.RED, true).apply {
             visibility = View.GONE; setPadding(ui.dp(12), ui.dp(8), ui.dp(12), ui.dp(8))
@@ -731,7 +740,16 @@ class MainActivity : AppCompatActivity() {
     }
 
     // ---------- 직접 보내기 ----------
+    /** 키보드 내리기 + 입력칸 선택 해제 */
+    private fun hideKeyboard() {
+        val v = currentFocus ?: window.decorView
+        getSystemService(android.view.inputmethod.InputMethodManager::class.java)
+            ?.hideSoftInputFromWindow(v.windowToken, 0)
+        currentFocus?.clearFocus()
+    }
+
     private fun sendManual(withImages: Boolean) {
+        hideKeyboard()
         val num = PhoneUtil.normalize(phoneEdit.text.toString())
         if (num.length < 9) { toast("① 고객 전화번호를 입력해 주세요", "err"); phoneEdit.requestFocus(); return }
         if (!has(Manifest.permission.SEND_SMS)) { permLauncher.launch(requiredPerms); return }
@@ -757,6 +775,7 @@ class MainActivity : AppCompatActivity() {
                 MmsSender.send(this, num, id, text, t.title, useImg)
                 toast("✅ 보냈어요 · 결과는 발송내역에서 확인", "ok")
                 phoneEdit.setText("")
+                hideKeyboard()
                 renderRecent()
             }
             .setNegativeButton("취소", null)
