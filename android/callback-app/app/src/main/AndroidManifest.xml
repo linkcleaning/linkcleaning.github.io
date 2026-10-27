@@ -14,6 +14,11 @@
     <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
     <uses-permission android:name="android.permission.REQUEST_IGNORE_BATTERY_OPTIMIZATIONS" />
 
+    <!-- 앱 안에서 업데이트 (새 버전 확인·다운로드·설치) -->
+    <uses-permission android:name="android.permission.INTERNET" />
+    <uses-permission android:name="android.permission.REQUEST_INSTALL_PACKAGES" />
+    <uses-permission android:name="android.permission.UPDATE_PACKAGES_WITHOUT_USER_ACTION" />
+
     <uses-feature android:name="android.hardware.telephony" android:required="false" />
 
     <application
@@ -60,6 +65,10 @@
                 <action android:name="android.intent.action.MY_PACKAGE_REPLACED" />
             </intent-filter>
         </receiver>
+
+        <receiver
+            android:name=".InstallReceiver"
+            android:exported="false" />
 
         <!-- 발송 결과(성공/실패) 수신 -->
         <receiver

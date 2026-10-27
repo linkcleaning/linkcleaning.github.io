@@ -43,12 +43,27 @@ jobs:
           pip install -q "qrcode[pil]"
           python -c "import qrcode; qrcode.make('https://linkcleaning.github.io/callback-app/', box_size=12, border=2).save('qr.png')"
 
+      - name: Make version.json (앱 안 업데이트 확인용)
+        working-directory: .
+        env:
+          RUN: ${{ github.run_number }}
+          MSG: ${{ github.event.head_commit.message }}
+        run: |
+          python - <<'PY'
+          import json, os
+          msg = (os.environ.get("MSG") or "").splitlines()[0] if os.environ.get("MSG") else ""
+          if ":" in msg: msg = msg.split(":", 1)[1].strip()
+          json.dump({"versionCode": int(os.environ["RUN"]), "versionName": "1.0." + os.environ["RUN"], "notes": msg},
+                    open("version.json", "w"), ensure_ascii=False)
+          PY
+          cat version.json
+
       - name: Publish release (callback-apk)
         working-directory: .
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
           gh release delete callback-apk -y --cleanup-tag || true
-          gh release create callback-apk linkclean-callback.apk qr.png \
+          gh release create callback-apk linkclean-callback.apk qr.png version.json \
             --title "링크클린 자동콜백 앱 v1.0.${{ github.run_number }}" \
             --notes "휴대폰에서 linkclean-callback.apk 를 눌러 다운로드 → 설치하세요."

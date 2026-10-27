@@ -96,6 +96,9 @@ class MainActivity : AppCompatActivity() {
     private var histFilter = "전체"
     private val thumbs = HashMap<String, Bitmap>()
     private var pendingEnable = false
+    private var pendingUpdate = false
+    private lateinit var updateCard: LinearLayout
+    private lateinit var updateText: TextView
 
     private val prefListener = SharedPreferences.OnSharedPreferenceChangeListener { _, key ->
         if (key == Prefs.KEY_HISTORY || key == Prefs.KEY_ENABLED) runOnUiThread {
@@ -147,6 +150,69 @@ class MainActivity : AppCompatActivity() {
         if (Prefs.enabled(this) && missingCorePerms().isEmpty()) CallMonitorService.start(this)
         renderAuto(); renderRecent()
         if (tab == 3) renderSettings()
+        if (pendingUpdate && canInstall()) { pendingUpdate = false; startUpdate() }
+        else if (System.currentTimeMillis() - Updater.lastCheck > 30 * 60_000L) checkUpdate(silent = true)
+        else showUpdateBanner()
+    }
+
+    // =====================================================================
+    // 🆕 앱 안에서 업데이트
+    // =====================================================================
+    private fun canInstall() = packageManager.canRequestPackageInstalls()
+
+    private fun showUpdateBanner() {
+        if (!::updateCard.isInitialized) return
+        val i = Updater.latest
+        if (Updater.isNewer(i)) {
+            updateText.text = "🆕 새 버전 ${i!!.name}이(가) 나왔어요" + if (i.notes.isNotBlank()) "\n· ${i.notes}" else ""
+            updateCard.visibility = View.VISIBLE
+        } else updateCard.visibility = View.GONE
+    }
+
+    private fun checkUpdate(silent: Boolean) {
+        if (!silent) toast("🔎 새 버전 확인 중…")
+        Thread {
+            val i = Updater.fetch()
+            runOnUiThread {
+                showUpdateBanner()
+                if (tab == 3) renderSettings()
+                if (!silent) when {
+                    i == null -> toast("인터넷 연결을 확인해 주세요", "err")
+                    Updater.isNewer(i) -> startUpdate()
+                    else -> toast("✅ 최신 버전이에요 (${BuildConfig.VERSION_NAME})", "ok")
+                }
+            }
+        }.start()
+    }
+
+    private fun startUpdate() {
+        if (!canInstall()) {
+            AlertDialog.Builder(this)
+                .setTitle("처음 한 번만 허용해 주세요")
+                .setMessage("다음 화면에서 '이 출처 허용'을 켜고 뒤로가기를 누르세요.\n\n한 번만 켜 두면 앞으로는 앱 안에서 버튼만 눌러 업데이트할 수 있어요.")
+                .setPositiveButton("허용하러 가기") { _, _ ->
+                    pendingUpdate = true
+                    startActivity(Intent(Settings.ACTION_MANAGE_UNKNOWN_APP_SOURCES, Uri.parse("package:$packageName")))
+                }
+                .setNegativeButton("나중에", null).show()
+            return
+        }
+        val msg = ui.text("새 버전을 받는 중… 0%", 16f, Col.S700, true).apply { setPadding(ui.dp(24), ui.dp(20), ui.dp(24), ui.dp(8)) }
+        val dlg = AlertDialog.Builder(this).setTitle("⬇️ 업데이트").setView(msg).setCancelable(false).show()
+        Thread {
+            try {
+                val apk = Updater.download(this) { p -> runOnUiThread { msg.text = "새 버전을 받는 중… $p%" } }
+                runOnUiThread { msg.text = "설치 준비 중…\n'업데이트' 창이 뜨면 [업데이트]를 눌러 주세요" }
+                Updater.install(this, apk)
+                Thread.sleep(1500)
+                runOnUiThread { try { dlg.dismiss() } catch (_: Exception) { } }
+            } catch (e: Exception) {
+                runOnUiThread {
+                    try { dlg.dismiss() } catch (_: Exception) { }
+                    toast("업데이트 실패: 인터넷 연결을 확인해 주세요", "err")
+                }
+            }
+        }.start()
     }
 
     override fun onPause() {
@@ -281,6 +347,13 @@ class MainActivity : AppCompatActivity() {
     // =====================================================================
     private fun buildSendTab() {
         val b = bodies[0]!!
+
+        // 🆕 새 버전 알림
+        updateCard = ui.card(Col.GREEN, 2f, Col.GREEN50).apply { visibility = View.GONE }
+        updateText = ui.text("", 15f, Col.GREEN700, true)
+        updateCard.addView(updateText)
+        updateCard.addView(ui.button("⬇️ 지금 업데이트 (1분)", Col.GREEN, Col.WHITE, 52, 17f) { startUpdate() }, ui.lp(top = 10))
+        b.addView(updateCard)
 
         // 권한 경고
         warnBox = ui.card(Col.AMBER300, 2f, Col.AMBER50).apply { visibility = View.GONE }
@@ -1132,6 +1205,15 @@ class MainActivity : AppCompatActivity() {
         pw.addView(ui.button("배터리 최적화 예외 등록", Col.WHITE, Col.B700, 48, 15f, Col.B200, 12f) { requestBatteryExemption() }, ui.lp(bottom = 8))
         pw.addView(ui.button("앱 정보 열기 (권한 · 제한된 설정)", Col.WHITE, Col.B700, 48, 15f, Col.B200, 12f) { openAppSettings() })
         b.addView(pw)
+
+        // 🆕 앱 업데이트
+        val uc = ui.card(if (Updater.isNewer(Updater.latest)) Col.GREEN else Col.S200, if (Updater.isNewer(Updater.latest)) 2f else 1f)
+        uc.addView(h2("🆕 앱 업데이트", 16f, Col.S800))
+        uc.addView(ui.text("지금 버전: ${BuildConfig.VERSION_NAME}" + (Updater.latest?.let { if (Updater.isNewer(it)) "  →  새 버전 ${it.name} 있음!" else "  (최신)" } ?: ""), 14f, Col.S600), ui.lp(top = 4, bottom = 10))
+        uc.addView(ui.button(if (Updater.isNewer(Updater.latest)) "⬇️ 지금 업데이트" else "🔎 새 버전 확인", if (Updater.isNewer(Updater.latest)) Col.GREEN else Col.B600, Col.WHITE, 52, 16f) {
+            if (Updater.isNewer(Updater.latest)) startUpdate() else checkUpdate(silent = false)
+        })
+        b.addView(uc)
 
         // 📤 공유
         val shc = ui.card()
