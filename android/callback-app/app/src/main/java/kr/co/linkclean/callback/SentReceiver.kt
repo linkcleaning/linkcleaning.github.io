@@ -18,7 +18,9 @@ class SentReceiver : BroadcastReceiver() {
                     Prefs.updateStatus(context, id, "성공(사진문자)")
                 } else {
                     Prefs.updateStatus(context, id, "사진문자 실패($resultCode)→문자 재시도")
-                    MmsSender.sendSms(context, num, id)
+                    val text = intent.getStringExtra(MmsSender.EXTRA_TEXT) ?: ""
+                    if (text.isNotEmpty()) MmsSender.sendSms(context, num, id, text)
+                    else Prefs.updateStatus(context, id, "실패(사진문자 $resultCode)")
                 }
             }
             MmsSender.ACTION_SMS_SENT -> {

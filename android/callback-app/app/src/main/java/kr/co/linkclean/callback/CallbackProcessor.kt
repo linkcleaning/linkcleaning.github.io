@@ -98,6 +98,14 @@ object CallbackProcessor {
         }
     }
 
+    fun periodLabel(h: Int): String = when {
+        h <= 0 -> "매번"
+        h % 720 == 0 -> "${h / 720}개월"
+        h % 168 == 0 -> "${h / 168}주"
+        h % 24 == 0 -> "${h / 24}일"
+        else -> "${h}시간"
+    }
+
     private fun evaluate(c: Context, e: Entry) {
         val kind = when (e.type) {
             CallLog.Calls.INCOMING_TYPE -> if (e.duration > 0) KIND_IN else KIND_MISSED
@@ -114,19 +122,26 @@ object CallbackProcessor {
             num.length < 7 -> "발신번호 표시제한"
             Prefs.mobileOnly(c) && !PhoneUtil.isMobile(num) -> "휴대폰 번호 아님"
             num in Prefs.blacklist(c) -> "제외 번호"
-            now - Prefs.lastSent(c, num) < hours * 3600_000L -> "${hours}시간 내 이미 발송"
+            hours > 0 && now - Prefs.lastSent(c, num) < hours * 3600_000L -> "${periodLabel(hours)} 내 이미 발송"
             Prefs.todayAttempts(c) >= Prefs.dailyLimit(c) -> "하루 한도 초과"
             else -> null
         }
 
+        // 수신 / 부재중 별로 지정된 문자 사용 (빈칸 {..}이 있는 문자는 자동 발송 불가)
+        val tplId = if (kind == KIND_IN) Prefs.autoInId(c) else Prefs.autoMissId(c)
+        val tpl = Templates.find(c, tplId)?.takeIf { !it.hasTokens }
+            ?: Templates.load(c).firstOrNull { !it.hasTokens && it.type == kind }
+            ?: Templates.load(c).firstOrNull { !it.hasTokens }
+            ?: return
+
         val id = Prefs.newId()
         if (reason != null) {
-            Prefs.addHistory(c, SendRecord(id, now, num.ifEmpty { "알 수 없음" }, kind, "제외: $reason"))
+            Prefs.addHistory(c, SendRecord(id, now, num.ifEmpty { "알 수 없음" }, kind, "제외: $reason", tpl.name, true))
             return
         }
         Prefs.markSent(c, num, now) // 발송 전에 먼저 기록 → 동시에 두 번 나가는 것 방지
-        Prefs.addHistory(c, SendRecord(id, now, num, kind, "발송중"))
-        MmsSender.send(c, num, id)
+        Prefs.addHistory(c, SendRecord(id, now, num, kind, "발송중", tpl.name, true))
+        MmsSender.send(c, num, id, Compose.build(c, tpl), tpl.title, tpl.useImages)
         CallMonitorService.refreshNotification(c)
     }
 }

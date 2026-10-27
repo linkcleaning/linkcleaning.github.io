@@ -13,11 +13,14 @@ data class SendRecord(
     val id: Long,
     val time: Long,
     val number: String,
-    val kind: String,   // 수신 / 부재중 / 테스트
-    val status: String  // 발송중 / 성공(MMS) / 성공(문자) / 실패 / 제외: 사유
+    val kind: String,   // 수신 / 발신 / 부재중 / 기타 / 테스트
+    val status: String, // 발송중 / 성공(사진문자) / 성공(문자) / 실패 / 제외: 사유
+    val tpl: String = "",      // 사용한 문자 이름
+    val auto: Boolean = false  // 자동 발송 여부
 ) {
     val isAttempt: Boolean get() = !status.startsWith("제외")
     val isSuccess: Boolean get() = status.startsWith("성공")
+    val isFail: Boolean get() = status.startsWith("실패")
 }
 
 /** SharedPreferences 기반 설정 · 쿨타임 · 발송 이력 저장소 */
@@ -91,7 +94,7 @@ https://www.instagram.com/linkcleaning
     const val DEFAULT_SUBJECT = ""  // 제목 없음
     const val MAX_IMAGES = 3
     private const val KEY_SEED_VER = "seed_ver"
-    private const val SEED_VER = 3
+    private const val SEED_VER = 4
 
     const val KEY_ENABLED = "enabled"
     const val KEY_MESSAGE = "message"
@@ -105,6 +108,26 @@ https://www.instagram.com/linkcleaning
     const val KEY_HISTORY = "history"
     const val KEY_PROCESSED = "processed_calls"
     const val KEY_IMAGE_VER = "image_ver"
+    const val KEY_SELECTED = "selected_tpl"
+    const val KEY_AUTO_IN = "auto_in_tpl"
+    const val KEY_AUTO_MISS = "auto_miss_tpl"
+    const val KEY_FIELDS = "fields"
+    const val KEY_TITLE_ON = "title_on"
+    const val KEY_SIGN_PHONE = "sign_phone"
+    const val KEY_SIGN_KAKAO = "sign_kakao"
+    const val KEY_SIGN_HOME = "sign_home"
+    const val KEY_SIGN_MAG = "sign_mag"
+    const val KEY_USE_PHONE = "sign_use_phone"
+    const val KEY_USE_KAKAO = "sign_use_kakao"
+    const val KEY_USE_HOME = "sign_use_home"
+    const val KEY_USE_MAG = "sign_use_mag"
+
+    /** 백업에 포함할 설정 키 */
+    val BACKUP_KEYS = listOf(
+        KEY_BLACKLIST, KEY_SEND_INCOMING, KEY_SEND_MISSED, KEY_MOBILE_ONLY, KEY_COOLDOWN_H, KEY_DAILY_LIMIT,
+        KEY_SELECTED, KEY_AUTO_IN, KEY_AUTO_MISS, KEY_TITLE_ON, KEY_SIGN_PHONE, KEY_SIGN_KAKAO, KEY_SIGN_HOME,
+        KEY_SIGN_MAG, KEY_USE_PHONE, KEY_USE_KAKAO, KEY_USE_HOME, KEY_USE_MAG, "templates"
+    )
     private const val SENT_PREFIX = "sent_"
 
     private val idGen = AtomicLong(System.currentTimeMillis())
@@ -119,8 +142,7 @@ https://www.instagram.com/linkcleaning
     fun message(c: Context): String = sp(c).getString(KEY_MESSAGE, DEFAULT_MESSAGE) ?: DEFAULT_MESSAGE
     fun subject(c: Context): String = sp(c).getString(KEY_SUBJECT, DEFAULT_SUBJECT) ?: ""
     fun blacklistRaw(c: Context): String = sp(c).getString(KEY_BLACKLIST, "") ?: ""
-    fun blacklist(c: Context): Set<String> =
-        blacklistRaw(c).lines().map { PhoneUtil.normalize(it) }.filter { it.length >= 7 }.toSet()
+    fun blacklist(c: Context): Set<String> = excludes(c).map { it.first }.toSet()
 
     fun sendIncoming(c: Context) = sp(c).getBoolean(KEY_SEND_INCOMING, true)
     fun sendMissed(c: Context) = sp(c).getBoolean(KEY_SEND_MISSED, true)
@@ -165,8 +187,46 @@ https://www.instagram.com/linkcleaning
         val saved = sp.getString(KEY_MESSAGE, null)
         if (saved == OLD_DEFAULT_MESSAGE || saved == OLD_DEFAULT_MESSAGE_V2) e.remove(KEY_MESSAGE)
         if (sp.getString(KEY_SUBJECT, null) == "링크클린") e.remove(KEY_SUBJECT)
-        e.putInt(KEY_SEED_VER, SEED_VER).commit()
+        e.commit()
+        // v4: 문자 템플릿 6종 도입 – 직접 고친 문구가 있으면 '수신 감사'에 옮겨 담기
+        if (sp.getString(Templates.KEY, null) == null) {
+            val custom = sp.getString(KEY_MESSAGE, null)
+            val list = Templates.defaults().toMutableList()
+            if (!custom.isNullOrBlank() && custom != DEFAULT_MESSAGE) {
+                list[0] = list[0].copy(body = custom, title = sp.getString(KEY_SUBJECT, "") ?: "")
+            }
+            Templates.save(c, list)
+        }
+        sp.edit().putInt(KEY_SEED_VER, SEED_VER).commit()
     }
+
+    // ---------- 자동 콜백 문자 / 서명 ----------
+    fun autoInId(c: Context): String = sp(c).getString(KEY_AUTO_IN, "t_in") ?: "t_in"
+    fun autoMissId(c: Context): String = sp(c).getString(KEY_AUTO_MISS, "t_miss") ?: "t_miss"
+    fun selectedId(c: Context): String = sp(c).getString(KEY_SELECTED, "t_in") ?: "t_in"
+    fun titleOn(c: Context) = sp(c).getBoolean(KEY_TITLE_ON, false)
+    fun signPhone(c: Context) = sp(c).getString(KEY_SIGN_PHONE, "064-763-4545") ?: ""
+    fun signKakao(c: Context) = sp(c).getString(KEY_SIGN_KAKAO, "https://pf.kakao.com/_xfxdrxmM") ?: ""
+    fun signHome(c: Context) = sp(c).getString(KEY_SIGN_HOME, "www.linkclean.co.kr") ?: ""
+    fun signMag(c: Context) = sp(c).getString(KEY_SIGN_MAG, "") ?: ""
+    fun signUsePhone(c: Context) = sp(c).getBoolean(KEY_USE_PHONE, true)
+    fun signUseKakao(c: Context) = sp(c).getBoolean(KEY_USE_KAKAO, true)
+    fun signUseHome(c: Context) = sp(c).getBoolean(KEY_USE_HOME, true)
+    fun signUseMag(c: Context) = sp(c).getBoolean(KEY_USE_MAG, false)
+
+    /** 발송제외 번호 목록 (번호, 메모) – 한 줄에 "번호 메모" */
+    fun excludes(c: Context): List<Pair<String, String>> = blacklistRaw(c).lines().mapNotNull { line ->
+        val t = line.trim()
+        val idx = t.indexOfFirst { !(it.isDigit() || it in "-+. ()") }
+        val num = PhoneUtil.normalize(if (idx < 0) t else t.substring(0, idx))
+        if (num.length < 7) null else num to (if (idx < 0) "" else t.substring(idx).trim())
+    }
+
+    fun setExcludes(c: Context, list: List<Pair<String, String>>) {
+        sp(c).edit().putString(KEY_BLACKLIST, list.joinToString("\n") { (n, m) -> if (m.isBlank()) n else "$n $m" }).apply()
+    }
+
+    fun excludeMemo(c: Context, num: String): String? = excludes(c).firstOrNull { it.first == num }?.second
 
     // ---------- 24시간 쿨타임 ----------
     fun lastSent(c: Context, num: String) = sp(c).getLong(SENT_PREFIX + num, 0L)
@@ -200,7 +260,7 @@ https://www.instagram.com/linkcleaning
         val arr = JSONArray(sp(c).getString(KEY_HISTORY, "[]"))
         return List(arr.length()) {
             val o = arr.getJSONObject(it)
-            SendRecord(o.getLong("id"), o.getLong("t"), o.getString("n"), o.getString("k"), o.getString("s"))
+            SendRecord(o.getLong("id"), o.getLong("t"), o.getString("n"), o.getString("k"), o.getString("s"), o.optString("tpl"), o.optBoolean("a"))
         }
     }
 
@@ -208,7 +268,7 @@ https://www.instagram.com/linkcleaning
     fun addHistory(c: Context, r: SendRecord) {
         val list = history(c).toMutableList()
         list.add(0, r)
-        saveHistory(c, list.take(150))
+        saveHistory(c, list.take(300))
     }
 
     @Synchronized
@@ -222,7 +282,7 @@ https://www.instagram.com/linkcleaning
     private fun saveHistory(c: Context, list: List<SendRecord>) {
         val arr = JSONArray()
         list.forEach {
-            arr.put(JSONObject().put("id", it.id).put("t", it.time).put("n", it.number).put("k", it.kind).put("s", it.status))
+            arr.put(JSONObject().put("id", it.id).put("t", it.time).put("n", it.number).put("k", it.kind).put("s", it.status).put("tpl", it.tpl).put("a", it.auto))
         }
         sp(c).edit().putString(KEY_HISTORY, arr.toString()).commit()
     }

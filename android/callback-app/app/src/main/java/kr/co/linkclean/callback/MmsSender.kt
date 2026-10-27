@@ -25,12 +25,22 @@ object MmsSender {
         if (Build.VERSION.SDK_INT >= 31) c.getSystemService(SmsManager::class.java)
         else @Suppress("DEPRECATION") SmsManager.getDefault()
 
-    fun send(c: Context, number: String, recordId: Long) {
-        val app = c.applicationContext
-        try {
-            val images = Prefs.imageFiles(app).map { it.readBytes() }
-            val pdu = MmsPdu.build(number, Prefs.subject(app), Prefs.message(app), images)
+    const val EXTRA_TEXT = "text"
 
+    /**
+     * 문자 보내기.
+     * - 사진 있음 → 사진문자(MMS)
+     * - 사진 없고 90바이트 이하 → 단문(SMS)
+     * - 사진 없고 90바이트 초과 → 장문(LMS, 사진 없는 MMS)
+     */
+    fun send(c: Context, number: String, recordId: Long, text: String, subject: String, withImages: Boolean) {
+        val app = c.applicationContext
+        val images = if (withImages) Prefs.imageFiles(app).map { it.readBytes() } else emptyList()
+        if (images.isEmpty() && Compose.byteLen(text) <= 90) {
+            sendSms(app, number, recordId, text); return
+        }
+        try {
+            val pdu = MmsPdu.build(number, subject, text, images)
             val dir = File(app.cacheDir, "mms").apply { mkdirs() }
             val f = File(dir, "send_$recordId.dat")
             f.writeBytes(pdu)
@@ -41,6 +51,7 @@ object MmsSender {
                 putExtra(EXTRA_ID, recordId)
                 putExtra(EXTRA_NUM, number)
                 putExtra(EXTRA_FILE, f.absolutePath)
+                putExtra(EXTRA_TEXT, text)
             }
             val pi = PendingIntent.getBroadcast(
                 app, (recordId % Int.MAX_VALUE).toInt(), sent,
@@ -49,17 +60,17 @@ object MmsSender {
             smsManager(app).sendMultimediaMessage(app, uri, null, null, pi)
         } catch (e: Exception) {
             Log.e(TAG, "MMS failed, fallback to SMS", e)
-            Prefs.updateStatus(app, recordId, "MMS 오류→문자 재시도")
-            sendSms(app, number, recordId)
+            Prefs.updateStatus(app, recordId, "사진문자 오류→문자 재시도")
+            sendSms(app, number, recordId, text)
         }
     }
 
     /** 대체 발송: 일반 문자 (긴 문구는 여러 통으로 나뉘어 전송됨) */
-    fun sendSms(c: Context, number: String, recordId: Long) {
+    fun sendSms(c: Context, number: String, recordId: Long, text: String) {
         val app = c.applicationContext
         try {
             val sm = smsManager(app)
-            val parts = sm.divideMessage(Prefs.message(app))
+            val parts = sm.divideMessage(text)
             val sent = Intent(app, SentReceiver::class.java).apply {
                 action = ACTION_SMS_SENT
                 putExtra(EXTRA_ID, recordId)
