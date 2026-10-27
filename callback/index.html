@@ -86,6 +86,7 @@
         <h2 class="text-[15px] font-bold text-slate-600">💬 보낼 문자 <span class="text-[12px] font-medium text-slate-400">(이번만 수정 가능)</span></h2>
         <button id="btnRestore" class="hidden rounded-lg bg-slate-100 px-2 py-1 text-[12px] font-bold text-slate-500">↩ 원래대로</button>
       </div>
+      <p id="sendImgsLabel" class="mb-1 hidden text-[13px] font-bold text-slate-500">📷 보낼 사진 고르기 <span class="font-medium text-slate-400">(눌러서 바꾸기)</span></p>
       <div id="sendImgs" class="mb-2 flex gap-2"></div>
       <textarea id="draft" rows="9" class="w-full resize-none rounded-2xl border-2 border-slate-200 bg-slate-50 p-4 leading-relaxed text-slate-800 outline-none focus:border-brand-500 focus:bg-white"></textarea>
       <p id="charInfo" class="mt-1 text-right text-[13px] font-semibold text-slate-400"></p>
@@ -182,7 +183,7 @@
         <li>• <b>자동 발송은 안 돼요.</b> 웹앱은 통화 종료를 감지할 수 없어서, 통화 후 앱을 열고 버튼을 눌러 보내는 방식이에요. (대신 아이폰·안드로이드 모두 쓸 수 있어요)</li>
         <li>• <b>번호 복사:</b> 최근 통화 목록에서 번호를 꾹 눌러 복사한 뒤 '📋 붙여넣기'를 누르세요.</li>
         <li>• <b>💬 문자만 보내기:</b> 번호와 글이 바로 채워져 빠르게 전송돼요. 단, 아이폰은 문자에 사진을 붙일 수 없어 <b>글만</b> 나가요.</li>
-        <li>• <b>🖼️ 사진+문자 보내기:</b> 누르면 사진이 복사돼요. 안내 창에서 <b>'💬 문자 앱 열기'</b>를 누른 뒤, 입력창을 꾹 눌러 <b>'붙여넣기'</b>만 하면 사진이 들어가요(번호·글은 자동). 사진 여러 장은 한 장으로 합쳐져 한 번에 들어가요. 카톡으로 넘어가지 않아요.</li>
+        <li>• <b>🖼️ 사진+문자 보내기:</b> 문자 위 사진 중 <b>보낼 사진 한 장을 눌러 고른 뒤</b> 버튼을 누르면 그 사진이 복사돼요. 안내 창에서 <b>'💬 문자 앱 열기'</b> → 입력창을 꾹 눌러 <b>'붙여넣기'</b>만 하면 사진이 들어가요(번호·글은 자동). 보낼 때마다 다른 사진을 골라 보낼 수 있어요. 카톡으로 넘어가지 않아요.</li>
         <li>• 문자 요금은 휴대폰 요금제의 기본 문자(무료 문자)로 나가요.</li>
       </ul>
       <button id="btnResetAll" class="mt-4 h-12 w-full rounded-xl bg-red-50 text-[14px] font-bold text-red-600">⚠️ 전체 초기화</button>
@@ -548,24 +549,21 @@ function renderChips() {
       <span class="text-[12px] ${on ? 'text-brand-100' : 'text-slate-400'}">${esc(t.type)}${tplImgIds(t).length ? ` · 📷${tplImgIds(t).length}${usesCommon(t) ? ' 공통' : ''}` : ''}</span></span></button>`;
   }).join('');
 }
+let pickedImg = 0; // 보낼 사진 번호 (0부터)
 function renderSendImgs() {
   const imgs = tplImgs(curTpl());
+  if (pickedImg >= imgs.length) pickedImg = 0;
+  $('sendImgsLabel').classList.toggle('hidden', imgs.length < 2);
   $('sendImgs').innerHTML = imgs.length
-    ? imgs.map(u => `<img src="${u}" class="h-20 w-20 rounded-xl object-cover ring-1 ring-slate-200"/>`).join('')
+    ? imgs.map((u, i) => {
+        const on = i === pickedImg;
+        return `<button data-pimg="${i}" class="press relative h-20 w-20 overflow-hidden rounded-xl ring-2 ${on ? 'ring-brand-600' : 'ring-slate-200'}">
+          <img src="${u}" class="h-full w-full object-cover ${on ? '' : 'opacity-60'}"/>
+          ${on ? '<span class="absolute inset-x-0 bottom-0 bg-brand-600 py-0.5 text-center text-[11px] font-bold text-white">보낼 사진</span>' : ''}</button>`;
+      }).join('')
     : `<button data-goto-edit="1" class="flex h-20 w-full items-center justify-center rounded-xl border-2 border-dashed border-slate-300 text-[13px] font-semibold text-slate-400">📷 이 문자에 사진이 없어요 · 눌러서 추가</button>`;
-  prebuildCombined();
 }
-// 사진을 미리 한 장으로 합쳐 둔다 (복사 순간 사파리가 멈추지 않도록)
-let _combined = { key: '', blob: null };
-function combinedKey() { return tplImgIds(curTpl()).join(','); }
-async function currentCombined() {
-  const key = combinedKey();
-  if (_combined.key === key && _combined.blob) return _combined.blob;
-  const blob = await combinePng(tplImgs(curTpl()));
-  _combined = { key, blob };
-  return blob;
-}
-function prebuildCombined() { if (tplImgs(curTpl()).length) currentCombined().catch(() => {}); }
+const pickedImgUrl = () => { const imgs = tplImgs(curTpl()); return imgs[pickedImg] || imgs[0]; };
 function setDraftFromTpl() { $('draft').value = composeFromTpl(curTpl()); draftDirty = false; $('btnRestore').classList.add('hidden'); renderCount(); }
 function renderCount() {
   const m = message(); const bytes = [...m].reduce((a, c) => a + (c.charCodeAt(0) > 127 ? 2 : 1), 0);
@@ -591,7 +589,7 @@ function checkPhone() {
   if (hit) { w.textContent = `⚠️ ${ago(hit.ts)}에 이미 보냈어요 (${hit.tpl})`; w.classList.remove('hidden'); w.classList.add('bg-amber-50', 'text-amber-700'); }
 }
 function pick(id, silent) {
-  S.selectedId = id; save(); renderChips(); renderSendImgs(); renderFields(); setDraftFromTpl();
+  S.selectedId = id; pickedImg = 0; save(); renderChips(); renderSendImgs(); renderFields(); setDraftFromTpl();
   if (!silent) { vib(); const t = curTpl(); toast(`${t.icon} '${t.name}' 문자가 세팅됐어요`); }
 }
 
@@ -636,7 +634,10 @@ $('chips').onclick = e => { const b = e.target.closest('[data-pick]'); if (b) pi
 $('draft').addEventListener('input', () => { draftDirty = true; $('btnRestore').classList.remove('hidden'); renderCount(); });
 $('btnRestore').onclick = () => { setDraftFromTpl(); toast('↩ 원래 문구로 되돌렸어요'); };
 $('recent').onclick = e => { const b = e.target.closest('[data-load]'); if (b) { $('phone').value = b.dataset.load; checkPhone(); toast(`📞 ${b.dataset.load} 불러왔어요`); window.scrollTo({ top: 0, behavior: 'smooth' }); } };
-$('sendImgs').onclick = e => { if (e.target.closest('[data-goto-edit]')) { if (usesCommon(curTpl())) go('msgs'); else openEditor(curTpl().id); } };
+$('sendImgs').onclick = e => {
+  if (e.target.closest('[data-goto-edit]')) { if (usesCommon(curTpl())) go('msgs'); else openEditor(curTpl().id); return; }
+  const b = e.target.closest('[data-pimg]'); if (b) { pickedImg = +b.dataset.pimg; vib(); renderSendImgs(); }
+};
 
 $('btnSms').onclick = () => { if (!guard()) return; vib(); record('문자'); location.href = smsHref(); };
 
@@ -648,11 +649,11 @@ $('btnShareAll').onclick = async () => {
   if (!navigator.clipboard || !window.ClipboardItem) { toast('이 브라우저는 사진 복사를 지원하지 않아요', 'err'); return; }
   vib();
   try {
-    // iOS: Promise를 그대로 넘겨야 터치 동작으로 인정됨. 미리 합쳐 둬서 거의 즉시 완료됨
-    const item = new ClipboardItem({ 'image/png': currentCombined() });
+    // 고른 사진 1장만 복사 (한 장이면 100% 확실하게 들어감). iOS는 Promise를 그대로 넘겨야 함
+    const item = new ClipboardItem({ 'image/png': toPng(pickedImgUrl()) });
     await navigator.clipboard.write([item]);
     record('사진+문자');
-    $('pasteMore').classList.toggle('hidden', imgs.length < 2);
+    $('pasteMore').classList.add('hidden');
     $('pasteSheet').classList.remove('hidden');
     toast('📋 사진 복사 완료! 아래 버튼을 누르세요', 'ok');
     // 여기서 문자 앱을 바로 열면 사파리가 숨겨져 복사가 취소됨 → 사용자가 '문자 앱 열기'를 누르게 함
