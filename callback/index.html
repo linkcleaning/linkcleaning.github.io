@@ -1,0 +1,739 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, maximum-scale=1, user-scalable=no" />
+<title>링크클린 콜백문자</title>
+<meta name="description" content="통화 후 원클릭 감사·홍보 문자 발송 — 링크클린 · 클린앤스카이" />
+<meta name="theme-color" content="#0369a1" />
+<meta name="apple-mobile-web-app-capable" content="yes" />
+<meta name="mobile-web-app-capable" content="yes" />
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+<meta name="apple-mobile-web-app-title" content="콜백문자" />
+<meta name="format-detection" content="telephone=no" />
+<link rel="manifest" href="manifest.webmanifest" />
+<link rel="apple-touch-icon" href="apple-touch-icon.png" />
+<link rel="icon" type="image/png" href="favicon-32.png" />
+<script src="https://cdn.tailwindcss.com"></script>
+<script>
+  tailwind.config = { theme: { extend: {
+    fontFamily: { sans: ['Pretendard', '-apple-system', 'BlinkMacSystemFont', 'Apple SD Gothic Neo', 'sans-serif'] },
+    colors: { brand: { 50:'#f0f9ff',100:'#e0f2fe',200:'#bae6fd',300:'#7dd3fc',400:'#38bdf8',500:'#0ea5e9',600:'#0284c7',700:'#0369a1',800:'#075985',900:'#0c4a6e' } }
+  } } };
+</script>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css" />
+<style>
+  html, body { -webkit-tap-highlight-color: transparent; overscroll-behavior-y: none; }
+  body { padding-top: env(safe-area-inset-top); }
+  .safe-b { padding-bottom: calc(env(safe-area-inset-bottom) + 6px); }
+  .press { transition: transform .12s ease; } .press:active { transform: scale(.97); }
+  .chip-on { background:#0369a1; color:#fff; border-color:#0369a1; box-shadow:0 6px 16px -6px rgba(3,105,161,.6); }
+  #toast { transition: transform .35s cubic-bezier(.2,.9,.3,1.2), opacity .3s; }
+  .t-hide { transform: translate(-50%,-150%); opacity:0; } .t-show { transform: translate(-50%,0); opacity:1; }
+  .no-sb::-webkit-scrollbar { display:none; }
+  textarea, input, select { font-size: 17px !important; }
+  .tab-on { color:#0369a1; } .tab-on .tab-dot { opacity:1; }
+</style>
+</head>
+<body class="bg-slate-100 font-sans text-slate-800 antialiased">
+
+<div id="toast" class="t-hide fixed left-1/2 z-[100] w-[92%] max-w-md rounded-2xl px-5 py-4 text-[16px] font-semibold text-white shadow-2xl" style="top:calc(env(safe-area-inset-top) + 12px);background:#0c4a6e"><span id="toastText"></span></div>
+
+<div class="mx-auto flex min-h-screen max-w-md flex-col bg-slate-50 shadow-xl">
+
+  <header class="sticky top-0 z-30 bg-gradient-to-br from-brand-700 to-brand-500 px-5 pb-4 pt-3 text-white">
+    <p class="text-[13px] font-medium text-brand-100">링크클린 · 클린앤스카이</p>
+    <h1 id="pageTitle" class="text-[22px] font-extrabold tracking-tight">📞 콜백 문자 보내기</h1>
+  </header>
+
+  <!-- ===================== 보내기 ===================== -->
+  <main id="tab-send" class="tab-page flex-1 space-y-4 px-4 pb-[300px] pt-4">
+    <section class="rounded-3xl bg-white p-4 shadow-sm ring-1 ring-slate-200">
+      <label for="phone" class="mb-2 block text-[15px] font-bold text-slate-600">① 고객 전화번호</label>
+      <div class="relative">
+        <input id="phone" type="tel" inputmode="tel" autocomplete="off" placeholder="010-0000-0000"
+          class="h-16 w-full rounded-2xl border-2 border-slate-200 bg-slate-50 px-4 pr-14 text-[26px] font-bold tracking-wider text-slate-900 outline-none placeholder:text-slate-300 focus:border-brand-500 focus:bg-white" />
+        <button id="btnClearX" class="press absolute right-2 top-1/2 hidden h-11 w-11 -translate-y-1/2 items-center justify-center rounded-full bg-slate-200 text-lg font-bold text-slate-600" aria-label="지우기">✕</button>
+      </div>
+      <div id="phoneWarn" class="mt-2 hidden rounded-xl px-3 py-2 text-[14px] font-semibold"></div>
+      <div class="mt-3 grid grid-cols-3 gap-2">
+        <button id="btnPaste" class="press col-span-2 h-14 rounded-2xl bg-brand-50 text-[17px] font-bold text-brand-700 ring-2 ring-brand-200">📋 복사한 번호 붙여넣기</button>
+        <button id="btnClear" class="press h-14 rounded-2xl bg-slate-100 text-[17px] font-bold text-slate-600 ring-1 ring-slate-200">✕ 초기화</button>
+      </div>
+    </section>
+
+    <section class="rounded-3xl bg-white p-4 shadow-sm ring-1 ring-slate-200">
+      <div class="mb-3 flex items-center justify-between">
+        <h2 class="text-[15px] font-bold text-slate-600">② 어떤 문자를 보낼까요?</h2>
+        <button data-goto="msgs" class="text-[13px] font-bold text-brand-600">문자 편집 ›</button>
+      </div>
+      <div id="chips" class="grid grid-cols-2 gap-2"></div>
+    </section>
+
+    <section class="rounded-3xl bg-white p-4 shadow-sm ring-1 ring-slate-200">
+      <div class="mb-2 flex items-center justify-between">
+        <h2 class="text-[15px] font-bold text-slate-600">💬 보낼 문자 <span class="text-[12px] font-medium text-slate-400">(이번만 수정 가능)</span></h2>
+        <button id="btnRestore" class="hidden rounded-lg bg-slate-100 px-2 py-1 text-[12px] font-bold text-slate-500">↩ 원래대로</button>
+      </div>
+      <div id="sendImgs" class="mb-2 flex gap-2"></div>
+      <textarea id="draft" rows="9" class="w-full resize-none rounded-2xl border-2 border-slate-200 bg-slate-50 p-4 leading-relaxed text-slate-800 outline-none focus:border-brand-500 focus:bg-white"></textarea>
+      <p id="charInfo" class="mt-1 text-right text-[13px] font-semibold text-slate-400"></p>
+    </section>
+
+    <section class="rounded-3xl bg-white p-4 shadow-sm ring-1 ring-slate-200">
+      <div class="mb-2 flex items-center justify-between">
+        <h2 class="text-[15px] font-bold text-slate-600">🕘 최근 보낸 번호</h2>
+        <button data-goto="history" class="text-[13px] font-bold text-brand-600">전체 내역 ›</button>
+      </div>
+      <ul id="recent" class="divide-y divide-slate-100"></ul>
+    </section>
+  </main>
+
+  <!-- 보내기 하단 버튼 -->
+  <div id="sendBar" class="fixed left-1/2 z-40 w-full max-w-md -translate-x-1/2 border-t border-slate-200 bg-white/95 px-4 pb-2 pt-3 backdrop-blur" style="bottom:calc(env(safe-area-inset-bottom) + 64px)">
+    <button id="btnSms" class="press mb-2 flex h-16 w-full items-center justify-center gap-2 rounded-2xl bg-brand-600 text-[19px] font-extrabold text-white shadow-lg shadow-brand-600/30">💬 문자 앱으로 바로 보내기 <span class="rounded-full bg-white/25 px-2 py-0.5 text-[12px]">가장 빠름</span></button>
+    <button id="btnImgSms" class="press mb-2 flex h-16 w-full items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-sky-500 to-cyan-500 text-[18px] font-extrabold text-white shadow-lg shadow-sky-500/30">🖼️ 홍보 사진과 함께 보내기</button>
+    <div class="grid grid-cols-2 gap-2">
+      <button id="btnShare" class="press h-12 rounded-xl bg-yellow-300 text-[15px] font-bold text-slate-900">📤 공유 (사진 전부·카톡)</button>
+      <button id="btnCopy" class="press h-12 rounded-xl bg-slate-100 text-[15px] font-bold text-slate-700 ring-1 ring-slate-200">📝 문자 내용만 복사</button>
+    </div>
+  </div>
+
+  <!-- ===================== 문자설정 ===================== -->
+  <main id="tab-msgs" class="tab-page hidden flex-1 space-y-3 px-4 pb-28 pt-4">
+    <p class="rounded-2xl bg-brand-50 p-3 text-[14px] font-medium text-brand-800">상황별 문자를 원하는 만큼 저장해 두세요. 문자마다 <b>제목</b>, <b>사진 3장</b>, 본문을 따로 넣을 수 있어요.</p>
+    <div id="tplList" class="space-y-3"></div>
+    <button id="btnAddTpl" class="press h-14 w-full rounded-2xl border-2 border-dashed border-brand-300 bg-white text-[17px] font-bold text-brand-700">＋ 새 문자 추가</button>
+    <button id="btnResetTpl" class="h-12 w-full text-[14px] font-semibold text-slate-400">↩ 기본 문자로 되돌리기</button>
+  </main>
+
+  <!-- ===================== 발송내역 ===================== -->
+  <main id="tab-history" class="tab-page hidden flex-1 px-4 pb-28 pt-4">
+    <div id="histFilter" class="no-sb mb-3 flex gap-2 overflow-x-auto"></div>
+    <div class="overflow-hidden rounded-3xl bg-white shadow-sm ring-1 ring-slate-200">
+      <div class="grid grid-cols-[1.1fr_1.5fr_0.9fr] border-b border-slate-200 bg-slate-50 px-4 py-2 text-[13px] font-bold text-slate-500"><span>날짜</span><span>번호</span><span class="text-right">구분</span></div>
+      <ul id="histList" class="divide-y divide-slate-100"></ul>
+    </div>
+    <p class="mt-3 text-center text-[13px] text-slate-400">※ 최근 3개월 · 최대 500건 보관 (이 휴대폰에만 저장)</p>
+    <div class="mt-3 grid grid-cols-2 gap-2">
+      <button id="btnCsv" class="press h-12 rounded-xl bg-white text-[14px] font-bold text-slate-600 ring-1 ring-slate-200">📊 엑셀(CSV) 저장</button>
+      <button id="btnClearHist" class="press h-12 rounded-xl bg-white text-[14px] font-bold text-red-500 ring-1 ring-slate-200">🗑️ 내역 지우기</button>
+    </div>
+  </main>
+
+  <!-- ===================== 설정 ===================== -->
+  <main id="tab-settings" class="tab-page hidden flex-1 space-y-4 px-4 pb-28 pt-4">
+    <section class="rounded-3xl bg-white p-4 shadow-sm ring-1 ring-slate-200">
+      <h2 class="mb-1 text-[16px] font-bold">🔁 동일번호 발송주기</h2>
+      <p class="mb-3 text-[13px] text-slate-500">같은 번호에 이 기간 안에 다시 보내려 하면 한 번 더 물어봐요.</p>
+      <div id="periodBox" class="grid grid-cols-5 gap-1.5"></div>
+    </section>
+
+    <section class="rounded-3xl bg-white p-4 shadow-sm ring-1 ring-slate-200">
+      <h2 class="mb-1 text-[16px] font-bold">✍️ 문자 하단 서명 (공통)</h2>
+      <p class="mb-3 text-[13px] text-slate-500">'서명 붙이기'를 켠 문자 끝에 자동으로 들어가요.</p>
+      <div class="space-y-2">
+        <label class="flex items-center gap-3 rounded-2xl bg-slate-50 p-3 ring-1 ring-slate-200"><input id="sUsePhone" type="checkbox" class="h-6 w-6 shrink-0 accent-sky-600"/><div class="flex-1"><p class="text-[13px] font-bold text-slate-500">📞 대표번호</p><input id="sPhone" class="w-full bg-transparent font-semibold outline-none" placeholder="064-763-4545"/></div></label>
+        <label class="flex items-center gap-3 rounded-2xl bg-slate-50 p-3 ring-1 ring-slate-200"><input id="sUseKakao" type="checkbox" class="h-6 w-6 shrink-0 accent-sky-600"/><div class="min-w-0 flex-1"><p class="text-[13px] font-bold text-slate-500">💬 카카오톡 상담</p><input id="sKakao" class="w-full bg-transparent font-semibold outline-none" placeholder="https://pf.kakao.com/..."/></div></label>
+        <label class="flex items-center gap-3 rounded-2xl bg-slate-50 p-3 ring-1 ring-slate-200"><input id="sUseHome" type="checkbox" class="h-6 w-6 shrink-0 accent-sky-600"/><div class="min-w-0 flex-1"><p class="text-[13px] font-bold text-slate-500">🏠 홈페이지</p><input id="sHome" class="w-full bg-transparent font-semibold outline-none" placeholder="www.linkclean.co.kr"/></div></label>
+        <label class="flex items-center gap-3 rounded-2xl bg-slate-50 p-3 ring-1 ring-slate-200"><input id="sUseMag" type="checkbox" class="h-6 w-6 shrink-0 accent-sky-600"/><div class="min-w-0 flex-1"><p class="text-[13px] font-bold text-slate-500">📖 온라인 매거진 / 작업사례</p><input id="sMag" class="w-full bg-transparent font-semibold outline-none" placeholder="링크 주소 붙여넣기"/></div></label>
+        <label class="flex items-center justify-between rounded-2xl bg-slate-50 p-3 ring-1 ring-slate-200"><span class="text-[14px] font-bold text-slate-600">📌 제목을 문자 첫 줄에 [제목]으로 넣기</span><input id="sTitleOn" type="checkbox" class="h-6 w-6 accent-sky-600"/></label>
+      </div>
+    </section>
+
+    <section class="rounded-3xl bg-white p-4 shadow-sm ring-1 ring-slate-200">
+      <h2 class="mb-1 text-[16px] font-bold">🚫 발송제외 번호</h2>
+      <p class="mb-3 text-[13px] text-slate-500">가족·거래처 등 콜백 문자를 보내지 않을 번호예요.</p>
+      <div class="mb-2 flex gap-2">
+        <input id="exPhone" type="tel" inputmode="tel" placeholder="번호" class="h-12 w-[45%] rounded-xl border-2 border-slate-200 bg-slate-50 px-3 font-semibold outline-none focus:border-brand-500"/>
+        <input id="exMemo" placeholder="메모 (예: 거래처)" class="h-12 min-w-0 flex-1 rounded-xl border-2 border-slate-200 bg-slate-50 px-3 outline-none focus:border-brand-500"/>
+        <button id="btnAddEx" class="press h-12 shrink-0 rounded-xl bg-slate-800 px-4 font-bold text-white">추가</button>
+      </div>
+      <ul id="exList" class="divide-y divide-slate-100"></ul>
+    </section>
+
+    <section class="rounded-3xl bg-white p-4 shadow-sm ring-1 ring-slate-200">
+      <h2 class="mb-1 text-[16px] font-bold">💾 백업 · 복원</h2>
+      <p class="mb-3 text-[13px] text-slate-500">휴대폰을 바꾸거나 다른 폰에서 쓸 때 파일로 옮기세요. (사진 포함)</p>
+      <div class="grid grid-cols-2 gap-2">
+        <button id="btnBackup" class="press h-12 rounded-xl bg-brand-600 font-bold text-white">⬇️ 백업 파일 저장</button>
+        <button id="btnRestoreFile" class="press h-12 rounded-xl bg-slate-100 font-bold text-slate-700 ring-1 ring-slate-200">⬆️ 백업 불러오기</button>
+      </div>
+      <input id="restoreInput" type="file" accept="application/json,.json" class="hidden"/>
+    </section>
+
+    <section class="rounded-3xl bg-white p-4 shadow-sm ring-1 ring-slate-200">
+      <h2 class="mb-2 text-[16px] font-bold">❓ 사용 안내</h2>
+      <ul class="space-y-2 text-[14px] leading-relaxed text-slate-600">
+        <li>• <b>자동 발송은 안 돼요.</b> 웹앱은 통화 종료를 감지할 수 없어서, 통화 후 앱을 열고 버튼을 눌러 보내는 방식이에요. (대신 아이폰·안드로이드 모두 쓸 수 있어요)</li>
+        <li>• <b>번호 복사:</b> 최근 통화 목록에서 번호를 꾹 눌러 복사한 뒤 '📋 붙여넣기'를 누르세요.</li>
+        <li>• <b>사진:</b> '사진과 함께 보내기'는 첫 번째 사진을 복사해 둬요. 문자창 입력칸을 꾹 눌러 '붙여넣기'하면 들어가요. 사진 여러 장은 '📤 공유'로 보내세요.</li>
+        <li>• 문자 요금은 휴대폰 요금제의 기본 문자(무료 문자)로 나가요.</li>
+      </ul>
+      <button id="btnResetAll" class="mt-4 h-12 w-full rounded-xl bg-red-50 text-[14px] font-bold text-red-600">⚠️ 전체 초기화</button>
+    </section>
+  </main>
+
+  <!-- 하단 탭바 -->
+  <nav class="fixed bottom-0 left-1/2 z-50 grid w-full max-w-md -translate-x-1/2 grid-cols-4 border-t border-slate-200 bg-white safe-b">
+    <button data-tab="send" class="tabbtn flex h-16 flex-col items-center justify-center gap-0.5 text-slate-400"><span class="text-[22px]">📞</span><span class="text-[12px] font-bold">보내기</span></button>
+    <button data-tab="msgs" class="tabbtn flex h-16 flex-col items-center justify-center gap-0.5 text-slate-400"><span class="text-[22px]">✉️</span><span class="text-[12px] font-bold">문자설정</span></button>
+    <button data-tab="history" class="tabbtn flex h-16 flex-col items-center justify-center gap-0.5 text-slate-400"><span class="text-[22px]">📋</span><span class="text-[12px] font-bold">발송내역</span></button>
+    <button data-tab="settings" class="tabbtn flex h-16 flex-col items-center justify-center gap-0.5 text-slate-400"><span class="text-[22px]">⚙️</span><span class="text-[12px] font-bold">설정</span></button>
+  </nav>
+</div>
+
+<!-- 문자 편집 시트 -->
+<div id="editSheet" class="fixed inset-0 z-[60] hidden">
+  <div class="absolute inset-0 bg-black/50" data-close="editSheet"></div>
+  <div class="absolute bottom-0 left-1/2 flex max-h-[94vh] w-full max-w-md -translate-x-1/2 flex-col rounded-t-3xl bg-white">
+    <div class="flex items-center justify-between border-b border-slate-100 px-5 py-4">
+      <h3 class="text-[19px] font-extrabold">✏️ 문자 편집</h3>
+      <button data-close="editSheet" class="press flex h-11 w-11 items-center justify-center rounded-full bg-slate-100 text-lg font-bold">✕</button>
+    </div>
+    <div class="no-sb flex-1 space-y-4 overflow-y-auto px-5 py-4">
+      <div class="grid grid-cols-[72px_1fr] gap-2">
+        <div><p class="mb-1 text-[13px] font-bold text-slate-500">아이콘</p><input id="eIcon" maxlength="2" class="h-12 w-full rounded-xl border-2 border-slate-200 bg-slate-50 text-center text-2xl outline-none focus:border-brand-500"/></div>
+        <div><p class="mb-1 text-[13px] font-bold text-slate-500">버튼 이름</p><input id="eName" maxlength="14" class="h-12 w-full rounded-xl border-2 border-slate-200 bg-slate-50 px-3 font-semibold outline-none focus:border-brand-500" placeholder="예: 수신 감사"/></div>
+      </div>
+      <div>
+        <p class="mb-1 text-[13px] font-bold text-slate-500">통화 구분</p>
+        <div id="eType" class="grid grid-cols-4 gap-1.5"></div>
+      </div>
+      <div>
+        <p class="mb-1 text-[13px] font-bold text-slate-500">제목 <span class="font-medium text-slate-400">(10자 이하)</span></p>
+        <input id="eTitle" maxlength="10" class="h-12 w-full rounded-xl border-2 border-slate-200 bg-slate-50 px-3 font-semibold outline-none focus:border-brand-500" placeholder="문자 제목을 입력해주세요"/>
+      </div>
+      <div>
+        <p class="mb-1 text-[13px] font-bold text-slate-500">사진 (최대 3장)</p>
+        <div id="eImgs" class="grid grid-cols-3 gap-2"></div>
+        <input id="eFile" type="file" accept="image/*" class="hidden"/>
+      </div>
+      <div>
+        <p class="mb-1 text-[13px] font-bold text-slate-500">본문</p>
+        <textarea id="eBody" rows="11" class="w-full resize-none rounded-2xl border-2 border-slate-200 bg-slate-50 p-3 leading-relaxed outline-none focus:border-brand-500"></textarea>
+      </div>
+      <label class="flex items-center justify-between rounded-2xl bg-slate-50 p-3 ring-1 ring-slate-200"><span class="text-[14px] font-bold text-slate-600">✍️ 하단 서명(전화·카톡·홈페이지) 붙이기</span><input id="eSign" type="checkbox" class="h-6 w-6 accent-sky-600"/></label>
+      <button id="eDelete" class="h-12 w-full rounded-xl bg-red-50 text-[15px] font-bold text-red-600">🗑️ 이 문자 삭제</button>
+    </div>
+    <div class="border-t border-slate-100 px-5 pt-3 safe-b"><button id="eSave" class="press mb-2 h-16 w-full rounded-2xl bg-brand-600 text-[18px] font-extrabold text-white">💾 저장</button></div>
+  </div>
+</div>
+
+<!-- 사진 복사 안내 시트 -->
+<div id="pasteSheet" class="fixed inset-0 z-[60] hidden">
+  <div class="absolute inset-0 bg-black/50" data-close="pasteSheet"></div>
+  <div class="absolute bottom-0 left-1/2 w-full max-w-md -translate-x-1/2 rounded-t-3xl bg-white p-6 safe-b">
+    <p class="text-center text-5xl">✅</p>
+    <h3 class="mt-2 text-center text-[20px] font-extrabold">홍보 사진이 복사되었어요</h3>
+    <ol class="mt-4 space-y-2 rounded-2xl bg-brand-50 p-4 text-[16px] font-semibold text-slate-700">
+      <li>1. 문자 앱에서 <b>입력창을 꾹 누르세요</b></li>
+      <li>2. <b>'붙여넣기'</b>를 누르면 사진이 들어가요</li>
+      <li>3. 문구는 채워져 있으니 <b>전송</b>만!</li>
+    </ol>
+    <p id="pasteMore" class="mt-2 hidden text-center text-[13px] text-slate-500">사진이 여러 장이면 '📤 공유'로 한 번에 보낼 수 있어요.</p>
+    <button id="btnOpenSms" class="press mt-4 h-16 w-full rounded-2xl bg-brand-600 text-[18px] font-extrabold text-white">💬 문자 앱 열기</button>
+    <button data-close="pasteSheet" class="mt-2 h-12 w-full text-[16px] font-bold text-slate-500">닫기</button>
+  </div>
+</div>
+
+<script>
+(() => {
+'use strict';
+
+/* ============ 기본값 ============ */
+const LINE = '────────────';
+const DEFAULT_TEMPLATES = () => [
+  { id:'t_in', icon:'🌟', name:'수신 감사', type:'수신', title:'링크클린', sign:false, imgs:[],
+    body:`전화 주셔서 진심으로 감사드립니다.\n${LINE}\n🧹 서비스 안내\n${LINE}\n✅ 입주·이사·준공 청소\n✅ 거주·부분·상가 청소\n✅ 사무실 청소\n✅ 폐기물 처리\n✅ 쓰레기집 청소\n\n언제나 고객 만족 100%를 약속드립니다!\n${LINE}\n📞 064-763-4545\n${LINE}\n카카오톡상담\nhttps://pf.kakao.com/_xfxdrxmM` },
+  { id:'t_out', icon:'📤', name:'발신 인사', type:'발신', title:'링크클린', sign:true, imgs:[],
+    body:'안녕하세요, 제주 청소 전문 기업 링크클린입니다. 통화 감사드립니다. 아래 링크에서 작업 사례와 상세 안내를 확인하실 수 있습니다.' },
+  { id:'t_miss', icon:'⏳', name:'부재중 안내', type:'부재중', title:'링크클린', sign:true, imgs:[],
+    body:'안녕하세요, 링크클린입니다. 현재 현장 작업 중이라 전화를 받지 못했습니다. 문의주신 내용을 문자로 남겨주시면 작업 종료 후 가장 먼저 연락드리겠습니다. 감사합니다!' },
+  { id:'t_move', icon:'🏠', name:'입주/이사청소', type:'수신', title:'입주청소안내', sign:true, imgs:[],
+    body:'안녕하세요, 링크클린입니다. 문의주신 입주/이사청소는 친환경 세제와 전문 장비를 사용해 보이지 않는 곳까지 꼼꼼하게 케어합니다. 작업 전후 사진과 안내는 아래에서 확인해 주세요.' },
+  { id:'t_sky', icon:'🏢', name:'외벽·고소작업', type:'기타', title:'클린앤스카이', sign:true, imgs:[],
+    body:'안녕하세요, 고소작업 및 외벽청소 전문 클린앤스카이입니다. 스카이차 및 전문 로프 장비를 통해 안전하고 완벽한 외벽 세척을 약속드립니다. 상세 작업 모습은 아래 링크를 참고해 주세요.' },
+];
+const TYPES = ['수신','발신','부재중','기타'];
+const TYPE_COLOR = { '수신':'text-brand-700 bg-brand-50', '발신':'text-emerald-700 bg-emerald-50', '부재중':'text-red-600 bg-red-50', '기타':'text-slate-600 bg-slate-100' };
+const PERIODS = [ ['always','매번',0], ['1d','1일',864e5], ['1w','1주',7*864e5], ['15d','15일',15*864e5], ['1m','1개월',30*864e5] ];
+
+const defaults = () => ({
+  templates: DEFAULT_TEMPLATES(),
+  selectedId: 't_in',
+  sign: { phone:'064-763-4545', kakao:'https://pf.kakao.com/_xfxdrxmM', home:'www.linkclean.co.kr', mag:'', usePhone:true, useKakao:true, useHome:true, useMag:false },
+  titleOn: false,
+  period: '1d',
+  excludes: [],
+  history: [],
+});
+
+/* ============ 저장소 ============ */
+const KEY = 'linkclean_callback_v2';
+let S = defaults();
+try {
+  const raw = JSON.parse(localStorage.getItem(KEY) || 'null');
+  if (raw) { S = Object.assign(defaults(), raw); S.sign = Object.assign(defaults().sign, raw.sign || {}); }
+  else {
+    // v1에서 옮겨오기
+    const v1 = JSON.parse(localStorage.getItem('linkclean_callback_v1') || 'null');
+    if (v1) {
+      if (v1.homeUrl) S.sign.home = v1.homeUrl;
+      if (v1.magUrl) { S.sign.mag = v1.magUrl; S.sign.useMag = !!v1.useMag; }
+    }
+  }
+} catch (e) {}
+const save = () => { try { localStorage.setItem(KEY, JSON.stringify(S)); } catch (e) { toast('⚠️ 저장 공간이 부족해요', 'err'); } };
+
+// 사진은 IndexedDB에 저장 (용량 넉넉)
+const IDB = (() => {
+  let dbp;
+  const open = () => dbp || (dbp = new Promise((res, rej) => {
+    const r = indexedDB.open('callback_imgs', 1);
+    r.onupgradeneeded = () => r.result.createObjectStore('imgs');
+    r.onsuccess = () => res(r.result); r.onerror = () => rej(r.error);
+  }));
+  const tx = (mode, fn) => open().then(db => new Promise((res, rej) => {
+    const t = db.transaction('imgs', mode); const st = t.objectStore('imgs');
+    const out = fn(st); t.oncomplete = () => res(out && out.result); t.onerror = () => rej(t.error);
+  }));
+  return {
+    get: k => tx('readonly', st => st.get(k)),
+    set: (k, v) => tx('readwrite', st => st.put(v, k)),
+    del: k => tx('readwrite', st => st.delete(k)),
+    keys: () => tx('readonly', st => st.getAllKeys()),
+    clear: () => tx('readwrite', st => st.clear()),
+  };
+})();
+const imgCache = {};
+async function loadImgs() {
+  const ids = [...new Set(S.templates.flatMap(t => t.imgs))];
+  await Promise.all(ids.map(async id => { if (!imgCache[id]) { try { const v = await IDB.get(id); if (v) imgCache[id] = v; } catch (e) {} } }));
+  // v1 사진 옮기기
+  try {
+    const old = localStorage.getItem('linkclean_callback_img_v1');
+    if (old && !S.templates.some(t => t.imgs.length)) {
+      const id = 'img_' + Date.now(); await IDB.set(id, old); imgCache[id] = old;
+      S.templates.forEach(t => t.imgs = [id]); save(); localStorage.removeItem('linkclean_callback_img_v1');
+    }
+  } catch (e) {}
+}
+const tplImgs = t => (t ? t.imgs.map(id => imgCache[id]).filter(Boolean) : []);
+
+/* ============ 유틸 ============ */
+const $ = id => document.getElementById(id);
+const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' }[c]));
+const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+const vib = (ms = 15) => { try { navigator.vibrate && navigator.vibrate(ms); } catch (e) {} };
+const digits = v => String(v || '').replace(/\D/g, '');
+let tt;
+function toast(msg, type) {
+  const el = $('toast'); $('toastText').textContent = msg;
+  el.style.background = type === 'err' ? '#b91c1c' : type === 'ok' ? '#047857' : '#0c4a6e';
+  el.classList.replace('t-hide', 't-show') || el.classList.add('t-show');
+  clearTimeout(tt); tt = setTimeout(() => { el.classList.remove('t-show'); el.classList.add('t-hide'); }, 2600);
+}
+function fmtPhone(raw) {
+  let d = String(raw || '').trim();
+  if (d.startsWith('+82')) d = '0' + d.slice(3);
+  d = digits(d);
+  if (d.startsWith('82') && d.length >= 11) d = '0' + d.slice(2);
+  d = d.slice(0, 11);
+  if (d.startsWith('02')) {
+    if (d.length <= 2) return d; if (d.length <= 5) return `${d.slice(0,2)}-${d.slice(2)}`;
+    if (d.length <= 9) return `${d.slice(0,2)}-${d.slice(2,5)}-${d.slice(5)}`;
+    return `${d.slice(0,2)}-${d.slice(2,6)}-${d.slice(6,10)}`;
+  }
+  if (/^1[5-9]\d{2}/.test(d) && d.length <= 8) return d.length <= 4 ? d : `${d.slice(0,4)}-${d.slice(4)}`;
+  if (d.length <= 3) return d; if (d.length <= 6) return `${d.slice(0,3)}-${d.slice(3)}`;
+  if (d.length <= 10) return `${d.slice(0,3)}-${d.slice(3,6)}-${d.slice(6)}`;
+  return `${d.slice(0,3)}-${d.slice(3,7)}-${d.slice(7)}`;
+}
+const pad = n => String(n).padStart(2, '0');
+const fmtDate = ts => { const d = new Date(ts); return `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`; };
+const fmtTime = ts => { const d = new Date(ts); return `${pad(d.getHours())}:${pad(d.getMinutes())}`; };
+function ago(ts) {
+  const s = (Date.now() - ts) / 1000;
+  if (s < 60) return '방금 전'; if (s < 3600) return `${Math.floor(s/60)}분 전`;
+  if (s < 86400) return `${Math.floor(s/3600)}시간 전`; if (s < 86400*30) return `${Math.floor(s/86400)}일 전`;
+  return fmtDate(ts);
+}
+function dataUrlToBlob(u) {
+  const [m, b] = u.split(','); const mime = (m.match(/:(.*?);/) || [])[1] || 'image/jpeg';
+  const bin = atob(b); const a = new Uint8Array(bin.length); for (let i = 0; i < bin.length; i++) a[i] = bin.charCodeAt(i);
+  return new Blob([a], { type: mime });
+}
+function toPng(u) {
+  return new Promise((res, rej) => {
+    const im = new Image();
+    im.onload = () => { const c = document.createElement('canvas'); c.width = im.naturalWidth; c.height = im.naturalHeight; c.getContext('2d').drawImage(im, 0, 0); c.toBlob(b => b ? res(b) : rej(), 'image/png'); };
+    im.onerror = rej; im.src = u;
+  });
+}
+function resize(file, max = 1280, q = 0.85) {
+  return new Promise((res, rej) => {
+    const r = new FileReader();
+    r.onload = () => { const im = new Image();
+      im.onload = () => { const k = Math.min(1, max / Math.max(im.width, im.height)); const w = Math.round(im.width*k), h = Math.round(im.height*k);
+        const c = document.createElement('canvas'); c.width = w; c.height = h; const x = c.getContext('2d'); x.fillStyle = '#fff'; x.fillRect(0,0,w,h); x.drawImage(im,0,0,w,h); res(c.toDataURL('image/jpeg', q)); };
+      im.onerror = () => rej(new Error('img')); im.src = r.result; };
+    r.onerror = rej; r.readAsDataURL(file);
+  });
+}
+function download(name, text, type) {
+  const b = new Blob([text], { type }); const a = document.createElement('a');
+  a.href = URL.createObjectURL(b); a.download = name; document.body.appendChild(a); a.click();
+  setTimeout(() => { URL.revokeObjectURL(a.href); a.remove(); }, 1000);
+}
+
+/* ============ 문자 만들기 ============ */
+const curTpl = () => S.templates.find(t => t.id === S.selectedId) || S.templates[0];
+function signText() {
+  const s = S.sign, l = [];
+  if (s.usePhone && s.phone.trim()) l.push(`📞 ${s.phone.trim()}`);
+  if (s.useKakao && s.kakao.trim()) l.push(`💬 카카오톡 상담: ${s.kakao.trim()}`);
+  if (s.useHome && s.home.trim()) l.push(`▶ 홈페이지: ${s.home.trim()}`);
+  if (s.useMag && s.mag.trim()) l.push(`▶ 작업사례 보기: ${s.mag.trim()}`);
+  return l.join('\n');
+}
+function composeFromTpl(t) {
+  if (!t) return '';
+  let m = '';
+  if (S.titleOn && t.title.trim()) m += `[${t.title.trim()}]\n`;
+  m += t.body.trim();
+  const sg = t.sign ? signText() : '';
+  if (sg) m += `\n\n${sg}`;
+  return m;
+}
+let draftDirty = false;
+const message = () => $('draft').value.trim();
+function smsHref() {
+  const n = digits($('phone').value), b = encodeURIComponent(message());
+  return isIOS ? `sms:${n}&body=${b}` : `sms:${n}?body=${b}`;
+}
+
+/* ============ 렌더: 보내기 ============ */
+function renderChips() {
+  $('chips').innerHTML = S.templates.map(t => {
+    const on = t.id === S.selectedId;
+    return `<button data-pick="${t.id}" class="press ${on ? 'chip-on' : 'border-slate-200 bg-white text-slate-700'} flex min-h-[64px] items-center gap-2 rounded-2xl border-2 px-3 py-2 text-left">
+      <span class="text-2xl">${esc(t.icon || '💬')}</span>
+      <span class="min-w-0 leading-tight"><span class="block truncate text-[15px] font-bold">${esc(t.name)}</span>
+      <span class="text-[12px] ${on ? 'text-brand-100' : 'text-slate-400'}">${esc(t.type)}${t.imgs.length ? ` · 📷${t.imgs.length}` : ''}</span></span></button>`;
+  }).join('');
+}
+function renderSendImgs() {
+  const imgs = tplImgs(curTpl());
+  $('sendImgs').innerHTML = imgs.length
+    ? imgs.map(u => `<img src="${u}" class="h-20 w-20 rounded-xl object-cover ring-1 ring-slate-200"/>`).join('')
+    : `<button data-goto-edit="1" class="flex h-20 w-full items-center justify-center rounded-xl border-2 border-dashed border-slate-300 text-[13px] font-semibold text-slate-400">📷 이 문자에 사진이 없어요 · 눌러서 추가</button>`;
+}
+function setDraftFromTpl() { $('draft').value = composeFromTpl(curTpl()); draftDirty = false; $('btnRestore').classList.add('hidden'); renderCount(); }
+function renderCount() {
+  const m = message(); const bytes = [...m].reduce((a, c) => a + (c.charCodeAt(0) > 127 ? 2 : 1), 0);
+  const kind = tplImgs(curTpl()).length ? 'MMS(사진)' : bytes > 90 ? 'LMS(장문)' : 'SMS(단문)';
+  $('charInfo').textContent = `${m.length}자 · ${kind}`;
+}
+function renderRecent() {
+  const h = S.history.slice(0, 5);
+  $('recent').innerHTML = h.length ? h.map((x, i) => `
+    <li><button data-load="${esc(x.phone)}" class="press flex w-full items-center justify-between py-3 text-left">
+      <span><span class="block text-[18px] font-bold tracking-wide">${esc(x.phone)}</span><span class="text-[13px] text-slate-400">${esc(x.tpl)} · ${esc(x.method)}</span></span>
+      <span class="text-right"><span class="mb-1 inline-block rounded-md px-2 py-0.5 text-[12px] font-bold ${TYPE_COLOR[x.type] || TYPE_COLOR['기타']}">${esc(x.type)}</span><span class="block text-[13px] font-semibold text-slate-500">${ago(x.ts)}</span></span>
+    </button></li>`).join('') : `<li class="py-4 text-center text-[14px] text-slate-400">아직 보낸 기록이 없어요</li>`;
+}
+function checkPhone() {
+  const n = digits($('phone').value), w = $('phoneWarn');
+  $('btnClearX').classList.toggle('hidden', !n); $('btnClearX').classList.toggle('flex', !!n);
+  w.className = 'mt-2 hidden rounded-xl px-3 py-2 text-[14px] font-semibold';
+  if (n.length < 8) return;
+  const ex = S.excludes.find(e => digits(e.phone) === n);
+  if (ex) { w.textContent = `🚫 발송제외 번호예요${ex.memo ? ` (${ex.memo})` : ''}`; w.classList.remove('hidden'); w.classList.add('bg-red-50', 'text-red-600'); return; }
+  const hit = S.history.find(x => digits(x.phone) === n);
+  if (hit) { w.textContent = `⚠️ ${ago(hit.ts)}에 이미 보냈어요 (${hit.tpl})`; w.classList.remove('hidden'); w.classList.add('bg-amber-50', 'text-amber-700'); }
+}
+function pick(id, silent) {
+  S.selectedId = id; save(); renderChips(); renderSendImgs(); setDraftFromTpl();
+  if (!silent) { vib(); const t = curTpl(); toast(`${t.icon} '${t.name}' 문자가 세팅됐어요`); }
+}
+
+/* ============ 발송 전 확인 ============ */
+function guard() {
+  const n = digits($('phone').value);
+  if (n.length < 8) { toast('📞 먼저 고객 전화번호를 입력해 주세요', 'err'); $('phone').focus(); vib(60); return false; }
+  if (!message()) { toast('💬 문자 내용이 비어 있어요', 'err'); return false; }
+  const ex = S.excludes.find(e => digits(e.phone) === n);
+  if (ex) { toast(`🚫 발송제외 번호라 보내지 않았어요${ex.memo ? ` (${ex.memo})` : ''}`, 'err'); vib(80); return false; }
+  const p = PERIODS.find(x => x[0] === S.period);
+  if (p && p[2] > 0) {
+    const hit = S.history.find(x => digits(x.phone) === n && Date.now() - x.ts < p[2]);
+    if (hit && !confirm(`이 번호에 ${ago(hit.ts)} '${hit.tpl}' 문자를 이미 보냈어요.\n(발송주기: ${p[1]})\n\n그래도 다시 보낼까요?`)) return false;
+  }
+  return true;
+}
+function record(method) {
+  const t = curTpl();
+  S.history.unshift({ phone: fmtPhone($('phone').value), ts: Date.now(), type: t.type, tpl: t.name, method });
+  const limit = Date.now() - 92 * 864e5;
+  S.history = S.history.filter(x => x.ts > limit).slice(0, 500);
+  save(); renderRecent(); checkPhone();
+}
+
+/* ============ 이벤트: 보내기 ============ */
+$('phone').addEventListener('input', e => { e.target.value = fmtPhone(e.target.value); checkPhone(); });
+const clearPhone = () => { $('phone').value = ''; checkPhone(); toast('🧹 번호를 지웠어요'); vib(); };
+$('btnClear').onclick = clearPhone; $('btnClearX').onclick = clearPhone;
+$('btnPaste').onclick = async () => {
+  vib();
+  if (!navigator.clipboard?.readText) { toast('입력창을 꾹 눌러 붙여넣어 주세요', 'err'); $('phone').focus(); return; }
+  try {
+    const f = fmtPhone(await navigator.clipboard.readText());
+    if (digits(f).length < 8) { toast('📋 복사된 내용에 전화번호가 없어요', 'err'); return; }
+    $('phone').value = f; checkPhone(); toast(`✅ ${f} 붙여넣기 완료`, 'ok');
+  } catch (e) { toast("붙여넣기 권한이 거부됐어요. 팝업에서 '붙여넣기'를 눌러주세요", 'err'); }
+};
+$('chips').onclick = e => { const b = e.target.closest('[data-pick]'); if (b) pick(b.dataset.pick); };
+$('draft').addEventListener('input', () => { draftDirty = true; $('btnRestore').classList.remove('hidden'); renderCount(); });
+$('btnRestore').onclick = () => { setDraftFromTpl(); toast('↩ 원래 문구로 되돌렸어요'); };
+$('recent').onclick = e => { const b = e.target.closest('[data-load]'); if (b) { $('phone').value = b.dataset.load; checkPhone(); toast(`📞 ${b.dataset.load} 불러왔어요`); window.scrollTo({ top: 0, behavior: 'smooth' }); } };
+$('sendImgs').onclick = e => { if (e.target.closest('[data-goto-edit]')) openEditor(curTpl().id); };
+
+$('btnSms').onclick = () => { if (!guard()) return; vib(); record('문자'); location.href = smsHref(); };
+
+$('btnImgSms').onclick = async () => {
+  if (!guard()) return;
+  const imgs = tplImgs(curTpl());
+  if (!imgs.length) { toast('🖼️ 이 문자에 등록된 사진이 없어요'); openEditor(curTpl().id); return; }
+  if (!navigator.clipboard || !window.ClipboardItem) { toast("사진 복사를 지원하지 않아요. '📤 공유'를 이용해 주세요", 'err'); return; }
+  vib();
+  try {
+    // iOS Safari는 Promise를 그대로 넘겨야 터치 동작으로 인정됨
+    const item = isIOS ? new ClipboardItem({ 'image/png': toPng(imgs[0]) }) : new ClipboardItem({ 'image/png': await toPng(imgs[0]) });
+    await navigator.clipboard.write([item]);
+    record('사진+문자');
+    $('pasteMore').classList.toggle('hidden', imgs.length < 2);
+    $('pasteSheet').classList.remove('hidden');
+    toast('📋 사진 복사 완료! 문자창에서 꾹 눌러 붙여넣기', 'ok');
+    location.href = smsHref();
+  } catch (e) { toast("사진 복사에 실패했어요. '📤 공유'로 보내 주세요", 'err'); }
+};
+$('btnOpenSms').onclick = () => { location.href = smsHref(); };
+
+$('btnShare').onclick = async () => {
+  const text = message(); if (!text) { toast('💬 문자 내용이 비어 있어요', 'err'); return; }
+  const n = digits($('phone').value);
+  if (n.length >= 8 && S.excludes.some(e => digits(e.phone) === n)) { toast('🚫 발송제외 번호예요', 'err'); return; }
+  if (!navigator.share) { copy(text, '공유를 지원하지 않아 문자 내용을 복사했어요'); return; }
+  vib();
+  try {
+    let data = { text };
+    const files = tplImgs(curTpl()).map((u, i) => { const b = dataUrlToBlob(u); return new File([b], `linkclean_${i + 1}.jpg`, { type: b.type }); });
+    if (files.length && navigator.canShare && navigator.canShare({ files })) data = { files, text };
+    await navigator.share(data);
+    if (n.length >= 8) record('공유');
+    toast('📤 공유 완료', 'ok');
+  } catch (e) { if (e?.name !== 'AbortError') toast('공유에 실패했어요', 'err'); }
+};
+async function copy(text, msg) {
+  try { await navigator.clipboard.writeText(text); toast(`📝 ${msg || '문자 내용을 복사했어요'}`, 'ok'); }
+  catch (e) { const ta = document.createElement('textarea'); ta.value = text; ta.style.cssText = 'position:fixed;opacity:0'; document.body.appendChild(ta); ta.select();
+    try { document.execCommand('copy'); toast(`📝 ${msg || '문자 내용을 복사했어요'}`, 'ok'); } catch (e2) { toast('복사 실패', 'err'); } ta.remove(); }
+}
+$('btnCopy').onclick = () => { vib(); copy(message()); };
+
+/* ============ 문자설정 ============ */
+function renderTplList() {
+  $('tplList').innerHTML = S.templates.map(t => {
+    const imgs = tplImgs(t);
+    return `<button data-edit="${t.id}" class="press block w-full rounded-3xl bg-white p-4 text-left shadow-sm ring-1 ring-slate-200">
+      <div class="mb-2 flex items-center gap-2">
+        <span class="text-2xl">${esc(t.icon || '💬')}</span>
+        <span class="flex-1 text-[17px] font-extrabold">${esc(t.name)}</span>
+        <span class="rounded-md px-2 py-0.5 text-[12px] font-bold ${TYPE_COLOR[t.type] || TYPE_COLOR['기타']}">${esc(t.type)}</span>
+      </div>
+      ${t.title ? `<p class="mb-1 text-[13px] font-bold text-slate-500">제목: ${esc(t.title)}</p>` : ''}
+      <p class="line-clamp-3 whitespace-pre-line text-[14px] leading-relaxed text-slate-600" style="display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden">${esc(t.body)}</p>
+      <div class="mt-2 flex items-center gap-2">${imgs.map(u => `<img src="${u}" class="h-12 w-12 rounded-lg object-cover"/>`).join('')}
+        <span class="ml-auto text-[13px] font-bold text-brand-600">편집 ›</span></div>
+    </button>`;
+  }).join('');
+}
+$('tplList').onclick = e => { const b = e.target.closest('[data-edit]'); if (b) openEditor(b.dataset.edit); };
+
+let edit = null; // 편집 중인 사본
+function openEditor(id) {
+  const t = id ? S.templates.find(x => x.id === id) : null;
+  edit = t ? JSON.parse(JSON.stringify(t)) : { id: 't_' + Date.now(), icon: '💬', name: '', type: '수신', title: '', body: '', sign: true, imgs: [], isNew: true };
+  edit.newImgs = {}; // id → dataURL (아직 저장 전)
+  $('eIcon').value = edit.icon; $('eName').value = edit.name; $('eTitle').value = edit.title; $('eBody').value = edit.body; $('eSign').checked = edit.sign;
+  $('eDelete').classList.toggle('hidden', !!edit.isNew);
+  renderEType(); renderEImgs();
+  $('editSheet').classList.remove('hidden');
+}
+function renderEType() {
+  $('eType').innerHTML = TYPES.map(x => `<button data-etype="${x}" class="press h-11 rounded-xl border-2 text-[15px] font-bold ${edit.type === x ? 'chip-on' : 'border-slate-200 bg-white text-slate-600'}">${x}</button>`).join('');
+}
+$('eType').onclick = e => { const b = e.target.closest('[data-etype]'); if (b) { edit.type = b.dataset.etype; renderEType(); } };
+function renderEImgs() {
+  const cells = [];
+  for (let i = 0; i < 3; i++) {
+    const id = edit.imgs[i];
+    const src = id && (edit.newImgs[id] || imgCache[id]);
+    cells.push(src
+      ? `<div class="relative aspect-square overflow-hidden rounded-xl ring-1 ring-slate-200"><img src="${src}" class="h-full w-full object-cover"/>
+          <button data-rmimg="${i}" class="absolute right-1 top-1 flex h-8 w-8 items-center justify-center rounded-full bg-black/60 text-white">✕</button></div>`
+      : `<button data-addimg="1" class="press flex aspect-square flex-col items-center justify-center rounded-xl border-2 border-dashed border-slate-300 bg-slate-50 text-slate-400"><span class="text-3xl">📷</span><span class="text-[12px] font-bold">사진 추가</span></button>`);
+  }
+  $('eImgs').innerHTML = cells.join('');
+}
+$('eImgs').onclick = e => {
+  if (e.target.closest('[data-addimg]')) { if (edit.imgs.length >= 3) return; $('eFile').click(); }
+  const r = e.target.closest('[data-rmimg]'); if (r) { edit.imgs.splice(+r.dataset.rmimg, 1); renderEImgs(); }
+};
+$('eFile').onchange = async e => {
+  const f = e.target.files?.[0]; e.target.value = ''; if (!f) return;
+  try { toast('⏳ 사진 준비 중...'); const u = await resize(f); const id = 'img_' + Date.now() + '_' + Math.random().toString(36).slice(2, 6);
+    edit.newImgs[id] = u; edit.imgs.push(id); renderEImgs(); toast('✅ 사진 추가! 저장을 눌러주세요', 'ok'); }
+  catch (err) { toast('사진을 불러오지 못했어요', 'err'); }
+};
+$('eSave').onclick = async () => {
+  edit.icon = $('eIcon').value.trim() || '💬'; edit.name = $('eName').value.trim(); edit.title = $('eTitle').value.trim().slice(0, 10);
+  edit.body = $('eBody').value; edit.sign = $('eSign').checked;
+  if (!edit.name) { toast('버튼 이름을 입력해 주세요', 'err'); $('eName').focus(); return; }
+  if (!edit.body.trim()) { toast('본문을 입력해 주세요', 'err'); $('eBody').focus(); return; }
+  try { for (const id of edit.imgs) if (edit.newImgs[id]) { await IDB.set(id, edit.newImgs[id]); imgCache[id] = edit.newImgs[id]; } }
+  catch (err) { toast('⚠️ 사진 저장에 실패했어요', 'err'); return; }
+  const { newImgs, isNew, ...clean } = edit;
+  const i = S.templates.findIndex(t => t.id === clean.id);
+  if (i >= 0) S.templates[i] = clean; else S.templates.push(clean);
+  save(); cleanupImgs(); $('editSheet').classList.add('hidden');
+  renderTplList(); renderChips(); if (S.selectedId === clean.id) { renderSendImgs(); setDraftFromTpl(); }
+  toast('💾 문자가 저장됐어요', 'ok');
+};
+$('eDelete').onclick = () => {
+  if (S.templates.length <= 1) { toast('문자는 최소 1개는 있어야 해요', 'err'); return; }
+  if (!confirm(`'${edit.name}' 문자를 삭제할까요?`)) return;
+  S.templates = S.templates.filter(t => t.id !== edit.id);
+  if (S.selectedId === edit.id) S.selectedId = S.templates[0].id;
+  save(); cleanupImgs(); $('editSheet').classList.add('hidden'); renderAll(); toast('🗑️ 삭제했어요');
+};
+async function cleanupImgs() {
+  try { const used = new Set(S.templates.flatMap(t => t.imgs)); const keys = await IDB.keys(); for (const k of keys) if (!used.has(k)) { await IDB.del(k); delete imgCache[k]; } } catch (e) {}
+}
+$('btnAddTpl').onclick = () => openEditor(null);
+$('btnResetTpl').onclick = () => {
+  if (!confirm('문자 목록을 처음 기본 문자 5개로 되돌릴까요?\n(직접 만든 문자와 사진은 지워져요)')) return;
+  S.templates = DEFAULT_TEMPLATES(); S.selectedId = 't_in'; save(); cleanupImgs(); renderAll(); toast('↩ 기본 문자로 되돌렸어요');
+};
+
+/* ============ 발송내역 ============ */
+let histFilter = '전체';
+function renderHistory() {
+  $('histFilter').innerHTML = ['전체', ...TYPES].map(x => {
+    const cnt = x === '전체' ? S.history.length : S.history.filter(h => h.type === x).length;
+    return `<button data-hf="${x}" class="press shrink-0 rounded-full border-2 px-4 py-2 text-[15px] font-bold ${histFilter === x ? 'chip-on' : 'border-slate-200 bg-white text-slate-600'}">${x} <span class="opacity-70">${cnt}</span></button>`;
+  }).join('');
+  const list = S.history.filter(h => histFilter === '전체' || h.type === histFilter);
+  $('histList').innerHTML = list.length ? list.map(h => `
+    <li class="grid grid-cols-[1.1fr_1.5fr_0.9fr] items-center px-4 py-3">
+      <span class="text-[13px] leading-tight text-slate-500">${fmtDate(h.ts)}<br/>${fmtTime(h.ts)}</span>
+      <button data-hload="${esc(h.phone)}" class="text-left"><span class="block text-[16px] font-bold tracking-wide text-slate-800">${esc(h.phone)}</span><span class="text-[12px] text-slate-400">${esc(h.tpl)} · ${esc(h.method)}</span></button>
+      <span class="flex flex-col items-end gap-1"><span class="rounded-md px-2 py-0.5 text-[12px] font-bold ${TYPE_COLOR[h.type] || TYPE_COLOR['기타']}">${esc(h.type)}</span>
+        <button data-hex="${esc(h.phone)}" class="text-[11px] font-semibold text-slate-400">🚫제외</button></span>
+    </li>`).join('') : `<li class="py-10 text-center text-[14px] text-slate-400">발송 내역이 없어요</li>`;
+}
+$('histFilter').onclick = e => { const b = e.target.closest('[data-hf]'); if (b) { histFilter = b.dataset.hf; renderHistory(); } };
+$('histList').onclick = e => {
+  const l = e.target.closest('[data-hload]'); if (l) { $('phone').value = l.dataset.hload; checkPhone(); go('send'); toast(`📞 ${l.dataset.hload} 불러왔어요`); return; }
+  const x = e.target.closest('[data-hex]'); if (x) addExclude(x.dataset.hex, '');
+};
+$('btnCsv').onclick = () => {
+  if (!S.history.length) { toast('내역이 없어요'); return; }
+  const rows = [['날짜', '시간', '번호', '구분', '문자', '방법'], ...S.history.map(h => [fmtDate(h.ts), fmtTime(h.ts), h.phone, h.type, h.tpl, h.method])];
+  download(`콜백발송내역_${fmtDate(Date.now())}.csv`, '﻿' + rows.map(r => r.map(c => `"${String(c).replace(/"/g, '""')}"`).join(',')).join('\n'), 'text/csv');
+  toast('📊 CSV 파일을 저장했어요', 'ok');
+};
+$('btnClearHist').onclick = () => { if (S.history.length && confirm('발송 내역을 모두 지울까요?')) { S.history = []; save(); renderAll(); toast('🧹 내역을 지웠어요'); } };
+
+/* ============ 설정 ============ */
+function renderSettings() {
+  $('periodBox').innerHTML = PERIODS.map(([k, l]) => `<button data-period="${k}" class="press h-12 rounded-xl border-2 text-[15px] font-bold ${S.period === k ? 'chip-on' : 'border-slate-200 bg-white text-slate-600'}">${l}</button>`).join('');
+  const s = S.sign;
+  $('sPhone').value = s.phone; $('sKakao').value = s.kakao; $('sHome').value = s.home; $('sMag').value = s.mag;
+  $('sUsePhone').checked = s.usePhone; $('sUseKakao').checked = s.useKakao; $('sUseHome').checked = s.useHome; $('sUseMag').checked = s.useMag;
+  $('sTitleOn').checked = S.titleOn;
+  renderExList();
+}
+function renderExList() {
+  $('exList').innerHTML = S.excludes.length ? S.excludes.map((e, i) => `
+    <li class="flex items-center justify-between py-2.5"><span><span class="text-[16px] font-bold">${esc(e.phone)}</span> <span class="text-[13px] text-slate-400">${esc(e.memo)}</span></span>
+    <button data-exdel="${i}" class="rounded-lg bg-slate-100 px-3 py-1.5 text-[13px] font-bold text-slate-500">삭제</button></li>`).join('')
+    : `<li class="py-3 text-center text-[14px] text-slate-400">등록된 번호가 없어요</li>`;
+}
+$('periodBox').onclick = e => { const b = e.target.closest('[data-period]'); if (b) { S.period = b.dataset.period; save(); renderSettings(); toast(`🔁 발송주기: ${PERIODS.find(p => p[0] === S.period)[1]}`); } };
+[['sPhone', 'phone'], ['sKakao', 'kakao'], ['sHome', 'home'], ['sMag', 'mag']].forEach(([id, k]) => $(id).addEventListener('input', e => { S.sign[k] = e.target.value; save(); if (!draftDirty) setDraftFromTpl(); }));
+[['sUsePhone', 'usePhone'], ['sUseKakao', 'useKakao'], ['sUseHome', 'useHome'], ['sUseMag', 'useMag']].forEach(([id, k]) => $(id).addEventListener('change', e => { S.sign[k] = e.target.checked; save(); if (!draftDirty) setDraftFromTpl(); }));
+$('sTitleOn').onchange = e => { S.titleOn = e.target.checked; save(); if (!draftDirty) setDraftFromTpl(); };
+$('exPhone').addEventListener('input', e => { e.target.value = fmtPhone(e.target.value); });
+function addExclude(phone, memo) {
+  const p = fmtPhone(phone); if (digits(p).length < 8) { toast('번호를 확인해 주세요', 'err'); return false; }
+  if (S.excludes.some(e => digits(e.phone) === digits(p))) { toast('이미 발송제외에 있는 번호예요'); return false; }
+  S.excludes.unshift({ phone: p, memo: memo.trim() }); save(); renderExList(); checkPhone(); toast(`🚫 ${p} 발송제외 추가`, 'ok'); return true;
+}
+$('btnAddEx').onclick = () => { if (addExclude($('exPhone').value, $('exMemo').value)) { $('exPhone').value = ''; $('exMemo').value = ''; } };
+$('exList').onclick = e => { const b = e.target.closest('[data-exdel]'); if (b) { S.excludes.splice(+b.dataset.exdel, 1); save(); renderExList(); checkPhone(); toast('삭제했어요'); } };
+
+$('btnBackup').onclick = async () => {
+  const imgs = {}; for (const id of new Set(S.templates.flatMap(t => t.imgs))) if (imgCache[id]) imgs[id] = imgCache[id];
+  download(`콜백문자_백업_${fmtDate(Date.now())}.json`, JSON.stringify({ app: 'linkclean-callback', v: 2, state: S, imgs }), 'application/json');
+  toast('⬇️ 백업 파일을 저장했어요', 'ok');
+};
+$('btnRestoreFile').onclick = () => $('restoreInput').click();
+$('restoreInput').onchange = async e => {
+  const f = e.target.files?.[0]; e.target.value = ''; if (!f) return;
+  try {
+    const d = JSON.parse(await f.text()); if (d.app !== 'linkclean-callback' || !d.state) throw 0;
+    if (!confirm('백업 파일로 지금 데이터를 덮어쓸까요?')) return;
+    for (const [k, v] of Object.entries(d.imgs || {})) { await IDB.set(k, v); imgCache[k] = v; }
+    S = Object.assign(defaults(), d.state); S.sign = Object.assign(defaults().sign, d.state.sign || {});
+    save(); cleanupImgs(); renderAll(); toast('⬆️ 백업을 불러왔어요', 'ok');
+  } catch (err) { toast('올바른 백업 파일이 아니에요', 'err'); }
+};
+$('btnResetAll').onclick = async () => {
+  if (!confirm('문자·사진·발송내역·설정을 모두 지울까요?\n되돌릴 수 없어요.')) return;
+  try { localStorage.removeItem(KEY); await IDB.clear(); } catch (e) {}
+  Object.keys(imgCache).forEach(k => delete imgCache[k]); S = defaults(); save(); renderAll(); go('send'); toast('⚠️ 전체 초기화했어요');
+};
+
+/* ============ 탭 / 시트 ============ */
+const TITLES = { send: '📞 콜백 문자 보내기', msgs: '✉️ 문자 설정', history: '📋 발송 내역', settings: '⚙️ 설정' };
+function go(tab) {
+  document.querySelectorAll('.tab-page').forEach(p => p.classList.toggle('hidden', p.id !== 'tab-' + tab));
+  document.querySelectorAll('.tabbtn').forEach(b => { const on = b.dataset.tab === tab; b.classList.toggle('text-brand-700', on); b.classList.toggle('text-slate-400', !on); });
+  $('sendBar').classList.toggle('hidden', tab !== 'send');
+  $('pageTitle').textContent = TITLES[tab];
+  if (tab === 'msgs') renderTplList(); if (tab === 'history') renderHistory(); if (tab === 'settings') renderSettings();
+  window.scrollTo({ top: 0 });
+  try { sessionStorage.setItem('cb_tab', tab); } catch (e) {}
+}
+document.addEventListener('click', e => {
+  const t = e.target.closest('[data-tab]'); if (t) { vib(8); go(t.dataset.tab); }
+  const g = e.target.closest('[data-goto]'); if (g) go(g.dataset.goto);
+  const c = e.target.closest('[data-close]'); if (c) $(c.dataset.close).classList.add('hidden');
+});
+
+function renderAll() { renderChips(); renderSendImgs(); setDraftFromTpl(); renderRecent(); checkPhone(); renderTplList(); renderHistory(); renderSettings(); }
+
+/* ============ 시작 ============ */
+(async () => {
+  if (!S.templates.some(t => t.id === S.selectedId)) S.selectedId = S.templates[0].id;
+  renderAll(); go('send');
+  await loadImgs(); renderAll();
+})();
+if ('serviceWorker' in navigator) window.addEventListener('load', () => navigator.serviceWorker.register('sw.js').catch(() => {}));
+setInterval(renderRecent, 60000);
+})();
+</script>
+</body>
+</html>
