@@ -106,7 +106,14 @@
 
   <!-- ===================== 문자설정 ===================== -->
   <main id="tab-msgs" class="tab-page hidden flex-1 space-y-3 px-4 pb-28 pt-4">
-    <p class="rounded-2xl bg-brand-50 p-3 text-[14px] font-medium text-brand-800">상황별 문자를 원하는 만큼 저장해 두세요. 문자마다 <b>제목</b>, <b>사진 3장</b>, 본문을 따로 넣을 수 있어요.</p>
+    <section class="rounded-3xl bg-white p-4 shadow-sm ring-2 ring-brand-200">
+      <h2 class="text-[17px] font-extrabold">📷 공통 홍보 사진 <span class="text-[13px] font-semibold text-slate-400">(최대 3장)</span></h2>
+      <p class="mb-3 mt-1 text-[13px] text-slate-500">여기 넣은 사진이 <b>수신 · 발신 · 부재중 · 기타</b> 모든 문자에 한 번에 같이 붙어요.</p>
+      <div id="cImgs" class="grid grid-cols-3 gap-2"></div>
+      <input id="cFile" type="file" accept="image/*" class="hidden"/>
+      <button id="btnAllCommon" class="press mt-3 h-11 w-full rounded-xl bg-brand-50 text-[14px] font-bold text-brand-700">🔗 모든 문자를 공통 사진으로 맞추기</button>
+    </section>
+    <p class="px-1 text-[13px] text-slate-500">문자를 눌러 제목·본문을 고칠 수 있어요. 특정 문자만 다른 사진을 쓰려면 편집에서 '공통 사진 사용'을 끄세요.</p>
     <div id="tplList" class="space-y-3"></div>
     <button id="btnAddTpl" class="press h-14 w-full rounded-2xl border-2 border-dashed border-brand-300 bg-white text-[17px] font-bold text-brand-700">＋ 새 문자 추가</button>
     <button id="btnResetTpl" class="h-12 w-full text-[14px] font-semibold text-slate-400">↩ 기본 문자로 되돌리기</button>
@@ -210,7 +217,9 @@
         <input id="eTitle" maxlength="10" class="h-12 w-full rounded-xl border-2 border-slate-200 bg-slate-50 px-3 font-semibold outline-none focus:border-brand-500" placeholder="문자 제목을 입력해주세요"/>
       </div>
       <div>
-        <p class="mb-1 text-[13px] font-bold text-slate-500">사진 (최대 3장)</p>
+        <label class="mb-2 flex items-center justify-between rounded-2xl bg-brand-50 p-3 ring-1 ring-brand-200"><span class="text-[14px] font-bold text-brand-800">📷 공통 홍보 사진 사용</span><input id="eCommon" type="checkbox" class="h-6 w-6 accent-sky-600"/></label>
+        <p id="eCommonNote" class="mb-1 text-[13px] text-slate-500">문자설정 맨 위 '공통 홍보 사진'이 함께 붙어요.</p>
+        <p id="eOwnLabel" class="mb-1 text-[13px] font-bold text-slate-500">이 문자 전용 사진 (최대 3장)</p>
         <div id="eImgs" class="grid grid-cols-3 gap-2"></div>
         <input id="eFile" type="file" accept="image/*" class="hidden"/>
       </div>
@@ -269,6 +278,7 @@ const defaults = () => ({
   selectedId: 't_in',
   sign: { phone:'064-763-4545', kakao:'https://pf.kakao.com/_xfxdrxmM', home:'www.linkclean.co.kr', mag:'', usePhone:true, useKakao:true, useHome:true, useMag:false },
   titleOn: false,
+  commonImgs: [],
   period: '1d',
   excludes: [],
   history: [],
@@ -313,7 +323,7 @@ const IDB = (() => {
 })();
 const imgCache = {};
 async function loadImgs() {
-  const ids = [...new Set(S.templates.flatMap(t => t.imgs))];
+  const ids = allImgIds();
   await Promise.all(ids.map(async id => { if (!imgCache[id]) { try { const v = await IDB.get(id); if (v) imgCache[id] = v; } catch (e) {} } }));
   // v1 사진 옮기기
   try {
@@ -325,7 +335,8 @@ async function loadImgs() {
   } catch (e) {}
 }
 // 기본 홍보 사진 넣기 (버전이 오르면 한 번만 다시 적용)
-const SEED_V = 2;
+const SEED_V = 3;
+const COMMON_DEFAULT = ['img_thanks','img_services','img_waste'];
 const PROMO = { img_thanks:'promo/thanks.jpg', img_services:'promo/services.jpg', img_move:'promo/move.jpg', img_waste:'promo/waste.jpg' };
 const PROMO_MAP = { t_in:['img_thanks','img_services'], t_out:['img_thanks','img_services'], t_miss:['img_services'], t_move:['img_move'], t_waste:['img_waste'] };
 async function seedPromo() {
@@ -345,10 +356,18 @@ async function seedPromo() {
       const own = t.imgs.filter(x => x !== 'img_logo');
       if (!own.length) t.imgs = [...m];
     }
+    // v3: 공통 사진으로 한 번에 묶기
+    if ((S.seedV || 0) < 3) {
+      if (!S.commonImgs || !S.commonImgs.length) S.commonImgs = [...COMMON_DEFAULT];
+      S.templates.forEach(t => { t.useCommon = true; });
+    }
     S.seedV = SEED_V; save(); cleanupImgs();
   } catch (e) {}
 }
-const tplImgs = t => (t ? t.imgs.map(id => imgCache[id]).filter(Boolean) : []);
+const usesCommon = t => t && t.useCommon !== false;
+const tplImgIds = t => (!t ? [] : usesCommon(t) ? (S.commonImgs || []) : t.imgs);
+const tplImgs = t => tplImgIds(t).map(id => imgCache[id]).filter(Boolean);
+const allImgIds = () => [...new Set([...(S.commonImgs || []), ...S.templates.flatMap(t => t.imgs)])];
 
 /* ============ 유틸 ============ */
 const $ = id => document.getElementById(id);
@@ -449,7 +468,7 @@ function renderChips() {
     return `<button data-pick="${t.id}" class="press ${on ? 'chip-on' : 'border-slate-200 bg-white text-slate-700'} flex min-h-[64px] items-center gap-2 rounded-2xl border-2 px-3 py-2 text-left">
       <span class="text-2xl">${esc(t.icon || '💬')}</span>
       <span class="min-w-0 leading-tight"><span class="block truncate text-[15px] font-bold">${esc(t.name)}</span>
-      <span class="text-[12px] ${on ? 'text-brand-100' : 'text-slate-400'}">${esc(t.type)}${t.imgs.length ? ` · 📷${t.imgs.length}` : ''}</span></span></button>`;
+      <span class="text-[12px] ${on ? 'text-brand-100' : 'text-slate-400'}">${esc(t.type)}${tplImgIds(t).length ? ` · 📷${tplImgIds(t).length}${usesCommon(t) ? ' 공통' : ''}` : ''}</span></span></button>`;
   }).join('');
 }
 function renderSendImgs() {
@@ -526,14 +545,14 @@ $('chips').onclick = e => { const b = e.target.closest('[data-pick]'); if (b) pi
 $('draft').addEventListener('input', () => { draftDirty = true; $('btnRestore').classList.remove('hidden'); renderCount(); });
 $('btnRestore').onclick = () => { setDraftFromTpl(); toast('↩ 원래 문구로 되돌렸어요'); };
 $('recent').onclick = e => { const b = e.target.closest('[data-load]'); if (b) { $('phone').value = b.dataset.load; checkPhone(); toast(`📞 ${b.dataset.load} 불러왔어요`); window.scrollTo({ top: 0, behavior: 'smooth' }); } };
-$('sendImgs').onclick = e => { if (e.target.closest('[data-goto-edit]')) openEditor(curTpl().id); };
+$('sendImgs').onclick = e => { if (e.target.closest('[data-goto-edit]')) { if (usesCommon(curTpl())) go('msgs'); else openEditor(curTpl().id); } };
 
 $('btnSms').onclick = () => { if (!guard()) return; vib(); record('문자'); location.href = smsHref(); };
 
 $('btnImgSms').onclick = async () => {
   if (!guard()) return;
   const imgs = tplImgs(curTpl());
-  if (!imgs.length) { toast('🖼️ 이 문자에 등록된 사진이 없어요'); openEditor(curTpl().id); return; }
+  if (!imgs.length) { toast('🖼️ 등록된 사진이 없어요. 공통 홍보 사진을 넣어주세요'); if (usesCommon(curTpl())) go('msgs'); else openEditor(curTpl().id); return; }
   if (!navigator.clipboard || !window.ClipboardItem) { toast("사진 복사를 지원하지 않아요. '📤 공유'를 이용해 주세요", 'err'); return; }
   vib();
   try {
@@ -590,12 +609,39 @@ function renderTplList() {
 }
 $('tplList').onclick = e => { const b = e.target.closest('[data-edit]'); if (b) openEditor(b.dataset.edit); };
 
+function renderCommon() {
+  const ids = S.commonImgs || [], cells = [];
+  for (let i = 0; i < 3; i++) {
+    const src = ids[i] && imgCache[ids[i]];
+    cells.push(src
+      ? `<div class="relative aspect-square overflow-hidden rounded-xl ring-1 ring-slate-200"><img src="${src}" class="h-full w-full object-cover"/>
+          <span class="absolute left-1 top-1 rounded-md bg-black/60 px-1.5 text-[12px] font-bold text-white">${i + 1}</span>
+          <button data-crm="${i}" class="absolute right-1 top-1 flex h-8 w-8 items-center justify-center rounded-full bg-black/60 text-white">✕</button>
+          ${i > 0 ? `<button data-cfirst="${i}" class="absolute bottom-1 left-1 right-1 rounded-lg bg-white/90 py-1 text-[11px] font-bold text-brand-700">⬆ 1번으로</button>` : ''}</div>`
+      : `<button data-cadd="1" class="press flex aspect-square flex-col items-center justify-center rounded-xl border-2 border-dashed border-slate-300 bg-slate-50 text-slate-400"><span class="text-3xl">📷</span><span class="text-[12px] font-bold">사진 추가</span></button>`);
+  }
+  $('cImgs').innerHTML = cells.join('');
+}
+$('cImgs').onclick = e => {
+  if (e.target.closest('[data-cadd]')) { if ((S.commonImgs || []).length < 3) $('cFile').click(); return; }
+  const r = e.target.closest('[data-crm]'); if (r) { S.commonImgs.splice(+r.dataset.crm, 1); save(); cleanupImgs(); afterCommon(); toast('🗑️ 공통 사진을 뺐어요'); return; }
+  const f = e.target.closest('[data-cfirst]'); if (f) { const [x] = S.commonImgs.splice(+f.dataset.cfirst, 1); S.commonImgs.unshift(x); save(); afterCommon(); toast('⬆ 1번 사진으로 옮겼어요 (사진 복사 시 1번이 들어가요)'); }
+};
+$('cFile').onchange = async e => {
+  const f = e.target.files?.[0]; e.target.value = ''; if (!f) return;
+  try { toast('⏳ 사진 준비 중...'); const u = await resize(f); const id = 'img_' + Date.now() + '_' + Math.random().toString(36).slice(2, 6);
+    await IDB.set(id, u); imgCache[id] = u; S.commonImgs = [...(S.commonImgs || []), id].slice(0, 3); save(); afterCommon(); toast('✅ 모든 문자에 사진이 들어갔어요', 'ok'); }
+  catch (err) { toast('사진을 저장하지 못했어요', 'err'); }
+};
+$('btnAllCommon').onclick = () => { S.templates.forEach(t => t.useCommon = true); save(); afterCommon(); toast('🔗 모든 문자가 공통 사진을 써요', 'ok'); };
+function afterCommon() { renderCommon(); renderTplList(); renderChips(); renderSendImgs(); renderCount(); }
+
 let edit = null; // 편집 중인 사본
 function openEditor(id) {
   const t = id ? S.templates.find(x => x.id === id) : null;
-  edit = t ? JSON.parse(JSON.stringify(t)) : { id: 't_' + Date.now(), icon: '💬', name: '', type: '수신', title: '', body: '', sign: true, imgs: [], isNew: true };
+  edit = t ? JSON.parse(JSON.stringify(t)) : { id: 't_' + Date.now(), icon: '💬', name: '', type: '수신', title: '', body: '', sign: true, imgs: [], useCommon: true, isNew: true };
   edit.newImgs = {}; // id → dataURL (아직 저장 전)
-  $('eIcon').value = edit.icon; $('eName').value = edit.name; $('eTitle').value = edit.title; $('eBody').value = edit.body; $('eSign').checked = edit.sign;
+  $('eIcon').value = edit.icon; $('eName').value = edit.name; $('eTitle').value = edit.title; $('eBody').value = edit.body; $('eSign').checked = edit.sign; $('eCommon').checked = usesCommon(edit);
   $('eDelete').classList.toggle('hidden', !!edit.isNew);
   renderEType(); renderEImgs();
   $('editSheet').classList.remove('hidden');
@@ -605,6 +651,8 @@ function renderEType() {
 }
 $('eType').onclick = e => { const b = e.target.closest('[data-etype]'); if (b) { edit.type = b.dataset.etype; renderEType(); } };
 function renderEImgs() {
+  const common = $('eCommon').checked;
+  $('eCommonNote').classList.toggle('hidden', !common); $('eOwnLabel').classList.toggle('hidden', common); $('eImgs').classList.toggle('hidden', common);
   const cells = [];
   for (let i = 0; i < 3; i++) {
     const id = edit.imgs[i];
@@ -616,6 +664,7 @@ function renderEImgs() {
   }
   $('eImgs').innerHTML = cells.join('');
 }
+$('eCommon').onchange = () => renderEImgs();
 $('eImgs').onclick = e => {
   if (e.target.closest('[data-addimg]')) { if (edit.imgs.length >= 3) return; $('eFile').click(); }
   const r = e.target.closest('[data-rmimg]'); if (r) { edit.imgs.splice(+r.dataset.rmimg, 1); renderEImgs(); }
@@ -628,7 +677,7 @@ $('eFile').onchange = async e => {
 };
 $('eSave').onclick = async () => {
   edit.icon = $('eIcon').value.trim() || '💬'; edit.name = $('eName').value.trim(); edit.title = $('eTitle').value.trim().slice(0, 10);
-  edit.body = $('eBody').value; edit.sign = $('eSign').checked;
+  edit.body = $('eBody').value; edit.sign = $('eSign').checked; edit.useCommon = $('eCommon').checked;
   if (!edit.name) { toast('버튼 이름을 입력해 주세요', 'err'); $('eName').focus(); return; }
   if (!edit.body.trim()) { toast('본문을 입력해 주세요', 'err'); $('eBody').focus(); return; }
   try { for (const id of edit.imgs) if (edit.newImgs[id]) { await IDB.set(id, edit.newImgs[id]); imgCache[id] = edit.newImgs[id]; } }
@@ -648,7 +697,7 @@ $('eDelete').onclick = () => {
   save(); cleanupImgs(); $('editSheet').classList.add('hidden'); renderAll(); toast('🗑️ 삭제했어요');
 };
 async function cleanupImgs() {
-  try { const used = new Set(S.templates.flatMap(t => t.imgs)); const keys = await IDB.keys(); for (const k of keys) if (!used.has(k)) { await IDB.del(k); delete imgCache[k]; } } catch (e) {}
+  try { const used = new Set(allImgIds()); const keys = await IDB.keys(); for (const k of keys) if (!used.has(k)) { await IDB.del(k); delete imgCache[k]; } } catch (e) {}
 }
 $('btnAddTpl').onclick = () => openEditor(null);
 $('btnResetTpl').onclick = async () => {
@@ -714,7 +763,7 @@ $('btnAddEx').onclick = () => { if (addExclude($('exPhone').value, $('exMemo').v
 $('exList').onclick = e => { const b = e.target.closest('[data-exdel]'); if (b) { S.excludes.splice(+b.dataset.exdel, 1); save(); renderExList(); checkPhone(); toast('삭제했어요'); } };
 
 $('btnBackup').onclick = async () => {
-  const imgs = {}; for (const id of new Set(S.templates.flatMap(t => t.imgs))) if (imgCache[id]) imgs[id] = imgCache[id];
+  const imgs = {}; for (const id of allImgIds()) if (imgCache[id]) imgs[id] = imgCache[id];
   download(`콜백문자_백업_${fmtDate(Date.now())}.json`, JSON.stringify({ app: 'linkclean-callback', v: 2, state: S, imgs }), 'application/json');
   toast('⬇️ 백업 파일을 저장했어요', 'ok');
 };
@@ -742,7 +791,7 @@ function go(tab) {
   document.querySelectorAll('.tabbtn').forEach(b => { const on = b.dataset.tab === tab; b.classList.toggle('text-brand-700', on); b.classList.toggle('text-slate-400', !on); });
   $('sendBar').classList.toggle('hidden', tab !== 'send');
   $('pageTitle').textContent = TITLES[tab];
-  if (tab === 'msgs') renderTplList(); if (tab === 'history') renderHistory(); if (tab === 'settings') renderSettings();
+  if (tab === 'msgs') { renderCommon(); renderTplList(); } if (tab === 'history') renderHistory(); if (tab === 'settings') renderSettings();
   window.scrollTo({ top: 0 });
   try { sessionStorage.setItem('cb_tab', tab); } catch (e) {}
 }
@@ -752,7 +801,7 @@ document.addEventListener('click', e => {
   const c = e.target.closest('[data-close]'); if (c) $(c.dataset.close).classList.add('hidden');
 });
 
-function renderAll() { renderChips(); renderSendImgs(); setDraftFromTpl(); renderRecent(); checkPhone(); renderTplList(); renderHistory(); renderSettings(); }
+function renderAll() { renderCommon(); renderChips(); renderSendImgs(); setDraftFromTpl(); renderRecent(); checkPhone(); renderTplList(); renderHistory(); renderSettings(); }
 
 /* ============ 시작 ============ */
 (async () => {
