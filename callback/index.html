@@ -270,14 +270,8 @@ const LINE = '────────────';
 const DEFAULT_TEMPLATES = () => [
   { id:'t_in', icon:'🌟', name:'수신 감사', type:'수신', title:'링크클린', sign:false, imgs:[],
     body:`전화 주셔서 진심으로 감사드립니다.\n${LINE}\n🧹 서비스 안내\n${LINE}\n✅ 입주·이사·준공 청소\n✅ 거주·부분·상가 청소\n✅ 사무실 청소\n✅ 폐기물 처리\n✅ 쓰레기집 청소\n\n언제나 고객 만족 100%를 약속드립니다!\n${LINE}\n📞 064-763-4545\n${LINE}\n카카오톡상담\nhttps://pf.kakao.com/_xfxdrxmM` },
-  { id:'t_out', icon:'📤', name:'발신 인사', type:'발신', title:'링크클린', sign:true, imgs:[],
-    body:'안녕하세요, 제주 청소 전문 기업 링크클린입니다. 통화 감사드립니다. 아래 링크에서 작업 사례와 상세 안내를 확인하실 수 있습니다.' },
   { id:'t_miss', icon:'⏳', name:'부재중 안내', type:'부재중', title:'링크클린', sign:true, imgs:[],
     body:'안녕하세요, 링크클린입니다. 현재 현장 작업 중이라 전화를 받지 못했습니다. 문의주신 내용을 문자로 남겨주시면 작업 종료 후 가장 먼저 연락드리겠습니다. 감사합니다!' },
-  { id:'t_move', icon:'🏠', name:'입주/이사청소', type:'수신', title:'입주청소안내', sign:true, imgs:[],
-    body:'안녕하세요, 링크클린입니다. 문의주신 입주/이사청소는 친환경 세제와 전문 장비를 사용해 보이지 않는 곳까지 꼼꼼하게 케어합니다. 작업 전후 사진과 안내는 아래에서 확인해 주세요.' },
-  { id:'t_waste', icon:'🚛', name:'폐기물·특수청소', type:'수신', title:'링크클린', sign:true, imgs:[],
-    body:'안녕하세요, 제주 청소업체 링크클린입니다. 문의주신 폐기물 처리·특수청소는 현장 상황에 맞춰 신속하고 깔끔하게 치워드립니다. 유품정리 시 귀중품·서류·사진 등은 꼭 유족분께 전달해 드립니다. 편하게 상담 주세요.' },
   { id:'t_contract', icon:'🤝', name:'계약 확정', type:'기타', title:'링크클린', sign:false, useCommon:false, imgs:[],
     body:`[링크클린]\n\n안녕하세요, 제주 청소 전문 "링크클린"입니다.\n소중한 인연을 맺어주셔서 진심으로 감사드립니다. 🙏\n\n${LINE}\n📅 청소 일정 : {청소날짜}\n⏰ 도착 시간 : {도착시간}경\n💰 청소 비용 : {청소비용}\n💳 계약금 : {계약금}\n${LINE}\n\n🏦 계약금 입금 계좌\n토스뱅크 1000-1626-3066\n예금주 : 한승우\n\n✔ 계약금 입금이 확인되면 예약이 최종 확정됩니다.\n✔ 정확한 주소와 동·호수를 문자로 남겨주세요.\n✔ 현관 비밀번호가 있다면 함께 알려주시면 편리합니다.\n\n깨끗한 공간으로 보답하겠습니다. 감사합니다!\n📞 064-763-4545` },
 ];
@@ -347,7 +341,7 @@ async function loadImgs() {
   } catch (e) {}
 }
 // 기본 홍보 사진 넣기 (버전이 오르면 한 번만 다시 적용)
-const SEED_V = 5;
+const SEED_V = 6;
 const COMMON_DEFAULT = ['img_thanks','img_services','img_waste'];
 const PROMO = { img_thanks:'promo/thanks.jpg', img_services:'promo/services.jpg', img_move:'promo/move.jpg', img_waste:'promo/waste.jpg' };
 const PROMO_MAP = { t_in:['img_thanks','img_services'], t_out:['img_thanks','img_services'], t_miss:['img_services'], t_move:['img_move'], t_waste:['img_waste'] };
@@ -359,6 +353,11 @@ async function seedPromo() {
       const blob = await (await fetch(url)).blob();
       const du = await new Promise((res, rej) => { const r = new FileReader(); r.onload = () => res(r.result); r.onerror = rej; r.readAsDataURL(blob); });
       await IDB.set(id, du); imgCache[id] = du;
+    }
+    // v6: 발신·입주·폐기물 문자 삭제 — 수신·부재중·예약만 남김
+    if ((S.seedV || 0) < 6) {
+      S.templates = S.templates.filter(t => !['t_out', 't_move', 't_waste'].includes(t.id));
+      if (!S.templates.some(t => t.id === S.selectedId)) S.selectedId = (S.templates[0] || {}).id;
     }
     // 예전 버전에서 빠진 기본 문자 추가
     DEFAULT_TEMPLATES().forEach(d => { if (!S.templates.some(t => t.id === d.id)) S.templates.push(d); });
@@ -823,7 +822,7 @@ async function cleanupImgs() {
 }
 $('btnAddTpl').onclick = () => openEditor(null);
 $('btnResetTpl').onclick = async () => {
-  if (!confirm('문자 목록을 처음 기본 문자 6개로 되돌릴까요?\n(직접 만든 문자와 사진은 지워져요)')) return;
+  if (!confirm('문자 목록을 처음 기본 문자 3개로 되돌릴까요?\n(직접 만든 문자와 사진은 지워져요)')) return;
   S.templates = DEFAULT_TEMPLATES(); S.selectedId = 't_in'; S.seedV = 0; save(); await seedPromo(); cleanupImgs(); renderAll(); toast('↩ 기본 문자로 되돌렸어요');
 };
 
