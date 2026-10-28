@@ -53,6 +53,11 @@
 
   <!-- ===================== 보내기 ===================== -->
   <main id="tab-send" class="tab-page flex-1 space-y-4 px-4 pb-[280px] pt-4">
+    <a id="androidBanner" href="../callback-app/" class="hidden rounded-3xl bg-emerald-50 p-4 ring-2 ring-emerald-300">
+      <p class="text-[16px] font-extrabold text-emerald-800">🤖 안드로이드 폰이세요?</p>
+      <p class="mt-1 text-[14px] text-emerald-700">통화가 끝나면 문자가 <b>자동으로</b> 나가는 안드로이드 앱이 있어요. 눌러서 설치 ›</p>
+    </a>
+    <script>if(/Android/i.test(navigator.userAgent)){var b=document.getElementById('androidBanner');b.classList.remove('hidden');b.classList.add('block');}</script>
     <section class="rounded-3xl bg-white p-4 shadow-sm ring-1 ring-slate-200">
       <label for="phone" class="mb-2 block text-[15px] font-bold text-slate-600">① 고객 전화번호</label>
       <div class="relative">
