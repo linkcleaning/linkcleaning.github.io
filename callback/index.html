@@ -132,6 +132,11 @@
     <div class="overflow-hidden rounded-3xl bg-white shadow-sm ring-1 ring-slate-200">
       <div class="grid grid-cols-[1.1fr_1.5fr_0.9fr] border-b border-slate-200 bg-slate-50 px-4 py-2 text-[13px] font-bold text-slate-500"><span>날짜</span><span>번호</span><span class="text-right">구분</span></div>
       <ul id="histList" class="divide-y divide-slate-100"></ul>
+      <div id="histPager" class="hidden grid-cols-[1fr_auto_1fr] items-center gap-2 border-t border-slate-200 bg-slate-50 px-3 py-2">
+        <button id="histPrev" class="press h-11 rounded-xl bg-white text-[15px] font-bold text-slate-600 ring-1 ring-slate-200">‹ 이전</button>
+        <span id="histPageInfo" class="text-center text-[14px] font-bold text-slate-500"></span>
+        <button id="histNext" class="press h-11 rounded-xl bg-white text-[15px] font-bold text-slate-600 ring-1 ring-slate-200">다음 ›</button>
+      </div>
     </div>
     <p class="mt-3 text-center text-[13px] text-slate-400">※ 최근 3개월 · 최대 500건 보관 (이 휴대폰에만 저장)</p>
     <div class="mt-3 grid grid-cols-2 gap-2">
@@ -828,22 +833,36 @@ $('btnResetTpl').onclick = async () => {
 };
 
 /* ============ 발송내역 ============ */
-let histFilter = '전체';
+let histFilter = '전체', histPage = 0;
+const HIST_PER = 5;
 function renderHistory() {
   $('histFilter').innerHTML = ['전체', ...TYPES].map(x => {
     const cnt = x === '전체' ? S.history.length : S.history.filter(h => h.type === x).length;
     return `<button data-hf="${x}" class="press shrink-0 rounded-full border-2 px-4 py-2 text-[15px] font-bold ${histFilter === x ? 'chip-on' : 'border-slate-200 bg-white text-slate-600'}">${x} <span class="opacity-70">${cnt}</span></button>`;
   }).join('');
   const list = S.history.filter(h => histFilter === '전체' || h.type === histFilter);
-  $('histList').innerHTML = list.length ? list.map(h => `
+  const pages = Math.max(1, Math.ceil(list.length / HIST_PER));
+  if (histPage >= pages) histPage = pages - 1;
+  if (histPage < 0) histPage = 0;
+  const page = list.slice(histPage * HIST_PER, histPage * HIST_PER + HIST_PER);
+  $('histList').innerHTML = page.length ? page.map(h => `
     <li class="grid grid-cols-[1.1fr_1.5fr_0.9fr] items-center px-4 py-3">
       <span class="text-[13px] leading-tight text-slate-500">${fmtDate(h.ts)}<br/>${fmtTime(h.ts)}</span>
       <button data-hload="${esc(h.phone)}" class="text-left"><span class="block text-[16px] font-bold tracking-wide text-slate-800">${esc(h.phone)}</span><span class="text-[12px] text-slate-400">${esc(h.tpl)} · ${esc(h.method)}</span></button>
       <span class="flex flex-col items-end gap-1"><span class="rounded-md px-2 py-0.5 text-[12px] font-bold ${TYPE_COLOR[h.type] || TYPE_COLOR['기타']}">${esc(h.type)}</span>
         <button data-hex="${esc(h.phone)}" class="text-[11px] font-semibold text-slate-400">🚫제외</button></span>
     </li>`).join('') : `<li class="py-10 text-center text-[14px] text-slate-400">발송 내역이 없어요</li>`;
+  const pager = $('histPager'); const many = list.length > HIST_PER;
+  pager.classList.toggle('hidden', !many); pager.classList.toggle('grid', many);
+  if (many) {
+    $('histPageInfo').textContent = `${histPage + 1} / ${pages} 쪽`;
+    $('histPrev').disabled = histPage === 0; $('histPrev').classList.toggle('opacity-30', histPage === 0);
+    $('histNext').disabled = histPage >= pages - 1; $('histNext').classList.toggle('opacity-30', histPage >= pages - 1);
+  }
 }
-$('histFilter').onclick = e => { const b = e.target.closest('[data-hf]'); if (b) { histFilter = b.dataset.hf; renderHistory(); } };
+$('histPrev').onclick = () => { if (histPage > 0) { histPage--; renderHistory(); window.scrollTo({ top: 0 }); } };
+$('histNext').onclick = () => { histPage++; renderHistory(); window.scrollTo({ top: 0 }); };
+$('histFilter').onclick = e => { const b = e.target.closest('[data-hf]'); if (b) { histFilter = b.dataset.hf; histPage = 0; renderHistory(); } };
 $('histList').onclick = e => {
   const l = e.target.closest('[data-hload]'); if (l) { $('phone').value = l.dataset.hload; checkPhone(); go('send'); toast(`📞 ${l.dataset.hload} 불러왔어요`); return; }
   const x = e.target.closest('[data-hex]'); if (x) addExclude(x.dataset.hex, '');
