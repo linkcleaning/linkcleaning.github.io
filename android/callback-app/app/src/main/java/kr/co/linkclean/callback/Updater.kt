@@ -74,4 +74,32 @@ object Updater {
         }
         c.startActivity(i)
     }
+
+    private const val UPD_CHANNEL = "app_update"
+    private const val UPD_NOTI_ID = 4546
+    const val EXTRA_DO_UPDATE = "do_update"
+
+    /** 백그라운드에서 새 버전 확인 → 있으면 알림 (누르면 앱이 열리면서 바로 업데이트 시작) */
+    fun checkAndNotify(c: Context) {
+        val app = c.applicationContext
+        Thread {
+            val i = fetch() ?: return@Thread
+            if (!isNewer(i)) return@Thread
+            val nm = app.getSystemService(android.app.NotificationManager::class.java)
+            if (nm.getNotificationChannel(UPD_CHANNEL) == null) {
+                nm.createNotificationChannel(android.app.NotificationChannel(UPD_CHANNEL, "앱 업데이트", android.app.NotificationManager.IMPORTANCE_DEFAULT))
+            }
+            val open = Intent(app, MainActivity::class.java).putExtra(EXTRA_DO_UPDATE, true)
+                .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP)
+            val pi = PendingIntent.getActivity(app, 9, open, PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE)
+            val n = androidx.core.app.NotificationCompat.Builder(app, UPD_CHANNEL)
+                .setSmallIcon(R.drawable.ic_stat_call)
+                .setContentTitle("🆕 링크클린 자동콜백 새 버전 ${i.name}")
+                .setContentText("누르면 바로 업데이트돼요" + if (i.notes.isNotBlank()) " · ${i.notes}" else "")
+                .setAutoCancel(true)
+                .setContentIntent(pi)
+                .build()
+            try { nm.notify(UPD_NOTI_ID, n) } catch (_: SecurityException) { }
+        }.start()
+    }
 }

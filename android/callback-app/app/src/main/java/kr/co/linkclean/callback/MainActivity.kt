@@ -144,6 +144,19 @@ class MainActivity : AppCompatActivity() {
         buildSendTab()
         selectTab(0)
         setDraftFromTpl()
+        handleUpdateIntent(intent)
+    }
+
+    override fun onNewIntent(intent: Intent) {
+        super.onNewIntent(intent)
+        handleUpdateIntent(intent)
+    }
+
+    /** '새 버전' 알림을 눌러서 들어온 경우 → 바로 업데이트 시작 */
+    private fun handleUpdateIntent(i: Intent?) {
+        if (i?.getBooleanExtra(Updater.EXTRA_DO_UPDATE, false) != true) return
+        i.removeExtra(Updater.EXTRA_DO_UPDATE)
+        toastView.post { startUpdate() }
     }
 
     override fun onResume() {

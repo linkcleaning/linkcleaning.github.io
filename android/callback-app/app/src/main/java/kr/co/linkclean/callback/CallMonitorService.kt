@@ -40,6 +40,8 @@ class CallMonitorService : Service() {
         )
         Prefs.pruneCooldowns(this)
         registerCallState()
+        // 6시간마다 새 버전 확인 → 알림
+        updHandler.post(updCheck)
     }
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
@@ -47,7 +49,16 @@ class CallMonitorService : Service() {
         return START_STICKY
     }
 
+    private val updHandler = android.os.Handler(android.os.Looper.getMainLooper())
+    private val updCheck = object : Runnable {
+        override fun run() {
+            Updater.checkAndNotify(this@CallMonitorService)
+            updHandler.postDelayed(this, 6 * 3600_000L)
+        }
+    }
+
     override fun onDestroy() {
+        updHandler.removeCallbacks(updCheck)
         unregisterCallState()
         super.onDestroy()
     }

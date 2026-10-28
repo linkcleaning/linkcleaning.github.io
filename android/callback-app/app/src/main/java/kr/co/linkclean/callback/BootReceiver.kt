@@ -10,5 +10,8 @@ class BootReceiver : BroadcastReceiver() {
         if (Prefs.enabled(context)) {
             try { CallMonitorService.start(context) } catch (_: Exception) { }
         }
+        if (intent.action == Intent.ACTION_BOOT_COMPLETED) {
+            Updater.checkAndNotify(context)
+        }
     }
 }
