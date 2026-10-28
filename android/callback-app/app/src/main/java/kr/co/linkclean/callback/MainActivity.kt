@@ -1333,6 +1333,14 @@ class MainActivity : AppCompatActivity() {
                 (if (missingCorePerms().isEmpty()) "✅ 전화·통화기록·문자 권한 허용됨" else "⚠️ 권한이 부족해요"),
             14f, Col.S600
         ), ui.lp(top = 4, bottom = 10))
+        val svcBox = ui.col().apply { background = ui.rect(Col.S50, 16f, Col.S200, 1f); setPadding(ui.dp(10), ui.dp(4), ui.dp(10), ui.dp(8)) }
+        svcBox.addView(ui.check("📡 상시 감시 서비스 사용 (알림줄에 '작동 중' 표시)", Prefs.useService(this)) { on ->
+            sp.edit().putBoolean(Prefs.KEY_USE_SERVICE, on).apply()
+            if (on && Prefs.enabled(this)) CallMonitorService.start(this) else CallMonitorService.stop(this)
+            toast(if (on) "상시 감시 켬" else "상시 감시 끔 – 통화 종료 신호만으로 동작해요")
+        })
+        svcBox.addView(ui.text("전화가 '통화중'으로 뜨는 등 통화가 이상하면 꺼 보세요. 꺼도 자동 콜백은 동작하지만, 폰이 깊은 절전 상태면 놓칠 수 있어요.", 12f, Col.S500).apply { setPadding(ui.dp(8), 0, 0, 0) })
+        pw.addView(svcBox, ui.lp(bottom = 8))
         pw.addView(ui.button("배터리 최적화 예외 등록", Col.WHITE, Col.B700, 48, 15f, Col.B200, 12f) { requestBatteryExemption() }, ui.lp(bottom = 8))
         pw.addView(ui.button("앱 정보 열기 (권한 · 제한된 설정)", Col.WHITE, Col.B700, 48, 15f, Col.B200, 12f) { openAppSettings() })
         b.addView(pw)

@@ -123,6 +123,7 @@ https://www.instagram.com/linkcleaning
     const val KEY_USE_MAG = "sign_use_mag"
     const val KEY_SAFE_TEXT = "safe_text"
     const val KEY_LAST_EVENT = "last_event"
+    const val KEY_USE_SERVICE = "use_service"
     const val KEY_SEND_OUTGOING = "send_outgoing"
     const val KEY_AUTO_OUT = "auto_out_tpl"
     const val KEY_SKIP_CONTACTS = "skip_contacts"
@@ -299,6 +300,8 @@ https://www.instagram.com/linkcleaning
         val t = java.text.SimpleDateFormat("MM/dd HH:mm:ss", java.util.Locale.KOREA).format(java.util.Date())
         sp(c).edit().putString(KEY_LAST_EVENT, "$t  $msg").apply()
     }
+    /** 상시 감시 서비스(알림줄 표시) 사용 여부 */
+    fun useService(c: Context) = sp(c).getBoolean(KEY_USE_SERVICE, true)
     fun lastEvent(c: Context): String = sp(c).getString(KEY_LAST_EVENT, "") ?: ""
 
     /** 7일 지난 쿨타임 기록 정리 */

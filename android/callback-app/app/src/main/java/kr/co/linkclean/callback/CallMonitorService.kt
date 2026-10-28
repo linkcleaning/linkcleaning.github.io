@@ -105,6 +105,7 @@ class CallMonitorService : Service() {
         private const val NOTI_ID = 4545
 
         fun start(c: Context) {
+            if (!Prefs.useService(c)) { stop(c); return } // 상시 감시 끔 → 매니페스트 리시버만 사용
             ContextCompat.startForegroundService(c, Intent(c, CallMonitorService::class.java))
         }
 
