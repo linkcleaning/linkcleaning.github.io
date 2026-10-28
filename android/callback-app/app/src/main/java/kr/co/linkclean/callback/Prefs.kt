@@ -94,7 +94,7 @@ https://www.instagram.com/linkcleaning
     const val DEFAULT_SUBJECT = ""  // 제목 없음
     const val MAX_IMAGES = 3
     private const val KEY_SEED_VER = "seed_ver"
-    private const val SEED_VER = 8
+    private const val SEED_VER = 9
 
     const val KEY_ENABLED = "enabled"
     const val KEY_MESSAGE = "message"
@@ -250,6 +250,14 @@ https://www.instagram.com/linkcleaning
                 if (t.body.trim() in olds) { list[i] = t.copy(body = new); changed = true }
             }
             if (changed) Templates.save(c, list)
+        }
+        // v9: 입주/이사청소·폐기물 문자 정리, 계약 확정 → 예약 문자
+        if (sp.getInt(KEY_SEED_VER, 0) < 9 && sp.getString(Templates.KEY, null) != null) {
+            val list = Templates.load(c).filter { it.id != "t_move" && it.id != "t_waste" }.map {
+                if (it.id == "t_contract" && it.name == "계약 확정") it.copy(name = "예약 문자") else it
+            }
+            Templates.save(c, list)
+            if (selectedId(c) == "t_move" || selectedId(c) == "t_waste") sp.edit().putString(KEY_SELECTED, "t_in").apply()
         }
         sp.edit().putInt(KEY_SEED_VER, SEED_VER).commit()
     }

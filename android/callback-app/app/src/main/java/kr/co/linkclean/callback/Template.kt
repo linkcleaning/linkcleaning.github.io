@@ -174,11 +174,7 @@ $LINE
         Tpl("t_in", "🌟", "수신 감사", "수신", "", CARD_IN, false, true),
         Tpl("t_out", "📤", "발신 인사", "발신", "", CARD_OUT, false, true),
         Tpl("t_miss", "⏳", "부재중 안내", "부재중", "", CARD_MISS, false, true),
-        Tpl("t_move", "🏠", "입주/이사청소", "수신", "입주청소안내",
-            "안녕하세요, 링크클린입니다. 문의주신 입주/이사청소는 친환경 세제와 전문 장비를 사용해 보이지 않는 곳까지 꼼꼼하게 케어합니다. 작업 전후 사진과 안내는 아래에서 확인해 주세요.", true, true),
-        Tpl("t_waste", "🚛", "폐기물·특수청소", "수신", "링크클린",
-            "안녕하세요, 제주 청소업체 링크클린입니다. 문의주신 폐기물 처리·특수청소는 현장 상황에 맞춰 신속하고 깔끔하게 치워드립니다. 유품정리 시 귀중품·서류·사진 등은 꼭 유족분께 전달해 드립니다. 편하게 상담 주세요.", true, true),
-        Tpl("t_contract", "🤝", "계약 확정", "기타", "링크클린", CONTRACT, false, false),
+        Tpl("t_contract", "🤝", "예약 문자", "기타", "링크클린", CONTRACT, false, false),
     )
 
     fun load(c: Context): MutableList<Tpl> {
