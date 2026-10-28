@@ -59,17 +59,16 @@
     </a>
     <script>if(/Android/i.test(navigator.userAgent)){var b=document.getElementById('androidBanner');b.classList.remove('hidden');b.classList.add('block');}</script>
     <section class="rounded-3xl bg-white p-4 shadow-sm ring-1 ring-slate-200">
-      <label for="phone" class="mb-2 block text-[15px] font-bold text-slate-600">① 고객 전화번호</label>
-      <div class="relative">
-        <input id="phone" type="tel" inputmode="tel" autocomplete="off" placeholder="010-0000-0000"
-          class="h-16 w-full rounded-2xl border-2 border-slate-200 bg-slate-50 px-4 pr-14 text-[26px] font-bold tracking-wider text-slate-900 outline-none placeholder:text-slate-300 focus:border-brand-500 focus:bg-white" />
+      <label class="mb-2 block text-[15px] font-bold text-slate-600">① 고객 전화번호</label>
+      <p class="mb-2 rounded-xl bg-amber-50 px-3 py-2 text-[13px] font-semibold text-amber-800">📞 통화목록에서 번호를 <b>꾹 눌러 복사</b> → 아래 큰 버튼을 누르세요 (외워서 입력 안 해도 돼요)</p>
+      <button id="btnPaste" class="press flex h-20 w-full items-center justify-center gap-2 rounded-2xl bg-brand-600 text-[20px] font-extrabold text-white shadow-lg shadow-brand-600/30">📋 복사한 번호 붙여넣기</button>
+      <div class="relative mt-3">
+        <input id="phone" type="tel" inputmode="tel" autocomplete="off" placeholder="또는 여기를 눌러 직접 입력"
+          class="h-16 w-full rounded-2xl border-2 border-slate-200 bg-slate-50 px-4 pr-14 text-[24px] font-bold tracking-wider text-slate-900 outline-none placeholder:text-[16px] placeholder:font-semibold placeholder:text-slate-400 focus:border-brand-500 focus:bg-white" />
         <button id="btnClearX" class="press absolute right-2 top-1/2 hidden h-11 w-11 -translate-y-1/2 items-center justify-center rounded-full bg-slate-200 text-lg font-bold text-slate-600" aria-label="지우기">✕</button>
       </div>
       <div id="phoneWarn" class="mt-2 hidden rounded-xl px-3 py-2 text-[14px] font-semibold"></div>
-      <div class="mt-3 grid grid-cols-3 gap-2">
-        <button id="btnPaste" class="press col-span-2 h-14 rounded-2xl bg-brand-50 text-[17px] font-bold text-brand-700 ring-2 ring-brand-200">📋 복사한 번호 붙여넣기</button>
-        <button id="btnClear" class="press h-14 rounded-2xl bg-slate-100 text-[17px] font-bold text-slate-600 ring-1 ring-slate-200">✕ 초기화</button>
-      </div>
+      <button id="btnClear" class="press mt-2 h-11 w-full rounded-xl bg-slate-100 text-[15px] font-bold text-slate-500 ring-1 ring-slate-200">✕ 번호 지우기</button>
     </section>
 
     <section class="rounded-3xl bg-white p-4 shadow-sm ring-1 ring-slate-200">
@@ -625,15 +624,17 @@ function record(method) {
 $('phone').addEventListener('input', e => { e.target.value = fmtPhone(e.target.value); checkPhone(); });
 const clearPhone = () => { $('phone').value = ''; checkPhone(); toast('🧹 번호를 지웠어요'); vib(); };
 $('btnClear').onclick = clearPhone; $('btnClearX').onclick = clearPhone;
-$('btnPaste').onclick = async () => {
-  vib();
-  if (!navigator.clipboard?.readText) { toast('입력창을 꾹 눌러 붙여넣어 주세요', 'err'); $('phone').focus(); return; }
+async function pasteNumber(silentFail) {
+  if (!navigator.clipboard?.readText) { if (!silentFail) { toast('입력창을 꾹 눌러 붙여넣어 주세요', 'err'); $('phone').focus(); } return false; }
   try {
     const f = fmtPhone(await navigator.clipboard.readText());
-    if (digits(f).length < 8) { toast('📋 복사된 내용에 전화번호가 없어요', 'err'); return; }
-    $('phone').value = f; checkPhone(); toast(`✅ ${f} 붙여넣기 완료`, 'ok');
-  } catch (e) { toast("붙여넣기 권한이 거부됐어요. 팝업에서 '붙여넣기'를 눌러주세요", 'err'); }
-};
+    if (digits(f).length < 8) { if (!silentFail) toast('📋 복사된 내용에 전화번호가 없어요', 'err'); return false; }
+    $('phone').value = f; checkPhone(); toast(`✅ ${f} 번호를 넣었어요`, 'ok'); return true;
+  } catch (e) { if (!silentFail) toast("붙여넣기 권한이 거부됐어요. 팝업에서 '붙여넣기'를 눌러주세요", 'err'); return false; }
+}
+$('btnPaste').onclick = () => { vib(); pasteNumber(false); };
+// 번호 칸을 눌렀을 때 비어 있으면 복사된 번호를 자동으로 채워줌
+$('phone').addEventListener('focus', () => { if (!digits($('phone').value)) pasteNumber(true); });
 $('chips').onclick = e => { const b = e.target.closest('[data-pick]'); if (b) pick(b.dataset.pick); };
 $('draft').addEventListener('input', () => { draftDirty = true; $('btnRestore').classList.remove('hidden'); renderCount(); });
 $('btnRestore').onclick = () => { setDraftFromTpl(); toast('↩ 원래 문구로 되돌렸어요'); };
