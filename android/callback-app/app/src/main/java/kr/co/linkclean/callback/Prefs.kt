@@ -94,7 +94,7 @@ https://www.instagram.com/linkcleaning
     const val DEFAULT_SUBJECT = ""  // 제목 없음
     const val MAX_IMAGES = 3
     private const val KEY_SEED_VER = "seed_ver"
-    private const val SEED_VER = 9
+    private const val SEED_VER = 10
 
     const val KEY_ENABLED = "enabled"
     const val KEY_MESSAGE = "message"
@@ -258,6 +258,11 @@ https://www.instagram.com/linkcleaning
             }
             Templates.save(c, list)
             if (selectedId(c) == "t_move" || selectedId(c) == "t_waste") sp.edit().putString(KEY_SELECTED, "t_in").apply()
+        }
+        // v10: 명함 링크를 회사 주소(www.linkclean.co.kr/card)로 – 직접 고친 문구 안의 옛 주소도 바꿈
+        if (sp.getInt(KEY_SEED_VER, 0) < 10 && sp.getString(Templates.KEY, null) != null) {
+            val list = Templates.load(c).map { it.copy(body = it.body.replace(Templates.OLD_CARD_URL, Templates.CARD_URL)) }
+            Templates.save(c, list)
         }
         sp.edit().putInt(KEY_SEED_VER, SEED_VER).commit()
     }

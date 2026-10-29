@@ -45,7 +45,8 @@ object Templates {
         FieldDef("계약금", "▷ 계약금", "money", "100000"),
     )
 
-    const val CARD_URL = "https://linkcleaning.github.io/card/"
+    const val CARD_URL = "www.linkclean.co.kr/card"
+    const val OLD_CARD_URL = "https://linkcleaning.github.io/card/"
 
     /** 수신 감사 – 짧은 안내 + 모바일 명함 링크 하나 (링크는 맨 끝에 두어야 미리보기 카드가 뜸) */
     val CARD_IN = """

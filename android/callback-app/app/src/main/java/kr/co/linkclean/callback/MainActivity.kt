@@ -1395,7 +1395,7 @@ class MainActivity : AppCompatActivity() {
         val send = Intent(Intent.ACTION_SEND).apply {
             type = "text/plain"
             putExtra(Intent.EXTRA_SUBJECT, "링크클린 자동콜백 앱")
-            putExtra(Intent.EXTRA_TEXT, "링크클린 자동콜백 앱 설치 링크입니다.\n아래 링크를 눌러 초록 버튼으로 설치하세요 (안드로이드 전용)\n\nhttps://linkcleaning.github.io/callback-app/")
+            putExtra(Intent.EXTRA_TEXT, "링크클린 자동콜백 앱 설치 링크입니다.\n아래 링크를 눌러 초록 버튼으로 설치하세요 (안드로이드 전용)\n\nhttps://linkcleaning.github.io/android-app/")
         }
         startActivity(Intent.createChooser(send, "앱 공유하기"))
     }
