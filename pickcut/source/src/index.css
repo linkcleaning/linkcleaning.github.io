@@ -1,0 +1,42 @@
+/* Tailwind CSS v4: 이 한 줄이면 모든 유틸리티 클래스를 쓸 수 있습니다 */
+@import "tailwindcss";
+
+/* 앱 전체에서 쓰는 색상 토큰.
+   클래스에서 bg-ink, text-mark 처럼 바로 쓸 수 있습니다. */
+/* 콘셉트: 암실(다크룸). 사진가가 밀착 인화지(contact sheet)에서 잘 나온 컷에
+   빨간 그리스 펜슬로 동그라미 치던 작업을 앱으로 옮겼습니다. */
+@theme {
+  --color-ink: #121014;      /* 배경: 따뜻한 암실 검정 */
+  --color-panel: #1d1a1f;    /* 카드·패널 배경 */
+  --color-line: #332d34;     /* 테두리 */
+  --color-mark: #ff4d2e;     /* 포인트: 그리스 펜슬 빨강 (베스트 컷, 실행 버튼) */
+  --color-warn: #f2b33d;     /* 경고: 앰버 (흔들림 등 제외 사유) */
+  --font-sans: "IBM Plex Sans KR", "Apple SD Gothic Neo", system-ui, sans-serif;
+  --font-mono: "IBM Plex Mono", ui-monospace, monospace; /* 점수·프레임 번호 */
+}
+
+html, body, #root { height: 100%; }
+body {
+  margin: 0;
+  background: var(--color-ink);
+  color: #f3eee9;
+  font-family: var(--font-sans);
+  -webkit-tap-highlight-color: transparent; /* 모바일 탭 시 파란 박스 제거 */
+  overscroll-behavior: none;                /* 당겨서 새로고침 방지 */
+}
+
+/* 아이폰 홈바 영역만큼 아래 여백 확보 */
+.pb-safe { padding-bottom: max(12px, env(safe-area-inset-bottom)); }
+.pt-safe { padding-top: max(12px, env(safe-area-inset-top)); }
+
+/* 가로 스크롤 칩 영역에서 스크롤바 숨기기 */
+.no-scrollbar::-webkit-scrollbar { display: none; }
+.no-scrollbar { scrollbar-width: none; }
+
+/* AI 분석 중 카드에 흐르는 빛 효과 */
+@keyframes shimmer { from { transform: translateX(-100%); } to { transform: translateX(100%); } }
+.shimmer::after {
+  content: ""; position: absolute; inset: 0;
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,.08), transparent);
+  animation: shimmer 1.2s infinite;
+}
