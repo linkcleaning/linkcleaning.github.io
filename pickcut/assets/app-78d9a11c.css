@@ -359,6 +359,9 @@
   .ml-1 {
     margin-left: var(--spacing);
   }
+  .ml-1\.5 {
+    margin-left: calc(var(--spacing) * 1.5);
+  }
   .ml-2 {
     margin-left: calc(var(--spacing) * 2);
   }
@@ -584,6 +587,12 @@
   .border {
     border-style: var(--tw-border-style);
     border-width: 1px;
+  }
+  .\!border-mark\/50 {
+    border-color: color-mix(in srgb, #ff4d2e 50%, transparent) !important;
+    @supports (color: color-mix(in lab, red, red)) {
+      border-color: color-mix(in oklab, var(--color-mark) 50%, transparent) !important;
+    }
   }
   .border-line {
     border-color: var(--color-line);
@@ -956,6 +965,9 @@
   }
   .underline {
     text-decoration-line: underline;
+  }
+  .underline-offset-2 {
+    text-underline-offset: 2px;
   }
   .underline-offset-4 {
     text-underline-offset: 4px;

@@ -87,6 +87,18 @@ export function deletePhoto(id) {
   return run('readwrite', (s) => s.delete(id));
 }
 
+/**
+ * 여러 장을 한 번에 삭제 (하나의 작업으로 묶음)
+ * 한 장씩 따로 지우면 수백 장일 때 느리고, 도중에 앱을 닫으면 일부만 지워질 수 있습니다.
+ * 하나로 묶으면 '전부 지워지거나, 하나도 안 지워지거나' 둘 중 하나라 안전합니다.
+ */
+export function deletePhotos(ids) {
+  return run('readwrite', (s) => {
+    ids.forEach((id) => s.delete(id));
+    return null;
+  });
+}
+
 /** 전부 삭제 */
 export function clearPhotos() {
   return run('readwrite', (s) => s.clear());

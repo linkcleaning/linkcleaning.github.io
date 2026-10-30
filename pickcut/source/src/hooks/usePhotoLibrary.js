@@ -13,11 +13,12 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { analyzePhoto, averageHash, loadImage, resizeToBlob, toDetectCanvas } from '../lib/imageAnalysis';
 import { preloadFaceModel } from '../lib/faceDetector';
-import { computeEmbedding, groupSimilar, preloadSimilarityModel } from '../lib/similarity';
+import { computeEmbedding, isSimilar, preloadSimilarityModel } from '../lib/similarity';
 import { readCaptureDate } from '../lib/exif';
 import {
   clearPhotos,
   deletePhoto,
+  deletePhotos,
   loadAllPhotos,
   requestPersistentStorage,
   savePhoto,
@@ -38,11 +39,13 @@ import {
 // '비슷한 사진' 기준값은 src/lib/similarity.js 의 SIMILAR_THRESHOLD 에서 조절
 
 // ★ 앱이 한 번에 안정적으로 다룰 수 있는 최대 사진 수 ★
-// 격자에는 썸네일만 띄우므로 200장까지 괜찮습니다.
-// 저장 용량은 사진 1장당 약 0.5MB → 200장 ≈ 100MB
-export const MAX_PHOTOS = 200;
+// 격자에는 작은 썸네일만 띄우고, 비슷한 사진 비교도 새 사진만 하도록 만들어 500장까지 다룹니다.
+// 저장 용량은 사진 1장당 약 0.45MB → 500장 ≈ 230MB
+// 비슷한 사진·제외된 사진을 정리하면 그만큼 자리가 생겨 더 올릴 수 있습니다.
+// 오래된 폰에서 느리면 300 정도로 낮추세요.
+export const MAX_PHOTOS = 500;
 
-const THUMB_SIZE = 400;  // 격자용 (2열 격자에서 레티나 화면 기준 충분)
+const THUMB_SIZE = 360;  // 격자용 (2열 격자 한 칸 ≈ 180pt × 2배 화면)
 const WORK_SIZE = 2048;  // 편집용 (편집 엔진은 1600px로 작업)
 
 const fullMessage = `최대 ${MAX_PHOTOS}장까지 정리할 수 있어요. 필요 없는 사진을 지운 뒤 다시 올려주세요.`;
@@ -236,28 +239,90 @@ export function usePhotoLibrary() {
    * 비슷한 사진 묶음에서 '이 사진만 남기기'
    * 고른 사진은 베스트, 같은 묶음의 나머지는 제외로 바꿉니다(사용자 지정 ✎).
    */
-  const keepOnlyInGroup = useCallback((groupIds, keepId) => {
-    const ids = new Set(groupIds);
-    setPhotos((prev) =>
-      prev.map((p) => {
-        if (!ids.has(p.id) || !p.result) return p;
-        const verdict = p.id === keepId ? 'best' : 'reject';
-        const result = { ...p.result, verdict, manual: true };
-        updatePhoto(p.id, { result }).catch(() => {});
-        return { ...p, result };
-      })
-    );
+  /** 여러 장을 한 번에 앱에서 지우기 (폰 갤러리 원본은 그대로) */
+  const removeMany = useCallback((ids) => {
+    const del = new Set(ids);
+    if (del.size === 0) return;
+    setPhotos((prev) => prev.filter((p) => !del.has(p.id)));
+    del.forEach(forget);
+    deletePhotos([...del]).catch((err) => console.warn('[픽컷] 저장소에서 지우기 실패', err));
   }, []);
 
-  // 비슷한 사진 묶기: 묶음마다 점수 1등만 isBurstBest = true
+  /**
+   * 비슷한 사진 묶음에서 '이 사진만 남기기'
+   * 고른 사진은 베스트로 지정하고, 같은 묶음의 나머지는 앱에서 지웁니다 → 장수가 줄어듦
+   */
+  const keepOnlyInGroup = useCallback(
+    (groupIds, keepId) => {
+      setPhotos((prev) =>
+        prev.map((p) => {
+          if (p.id !== keepId || !p.result) return p;
+          const result = { ...p.result, verdict: 'best', manual: true };
+          updatePhoto(p.id, { result }).catch(() => {});
+          return { ...p, result };
+        })
+      );
+      removeMany(groupIds.filter((id) => id !== keepId));
+    },
+    [removeMany]
+  );
+
+  // ── 비슷한 사진 찾기 (빠른 방식) ──
+  // 사진이 하나 추가될 때마다 '전부 대 전부'를 다시 비교하면 500장일 때 폰이 버벅입니다.
+  // 그래서 비교 결과(누가 누구와 비슷한지)를 기억해 두고, 새로 분석된 사진만 기존 사진과 비교합니다.
+  const similarRef = useRef(new Map()); // 사진 id → 비슷한 사진 id 모음
+
   const { enriched, groups } = useMemo(() => {
     const done = photos.filter((p) => p.status === 'done');
+    const links = similarRef.current;
+    const doneIds = new Set(done.map((p) => p.id));
+
+    // 지워진 사진은 기억에서도 빼기
+    for (const [id, set] of links) {
+      if (!doneIds.has(id)) links.delete(id);
+      else for (const other of set) if (!doneIds.has(other)) set.delete(other);
+    }
+    // 새로 분석된 사진만 기존 사진들과 비교
+    const known = done.filter((p) => links.has(p.id));
+    for (const p of done) {
+      if (links.has(p.id)) continue;
+      const mine = new Set();
+      for (const q of known) {
+        if (isSimilar(p, q)) {
+          mine.add(q.id);
+          links.get(q.id).add(p.id);
+        }
+      }
+      links.set(p.id, mine);
+      known.push(p);
+    }
+
+    // 연결된 것끼리 묶음 만들기 (A~B, B~C 비슷하면 A·B·C 한 묶음)
+    const byId = new Map(done.map((p) => [p.id, p]));
+    const seen = new Set();
+    const groups = [];
+    for (const p of done) {
+      if (seen.has(p.id)) continue;
+      const members = [];
+      const stack = [p.id];
+      seen.add(p.id);
+      while (stack.length) {
+        const id = stack.pop();
+        members.push(byId.get(id));
+        for (const next of links.get(id) || []) {
+          if (!seen.has(next)) {
+            seen.add(next);
+            stack.push(next);
+          }
+        }
+      }
+      // 맨 앞 = 그 묶음의 1등: 사용자가 직접 고른 베스트 → 그다음 점수 높은 순
+      const rank = (x) => (x.result.manual && x.result.verdict === 'best' ? 1000 : 0) + x.result.score;
+      groups.push(members.sort((a, b) => rank(b) - rank(a)));
+    }
+
     const bestIds = new Set();
     const groupOf = new Map(); // 사진 id → 묶음 번호
-    // 각 묶음을 점수 높은 순으로 정렬 → 맨 앞이 그 묶음의 1등
-    const groups = groupSimilar(done).map((members) =>
-      [...members].sort((a, b) => b.result.score - a.result.score)
-    );
     groups.forEach((members, gi) => {
       bestIds.add(members[0].id);
       members.forEach((p) => groupOf.set(p.id, gi));
@@ -274,6 +339,20 @@ export function usePhotoLibrary() {
     });
     return { enriched, groups };
   }, [photos]);
+
+  /** 제외된 사진(흔들림·어두움·눈 감음 등) 전부 앱에서 지우기 */
+  const removeRejected = useCallback(() => {
+    const ids = photos.filter((p) => p.result?.verdict === 'reject').map((p) => p.id);
+    removeMany(ids);
+    if (ids.length) setNotice(`제외된 사진 ${ids.length}장을 지웠어요.`);
+  }, [photos, removeMany]);
+
+  /** 비슷한 사진 전부 정리: 묶음마다 1등만 남기고 나머지는 앱에서 지우기 */
+  const cleanupSimilar = useCallback(() => {
+    const extra = groups.filter((g) => g.length > 1).flatMap((g) => g.slice(1).map((p) => p.id));
+    removeMany(extra);
+    if (extra.length) setNotice(`비슷한 사진 ${extra.length}장을 정리했어요. 묶음마다 베스트 1장만 남았어요.`);
+  }, [groups, removeMany]);
 
   // 화면 탭별 목록
   const lists = useMemo(() => {
@@ -296,7 +375,10 @@ export function usePhotoLibrary() {
     const when = (p) => p.captured?.ts ?? p.addedAt;
     const all = [...enriched].sort((a, b) => when(a) - when(b));
 
-    return { all, best, rejected, similar };
+    // 정리하면 줄어드는 장수 (비슷한 사진 중 1등 아닌 것)
+    const similarExtra = similar.reduce((n, g) => n + g.length - 1, 0);
+
+    return { all, best, rejected, similar, similarExtra };
   }, [enriched, groups]);
 
   const analyzingCount = photos.filter((p) => p.status === 'analyzing').length;
@@ -324,6 +406,8 @@ export function usePhotoLibrary() {
     removeAll,
     overrideVerdict,
     keepOnlyInGroup,
+    cleanupSimilar,
+    removeRejected,
     notice,
     isFull,
     warnFull,

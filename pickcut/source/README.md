@@ -94,7 +94,8 @@ src/
 | 눈 감음 감지 | ✅ 실제 동작 | MediaPipe Face Landmarker. 첫 사용 시 모델 약 4MB 다운로드, 이후 오프라인 가능. 사진은 폰 밖으로 안 나감 |
 | 썸네일 | ✅ 실제 동작 | 격자는 400px, 편집은 2048px 사본 → 최대 200장 |
 | 결과 저장 | ✅ 실제 동작 | IndexedDB. 앱을 다시 열어도 사진·판정 유지, '비우기'로 전체 삭제 |
-| 최대 장수 제한 | ✅ | 200장 초과분은 받지 않고 안내 (`MAX_PHOTOS`) |
+| 최대 장수 제한 | ✅ | 500장 초과분은 받지 않고 안내 (`MAX_PHOTOS`). 정리하면 그만큼 자리가 생김 |
+| 한 번에 정리 | ✅ | '비슷한' 탭: 묶음마다 베스트 1장만 남기고 나머지 앱에서 지우기 / '제외됨' 탭: 제외된 사진 한 번에 지우기 (폰 갤러리 원본은 그대로) |
 | 비슷한 사진 묶음 | ✅ 실제 동작 | AI 지문(Image Embedder, 약 4MB)으로 각도·줌이 달라도 묶음. 모델 없으면 평균 해시로 대체. '비슷한' 탭에서 비교 후 1장만 남기기 |
 | 한꺼번에 내보내기 | ✅ | 베스트 탭 → 선택 해제 → 준비 → 저장·공유 (아이폰 공유 제한 때문에 2단계) |
 | 로고 자동 삽입 | ✅ | 로고 PNG 또는 글자, 위치 4곳·크기 3단계·진하기 2단계. 내보내기와 편집 저장 모두 적용 |
@@ -124,7 +125,7 @@ npm run build    # dist/ 폴더 → Cloudflare Pages/Workers 등에 배포
 
 | 파일 | 값 | 뜻 |
 |---|---|---|
-| `src/hooks/usePhotoLibrary.js` | `MAX_PHOTOS = 200` | 최대 장수. 오래된 폰은 100 권장 |
+| `src/hooks/usePhotoLibrary.js` | `MAX_PHOTOS = 500` | 최대 장수. 오래된 폰에서 느리면 300 |
 | `src/lib/imageAnalysis.js` | `THRESHOLDS.sharpBlurry = 35` | 높이면 흔들림 판정이 엄격해짐 |
 | `src/lib/imageAnalysis.js` | `THRESHOLDS.bestScore = 70` | 높이면 베스트 컷이 줄어듦 |
 | `src/lib/faceDetector.js` | `BLINK_THRESHOLD = 0.55` | 웃는 눈이 '감음'으로 잡히면 0.6~0.65로 |

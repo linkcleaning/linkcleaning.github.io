@@ -15,6 +15,7 @@ import SimilarGroups from './SimilarGroups';
 import ExportSheet from './ExportSheet';
 import WatermarkSheet from '../settings/WatermarkSheet';
 import { dayKey, formatCapture } from '../../lib/exif';
+import ConfirmButton from '../common/ConfirmButton';
 import { createSamplePhotos } from '../../lib/samplePhotos';
 
 // 탭 목록. 탭을 추가하려면 여기 한 줄 + usePhotoLibrary의 lists에 목록 추가
@@ -27,7 +28,7 @@ const TABS = [
 
 export default function SmartGallery({ library, watermark, onOpenEditor }) {
   const {
-    lists, photos, loaded, analyzingCount, addFiles, removePhoto, removeAll, overrideVerdict, keepOnlyInGroup,
+    lists, photos, loaded, analyzingCount, addFiles, removePhoto, removeAll, overrideVerdict, keepOnlyInGroup, cleanupSimilar, removeRejected,
     notice, isFull, warnFull, maxPhotos,
   } = library;
   const [confirmClear, setConfirmClear] = useState(false); // '비우기' 두 번 눌러야 실행
@@ -95,6 +96,12 @@ export default function SmartGallery({ library, watermark, onOpenEditor }) {
             : analyzingCount > 0
               ? `${photos.length}장 분석 중… (${doneCount}/${photos.length})`
               : `${photos.length}장 중 베스트 ${lists.best.length}장 · 제외 ${lists.rejected.length}장`}
+          {/* 정리하면 줄일 수 있는 장수 안내 → 누르면 비슷한 탭으로 */}
+          {analyzingCount === 0 && lists.similarExtra > 0 && tab !== 'similar' && (
+            <button onClick={() => setTab('similar')} className="ml-1.5 font-semibold text-mark underline underline-offset-2">
+              비슷한 {lists.similarExtra}장 정리 가능
+            </button>
+          )}
         </p>
         {/* 분석 진행 막대 */}
         {analyzingCount > 0 && (
@@ -135,13 +142,30 @@ export default function SmartGallery({ library, watermark, onOpenEditor }) {
             onSample={async () => addFiles(await createSamplePhotos())}
           />
         ) : tab === 'similar' ? (
-          <SimilarGroups groups={lists.similar} onKeepOnly={keepOnlyInGroup} />
+          <SimilarGroups
+            groups={lists.similar}
+            onKeepOnly={keepOnlyInGroup}
+            onCleanupAll={cleanupSimilar}
+            disabled={analyzingCount > 0}
+          />
         ) : current.length === 0 ? (
           <p className="py-16 text-center text-sm text-white/50">
             {tab === 'best' && analyzingCount > 0 ? '분석이 끝나면 베스트 컷이 여기 모여요' : '해당하는 사진이 없어요'}
           </p>
         ) : (
           <>
+          {/* 제외됨 탭: 한 번에 지우기 */}
+          {tab === 'rejected' && (
+            <div className="mb-3 grid gap-1.5">
+              <ConfirmButton
+                disabled={analyzingCount > 0}
+                label={`제외된 사진 ${lists.rejected.length}장 지우기`}
+                confirmLabel="한 번 더 누르면 지워요"
+                onConfirm={removeRejected}
+              />
+              <p className="text-xs text-white/50">앱에서만 지워지고 폰 갤러리 원본은 그대로예요</p>
+            </div>
+          )}
           {/* 베스트 탭: 한꺼번에 내보내기 */}
           {tab === 'best' && (
             <button

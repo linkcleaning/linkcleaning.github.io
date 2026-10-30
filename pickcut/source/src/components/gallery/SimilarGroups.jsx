@@ -5,11 +5,13 @@
 //               │ 1등  │ 2  │ 3  │ +2 │   비슷한 5장 · 1장만 남기기 →
 //               └──────┴────┴────┴────┘
 //   카드를 누르면 → 아래에서 시트가 올라와 묶음 전체를 크게 비교,
-//   사진을 골라 '이 사진만 남기기' → 나머지는 자동으로 제외
+//   사진을 골라 '이 사진만 남기기' → 나머지는 앱에서 지워짐 (장수가 줄어듦)
+//   맨 위 '전부 정리' 버튼: 모든 묶음에서 1등만 남기고 한 번에 정리
 // ═════════════════════════════════════════════════════════════
 import { useState } from 'react';
+import ConfirmButton from '../common/ConfirmButton';
 
-export default function SimilarGroups({ groups, onKeepOnly }) {
+export default function SimilarGroups({ groups, onKeepOnly, onCleanupAll, disabled }) {
   const [openIndex, setOpenIndex] = useState(null);
   const open = openIndex === null ? null : groups[openIndex];
 
@@ -25,13 +27,22 @@ export default function SimilarGroups({ groups, onKeepOnly }) {
 
   return (
     <>
-      <p className="mb-3 text-xs text-white/50">
-        같은 장면 묶음 {groups.length}개 · 묶음마다 1장만 남기면 정리가 끝나요
-      </p>
+      {/* 한 번에 정리: 묶음마다 추천(1등) 1장만 남기고 나머지 지우기 */}
+      <div className="mb-3 grid gap-1.5">
+        <ConfirmButton
+          disabled={disabled}
+          label={`비슷한 사진 ${groups.reduce((n, g) => n + g.length - 1, 0)}장 정리하기 (묶음마다 베스트 1장만)`}
+          confirmLabel="한 번 더 누르면 정리해요"
+          onConfirm={onCleanupAll}
+          className="!border-mark/50"
+        />
+        <p className="text-xs text-white/50">
+          같은 장면 묶음 {groups.length}개 · 앱에서만 지워지고 폰 갤러리 원본은 그대로예요
+          {disabled && ' · 분석이 끝나면 정리할 수 있어요'}
+        </p>
+      </div>
       <ul className="grid gap-3">
         {groups.map((group, gi) => {
-          const kept = group.filter((p) => p.result.verdict === 'best').length;
-          const done = kept === 1 && group.every((p) => p.result.manual); // 이미 정리한 묶음
           const shown = group.slice(0, 4);
           const more = group.length - shown.length;
           return (
@@ -62,9 +73,7 @@ export default function SimilarGroups({ groups, onKeepOnly }) {
                   <span>
                     비슷한 <b className="font-mono">{group.length}</b>장
                   </span>
-                  <span className={done ? 'text-white/50' : 'font-semibold text-mark'}>
-                    {done ? '정리 완료 ✓' : '1장만 남기기 →'}
-                  </span>
+                  <span className="font-semibold text-mark">직접 고르기 →</span>
                 </div>
               </button>
             </li>
@@ -99,7 +108,7 @@ function GroupSheet({ group, onClose, onKeep }) {
         onClick={(e) => e.stopPropagation()}
       >
         <div className="mx-auto mb-3 h-1 w-10 rounded-full bg-white/20" />
-        <p className="mb-3 text-sm text-white/60">남길 사진 1장을 고르세요. 나머지는 '제외됨'으로 옮겨요.</p>
+        <p className="mb-3 text-sm text-white/60">남길 사진 1장을 고르세요. 나머지 사진은 앱에서 지워져요 (폰 갤러리 원본은 그대로).</p>
 
         {/* 크게 보기: 편집용 사본(고화질)으로 표시 */}
         <div className="relative mb-3 overflow-hidden rounded-2xl bg-black">
@@ -137,7 +146,7 @@ function GroupSheet({ group, onClose, onKeep }) {
           onClick={() => onKeep(picked.id)}
           className="mt-4 w-full rounded-2xl bg-mark py-3.5 font-bold text-ink active:opacity-80"
         >
-          이 사진만 남기기 ({group.length - 1}장 제외)
+          이 사진만 남기기 ({group.length - 1}장 지우기)
         </button>
       </div>
     </div>
