@@ -570,8 +570,19 @@ function renderSendImgs() {
           ${on ? '<span class="absolute inset-x-0 bottom-0 bg-brand-600 py-0.5 text-center text-[11px] font-bold text-white">보낼 사진</span>' : ''}</button>`;
       }).join('')
     : `<button data-goto-edit="1" class="flex h-20 w-full items-center justify-center rounded-xl border-2 border-dashed border-slate-300 text-[13px] font-semibold text-slate-400">📷 이 문자에 사진이 없어요 · 눌러서 추가</button>`;
+  prebuildPicked();
 }
 const pickedImgUrl = () => { const imgs = tplImgs(curTpl()); return imgs[pickedImg] || imgs[0]; };
+// 고른 사진의 PNG를 미리 만들어 둔다 (복사 순간 사파리가 멈추지 않도록)
+let _picked = { url: '', blob: null };
+async function pickedBlob() {
+  const url = pickedImgUrl();
+  if (_picked.url === url && _picked.blob) return _picked.blob;
+  const blob = await toPng(url);
+  _picked = { url, blob };
+  return blob;
+}
+function prebuildPicked() { if (pickedImgUrl()) pickedBlob().catch(() => {}); }
 function setDraftFromTpl() { $('draft').value = composeFromTpl(curTpl()); draftDirty = false; $('btnRestore').classList.add('hidden'); renderCount(); }
 function renderCount() {
   const m = message(); const bytes = [...m].reduce((a, c) => a + (c.charCodeAt(0) > 127 ? 2 : 1), 0);
@@ -659,8 +670,9 @@ $('btnShareAll').onclick = async () => {
   if (!navigator.clipboard || !window.ClipboardItem) { toast('이 브라우저는 사진 복사를 지원하지 않아요', 'err'); return; }
   vib();
   try {
-    // 고른 사진 1장만 복사 (한 장이면 100% 확실하게 들어감). iOS는 Promise를 그대로 넘겨야 함
-    const item = new ClipboardItem({ 'image/png': toPng(pickedImgUrl()) });
+    // 미리 만들어 둔 사진이 있으면 Blob을 바로 복사(가장 안정적), 없으면 Promise로 복사
+    const ready = (_picked.url === pickedImgUrl()) ? _picked.blob : null;
+    const item = new ClipboardItem({ 'image/png': ready || pickedBlob() });
     await navigator.clipboard.write([item]);
     record('사진+문자');
     $('pasteMore').classList.add('hidden');
