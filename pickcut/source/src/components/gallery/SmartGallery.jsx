@@ -14,6 +14,7 @@ import PhotoActionSheet from './PhotoActionSheet';
 import SimilarGroups from './SimilarGroups';
 import ExportSheet from './ExportSheet';
 import WatermarkSheet from '../settings/WatermarkSheet';
+import { dayKey, formatCapture } from '../../lib/exif';
 import { createSamplePhotos } from '../../lib/samplePhotos';
 
 // 탭 목록. 탭을 추가하려면 여기 한 줄 + usePhotoLibrary의 lists에 목록 추가
@@ -154,6 +155,24 @@ export default function SmartGallery({ library, watermark, onOpenEditor }) {
               </span>
             </button>
           )}
+          {tab === 'all' ? (
+            // 전체 탭: 촬영 날짜별로 묶어서 표시
+            <div className="grid gap-5">
+              {groupByDay(current).map(({ key, label, items }) => (
+                <section key={key}>
+                  <h2 className="mb-2 flex items-baseline justify-between text-sm font-semibold">
+                    {label}
+                    <span className="font-mono text-xs font-normal text-white/45">{items.length}장</span>
+                  </h2>
+                  <div className="grid grid-cols-2 gap-2">
+                    {items.map((photo) => (
+                      <PhotoCard key={photo.id} photo={photo} onTap={setSelected} />
+                    ))}
+                  </div>
+                </section>
+              ))}
+            </div>
+          ) : (
           <div className="grid grid-cols-2 gap-2">
             {current.map((photo, i) => (
               <PhotoCard
@@ -164,6 +183,7 @@ export default function SmartGallery({ library, watermark, onOpenEditor }) {
               />
             ))}
           </div>
+          )}
           </>
         )}
       </main>
@@ -239,6 +259,31 @@ export default function SmartGallery({ library, watermark, onOpenEditor }) {
       )}
     </div>
   );
+}
+
+/**
+ * 촬영 날짜별로 묶기 (이미 촬영 순서로 정렬된 목록을 받음)
+ * 날짜를 모르는 사진은 맨 끝 '날짜 정보 없음'에 모음
+ */
+function groupByDay(list) {
+  const groups = [];
+  const unknown = [];
+  for (const p of list) {
+    if (!p.captured) {
+      unknown.push(p);
+      continue;
+    }
+    const key = dayKey(p.captured.exif);
+    const last = groups[groups.length - 1];
+    if (last?.key === key) last.items.push(p);
+    else groups.push({ key, label: formatCapture(p.captured.exif).slice(0, 15), items: [p] });
+  }
+  if (unknown.length) groups.push({ key: 'unknown', label: '날짜 정보 없음', items: unknown });
+  // 사진 정보에 날짜가 없어 파일 시각으로 추정한 묶음은 표시해 둠
+  groups.forEach((g) => {
+    if (g.key !== 'unknown' && g.items.every((p) => p.captured?.source === 'file')) g.label += ' · 날짜 추정';
+  });
+  return groups;
 }
 
 /** 사진이 하나도 없을 때 보여주는 안내 화면 */

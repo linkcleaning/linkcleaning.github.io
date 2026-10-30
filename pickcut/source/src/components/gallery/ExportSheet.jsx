@@ -7,7 +7,7 @@
 // ═════════════════════════════════════════════════════════════
 import { useEffect, useRef, useState } from 'react';
 import { renderForExport } from '../../lib/watermark';
-import { exportFileName, shareOrDownload } from '../../lib/exporter';
+import { makeExportFile, shareOrDownload } from '../../lib/exporter';
 
 export default function ExportSheet({ photos, watermark, onOpenWatermark, onClose }) {
   // 처음엔 전부 선택된 상태. 빼고 싶은 사진만 눌러서 해제
@@ -42,10 +42,13 @@ export default function ExportSheet({ photos, watermark, onOpenWatermark, onClos
     setStage('preparing');
     setProgress(0);
     const files = [];
-    for (let i = 0; i < chosen.length; i++) {
+    const usedNames = new Set();
+    // 촬영 순서대로 내보내기 → 받는 쪽(카톡·갤러리)에서도 순서가 맞음
+    const ordered = [...chosen].sort((a, b) => (a.captured?.ts ?? a.addedAt) - (b.captured?.ts ?? b.addedAt));
+    for (let i = 0; i < ordered.length; i++) {
       if (cancelledRef.current) return;
-      const blob = await renderForExport(chosen[i].url, watermark.settings, watermark.logoImg);
-      files.push(new File([blob], exportFileName(i), { type: 'image/jpeg' }));
+      const blob = await renderForExport(ordered[i].url, watermark.settings, watermark.logoImg);
+      files.push(await makeExportFile(blob, ordered[i], i, usedNames)); // 촬영 날짜 유지
       setProgress(i + 1);
     }
     filesRef.current = files;
@@ -77,7 +80,7 @@ export default function ExportSheet({ photos, watermark, onOpenWatermark, onClos
             {chosen.length} / {photos.length}장
           </span>
         </div>
-        <p className="mb-3 text-xs text-white/50">빼고 싶은 사진은 눌러서 선택을 해제하세요.</p>
+        <p className="mb-3 text-xs text-white/50">빼고 싶은 사진은 눌러서 선택을 해제하세요. 찍은 날짜 그대로 저장돼요.</p>
 
         {/* 선택 격자 */}
         <div className="mb-4 grid grid-cols-4 gap-1.5">

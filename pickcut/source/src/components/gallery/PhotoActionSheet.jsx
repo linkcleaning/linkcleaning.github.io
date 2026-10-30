@@ -2,6 +2,7 @@
 // PhotoActionSheet — 사진을 탭하면 아래에서 올라오는 메뉴(바텀 시트)
 // 모바일 앱에서 흔한 패턴: 화면을 가리지 않고 엄지로 누르기 쉬움
 // ═════════════════════════════════════════════════════════════
+import { formatCapture } from '../../lib/exif';
 
 /** 눈 감음 검사 결과를 사람이 읽을 문장으로 */
 function eyesText(eyes) {
@@ -34,6 +35,10 @@ export default function PhotoActionSheet({ photo, onClose, onEdit, onOverride, o
             </p>
             <p className="mt-0.5 text-white/60">
               눈 감음 검사: {eyesText(result.metrics.eyes)}
+            </p>
+            <p className="mt-0.5 text-white/60">
+              촬영: {photo.captured ? formatCapture(photo.captured.exif) : '정보 없음'}
+              {photo.captured?.source === 'file' && ' (추정)'}
             </p>
           </div>
         </div>

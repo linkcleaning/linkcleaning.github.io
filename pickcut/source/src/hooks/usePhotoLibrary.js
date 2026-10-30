@@ -14,6 +14,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { analyzePhoto, averageHash, loadImage, resizeToBlob, toDetectCanvas } from '../lib/imageAnalysis';
 import { preloadFaceModel } from '../lib/faceDetector';
 import { computeEmbedding, groupSimilar, preloadSimilarityModel } from '../lib/similarity';
+import { readCaptureDate } from '../lib/exif';
 import {
   clearPhotos,
   deletePhoto,
@@ -32,6 +33,7 @@ import {
 //   result: { score, verdict, reasons, metrics, manual? } | null,
 //   hash: string | null       예전 방식 지문(AI 모델을 못 쓸 때 대체용)
 //   embedding: Float32Array    AI 지문(비슷한 사진 찾기용)
+//   captured: { exif, offset, ts, source } | null  촬영 날짜 (사진 정보에서 읽음)
 // }
 // '비슷한 사진' 기준값은 src/lib/similarity.js 의 SIMILAR_THRESHOLD 에서 조절
 
@@ -57,6 +59,7 @@ function recordToPhoto(rec) {
     result: rec.result,
     hash: rec.hash,
     embedding: rec.embedding ?? null,
+    captured: rec.captured ?? null, // 예전에 저장한 사진엔 없을 수 있음
   };
 }
 
@@ -131,7 +134,10 @@ export function usePhotoLibrary() {
       const id = `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
       const addedAt = Date.now();
 
-      // ② 원본을 열어서 썸네일·작업용 사본 만들기
+      // ② 사진 정보(EXIF)에서 촬영 날짜 읽기 — 줄이기 전에 원본에서 읽어야 함
+      const captured = await readCaptureDate(file);
+
+      // ③ 원본을 열어서 썸네일·작업용 사본 만들기
       let source;
       let thumb;
       let work;
@@ -148,7 +154,7 @@ export function usePhotoLibrary() {
         continue;
       }
 
-      // ③ 화면에 '분석 중'으로 바로 표시
+      // ④ 화면에 '분석 중'으로 바로 표시
       const photo = {
         id,
         name: file.name,
@@ -159,13 +165,14 @@ export function usePhotoLibrary() {
         result: null,
         hash: null,
         embedding: null,
+        captured,
       };
       remember(photo);
       pendingRef.current -= 1;
       countRef.current += 1;
       setPhotos((prev) => [...prev, photo]);
 
-      // ④ 분석
+      // ⑤ 분석
       let result = null;
       let hash = null;
       let embedding = null;
@@ -183,8 +190,8 @@ export function usePhotoLibrary() {
       // 원본은 분석이 끝나면 바로 메모리에서 해제 (썸네일·사본만 남김)
       URL.revokeObjectURL(source.url);
 
-      // ⑤ 폰 저장소에 저장 (실패해도 화면 사용엔 지장 없음)
-      savePhoto({ id, name: file.name, addedAt, thumb, work, result, hash, embedding }).catch((err) => {
+      // ⑥ 폰 저장소에 저장 (실패해도 화면 사용엔 지장 없음)
+      savePhoto({ id, name: file.name, addedAt, thumb, work, result, hash, embedding, captured }).catch((err) => {
         console.warn('[픽컷] 저장 실패(저장 공간 부족 등)', err);
         setNotice('폰 저장 공간이 부족해 일부 사진은 앱을 다시 열면 사라질 수 있어요.');
       });
@@ -285,7 +292,11 @@ export function usePhotoLibrary() {
       .map((g) => g.map((p) => byId.get(p.id)))
       .sort((a, b) => b.length - a.length);
 
-    return { all: enriched, best, rejected, similar };
+    // 전체: 촬영한 순서대로 (촬영 날짜를 모르면 올린 순서)
+    const when = (p) => p.captured?.ts ?? p.addedAt;
+    const all = [...enriched].sort((a, b) => when(a) - when(b));
+
+    return { all, best, rejected, similar };
   }, [enriched, groups]);
 
   const analyzingCount = photos.filter((p) => p.status === 'analyzing').length;

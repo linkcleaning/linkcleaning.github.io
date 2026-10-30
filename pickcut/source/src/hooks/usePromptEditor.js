@@ -10,7 +10,7 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import { parsePrompt } from '../lib/promptParser';
 import { canvasToUrl, renderEdits } from '../lib/editEngine';
 import { renderForExport } from '../lib/watermark';
-import { exportFileName, shareOrDownload } from '../lib/exporter';
+import { makeExportFile, shareOrDownload } from '../lib/exporter';
 
 /**
  * @param photo      편집할 사진
@@ -107,8 +107,9 @@ export function usePromptEditor(photo, watermark) {
     let cancelled = false;
     exportFileRef.current = null;
     renderForExport(url, watermark?.settings, watermark?.logoImg)
-      .then((blob) => {
-        if (!cancelled) exportFileRef.current = new File([blob], exportFileName(0), { type: 'image/jpeg' });
+      .then((blob) => makeExportFile(blob, photo, 0)) // 촬영 날짜 유지
+      .then((file) => {
+        if (!cancelled) exportFileRef.current = file;
       })
       .catch(() => {});
     return () => {
@@ -122,7 +123,7 @@ export function usePromptEditor(photo, watermark) {
     if (!file) {
       // 아직 준비 전이면 지금 만듦 (아이폰에서는 공유 대신 다운로드로 넘어갈 수 있음)
       const blob = await renderForExport(resultUrl || photo.url, watermark?.settings, watermark?.logoImg);
-      file = new File([blob], exportFileName(0), { type: 'image/jpeg' });
+      file = await makeExportFile(blob, photo, 0);
     }
     const outcome = await shareOrDownload([file]);
     if (outcome !== 'cancelled') {

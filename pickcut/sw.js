@@ -1,8 +1,8 @@
 // 픽컷 서비스 워커 — 앱 파일을 폰에 보관해 오프라인에서도 열리게 합니다.
 // 새 버전을 올리면 VERSION이 바뀌어 예전 보관본은 자동으로 지워집니다.
 // ※ 같은 주소의 다른 앱(콜백문자 등) 보관본은 건드리지 않도록 'pickcut-'으로 시작하는 것만 지웁니다.
-const VERSION = 'pickcut-589a0525';
-const APP_SHELL = ['./', './index.html', './assets/app-wceznpvz.js', './assets/app-2b2a7b31.css', './manifest.webmanifest',
+const VERSION = 'pickcut-1d51b910';
+const APP_SHELL = ['./', './index.html', './assets/app-jv7c4ry4.js', './assets/app-0026ae75.css', './manifest.webmanifest',
   './icon.svg', './icon-192.png', './icon-512.png', './apple-touch-icon.png'];
 const MODEL_CACHE = 'pickcut-models'; // AI 모델(눈 감음·비슷한 사진)은 버전과 무관하게 계속 보관
 
