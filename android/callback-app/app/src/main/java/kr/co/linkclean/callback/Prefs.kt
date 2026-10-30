@@ -94,7 +94,7 @@ https://www.instagram.com/linkcleaning
     const val DEFAULT_SUBJECT = ""  // 제목 없음
     const val MAX_IMAGES = 3
     private const val KEY_SEED_VER = "seed_ver"
-    private const val SEED_VER = 10
+    private const val SEED_VER = 11
 
     const val KEY_ENABLED = "enabled"
     const val KEY_MESSAGE = "message"
@@ -262,6 +262,17 @@ https://www.instagram.com/linkcleaning
         // v10: 명함 링크를 회사 주소(www.linkclean.co.kr/card)로 – 직접 고친 문구 안의 옛 주소도 바꿈
         if (sp.getInt(KEY_SEED_VER, 0) < 10 && sp.getString(Templates.KEY, null) != null) {
             val list = Templates.load(c).map { it.copy(body = it.body.replace(Templates.OLD_CARD_URL, Templates.CARD_URL)) }
+            Templates.save(c, list)
+        }
+        // v11: 자동 문자 3종 – 억지 줄바꿈 없애고 가운뎃점(·) 대신 쉼표 (아이폰 표시 개선)
+        if (sp.getInt(KEY_SEED_VER, 0) < 11 && sp.getString(Templates.KEY, null) != null) {
+            val m = mapOf("t_in" to (Templates.CARD_IN_V1 to Templates.CARD_IN),
+                "t_miss" to (Templates.CARD_MISS_V1 to Templates.CARD_MISS),
+                "t_out" to (Templates.CARD_OUT_V1 to Templates.CARD_OUT))
+            val list = Templates.load(c).map { t ->
+                val p = m[t.id]
+                if (p != null && (t.body.trim() == p.first || t.body.trim() == p.first.replace(Templates.CARD_URL, Templates.OLD_CARD_URL))) t.copy(body = p.second) else t
+            }
             Templates.save(c, list)
         }
         sp.edit().putInt(KEY_SEED_VER, SEED_VER).commit()
