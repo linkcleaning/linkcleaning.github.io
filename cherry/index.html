@@ -192,7 +192,7 @@ Error generating stack: `+i.message+`
 <div id="root"></div>
 <script>
 if ("serviceWorker" in navigator && location.protocol === "https:") {
-  window.addEventListener("load", function () { navigator.serviceWorker.register("sw.js").catch(function () {}); });
+  window.addEventListener("load", function () { navigator.serviceWorker.register("sw.js").then(function (r) { r.update(); }).catch(function () {}); });
 }
 </script>
 </body>

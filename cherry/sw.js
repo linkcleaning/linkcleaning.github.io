@@ -1,4 +1,4 @@
-const CACHE = "cherry-master-v3";
+const CACHE = "cherry-master-v4";
 const CORE = ["./", "./index.html", "./manifest.webmanifest", "./icon-192.png", "./icon-512.png"];
 self.addEventListener("install", (e) => {
   e.waitUntil(caches.open(CACHE).then((c) => c.addAll(CORE)).then(() => self.skipWaiting()));
@@ -14,7 +14,7 @@ self.addEventListener("fetch", (e) => {
   // 페이지: 네트워크 우선(업데이트 반영), 실패 시 캐시
   if (e.request.mode === "navigate") {
     e.respondWith(
-      fetch(e.request).then((r) => { const cp = r.clone(); caches.open(CACHE).then((c) => c.put("./index.html", cp)); return r; })
+      fetch(e.request, { cache: "no-store" }).then((r) => { const cp = r.clone(); caches.open(CACHE).then((c) => c.put("./index.html", cp)); return r; })
         .catch(() => caches.match("./index.html"))
     );
     return;
