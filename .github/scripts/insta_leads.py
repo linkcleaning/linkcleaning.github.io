@@ -69,6 +69,9 @@ FRANCHISE = re.compile(
     r"더벤티|매머드|공차|배스킨|던킨|파리바게|뚜레쥬르|맥도날드|롯데리아|버거킹|맘스터치|KFC|서브웨이|"
     r"GS25|씨유|CU|세븐일레븐|이마트24|미니스톱|교촌|BBQ|bhc|굽네|푸라닭|노브랜드|홈플러스|이마트|하나로마트", re.I)
 SKIP_TYPE = re.compile(r"편의점|백화점|기타 휴게음식점\(편의")
+# 축제·행사 임시 부스, 단체 등 (청소 고객이 아닌 곳)
+SKIP_NAME = re.compile(r"부녀회|청년회|노인회|새마을|협의회|축제|행사|체험부스|임시|\(주\)씨유|학교|교회|성당")
+SKIP_ADDR = re.compile(r"외\s*\d+\s*필지")
 
 
 # ───────── 1. 인허가 (카페·식당·민박) ─────────
@@ -116,7 +119,7 @@ def collect_license(kind, path):
                     continue
                 typ = it.get("SNTTN_BZSTAT_NM") or it.get("BZSTAT_SE_NM") or ""
                 name = (it.get("BPLC_NM") or "").strip()
-                if SKIP_TYPE.search(typ) or not name:
+                if SKIP_TYPE.search(typ) or not name or SKIP_NAME.search(name) or SKIP_ADDR.search(addr):
                     continue
                 mid = it.get("MNG_NO") or f"{name}|{addr}"
                 if mid in seen:
@@ -234,6 +237,7 @@ def main():
     for k, x in prev.items():
         if k not in merged and (x.get("date") or "") >= cutoff:
             merged[k] = x
+    merged = {k: x for k, x in merged.items() if not (x["src"] in ("cafe", "restaurant", "minbak") and (SKIP_NAME.search(x.get("name", "")) or SKIP_ADDR.search(x.get("addr", ""))))}
     lst = sorted(merged.values(), key=lambda x: (x.get("date") or "", x.get("firstSeen") or ""), reverse=True)
     stats = {}
     for x in lst:
