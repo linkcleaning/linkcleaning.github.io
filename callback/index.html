@@ -108,7 +108,7 @@
   <!-- 보내기 하단 버튼 -->
   <div id="sendBar" class="fixed left-1/2 z-40 w-full max-w-md -translate-x-1/2 border-t border-slate-200 bg-white/95 px-4 pb-2 pt-3 backdrop-blur" style="bottom:calc(env(safe-area-inset-bottom) + 64px)">
     <button id="btnSms" class="press mb-2 flex h-16 w-full items-center justify-center gap-2 rounded-2xl bg-brand-600 text-[19px] font-extrabold text-white shadow-lg shadow-brand-600/30">💬 문자만 보내기 <span class="rounded-full bg-white/25 px-2 py-0.5 text-[12px]">글만</span></button>
-    <button id="btnShareAll" class="press flex h-16 w-full items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-sky-500 to-cyan-500 text-[18px] font-extrabold text-white shadow-lg shadow-sky-500/30">🖼️ 사진+문자 보내기</button>
+    <button id="btnShareAll" class="press flex h-16 w-full items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-sky-500 to-cyan-500 text-[18px] font-extrabold text-white shadow-lg shadow-sky-500/30">🖼️ 사진+문자 공유하기</button>
   </div>
 
   <!-- ===================== 문자설정 ===================== -->
@@ -192,7 +192,7 @@
         <li>• <b>자동 발송은 안 돼요.</b> 웹앱은 통화 종료를 감지할 수 없어서, 통화 후 앱을 열고 버튼을 눌러 보내는 방식이에요. (대신 아이폰·안드로이드 모두 쓸 수 있어요)</li>
         <li>• <b>번호 복사:</b> 최근 통화 목록에서 번호를 꾹 눌러 복사한 뒤 '📋 붙여넣기'를 누르세요.</li>
         <li>• <b>💬 문자만 보내기:</b> 번호와 글이 바로 채워져 빠르게 전송돼요. 단, 아이폰은 문자에 사진을 붙일 수 없어 <b>글만</b> 나가요.</li>
-        <li>• <b>🖼️ 사진+문자 보내기:</b> 보낼 사진 한 장을 고른 뒤 버튼을 누르면, <b>사진 아래에 문구까지 들어간 한 장</b>이 복사돼요. 안내 창에서 <b>'💬 문자 앱 열기'</b> → 입력창을 꾹 눌러 <b>'붙여넣기'</b>만 하면 끝(번호는 자동, 글자는 사진에 들어있음). 안드로이드처럼 사진 밑에 문구가 함께 가요. 카톡으로 안 넘어가요.</li>
+        <li>• <b>🖼️ 사진+문자 공유하기:</b> 사진을 고른 뒤 버튼을 누르면 <b>공유창</b>이 떠요. <b>'메시지'</b>를 고르면 사진(아래에 문구까지 들어간 한 장)이 <b>이미 첨부된 채로</b> 열려요 — 붙여넣기 필요 없음. 받는 번호만 고르거나 입력(최근 통화에서 선택)하고 전송하면 끝. 카톡으로 보내려면 공유창에서 카톡을 고르면 돼요.</li>
         <li>• 문자 요금은 휴대폰 요금제의 기본 문자(무료 문자)로 나가요.</li>
       </ul>
       <button id="btnResetAll" class="mt-4 h-12 w-full rounded-xl bg-red-50 text-[14px] font-bold text-red-600">⚠️ 전체 초기화</button>
@@ -644,7 +644,7 @@ function renderSendImgs() {
     // 카드는 보낼 게 한 가지뿐 → 버튼 하나만
     $('btnShareAll').classList.add('hidden');
     $('btnSms').classList.remove('mb-2');
-    $('btnSms').innerHTML = '📇 예약 카드 보내기';
+    $('btnSms').innerHTML = '📇 예약 카드 공유하기';
     renderCardPreview();
     return;
   }
@@ -796,36 +796,43 @@ $('sendImgs').onclick = e => {
   const b = e.target.closest('[data-pimg]'); if (b) { pickedImg = +b.dataset.pimg; vib(); renderSendImgs(); }
 };
 
+// 사진을 '공유'로 보내기 (붙여넣기 없이 공유창 → 메시지 선택). 안 되면 복사→문자앱으로 대체
+async function shareImage(readyBlob, fname, method, build) {
+  vib();
+  // 1) 공유하기 — 공유창에서 '메시지'를 고르면 사진이 이미 첨부된 채 열림 (붙여넣기 불필요)
+  try {
+    const blob = readyBlob || await build(); // 미리 못 만든 경우 지금 만듦 (이땐 복사로 대체될 수 있음)
+    const file = new File([blob], fname, { type: 'image/png' });
+    if (navigator.canShare && navigator.canShare({ files: [file] })) {
+      await navigator.share({ files: [file] });
+      record(method);
+      toast('📤 공유창에서 메시지/카톡을 선택하세요', 'ok');
+      return;
+    }
+  } catch (e) { if (e && e.name === 'AbortError') return; } // 사용자가 취소 → 아무 것도 안 함
+  // 2) 공유가 안 되는 경우: 복사 → 문자 앱 열기
+  try {
+    if (!(navigator.clipboard && window.ClipboardItem)) { toast('이 기기는 사진 보내기를 지원하지 않아요', 'err'); return; }
+    await navigator.clipboard.write([new ClipboardItem({ 'image/png': readyBlob || build() })]);
+    record(method);
+    toast('📋 복사됨! 문자창을 꾹 눌러 붙여넣으세요', 'ok');
+    location.href = smsHref(true);
+  } catch (e) { toast('보내기에 실패했어요. 다시 시도해 주세요', 'err'); }
+}
 async function sendCard() {
   if (!guard()) return;
-  if (!navigator.clipboard || !window.ClipboardItem) { toast('이 브라우저는 사진 복사를 지원하지 않아요', 'err'); return; }
-  vib();
-  try {
-    const ready = (_card.key === cardKey()) ? _card.blob : null;
-    await navigator.clipboard.write([new ClipboardItem({ 'image/png': ready || cardBlob() })]);
-    record('예약카드');
-    toast('📋 복사됨! 문자창을 꾹 눌러 붙여넣으세요', 'ok');
-    location.href = smsHref(true); // 바로 문자 앱 열기 (붙여넣기가 사라지기 전에)
-  } catch (e) { toast('복사에 실패했어요. 다시 시도해 주세요', 'err'); }
+  const ready = (_card.key === cardKey()) ? _card.blob : null;
+  await shareImage(ready, 'linkclean_예약카드.png', '예약카드', cardBlob);
 }
 $('btnSms').onclick = () => { if (isCardTpl(curTpl())) return sendCard(); if (!guard()) return; vib(); record('문자'); location.href = smsHref(); };
 
-// 사진+문구를 한 장으로 복사한 뒤, 바로 문자 앱을 열어 붙여넣기가 사라지기 전에 넣게 함
 $('btnShareAll').onclick = async () => {
   if (isCardTpl(curTpl())) return sendCard();
   if (!guard()) return;
   const imgs = tplImgs(curTpl());
   if (!imgs.length) { toast('🖼️ 등록된 사진이 없어요. 공통 홍보 사진을 넣어주세요'); if (usesCommon(curTpl())) go('msgs'); else openEditor(curTpl().id); return; }
-  if (!navigator.clipboard || !window.ClipboardItem) { toast('이 브라우저는 사진 복사를 지원하지 않아요', 'err'); return; }
-  vib();
-  try {
-    // 미리 만들어 둔 Blob을 바로 복사(가장 안정적)
-    const ready = (_pt.key === ptKey()) ? _pt.blob : null;
-    await navigator.clipboard.write([new ClipboardItem({ 'image/png': ready || pickedBlob() })]);
-    record('사진+문자');
-    toast('📋 복사됨! 문자창을 꾹 눌러 붙여넣으세요', 'ok');
-    location.href = smsHref(true); // 바로 문자 앱 열기
-  } catch (e) { toast('복사에 실패했어요. 다시 시도해 주세요', 'err'); }
+  const ready = (_pt.key === ptKey()) ? _pt.blob : null;
+  await shareImage(ready, 'linkclean.png', '사진+문자', pickedBlob);
 };
 
 if ($('btnImgSms')) $('btnImgSms').onclick = async () => {
