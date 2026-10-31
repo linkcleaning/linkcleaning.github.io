@@ -229,13 +229,14 @@
         <p class="mb-1 text-[13px] font-bold text-slate-500">제목 <span class="font-medium text-slate-400">(10자 이하)</span></p>
         <input id="eTitle" maxlength="10" class="h-12 w-full rounded-xl border-2 border-slate-200 bg-slate-50 px-3 font-semibold outline-none focus:border-brand-500" placeholder="문자 제목을 입력해주세요"/>
       </div>
-      <div>
+      <div id="ePhotoSection">
         <label class="mb-2 flex items-center justify-between rounded-2xl bg-brand-50 p-3 ring-1 ring-brand-200"><span class="text-[14px] font-bold text-brand-800">📷 공통 홍보 사진 사용</span><input id="eCommon" type="checkbox" class="h-6 w-6 accent-sky-600"/></label>
         <p id="eCommonNote" class="mb-1 text-[13px] text-slate-500">문자설정 맨 위 '공통 홍보 사진'이 함께 붙어요.</p>
         <p id="eOwnLabel" class="mb-1 text-[13px] font-bold text-slate-500">이 문자 전용 사진 (최대 3장)</p>
         <div id="eImgs" class="grid grid-cols-3 gap-2"></div>
         <input id="eFile" type="file" accept="image/*" class="hidden"/>
       </div>
+      <p id="eCardNote" class="hidden rounded-2xl bg-brand-50 p-3 text-[13px] font-semibold text-brand-700 ring-1 ring-brand-200">📇 이 문자는 입력한 예약 정보가 들어간 <b>카드 사진 한 장</b>으로 보내져요. 별도 사진은 필요 없어요.</p>
       <div>
         <p class="mb-1 text-[13px] font-bold text-slate-500">본문</p>
         <p class="mb-1 text-[12px] text-slate-400">빈칸 넣기: {청소날짜} {도착시간} {청소비용} {계약금} {잔금} — 보낼 때 입력칸이 생겨요</p>
@@ -912,8 +913,14 @@ function openEditor(id) {
   edit.newImgs = {}; // id → dataURL (아직 저장 전)
   $('eIcon').value = edit.icon; $('eName').value = edit.name; $('eTitle').value = edit.title; $('eBody').value = edit.body; $('eSign').checked = edit.sign; $('eCommon').checked = usesCommon(edit);
   $('eDelete').classList.toggle('hidden', !!edit.isNew);
-  renderEType(); renderEImgs();
+  renderEType(); renderEImgs(); updateEditorCardMode();
   $('editSheet').classList.remove('hidden');
+}
+// 예약 카드(본문에 빈칸이 있는 문자)는 사진 선택이 필요 없음 → 숨김
+function updateEditorCardMode() {
+  const card = isCardTpl({ body: $('eBody').value });
+  $('ePhotoSection').classList.toggle('hidden', card);
+  $('eCardNote').classList.toggle('hidden', !card);
 }
 function renderEType() {
   $('eType').innerHTML = TYPES.map(x => `<button data-etype="${x}" class="press h-11 rounded-xl border-2 text-[15px] font-bold ${edit.type === x ? 'chip-on' : 'border-slate-200 bg-white text-slate-600'}">${x}</button>`).join('');
@@ -934,6 +941,7 @@ function renderEImgs() {
   $('eImgs').innerHTML = cells.join('');
 }
 $('eCommon').onchange = () => renderEImgs();
+$('eBody').addEventListener('input', updateEditorCardMode);
 $('eImgs').onclick = e => {
   if (e.target.closest('[data-addimg]')) { if (edit.imgs.length >= 3) return; $('eFile').click(); }
   const r = e.target.closest('[data-rmimg]'); if (r) { edit.imgs.splice(+r.dataset.rmimg, 1); renderEImgs(); }
