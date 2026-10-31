@@ -15,7 +15,7 @@ OUT = os.path.join(ROOT, "..", "..", "insta", "leads.json")
 
 LICENSE_DAYS = 45   # 최근 N일 신규 인허가 (카페·식당·민박)
 BUILD_DAYS = 60     # 최근 N일 준공/착공
-KEEP_DAYS = 90      # 목록 보관 기간
+KEEP_DAYS = 90      # 목록 보관 기간 (일)
 
 debug = {"errors": [], "calls": 0, "notes": []}
 
