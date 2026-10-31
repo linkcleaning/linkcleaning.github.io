@@ -555,6 +555,22 @@ function smsHref(noBody) {
   const b = encodeURIComponent(message());
   return isIOS ? `sms:${n}&body=${b}` : `sms:${n}?body=${b}`;
 }
+// 지정한 글을 본문으로 하는 문자 링크 (예약 카드 보낼 때 계좌 정보만 글자로)
+function smsHrefText(text) {
+  const n = digits($('phone').value);
+  if (!text) return `sms:${n}`;
+  const b = encodeURIComponent(text);
+  return isIOS ? `sms:${n}&body=${b}` : `sms:${n}?body=${b}`;
+}
+// 예약 문자 본문에서 계좌 정보 부분만 뽑아 (고객이 복사할 수 있게)
+function cardAccountText() {
+  const lines = (composeFromTpl(curTpl()) || '').split('\n');
+  const start = lines.findIndex(l => l.includes('🏦') || l.includes('계좌'));
+  if (start < 0) return '';
+  let end = start;
+  for (let i = start; i < lines.length; i++) { end = i; if (lines[i].includes('예금주')) break; }
+  return lines.slice(start, end + 1).join('\n').trim();
+}
 
 /* ============ 렌더: 보내기 ============ */
 function renderChips() {
@@ -785,7 +801,8 @@ async function sendCard() {
     const ready = (_card.key === cardKey()) ? _card.blob : null;
     await navigator.clipboard.write([new ClipboardItem({ 'image/png': ready || cardBlob() })]);
     record('예약카드');
-    $('pasteMore').classList.add('hidden');
+    $('pasteMore').textContent = '카드를 붙여넣은 뒤, 계좌번호 글자도 함께 전송돼요 (고객이 복사 가능).';
+    $('pasteMore').classList.remove('hidden');
     $('pasteSheet').classList.remove('hidden');
     toast('📋 예약 카드 복사 완료! 아래 버튼을 누르세요', 'ok');
   } catch (e) { toast('복사에 실패했어요. 다시 시도해 주세요', 'err'); }
@@ -830,7 +847,10 @@ if ($('btnImgSms')) $('btnImgSms').onclick = async () => {
     location.href = smsHref();
   } catch (e) { toast("사진 복사에 실패했어요. '📤 공유'로 보내 주세요", 'err'); }
 };
-$('btnOpenSms').onclick = () => { location.href = smsHref(true); }; // 사진에 문구가 들어있으니 번호만
+$('btnOpenSms').onclick = () => {
+  // 예약 카드는 계좌 정보를 글자로도 넣어 고객이 복사 가능하게. 일반 사진은 문구가 사진에 있으니 번호만
+  location.href = isCardTpl(curTpl()) ? smsHrefText(cardAccountText()) : smsHref(true);
+};
 
 // 문자 편집 중에는 하단 버튼을 숨겨 입력칸을 가리지 않게
 $('draft').addEventListener('focus', () => $('sendBar').classList.add('hidden'));
