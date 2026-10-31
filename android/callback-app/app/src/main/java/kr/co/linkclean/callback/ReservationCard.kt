@@ -7,7 +7,7 @@ import java.io.ByteArrayOutputStream
 /** 예약 확정 안내 카드 이미지 (사진문자로 함께 보냄) */
 object ReservationCard {
     private const val W = 1080
-    private const val H = 1350
+    private const val H = 1430
 
     fun render(c: Context, f: Map<String, String>): Bitmap {
         val bmp = Bitmap.createBitmap(W, H, Bitmap.Config.ARGB_8888)
@@ -68,7 +68,8 @@ object ReservationCard {
         cv.drawText("토스뱅크 1000-1626-3066", 110f, 1258f, p(0xFF0F172A.toInt(), 46f, true))
         cv.drawText("예금주 한승우", W - 110f, 1258f, p(0xFF475569.toInt(), 36f, true, Paint.Align.RIGHT))
 
-        cv.drawText("입금 확인 후 예약이 확정됩니다 · 064-763-4545", W / 2f, 1330f, p(0xFF64748B.toInt(), 30f, true, Paint.Align.CENTER))
+        cv.drawText("입금 확인 후 예약이 확정됩니다", W / 2f, 1345f, p(0xFF334155.toInt(), 34f, true, Paint.Align.CENTER))
+        cv.drawText("정확한 주소(동·호수)를 문자로 남겨주세요 · 064-763-4545", W / 2f, 1400f, p(0xFF64748B.toInt(), 30f, true, Paint.Align.CENTER))
         return bmp
     }
 

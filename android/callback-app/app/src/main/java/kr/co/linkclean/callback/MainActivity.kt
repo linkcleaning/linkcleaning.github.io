@@ -85,6 +85,8 @@ class MainActivity : AppCompatActivity() {
     private lateinit var fieldsCard: LinearLayout
     private lateinit var fieldsBox: LinearLayout
     private lateinit var draftEdit: EditText
+    private lateinit var draftCard: LinearLayout
+    private lateinit var cardOnlyNote: TextView
     private lateinit var restoreBtn: TextView
     private lateinit var sendImgs: LinearLayout
     private lateinit var charInfo: TextView
@@ -468,6 +470,7 @@ class MainActivity : AppCompatActivity() {
 
         // 💬 보낼 문자
         val dc = ui.card()
+        draftCard = dc
         val dh = ui.row()
         dh.addView(h2("💬 보낼 문자 "))
         dh.addView(ui.text("(이번만 수정 가능)", 12f, Col.S400), ui.lp(0, ui.WRAP, 1f))
@@ -493,6 +496,10 @@ class MainActivity : AppCompatActivity() {
             renderCount()
         })
         b.addView(dc)
+        cardOnlyNote = ui.text("📇 예약 문자는 위 예약 정보로 만든 카드 사진 한 장만 보내요.\n(글자 문자는 따로 안 나가요)", 14f, Col.B700, true).apply {
+            background = ui.rect(Col.B50, 16f, Col.B200, 1f); setPadding(ui.dp(14), ui.dp(12), ui.dp(14), ui.dp(12)); visibility = View.GONE
+        }
+        b.addView(cardOnlyNote, ui.lp(bottom = 14))
 
         // 🕘 최근 보낸 번호
         val rc = ui.card()
@@ -618,6 +625,7 @@ class MainActivity : AppCompatActivity() {
             jr.addView(jv); jangeumView = jv
             fieldsBox.addView(jr, ui.lp())
         }
+        renderCardPreview()
     }
 
     private fun pickField(f: FieldDef) {
@@ -657,6 +665,24 @@ class MainActivity : AppCompatActivity() {
         renderCount()
     }
 
+    private var cardPreview: ImageView? = null
+    /** 예약 정보 아래에 카드 미리보기 */
+    private fun renderCardPreview() {
+        val bmp = ReservationCard.render(this, fields)
+        val iv = cardPreview ?: ImageView(this).apply {
+            adjustViewBounds = true; scaleType = ImageView.ScaleType.FIT_CENTER
+            background = ui.rect(Col.S100, 16f, Col.S200, 1f); clipToOutline = true
+            setOnClickListener {
+                val big = ImageView(this@MainActivity).apply { setImageBitmap(ReservationCard.render(this@MainActivity, fields)); adjustViewBounds = true }
+                AlertDialog.Builder(this@MainActivity).setView(big).setPositiveButton("닫기", null).show()
+            }
+        }.also { cardPreview = it }
+        iv.setImageBitmap(bmp)
+        (iv.parent as? android.view.ViewGroup)?.removeView(iv)
+        fieldsBox.addView(ui.text("👇 손님에게 이렇게 보내져요 (누르면 크게)", 13f, Col.S500, true), ui.lp(top = 10, bottom = 6))
+        fieldsBox.addView(iv, ui.lp())
+    }
+
     private fun renderCount() {
         val m = draftEdit.text.toString().trim()
         val withImg = selectedTpl().hasTokens || (selectedTpl().useImages && Prefs.imageFiles(this).isNotEmpty())
@@ -665,6 +691,10 @@ class MainActivity : AppCompatActivity() {
 
     private fun renderSendImgs() {
         sendImgs.removeAllViews()
+        val cardMode = selectedTpl().hasTokens
+        draftCard.visibility = if (cardMode) View.GONE else View.VISIBLE
+        cardOnlyNote.visibility = if (cardMode) View.VISIBLE else View.GONE
+        if (cardMode) { cardPreview?.setImageBitmap(ReservationCard.render(this, fields)); return }
         val files = Prefs.imageFiles(this)
         if (selectedTpl().hasTokens) {
             // 예약 카드 미리보기 (누르면 크게)
@@ -871,21 +901,25 @@ class MainActivity : AppCompatActivity() {
         val num = PhoneUtil.normalize(phoneEdit.text.toString())
         if (num.length < 9) { toast("① 고객 전화번호를 입력해 주세요", "err"); phoneEdit.requestFocus(); return }
         if (!has(Manifest.permission.SEND_SMS)) { permLauncher.launch(requiredPerms); return }
-        val text = Compose.finalize(this, draftEdit.text.toString().trim())
-        if (text.isEmpty()) { toast("보낼 문자가 비어 있어요", "err"); return }
-        if (Templates.TOKEN_RE.containsMatchIn(text)) { toast("📝 예약 정보 빈칸을 채워 주세요", "err"); return }
         val t = selectedTpl()
+        if (t.hasTokens) {
+            val need = Templates.tokens(t.body).flatMap { if (it == "잔금") listOf("청소비용", "계약금") else listOf(it) }.toSet()
+            if (need.any { fields[it].isNullOrBlank() }) { toast("📝 예약 정보를 모두 입력해 주세요", "err"); return }
+        }
+        val text = if (t.hasTokens) "" else Compose.finalize(this, draftEdit.text.toString().trim())
+        if (!t.hasTokens && text.isEmpty()) { toast("보낼 문자가 비어 있어요", "err"); return }
+        if (Templates.TOKEN_RE.containsMatchIn(text)) { toast("📝 예약 정보 빈칸을 채워 주세요", "err"); return }
         val imgs = Prefs.imageFiles(this)
-        val useImg = withImages && imgs.isNotEmpty()
+        val useImg = withImages && imgs.isNotEmpty() && !t.hasTokens
         // 예약 문자({빈칸} 있는 문자)는 예약 카드 이미지를 항상 같이 보냄
         val cardImg: List<ByteArray> = if (t.hasTokens) listOf(ReservationCard.jpeg(this, fields)) else emptyList()
         val notes = mutableListOf<String>()
         Prefs.excludeMemo(this, num)?.let { notes.add("🚫 발송제외 번호예요" + if (it.isNotEmpty()) " ($it)" else "") }
         val last = Prefs.lastSent(this, num); val hours = Prefs.cooldownHours(this)
         if (last > 0 && hours > 0 && System.currentTimeMillis() - last < hours * 3600_000L) notes.add("🔁 ${ago(last)}에 이미 보낸 번호예요")
-        if (withImages && imgs.isEmpty()) notes.add("📷 홍보 사진이 없어서 글만 보내요")
+        if (withImages && imgs.isEmpty() && !t.hasTokens) notes.add("📷 홍보 사진이 없어서 글만 보내요")
         notes.add("[${t.icon} ${t.name}] " + when {
-            cardImg.isNotEmpty() -> "예약 카드" + (if (useImg) " + 홍보 사진 ${imgs.size}장" else "") + " + 문자"
+            cardImg.isNotEmpty() -> "📇 예약 카드 사진 한 장"
             useImg -> "사진 ${imgs.size}장 + 문자"
             else -> "문자 (${Compose.kind(text, false)})"
         })

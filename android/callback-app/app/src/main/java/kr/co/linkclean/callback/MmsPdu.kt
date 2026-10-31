@@ -34,9 +34,9 @@ object MmsPdu {
 
         // ---- 본문 (multipart) ----
         val parts = mutableListOf<Part>()
-        parts.add(smilPart(images.size))
+        parts.add(smilPart(images.size, text.isNotBlank()))
         images.forEachIndexed { i, img -> parts.add(imagePart(img, i)) }
-        parts.add(textPart(text))
+        if (text.isNotBlank()) parts.add(textPart(text))
 
         writeUintvar(out, parts.size)
         for (p in parts) {
@@ -58,7 +58,7 @@ object MmsPdu {
         return h.toByteArray()
     }
 
-    private fun smilPart(imageCount: Int): Part {
+    private fun smilPart(imageCount: Int, hasText: Boolean = true): Part {
         val sb = StringBuilder()
         sb.append("<smil><head><layout><root-layout/>")
         sb.append("<region id=\"Image\" fit=\"meet\" top=\"0\" left=\"0\" height=\"80%\" width=\"100%\"/>")
@@ -67,7 +67,7 @@ object MmsPdu {
         for (i in 0 until imageCount) {
             sb.append("<par dur=\"5000ms\"><img src=\"image$i.jpg\" region=\"Image\"/></par>")
         }
-        sb.append("<par dur=\"5000ms\"><text src=\"text.txt\" region=\"Text\"/></par>")
+        if (hasText) sb.append("<par dur=\"5000ms\"><text src=\"text.txt\" region=\"Text\"/></par>")
         sb.append("</body></smil>")
         val ct = ByteArrayOutputStream().also { writeText(it, "application/smil") }.toByteArray()
         return Part(partHeaders(ct, "smil", "smil.xml"), sb.toString().toByteArray(Charsets.UTF_8))

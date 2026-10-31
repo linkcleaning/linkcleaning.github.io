@@ -36,6 +36,7 @@ object MmsSender {
     fun send(c: Context, number: String, recordId: Long, text: String, subject: String, withImages: Boolean, extra: List<ByteArray> = emptyList()) {
         val app = c.applicationContext
         val images = extra + (if (withImages) Prefs.imageFiles(app).map { it.readBytes() } else emptyList())
+        if (images.isEmpty() && text.isBlank()) { Prefs.updateStatus(app, recordId, "실패: 보낼 내용 없음"); return }
         if (images.isEmpty() && Compose.byteLen(text) <= 90) {
             sendSms(app, number, recordId, text); return
         }
