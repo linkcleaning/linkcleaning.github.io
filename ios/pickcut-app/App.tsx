@@ -103,7 +103,9 @@ async function handle(type: string, p: any): Promise<unknown> {
 
 /** 답을 웹에 넣을 JS 코드로 (특수 줄바꿈 문자는 JS에서 오류가 나므로 바꿔 둠) */
 function replyScript(msg: unknown) {
-  const json = JSON.stringify(msg).replace(/ /g, '\\u2028').replace(/ /g, '\\u2029');
+  const LS = String.fromCharCode(0x2028); // 줄 구분 문자
+  const PS = String.fromCharCode(0x2029); // 문단 구분 문자
+  const json = JSON.stringify(msg).split(LS).join('\\u2028').split(PS).join('\\u2029');
   return `window.__pickcutNative && window.__pickcutNative(${json}); true;`;
 }
 

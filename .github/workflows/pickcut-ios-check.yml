@@ -20,7 +20,7 @@ concurrency:
 
 jobs:
   check:
-    runs-on: macos-15
+    runs-on: macos-26
     timeout-minutes: 75
     defaults:
       run:
@@ -34,6 +34,7 @@ jobs:
 
       - name: 최신 Xcode 선택
         run: |
+          ls -d /Applications/Xcode*.app | tee $RUNNER_TEMP/0-xcode-list.log
           X=$(ls -d /Applications/Xcode_*.app | grep -v -i beta | sort -V | tail -1)
           sudo xcode-select -s "$X"
           xcodebuild -version | tee $RUNNER_TEMP/0-xcode-version.log
@@ -45,10 +46,8 @@ jobs:
           set -o pipefail
           {
             npm install --no-audit --no-fund
-            npx expo install react react-native react-native-webview expo-media-library expo-image-manipulator \
-              expo-file-system expo-status-bar expo-splash-screen react-native-safe-area-context
-            npx expo install --fix
-            echo "----- package.json -----"; cat package.json
+            echo "----- SDK 버전과 맞는지 확인 -----"
+            npx expo install --check
           } 2>&1 | tee $RUNNER_TEMP/1-install.log
 
       - name: 2. 타입 검사 (없는 기능을 쓰는지 확인)
@@ -112,7 +111,7 @@ jobs:
             echo "# 픽컷 iOS 검사 결과"
             echo "- 실행 번호: ${{ github.run_number }}  /  커밋: ${{ github.sha }}"
             echo "- 시각(UTC): $(date -u '+%Y-%m-%d %H:%M')"
-            echo "- Xcode: $(head -1 $L/0-xcode-version.log)"
+            echo "- Xcode: $(head -1 $L/0-xcode-version.log)  (설치된 것: $(tr '\n' ' ' < $L/0-xcode-list.log))"
             echo
             echo "| 단계 | 결과 |"; echo "|---|---|"
             echo "| 1 설치 | $S1 |"; echo "| 2 타입 검사 | $S2 |"; echo "| 3 expo-doctor | $S3 |"
