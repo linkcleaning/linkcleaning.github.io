@@ -45,8 +45,6 @@ input,textarea,select{font:inherit;font-size:17px;color:var(--ink)}
 .hd-t2 b{color:var(--gold2)}
 .hd-act{margin-left:auto;display:flex;gap:8px;align-items:center}
 .icon-btn{width:42px;height:42px;border-radius:14px;background:rgba(255,255,255,.14);display:grid;place-items:center;font-size:20px;backdrop-filter:blur(6px)}
-.me-chip{display:inline-flex;align-items:center;gap:6px;margin-top:14px;background:rgba(255,255,255,.14);padding:7px 12px 7px 8px;border-radius:999px;font-size:14px;font-weight:700}
-.me-chip .av{width:24px;height:24px;border-radius:50%;background:var(--gold);color:var(--g9);display:grid;place-items:center;font-size:12px;font-weight:900}
 .sync-dot{width:9px;height:9px;border-radius:50%;background:#9fb3aa;display:inline-block}
 .sync-dot.ok{background:#4ade80;box-shadow:0 0 0 3px rgba(74,222,128,.25)}
 .sync-dot.ing{background:var(--gold);animation:blink 1s infinite}
@@ -92,13 +90,6 @@ main{padding:16px 14px 0}
 .empty .big{font-size:44px;margin-bottom:6px}
 
 /* ---------- leaderboard ---------- */
-.lb-row{display:flex;align-items:center;gap:12px;padding:10px 4px;border-bottom:1px dashed var(--line)}
-.lb-row:last-child{border:0}
-.lb-medal{width:34px;text-align:center;font-size:22px}
-.lb-name{flex:1;font-weight:800;font-size:16px}
-.lb-bar{height:8px;border-radius:9px;background:var(--g1);margin-top:6px;overflow:hidden}
-.lb-bar i{display:block;height:100%;border-radius:9px;background:linear-gradient(90deg,var(--g5),var(--gold))}
-.lb-n{font-weight:900;font-size:18px;color:var(--g7)}
 
 .tip{display:flex;gap:12px;align-items:flex-start;background:linear-gradient(135deg,#fffaf0,#fff);border:1.5px solid #f6e3b4;border-radius:20px;padding:15px}
 .tip .ti{font-size:26px}
@@ -216,8 +207,6 @@ textarea.inp{min-height:120px;line-height:1.55;resize:vertical}
 .set-g .d{font-size:13.5px;color:var(--mut);font-weight:600;margin:0 0 14px;line-height:1.5}
 .help{background:var(--g1);border-radius:14px;padding:12px 14px;font-size:13.5px;line-height:1.65;color:var(--ink2);font-weight:600;margin:-4px 0 14px}
 .help b{color:var(--g7)}
-.staff-chip{display:inline-flex;align-items:center;gap:6px;padding:8px 8px 8px 13px;background:var(--g1);border-radius:12px;font-weight:800;color:var(--g7);margin:0 6px 6px 0}
-.staff-chip button{width:24px;height:24px;border-radius:8px;background:rgba(0,0,0,.06);font-size:13px}
 .var-chips{display:flex;flex-wrap:wrap;gap:5px;margin:8px 0 2px}
 .var-chips button{font-size:12.5px;font-weight:800;padding:5px 8px;border-radius:9px;background:var(--amber1);color:var(--goldd)}
 
@@ -247,7 +236,6 @@ textarea.inp{min-height:120px;line-height:1.55;resize:vertical}
         <button class="icon-btn press" id="btnSettings" aria-label="설정">⚙️</button>
       </div>
     </div>
-    <button class="me-chip press" id="meChip"><span class="av" id="meAv">?</span><span id="meName">사용자 선택</span> ▾</button>
   </header>
 
   <main id="v-home" class="view"></main>
@@ -303,7 +291,7 @@ ask:
 ✔ 영수증(또는 카드 결제내역) 인증 후 작성할 수 있어요
 ✔ 후기 첫 줄에 "링크클린 후기 이벤트 참여"라고 꼭 적어주세요 (공정위 표시 규정)
 
-담당 {담당} 드림 · {전화}`,
+{업체} 드림 · {전화}`,
 remind:
 `[{업체}] {고객님}, 청소 후 며칠 지내보시니 어떠세요? 😊
 혹시 마음에 걸리는 부분이 있으면 편하게 연락 주세요. 바로 확인해드리겠습니다.
@@ -330,7 +318,7 @@ referral:
 {전화}`
 };
 const TPL_NAME = {ask:'후기 부탁', remind:'한 번 더 부탁', thanks:'후기 감사', referral:'소개 감사'};
-const VARS = ['{고객님}','{서비스}','{링크}','{선물}','{소개선물}','{담당}','{전화}','{업체}','{소개자}'];
+const VARS = ['{고객님}','{서비스}','{링크}','{선물}','{소개선물}','{전화}','{업체}','{소개자}'];
 
 const TIPS = [
   ['🧾','영수증부터 챙기세요','네이버 방문자 후기는 영수증이나 카드 결제내역을 인증해야 플레이스에 노출돼요. 작업이 끝나면 카드 영수증이나 현금영수증을 꼭 드리세요.'],
@@ -356,7 +344,7 @@ function defShared(){
 function load(){
   let d=null; try{ d=JSON.parse(localStorage.getItem(LS_DATA)); }catch(e){}
   if(!d||!d.shared) d={shared:defShared(),recs:{},dirty:{},sharedDirty:false};
-  d.shared=Object.assign(defShared(),d.shared); d.shared.tpl=Object.assign({},DEFAULT_TPL,d.shared.tpl||{});
+  d.shared=Object.assign(defShared(),d.shared); d.shared.tpl=Object.assign({},DEFAULT_TPL,d.shared.tpl||{}); for(const k in d.shared.tpl) d.shared.tpl[k]=d.shared.tpl[k].replace('담당 {담당} 드림','{업체} 드림').replace(/\{담당\}/g,'{업체}');
   d.recs=d.recs||{}; d.dirty=d.dirty||{};
   return d;
 }
@@ -405,7 +393,7 @@ async function copyText(txt){
    ========================================================= */
 function touch(r, logText){
   r.updatedAt=now();
-  if(logText){ r.log=r.log||[]; r.log.push({t:logText,ts:now(),by:L.me||''}); }
+  if(logText){ r.log=r.log||[]; r.log.push({t:logText,ts:now()}); }
   S.recs[r.id]=r; S.dirty[r.id]=1; save(); scheduleSync(); renderAll();
 }
 function setShared(fn){ fn(S.shared); S.shared.updatedAt=now(); S.sharedDirty=true; save(); scheduleSync(); }
@@ -450,14 +438,6 @@ function renderHome(){
   const m=new Date().getMonth()+1;
   const td=todos();
 
-  // 직원 순위
-  const by={}; S.shared.staff.forEach(s=>by[s]={rev:0,ask:0});
-  all.forEach(r=>{ const s=r.staff||'미지정'; by[s]=by[s]||{rev:0,ask:0};
-    if((r.status==='reviewed'||r.status==='rewarded')&&inThisMonth(r.reviewedAt)) by[s].rev++;
-    if(r.askedAt&&inThisMonth(r.askedAt)) by[s].ask++; });
-  const lb=Object.entries(by).filter(([k,v])=>v.rev||v.ask||S.shared.staff.includes(k)).sort((a,b)=>b[1].rev-a[1].rev||b[1].ask-a[1].ask);
-  const mx=Math.max(1,...lb.map(x=>x[1].rev));
-  const medals=['🥇','🥈','🥉'];
   const tip=TIPS[(L.tip||0)%TIPS.length];
 
   $('#v-home').innerHTML=`
@@ -492,16 +472,6 @@ function renderHome(){
     </div>`).join('') + (td.length>8?`<button class="btn-l btn-ghost press" style="width:100%" data-go="list">전체 보기 (${td.length})</button>`:'')
   :`<div class="card empty"><div class="big">🎉</div>할 일을 모두 끝냈어요!<br><span style="font-size:13px">작업이 끝나면 아래 <b>+</b> 버튼으로 고객을 등록하세요.</span></div>`}
 
-  <div class="sec-t">🏆 ${m}월 후기왕 <small>후기 수 기준</small></div>
-  <div class="card">
-    ${lb.length?lb.map(([n,v],i)=>`
-      <div class="lb-row">
-        <div class="lb-medal">${v.rev&&i<3?medals[i]:'<span style="font-size:15px;color:var(--mut);font-weight:800">'+(i+1)+'</span>'}</div>
-        <div style="flex:1"><div class="lb-name">${esc(n)}${n===L.me?' <span class="tag">나</span>':''}</div><div class="lb-bar"><i style="width:${v.rev/mx*100}%"></i></div></div>
-        <div style="text-align:right"><div class="lb-n">${v.rev}<span style="font-size:13px">개</span></div><div style="font-size:12px;color:var(--mut);font-weight:700">요청 ${v.ask}</div></div>
-      </div>`).join(''):'<div class="empty">아직 기록이 없어요</div>'}
-  </div>
-
   <div class="sec-t">💡 후기 꿀팁</div>
   <div class="tip"><div class="ti">${tip[0]}</div><div><b>${tip[1]}</b><p>${tip[2]}</p></div></div>
   <div class="tip-nav"><button class="btn-s bg-amber press" id="nextTip">다음 팁 ›</button></div>
@@ -533,7 +503,7 @@ function custCard(r){
     <button class="cust-top" style="width:100%;text-align:left" data-open="${r.id}">
       <div class="avatar" style="background:${col}">${esc(initial(r.name))}</div>
       <div style="flex:1;min-width:0"><div class="cust-name">${esc(r.name||'이름 없음')} <span style="font-size:13px;color:var(--mut);font-weight:700">${esc(fmtPhone(r.phone))}</span></div>
-      <div class="cust-sub"><span class="tag" style="background:${col}1a;color:${col}">${esc(r.service||'청소')}</span>${esc(branch(r.branch)?.name||'')} · ${esc(r.staff||'')} · ${fmtDate(r.workDate)}</div></div>
+      <div class="cust-sub"><span class="tag" style="background:${col}1a;color:${col}">${esc(r.service||'청소')}</span>${esc(branch(r.branch)?.name||'')} · ${fmtDate(r.workDate)}</div></div>
       <span style="color:#b6c0bb;font-size:20px">›</span>
     </button>
     ${stepsHTML(r)}
@@ -544,18 +514,15 @@ function renderList(){
   const all=recs().sort((a,b)=>(b.updatedAt||0)-(a.updatedAt||0));
   const cnt=k=>k==='all'?all.length:all.filter(r=>r.status===k).length;
   let list=all.filter(r=>F.st==='all'||r.status===F.st);
-  if(F.mine&&L.me) list=list.filter(r=>r.staff===L.me);
-  if(F.q){ const q=F.q.replace(/-/g,''); list=list.filter(r=>((r.name||'')+(r.phone||'')+(r.service||'')+(r.memo||'')+(r.staff||'')+(r.referrer||'')).replace(/-/g,'').includes(q)); }
+  if(F.q){ const q=F.q.replace(/-/g,''); list=list.filter(r=>((r.name||'')+(r.phone||'')+(r.service||'')+(r.memo||'')+(r.referrer||'')).replace(/-/g,'').includes(q)); }
   const chips=[['all','전체'],['done','📨 요청 전'],['asked','⏳ 기다림'],['reviewed','⭐ 후기'],['rewarded','☕ 완료']];
   $('#v-list').innerHTML=`
     <div class="search"><span>🔍</span><input id="q" placeholder="이름·전화번호·서비스 검색" value="${esc(F.q)}" /></div>
-    <div class="chips">${chips.map(([k,t])=>`<button class="chip ${F.st===k?'on':''}" data-st="${k}">${t}<span class="c">${cnt(k)}</span></button>`).join('')}
-      <button class="chip ${F.mine?'on':''}" id="mine">🙋 내 고객만</button></div>
+    <div class="chips">${chips.map(([k,t])=>`<button class="chip ${F.st===k?'on':''}" data-st="${k}">${t}<span class="c">${cnt(k)}</span></button>`).join('')}</div>
     ${list.length?list.map(custCard).join(''):`<div class="card empty" style="margin-top:12px"><div class="big">🗂️</div>${all.length?'조건에 맞는 고객이 없어요':'아직 등록된 고객이 없어요.<br>작업이 끝나면 <b>+</b> 버튼을 눌러주세요.'}</div>`}
     <div style="height:10px"></div>`;
   const q=$('#q'); q.oninput=e=>{ F.q=e.target.value.trim(); clearTimeout(q._t); q._t=setTimeout(()=>{ renderList(); const n=$('#q'); n.focus(); n.setSelectionRange(n.value.length,n.value.length); },350); };
   document.querySelectorAll('[data-st]').forEach(b=>b.onclick=()=>{F.st=b.dataset.st;renderList();});
-  $('#mine').onclick=()=>{ if(!L.me){ pickMe(); return; } F.mine=!F.mine; renderList(); };
 }
 
 /* =========================================================
@@ -743,7 +710,7 @@ $('#ov').onclick=closeSheet;
 /* ---------- 고객 등록/수정 ---------- */
 function openForm(r){
   const isNew=!r;
-  r=r?Object.assign({},r):{id:uid(),name:'',phone:'',service:'입주청소',branch:S.shared.branches[0].id,staff:L.me||S.shared.staff[0]||'',workDate:todayStr(),receipt:true,referrer:'',referrerPhone:'',memo:'',status:'done',createdAt:now(),log:[]};
+  r=r?Object.assign({},r):{id:uid(),name:'',phone:'',service:'입주청소',branch:S.shared.branches[0].id,workDate:todayStr(),receipt:true,referrer:'',referrerPhone:'',memo:'',status:'done',createdAt:now(),log:[]};
   openSheet(`
     <div class="sh-t">${isNew?'🧹 작업 완료 등록':'✏️ 고객 정보 수정'}</div>
     <div class="sh-s">${isNew?'청소가 끝난 고객을 등록하고 바로 후기를 부탁해요':'바꿀 내용을 고친 뒤 저장하세요'}</div>
@@ -751,7 +718,6 @@ function openForm(r){
     <div class="fld"><label>고객 이름 <small>(선택)</small></label><input class="inp" id="fName" placeholder="예) 김민지 / 노형동 아파트" value="${esc(r.name)}"></div>
     <div class="fld"><label>서비스</label><div class="opts" id="fSvc">${SERVICES.map(s=>`<button class="opt ${r.service===s?'on':''}" data-v="${s}">${s}</button>`).join('')}</div></div>
     <div class="fld"><label>지점</label><div class="opts" id="fBr">${S.shared.branches.map(b=>`<button class="opt ${r.branch===b.id?'on':''}" data-v="${b.id}">📍 ${esc(b.name)}</button>`).join('')}</div></div>
-    <div class="fld"><label>담당 직원</label><div class="opts" id="fStaff">${S.shared.staff.map(s=>`<button class="opt ${r.staff===s?'on':''}" data-v="${esc(s)}">${esc(s)}</button>`).join('')}</div></div>
     <div class="fld"><label>작업 날짜</label><input class="inp" type="date" id="fDate" value="${esc(r.workDate)}"></div>
     <div class="fld"><div class="toggle" id="fRc"><div class="tt">🧾 영수증 드렸어요<small>카드 영수증·현금영수증이 있어야 네이버 후기 인증이 돼요</small></div><div class="sw ${r.receipt?'on':''}"></div></div></div>
     <div class="fld"><label>소개해주신 분 <small>(지인 소개 이벤트 · 선택)</small></label>
@@ -761,7 +727,7 @@ function openForm(r){
     ${isNew?'<button class="btn-l btn-ghost press" style="width:100%;margin-top:8px" id="fSaveOnly">등록만 하기 (나중에 보낼게요)</button>':''}
   `);
   const bindOpts=(id,key)=>document.querySelectorAll(id+' .opt').forEach(o=>o.onclick=()=>{ r[key]=o.dataset.v; document.querySelectorAll(id+' .opt').forEach(x=>x.classList.toggle('on',x===o)); });
-  bindOpts('#fSvc','service'); bindOpts('#fBr','branch'); bindOpts('#fStaff','staff');
+  bindOpts('#fSvc','service'); bindOpts('#fBr','branch');
   $('#fRc').onclick=()=>{ r.receipt=!r.receipt; $('#fRc .sw').classList.toggle('on',r.receipt); };
   ['#fPhone','#fRefP'].forEach(s=>$(s).oninput=e=>{ e.target.value=fmtPhone(e.target.value); });
   const collect=()=>{
@@ -780,7 +746,7 @@ function openForm(r){
 /* ---------- 문자 보내기 ---------- */
 function fill(tpl,r){
   const link=reviewUrl(r,'naver')||fallbackUrl(r);
-  const map={'{고객님}':r.name?r.name+'님':'고객님','{서비스}':r.service||'청소','{링크}':link,'{선물}':S.shared.reward,'{소개선물}':S.shared.referralReward,'{담당}':r.staff||L.me||S.shared.company,'{전화}':S.shared.phone,'{업체}':S.shared.company,'{소개자}':r.referrer||'소개해주신 분'};
+  const map={'{고객님}':r.name?r.name+'님':'고객님','{서비스}':r.service||'청소','{링크}':link,'{선물}':S.shared.reward,'{소개선물}':S.shared.referralReward,'{담당}':S.shared.company,'{전화}':S.shared.phone,'{업체}':S.shared.company,'{소개자}':r.referrer||'소개해주신 분'};
   return tpl.replace(/\{[^}]+\}/g,m=>m in map?map[m]:m);
 }
 function openSend(id,kind){
@@ -829,7 +795,6 @@ function openDetail(id){
         <dt>전화</dt><dd>${esc(fmtPhone(r.phone))}</dd>
         <dt>서비스</dt><dd>${esc(r.service)}</dd>
         <dt>지점</dt><dd>${esc(branch(r.branch)?.name||'')}</dd>
-        <dt>담당</dt><dd>${esc(r.staff)}</dd>
         <dt>작업일</dt><dd>${fmtDate(r.workDate)}</dd>
         <dt>영수증</dt><dd>${r.receipt?'✅ 드림':'❌ 아직'}</dd>
         ${r.referrer?`<dt>소개</dt><dd>${esc(r.referrer)} ${esc(fmtPhone(r.referrerPhone))} ${r.referrerRewarded?'· ☕ 선물 완료':'· 선물 전'}</dd>`:''}
@@ -843,7 +808,7 @@ function openDetail(id){
     </div>
     ${r.referrer&&!r.referrerRewarded?`<button class="btn-l bg-green press" style="width:100%;margin-top:8px" data-act="refgift" data-id="${r.id}">🎁 ${esc(r.referrer)}님께 소개 선물 보냈어요</button>`:''}
     <div class="sec-t" style="margin-top:18px">🕒 기록</div>
-    <ul class="log" style="padding:0;margin:0">${(r.log||[]).slice().reverse().map(l=>`<li>${esc(l.t)}<small>${fmtDT(l.ts)}${l.by?' · '+esc(l.by):''}</small></li>`).join('')||'<li>기록 없음</li>'}</ul>
+    <ul class="log" style="padding:0;margin:0">${(r.log||[]).slice().reverse().map(l=>`<li>${esc(l.t)}<small>${fmtDT(l.ts)}</small></li>`).join('')||'<li>기록 없음</li>'}</ul>
     <div class="btn-row" style="margin-top:16px">
       ${r.status!=='done'?'<button class="btn-l btn-ghost press" id="dBack">↩️ 한 단계 되돌리기</button>':''}
       <button class="btn-l bg-red press" id="dDel">🗑️ 삭제</button>
@@ -878,23 +843,6 @@ document.addEventListener('click',e=>{
   const s=e.target.closest('[data-gosettings]'); if(s){ closeSheet(); go('settings'); setTimeout(()=>{ const el=document.getElementById('set-'+s.dataset.gosettings); if(el) el.scrollIntoView({behavior:'smooth'}); },60); return; }
 });
 
-/* ---------- 사용자 선택 ---------- */
-function pickMe(first){
-  openSheet(`
-    <div style="text-align:center"><img src="logo-sm.png" style="width:70px;height:70px;border-radius:50%;box-shadow:var(--sh)"></div>
-    <div class="sh-t" style="text-align:center;margin-top:10px">${first?'후기부스터에 오신 걸 환영해요! 👋':'누가 쓰고 있나요?'}</div>
-    <div class="sh-s" style="text-align:center">이 폰을 쓰는 사람을 골라주세요.<br>내가 등록한 고객과 후기 성적이 따로 집계돼요.</div>
-    <div class="opts" style="justify-content:center">${S.shared.staff.map(s=>`<button class="opt ${L.me===s?'on':''}" data-me="${esc(s)}" style="padding:14px 18px;font-size:17px">${esc(s)}</button>`).join('')}</div>
-    <div class="fld" style="margin-top:16px"><label>목록에 없으면 이름 입력</label><div style="display:flex;gap:8px"><input class="inp" id="newMe" placeholder="예) 김팀장"><button class="btn-s solid-green press" id="addMe" style="padding:0 18px">추가</button></div></div>
-  `);
-  document.querySelectorAll('[data-me]').forEach(b=>b.onclick=()=>setMe(b.dataset.me));
-  $('#addMe').onclick=()=>{ const v=$('#newMe').value.trim(); if(!v) return; if(!S.shared.staff.includes(v)) setShared(s=>s.staff.push(v)); setMe(v); };
-}
-function setMe(n){ L.me=n; saveLocal(); closeSheet(); renderHeader(); renderAll(); toast(`👋 ${n}님, 반가워요!`); }
-function renderHeader(){
-  $('#meName').textContent=L.me||'사용자 선택'; $('#meAv').textContent=L.me?L.me.charAt(0):'?';
-}
-$('#meChip').onclick=()=>pickMe(false);
 
 /* =========================================================
    설정
@@ -921,13 +869,6 @@ function renderSettings(){
       <div class="fld"><label>지점 이름</label><div style="display:flex;gap:8px">${s.branches.map((b,i)=>`<input class="inp" data-bname="${i}" value="${esc(b.name)}">`).join('')}</div></div>
     </div>
 
-    <div class="set-g" id="set-staff">
-      <h3>👥 직원</h3>
-      <p class="d">담당자 선택과 후기왕 순위에 쓰여요.</p>
-      <div>${s.staff.map((n,i)=>`<span class="staff-chip">${esc(n)}<button data-delstaff="${i}" aria-label="삭제">✕</button></span>`).join('')}</div>
-      <div style="display:flex;gap:8px;margin-top:6px"><input class="inp" id="newStaff" placeholder="직원 이름 추가"><button class="btn-s solid-green press" id="addStaff" style="padding:0 18px">추가</button></div>
-      <div class="toggle press" style="margin-top:12px" id="whoAmI"><div class="tt">🙋 이 폰 사용자: <b>${esc(L.me||'선택 안 함')}</b><small>눌러서 바꾸기</small></div><span>›</span></div>
-    </div>
 
     <div class="set-g">
       <h3>🎁 이벤트 · 목표</h3>
@@ -953,14 +894,14 @@ function renderSettings(){
     </div>
 
     <div class="set-g" id="set-sync">
-      <h3>🔄 직원 공유 (구글 시트)</h3>
-      <p class="d">설정하면 모든 직원 폰의 고객·후기 기록이 하나의 구글 시트로 합쳐져요. 안 해도 이 폰에서는 잘 돌아가요.</p>
+      <h3>🔄 여러 폰 함께 쓰기 (구글 시트)</h3>
+      <p class="d">설정하면 여러 폰의 고객·후기 기록이 하나의 구글 시트로 합쳐져요. 안 해도 이 폰에서는 잘 돌아가요.</p>
       <div class="help">
         <b>처음 한 번만 (대표님 5분)</b><br>
         ① 구글 시트 새로 만들기 → <b>확장 프로그램 → Apps Script</b><br>
         ② 아래 <b>설치 코드 복사</b> → 붙여넣고 저장<br>
         ③ <b>배포 → 새 배포 → 웹 앱</b>, 액세스 권한 <b>"모든 사용자"</b> → 배포<br>
-        ④ 나온 주소(…/exec)를 아래에 붙여넣기 → 직원 폰에도 똑같이
+        ④ 나온 주소(…/exec)를 아래에 붙여넣기 → 함께 쓰는 폰에도 똑같이
       </div>
       <button class="btn-l bg-green press" style="width:100%;margin-bottom:12px" id="copyGs">📋 설치 코드 복사</button>
       <div class="fld"><label>웹 앱 주소</label><input class="inp" id="syncUrl" placeholder="https://script.google.com/macros/s/.../exec" value="${esc(L.syncUrl)}" inputmode="url"></div>
@@ -993,9 +934,6 @@ function renderSettings(){
   ch('#rd',v=>setShared(s=>s.remindDays=Math.max(1,parseInt(v)||2)));
   ch('#co',v=>setShared(s=>s.company=v||'링크클린'));
   ch('#ph',v=>setShared(s=>s.phone=v));
-  document.querySelectorAll('[data-delstaff]').forEach(b=>b.onclick=()=>{ const n=s.staff[+b.dataset.delstaff]; if(!confirm(n+' 님을 목록에서 뺄까요?')) return; setShared(x=>x.staff.splice(+b.dataset.delstaff,1)); renderSettings(); });
-  $('#addStaff').onclick=()=>{ const v=$('#newStaff').value.trim(); if(!v||s.staff.includes(v)) return; setShared(x=>x.staff.push(v)); renderSettings(); };
-  $('#whoAmI').onclick=()=>pickMe(false);
   // 템플릿
   let tk='ask'; const ta=$('#tplTa'); ta.value=s.tpl[tk];
   document.querySelectorAll('[data-tk]').forEach(b=>b.onclick=()=>{ tk=b.dataset.tk; ta.value=S.shared.tpl[tk]; document.querySelectorAll('[data-tk]').forEach(x=>x.classList.toggle('on',x===b)); });
@@ -1012,9 +950,9 @@ function renderSettings(){
   $('#bkIn').onclick=()=>$('#bkFile').click();
   $('#bkFile').onchange=async e=>{ const f=e.target.files[0]; if(!f) return; try{ const d=JSON.parse(await f.text()); if(!d.recs) throw 0; let n=0; Object.values(d.recs).forEach(r=>{ const l=S.recs[r.id]; if(!l||(r.updatedAt||0)>(l.updatedAt||0)){ S.recs[r.id]=r; S.dirty[r.id]=1; n++; } }); if(d.shared&&(d.shared.updatedAt||0)>(S.shared.updatedAt||0)){ S.shared=Object.assign(defShared(),d.shared); S.sharedDirty=true; } save(); renderAll(); toast(`⬆️ ${n}건 불러왔어요`); scheduleSync(); }catch(_){ toast('⚠️ 백업 파일이 아니에요'); } };
   $('#csvOut').onclick=()=>{
-    const head=['이름','전화','서비스','지점','담당','작업일','상태','요청일','후기일','선물일','소개자','영수증','메모'];
+    const head=['이름','전화','서비스','지점','작업일','상태','요청일','후기일','선물일','소개자','영수증','메모'];
     const d=t=>t?new Date(t).toLocaleDateString('ko-KR'):'';
-    const rows=recs().map(r=>[r.name,fmtPhone(r.phone),r.service,branch(r.branch)?.name,r.staff,r.workDate,ST[r.status].t,d(r.askedAt),d(r.reviewedAt),d(r.rewardedAt),r.referrer,r.receipt?'O':'X',r.memo]);
+    const rows=recs().map(r=>[r.name,fmtPhone(r.phone),r.service,branch(r.branch)?.name,r.workDate,ST[r.status].t,d(r.askedAt),d(r.reviewedAt),d(r.rewardedAt),r.referrer,r.receipt?'O':'X',r.memo]);
     const csv='﻿'+[head,...rows].map(r=>r.map(v=>`"${String(v==null?'':v).replace(/"/g,'""')}"`).join(',')).join('\n');
     const a=document.createElement('a'); a.href=URL.createObjectURL(new Blob([csv],{type:'text/csv'})); a.download=`후기부스터_${todayStr()}.csv`; a.click();
   };
@@ -1027,7 +965,7 @@ let syncT=null, syncing=false;
 function setDot(st){ $('#syncDot').className='sync-dot '+(st||''); }
 function scheduleSync(){ if(!L.syncUrl) return; clearTimeout(syncT); syncT=setTimeout(()=>sync(false),1500); }
 async function sync(manual){
-  if(!L.syncUrl||syncing){ if(manual&&!L.syncUrl) toast('설정 → 직원 공유에서 주소를 넣어주세요'); return; }
+  if(!L.syncUrl||syncing){ if(manual&&!L.syncUrl) toast('설정 → 여러 폰 함께 쓰기에서 주소를 넣어주세요'); return; }
   syncing=true; setDot('ing');
   const ids=Object.keys(S.dirty);
   const out=ids.map(id=>S.recs[id]).filter(Boolean);
@@ -1051,7 +989,7 @@ async function sync(manual){
   }catch(e){ setDot('err'); if(manual) toast('⚠️ 동기화 실패: '+(e.message||'주소를 확인해주세요')); }
   syncing=false;
 }
-$('#btnSync').onclick=()=>{ if(!L.syncUrl){ go('settings'); setTimeout(()=>$('#set-sync').scrollIntoView({behavior:'smooth'}),60); toast('직원끼리 공유하려면 여기서 설정해요'); } else sync(true); };
+$('#btnSync').onclick=()=>{ if(!L.syncUrl){ go('settings'); setTimeout(()=>$('#set-sync').scrollIntoView({behavior:'smooth'}),60); toast('여러 폰에서 함께 쓰려면 여기서 설정해요'); } else sync(true); };
 document.addEventListener('visibilitychange',()=>{ if(document.visibilityState==='visible') sync(false); });
 setInterval(()=>{ if(document.visibilityState==='visible') sync(false); },60000);
 
@@ -1093,8 +1031,7 @@ function confetti(){
 /* =========================================================
    시작
    ========================================================= */
-renderHeader(); go('home');
-if(!L.me) setTimeout(()=>pickMe(true),350);
+go('home');
 if(L.syncUrl) sync(false);
 if('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js').catch(()=>{});
 </script>
