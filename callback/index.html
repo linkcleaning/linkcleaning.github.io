@@ -534,6 +534,7 @@ document.addEventListener('input', e => {
   if (f.type === 'money') { const d = digits(el.value); el.value = d ? parseInt(d, 10).toLocaleString('ko-KR') : ''; S.fields[f.key] = d; }
   else S.fields[f.key] = el.value;
   save(); setDraftFromTpl(); const j = $('jangeum'); if (j) j.textContent = fieldText('잔금') || '-';
+  if (isCardTpl(curTpl())) renderCardPreview();
 });
 
 function composeFromTpl(t) {
@@ -564,8 +565,68 @@ function renderChips() {
       <span class="text-[12px] ${on ? 'text-brand-100' : 'text-slate-400'}">${esc(t.type)}${tplImgIds(t).length ? ` · 📷${tplImgIds(t).length}${usesCommon(t) ? ' 공통' : ''}` : ''}</span></span></button>`;
   }).join('');
 }
+/* ============ 예약 카드 (예약 문자는 카드 사진 한 장만) ============ */
+const isCardTpl = t => tplTokens(t).length > 0;
+let _card = { key: '', blob: null, url: '' };
+const cardKey = () => JSON.stringify(S.fields || {});
+async function drawReservationCard() {
+  const W = 1080, H = 1430, c = document.createElement('canvas'); c.width = W; c.height = H;
+  const x = c.getContext('2d');
+  try { if (document.fonts) await document.fonts.load('bold 40px Pretendard'); } catch (e) {}
+  const F = (sz) => `800 ${sz}px Pretendard, -apple-system, 'Apple SD Gothic Neo', sans-serif`;
+  x.fillStyle = '#f1f5f9'; x.fillRect(0, 0, W, H);
+  const g = x.createLinearGradient(0, 0, W, 420); g.addColorStop(0, '#0369a1'); g.addColorStop(1, '#0ea5e9');
+  x.fillStyle = g; x.fillRect(0, 0, W, 430);
+  x.fillStyle = '#fff'; x.beginPath(); x.arc(540, 150, 100, 0, Math.PI * 2); x.fill();
+  try { const lg = await loadImg('logo-sm.png'); x.save(); x.beginPath(); x.arc(540, 150, 92, 0, Math.PI * 2); x.clip(); x.drawImage(lg, 448, 58, 184, 184); x.restore(); } catch (e) {}
+  x.textAlign = 'center'; x.fillStyle = '#e0f2fe'; x.font = F(38); x.fillText('제주 청소 전문 링크클린', 540, 312);
+  x.fillStyle = '#fff'; x.font = F(64); x.fillText('예약 확정 안내', 540, 386);
+  const rr = (l, t, r, b, rad) => { x.beginPath(); x.roundRect ? x.roundRect(l, t, r - l, b - t, rad) : x.rect(l, t, r - l, b - t); };
+  x.fillStyle = '#fff'; rr(60, 470, 1020, 1110, 40); x.fill();
+  const rows = [['청소하는 날', fieldText('청소날짜')], ['도착 시간', fieldText('도착시간') ? fieldText('도착시간') + '경' : ''],
+    ['청소 비용', fieldText('청소비용')], ['계약금', fieldText('계약금')], ['잔금 (청소 후)', fieldText('잔금')]].filter(r => r[1]);
+  let y = 560;
+  rows.forEach(([k, v], i) => {
+    if (i) { x.strokeStyle = '#e2e8f0'; x.lineWidth = 3; x.beginPath(); x.moveTo(110, y - 62); x.lineTo(970, y - 62); x.stroke(); }
+    x.textAlign = 'left'; x.fillStyle = '#64748b'; x.font = F(38); x.fillText(k, 110, y);
+    x.textAlign = 'right'; x.fillStyle = k === '계약금' ? '#0369a1' : '#0f172a'; x.font = F(k === '계약금' ? 50 : 46); x.fillText(v, 970, y);
+    y += 108;
+  });
+  x.fillStyle = '#fffbeb'; rr(60, 1140, 1020, 1290, 32); x.fill(); x.strokeStyle = '#fcd34d'; x.lineWidth = 4; x.stroke();
+  x.textAlign = 'left'; x.fillStyle = '#92400e'; x.font = F(34); x.fillText('계약금 입금 계좌', 110, 1198);
+  x.fillStyle = '#0f172a'; x.font = F(46); x.fillText('토스뱅크 1000-1626-3066', 110, 1258);
+  x.textAlign = 'right'; x.fillStyle = '#475569'; x.font = F(36); x.fillText('예금주 한승우', 970, 1258);
+  x.textAlign = 'center'; x.fillStyle = '#334155'; x.font = F(34); x.fillText('입금 확인 후 예약이 확정됩니다', 540, 1345);
+  x.fillStyle = '#64748b'; x.font = F(30); x.fillText('정확한 주소(동·호수)를 문자로 남겨주세요 · 064-763-4545', 540, 1400);
+  return new Promise((res, rej) => c.toBlob(b => b ? res(b) : rej(), 'image/png'));
+}
+async function cardBlob() {
+  const k = cardKey();
+  if (_card.key === k && _card.blob) return _card.blob;
+  const blob = await drawReservationCard();
+  if (_card.url) URL.revokeObjectURL(_card.url);
+  _card = { key: k, blob, url: URL.createObjectURL(blob) };
+  return blob;
+}
+let _cardTimer;
+function renderCardPreview() {
+  clearTimeout(_cardTimer);
+  _cardTimer = setTimeout(async () => {
+    try { await cardBlob(); const im = document.getElementById('cardPrev'); if (im) im.src = _card.url; } catch (e) {}
+  }, 200);
+}
+
 let pickedImg = 0; // 보낼 사진 번호 (0부터)
 function renderSendImgs() {
+  const cardMode = isCardTpl(curTpl());
+  ['draft', 'charInfo'].forEach(id => $(id) && $(id).classList.toggle('hidden', cardMode));
+  if (cardMode) {
+    $('btnRestore').classList.add('hidden'); $('sendImgsLabel').classList.add('hidden');
+    $('sendImgs').innerHTML = `<div class="w-full"><p class="mb-2 rounded-xl bg-brand-50 px-3 py-2 text-[14px] font-bold text-brand-700 ring-1 ring-brand-200">📇 예약 문자는 이 카드 사진 한 장만 보내요<br><span class="font-medium">위 예약 정보를 입력하면 카드에 바로 들어가요</span></p>
+      <img id="cardPrev" class="w-full rounded-2xl ring-1 ring-slate-200" src="${_card.url || ''}" alt="예약 카드"/></div>`;
+    renderCardPreview();
+    return;
+  }
   const imgs = tplImgs(curTpl());
   if (pickedImg >= imgs.length) pickedImg = 0;
   $('sendImgsLabel').classList.toggle('hidden', imgs.length < 2);
@@ -695,10 +756,24 @@ $('sendImgs').onclick = e => {
   const b = e.target.closest('[data-pimg]'); if (b) { pickedImg = +b.dataset.pimg; vib(); renderSendImgs(); }
 };
 
-$('btnSms').onclick = () => { if (!guard()) return; vib(); record('문자'); location.href = smsHref(); };
+async function sendCard() {
+  if (!guard()) return;
+  if (!navigator.clipboard || !window.ClipboardItem) { toast('이 브라우저는 사진 복사를 지원하지 않아요', 'err'); return; }
+  vib();
+  try {
+    const ready = (_card.key === cardKey()) ? _card.blob : null;
+    await navigator.clipboard.write([new ClipboardItem({ 'image/png': ready || cardBlob() })]);
+    record('예약카드');
+    $('pasteMore').classList.add('hidden');
+    $('pasteSheet').classList.remove('hidden');
+    toast('📋 예약 카드 복사 완료! 아래 버튼을 누르세요', 'ok');
+  } catch (e) { toast('복사에 실패했어요. 다시 시도해 주세요', 'err'); }
+}
+$('btnSms').onclick = () => { if (isCardTpl(curTpl())) return sendCard(); if (!guard()) return; vib(); record('문자'); location.href = smsHref(); };
 
 // 아이폰: 미리 합쳐 둔 사진을 복사. 복사가 끝난 뒤 사용자가 직접 '문자 앱 열기'를 눌러야 복사가 취소되지 않음
 $('btnShareAll').onclick = async () => {
+  if (isCardTpl(curTpl())) return sendCard();
   if (!guard()) return;
   const imgs = tplImgs(curTpl());
   if (!imgs.length) { toast('🖼️ 등록된 사진이 없어요. 공통 홍보 사진을 넣어주세요'); if (usesCommon(curTpl())) go('msgs'); else openEditor(curTpl().id); return; }
