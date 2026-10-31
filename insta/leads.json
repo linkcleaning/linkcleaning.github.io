@@ -1,9 +1,9 @@
 {
-"updated": "2026-11-01 01:58",
+"updated": "2026-11-01 02:04",
 "stats": {
 "minbak": 62,
-"cafe": 55,
-"restaurant": 117,
+"cafe": 52,
+"restaurant": 108,
 "build_done": 139,
 "build_start": 109
 },
@@ -28,54 +28,6 @@
 "addr": "제주특별자치도 제주시 한라대학로 37, 1층 (노형동)",
 "date": "2026-10-29",
 "area": "122.23",
-"tel": "",
-"franchise": false,
-"firstSeen": "2026-11-01 01:58"
-},
-{
-"id": "cafe:6510000-104-2026-00392",
-"src": "cafe",
-"name": "건입동바리스타(제주한라설)",
-"type": "기타 휴게음식점",
-"addr": "제주특별자치도 제주시 건입동 1320-1 외 25필지",
-"date": "2026-10-29",
-"area": "18.00",
-"tel": "",
-"franchise": false,
-"firstSeen": "2026-11-01 01:58"
-},
-{
-"id": "cafe:6510000-104-2026-00391",
-"src": "cafe",
-"name": "제주곱들락과일모찌",
-"type": "기타 휴게음식점",
-"addr": "제주특별자치도 제주시 건입동 1320-1 외 25필지",
-"date": "2026-10-29",
-"area": "18.00",
-"tel": "",
-"franchise": false,
-"firstSeen": "2026-11-01 01:58"
-},
-{
-"id": "restaurant:6510000-101-2026-00719",
-"src": "restaurant",
-"name": "새마을지도자봉개동부녀회",
-"type": "한식",
-"addr": "제주특별자치도 제주시 봉개동 237-18",
-"date": "2026-10-29",
-"area": "375.00",
-"tel": "",
-"franchise": false,
-"firstSeen": "2026-11-01 01:58"
-},
-{
-"id": "restaurant:6510000-101-2026-00718",
-"src": "restaurant",
-"name": "명가일식",
-"type": "기타",
-"addr": "제주특별자치도 제주시 건입동 1320-1 외 25필지",
-"date": "2026-10-29",
-"area": "25.00",
 "tel": "",
 "franchise": false,
 "firstSeen": "2026-11-01 01:58"
@@ -196,30 +148,6 @@
 "addr": "제주특별자치도 제주시 애월읍 일주서로 6040, 1층",
 "date": "2026-10-28",
 "area": "64.27",
-"tel": "",
-"franchise": false,
-"firstSeen": "2026-11-01 01:58"
-},
-{
-"id": "restaurant:6510000-101-2026-00713",
-"src": "restaurant",
-"name": "애월취나물축제향토음식점",
-"type": "한식",
-"addr": "제주특별자치도 제주시 애월읍 애월리 1772-10",
-"date": "2026-10-28",
-"area": "150.00",
-"tel": "",
-"franchise": false,
-"firstSeen": "2026-11-01 01:58"
-},
-{
-"id": "restaurant:6510000-101-2026-00712",
-"src": "restaurant",
-"name": "명월성문화제향토음식점",
-"type": "한식",
-"addr": "제주특별자치도 제주시 한림읍 명월리 2146 외 1필지",
-"date": "2026-10-28",
-"area": "300.00",
 "tel": "",
 "franchise": false,
 "firstSeen": "2026-11-01 01:58"
@@ -393,18 +321,6 @@
 "firstSeen": "2026-11-01 01:58"
 },
 {
-"id": "cafe:6510000-104-2026-00387",
-"src": "cafe",
-"name": "광해다락",
-"type": "기타 휴게음식점",
-"addr": "제주특별자치도 제주시 조천읍 조천리 1234 외 2필지 만세동산",
-"date": "2026-10-26",
-"area": "25.00",
-"tel": "",
-"franchise": false,
-"firstSeen": "2026-11-01 01:58"
-},
-{
 "id": "cafe:6510000-104-2026-00386",
 "src": "cafe",
 "name": "빵끗빵끗",
@@ -412,18 +328,6 @@
 "addr": "제주특별자치도 제주시 진남로2길 34, 1층 101호 (화북일동, 화북빌라)",
 "date": "2026-10-26",
 "area": "29.05",
-"tel": "",
-"franchise": false,
-"firstSeen": "2026-11-01 01:58"
-},
-{
-"id": "restaurant:6510000-101-2026-00703",
-"src": "restaurant",
-"name": "김녕리부녀회",
-"type": "한식",
-"addr": "제주특별자치도 제주시 구좌읍 김녕로 209",
-"date": "2026-10-26",
-"area": "449.00",
 "tel": "",
 "franchise": false,
 "firstSeen": "2026-11-01 01:58"
@@ -532,18 +436,6 @@
 "addr": "제주특별자치도 제주시 동광로1길 28-1 (이도일동)",
 "date": "2026-10-23",
 "area": "33.00",
-"tel": "",
-"franchise": false,
-"firstSeen": "2026-11-01 01:58"
-},
-{
-"id": "restaurant:6510000-101-2026-00699",
-"src": "restaurant",
-"name": "제주올레걷기축제북촌리부녀회",
-"type": "한식",
-"addr": "제주특별자치도 제주시 조천읍 북촌리 1457-4 외 1필지",
-"date": "2026-10-23",
-"area": "275.00",
 "tel": "",
 "franchise": false,
 "firstSeen": "2026-11-01 01:58"
@@ -664,18 +556,6 @@
 "addr": "제주특별자치도 제주시 첨단동길 171-16, 1층 (용강동)",
 "date": "2026-10-22",
 "area": "190.00",
-"tel": "",
-"franchise": false,
-"firstSeen": "2026-11-01 01:58"
-},
-{
-"id": "restaurant:6510000-101-2026-00693",
-"src": "restaurant",
-"name": "새마을지도자행원리부녀회",
-"type": "한식",
-"addr": "제주특별자치도 제주시 구좌읍 행원리 575-15",
-"date": "2026-10-22",
-"area": "191.75",
 "tel": "",
 "franchise": false,
 "firstSeen": "2026-11-01 01:58"
@@ -1149,18 +1029,6 @@
 "firstSeen": "2026-11-01 01:58"
 },
 {
-"id": "restaurant:6510000-101-2026-00671",
-"src": "restaurant",
-"name": "용연장터",
-"type": "한식",
-"addr": "제주특별자치도 제주시 용담이동 461 외 5필지 2026용담용연음악회문화제 축제장내",
-"date": "2026-10-16",
-"area": "286.00",
-"tel": "",
-"franchise": false,
-"firstSeen": "2026-11-01 01:58"
-},
-{
 "id": "restaurant:6510000-101-2026-00670",
 "src": "restaurant",
 "name": "한라봉스시",
@@ -1288,18 +1156,6 @@
 "addr": "제주특별자치도 제주시 애월읍 일주서로 6690, 1층",
 "date": "2026-10-15",
 "area": "120.67",
-"tel": "",
-"franchise": false,
-"firstSeen": "2026-11-01 01:58"
-},
-{
-"id": "restaurant:6510000-101-2026-00663",
-"src": "restaurant",
-"name": "월정리부녀회먹거리장터",
-"type": "한식",
-"addr": "제주특별자치도 제주시 구좌읍 월정리 1400-14 제주밭담 테마공원 제주올레걷기축제 행사장내",
-"date": "2026-10-15",
-"area": "18.00",
 "tel": "",
 "franchise": false,
 "firstSeen": "2026-11-01 01:58"
@@ -6043,18 +5899,18 @@
 ],
 "debug": {
 "errors": [],
-"calls": 238,
+"calls": 235,
 "notes": [
 "cafe path=rest_cafes",
 "cafe 6510000 total=388",
 "cafe 6520000 total=143",
 "cafe 6500000 total=0",
-"cafe collected=55",
+"cafe collected=52",
 "restaurant path=general_restaurants",
 "restaurant 6510000 total=716",
 "restaurant 6520000 total=391",
 "restaurant 6500000 total=0",
-"restaurant collected=117",
+"restaurant collected=108",
 "minbak path=rural_homestays",
 "minbak 6510000 total=362",
 "minbak 6520000 total=157",
