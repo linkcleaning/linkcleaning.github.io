@@ -33,9 +33,9 @@ object MmsSender {
      * - 사진 없고 90바이트 이하 → 단문(SMS)
      * - 사진 없고 90바이트 초과 → 장문(LMS, 사진 없는 MMS)
      */
-    fun send(c: Context, number: String, recordId: Long, text: String, subject: String, withImages: Boolean) {
+    fun send(c: Context, number: String, recordId: Long, text: String, subject: String, withImages: Boolean, extra: List<ByteArray> = emptyList()) {
         val app = c.applicationContext
-        val images = if (withImages) Prefs.imageFiles(app).map { it.readBytes() } else emptyList()
+        val images = extra + (if (withImages) Prefs.imageFiles(app).map { it.readBytes() } else emptyList())
         if (images.isEmpty() && Compose.byteLen(text) <= 90) {
             sendSms(app, number, recordId, text); return
         }

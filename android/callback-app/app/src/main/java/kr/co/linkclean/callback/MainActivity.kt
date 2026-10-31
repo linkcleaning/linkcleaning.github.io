@@ -597,6 +597,7 @@ class MainActivity : AppCompatActivity() {
                             fields[f.key] = d; saveFields()
                             jangeumView?.text = Compose.fieldText("잔금", fields).ifEmpty { "-" }
                             if (!draftDirty) setDraftFromTpl()
+                            renderSendImgs()
                         })
                     }
                     else -> ui.button(
@@ -625,13 +626,13 @@ class MainActivity : AppCompatActivity() {
             fields[f.key]?.split("-")?.mapNotNull { it.toIntOrNull() }?.takeIf { it.size == 3 }?.let { cal.set(it[0], it[1] - 1, it[2]) }
             DatePickerDialog(this, { _, y, m, d ->
                 fields[f.key] = String.format("%04d-%02d-%02d", y, m + 1, d)
-                saveFields(); renderFields(); if (!draftDirty) setDraftFromTpl()
+                saveFields(); renderFields(); renderSendImgs(); if (!draftDirty) setDraftFromTpl()
             }, cal.get(Calendar.YEAR), cal.get(Calendar.MONTH), cal.get(Calendar.DAY_OF_MONTH)).show()
         } else {
             val (h, mi) = (fields[f.key] ?: "08:30").split(":").map { it.toIntOrNull() ?: 0 }.let { (it.getOrElse(0) { 8 }) to (it.getOrElse(1) { 30 }) }
             TimePickerDialog(this, { _, hh, mm ->
                 fields[f.key] = String.format("%02d:%02d", hh, mm)
-                saveFields(); renderFields(); if (!draftDirty) setDraftFromTpl()
+                saveFields(); renderFields(); renderSendImgs(); if (!draftDirty) setDraftFromTpl()
             }, h, mi, false).show()
         }
     }
@@ -658,13 +659,28 @@ class MainActivity : AppCompatActivity() {
 
     private fun renderCount() {
         val m = draftEdit.text.toString().trim()
-        val withImg = selectedTpl().useImages && Prefs.imageFiles(this).isNotEmpty()
+        val withImg = selectedTpl().hasTokens || (selectedTpl().useImages && Prefs.imageFiles(this).isNotEmpty())
         charInfo.text = "${m.length}자 · ${Compose.kind(m, withImg)}"
     }
 
     private fun renderSendImgs() {
         sendImgs.removeAllViews()
         val files = Prefs.imageFiles(this)
+        if (selectedTpl().hasTokens) {
+            // 예약 카드 미리보기 (누르면 크게)
+            val bmp = ReservationCard.render(this, fields)
+            val iv = ImageView(this).apply {
+                setImageBitmap(bmp); scaleType = ImageView.ScaleType.FIT_CENTER; adjustViewBounds = true
+                background = ui.rect(Col.S100, 12f, Col.S200, 1f); clipToOutline = true
+                setOnClickListener {
+                    val big = ImageView(this@MainActivity).apply { setImageBitmap(bmp); adjustViewBounds = true }
+                    AlertDialog.Builder(this@MainActivity).setView(big).setPositiveButton("닫기", null).show()
+                }
+            }
+            sendImgs.addView(iv, LinearLayout.LayoutParams(ui.dp(160), ui.dp(200)).apply { marginEnd = ui.dp(8) })
+            sendImgs.addView(ui.text("📇 예약 카드가\n문자와 함께 가요\n\n(눌러서 크게 보기)", 13f, Col.S500, true), LinearLayout.LayoutParams(ui.WRAP, ui.WRAP))
+            return
+        }
         if (selectedTpl().useImages && files.isNotEmpty()) {
             files.forEach { f ->
                 val iv = ImageView(this).apply {
@@ -861,12 +877,18 @@ class MainActivity : AppCompatActivity() {
         val t = selectedTpl()
         val imgs = Prefs.imageFiles(this)
         val useImg = withImages && imgs.isNotEmpty()
+        // 예약 문자({빈칸} 있는 문자)는 예약 카드 이미지를 항상 같이 보냄
+        val cardImg: List<ByteArray> = if (t.hasTokens) listOf(ReservationCard.jpeg(this, fields)) else emptyList()
         val notes = mutableListOf<String>()
         Prefs.excludeMemo(this, num)?.let { notes.add("🚫 발송제외 번호예요" + if (it.isNotEmpty()) " ($it)" else "") }
         val last = Prefs.lastSent(this, num); val hours = Prefs.cooldownHours(this)
         if (last > 0 && hours > 0 && System.currentTimeMillis() - last < hours * 3600_000L) notes.add("🔁 ${ago(last)}에 이미 보낸 번호예요")
         if (withImages && imgs.isEmpty()) notes.add("📷 홍보 사진이 없어서 글만 보내요")
-        notes.add("[${t.icon} ${t.name}] " + if (useImg) "사진 ${imgs.size}장 + 문자" else "문자 (${Compose.kind(text, false)})")
+        notes.add("[${t.icon} ${t.name}] " + when {
+            cardImg.isNotEmpty() -> "예약 카드" + (if (useImg) " + 홍보 사진 ${imgs.size}장" else "") + " + 문자"
+            useImg -> "사진 ${imgs.size}장 + 문자"
+            else -> "문자 (${Compose.kind(text, false)})"
+        })
         AlertDialog.Builder(this)
             .setTitle("${PhoneUtil.pretty(num)} 에게 보낼까요?")
             .setMessage(notes.joinToString("\n\n"))
@@ -874,7 +896,7 @@ class MainActivity : AppCompatActivity() {
                 val id = Prefs.newId()
                 Prefs.markSent(this, num, System.currentTimeMillis())
                 Prefs.addHistory(this, SendRecord(id, System.currentTimeMillis(), num, t.type, "발송중", t.name, false))
-                MmsSender.send(this, num, id, text, t.title, useImg)
+                MmsSender.send(this, num, id, text, t.title, useImg, cardImg)
                 toast("✅ 보냈어요 · 결과는 발송내역에서 확인", "ok")
                 phoneEdit.setText("")
                 hideKeyboard()

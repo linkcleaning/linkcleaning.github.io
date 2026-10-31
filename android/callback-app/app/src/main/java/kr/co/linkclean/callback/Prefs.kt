@@ -94,7 +94,7 @@ https://www.instagram.com/linkcleaning
     const val DEFAULT_SUBJECT = ""  // 제목 없음
     const val MAX_IMAGES = 3
     private const val KEY_SEED_VER = "seed_ver"
-    private const val SEED_VER = 11
+    private const val SEED_VER = 12
 
     const val KEY_ENABLED = "enabled"
     const val KEY_MESSAGE = "message"
@@ -274,6 +274,11 @@ https://www.instagram.com/linkcleaning
                 if (p != null && (t.body.trim() == p.first || t.body.trim() == p.first.replace(Templates.CARD_URL, Templates.OLD_CARD_URL))) t.copy(body = p.second) else t
             }
             Templates.save(c, list)
+        }
+        // v12: 예약 문자를 대표님 문구로 (기본 문구 그대로일 때만)
+        if (sp.getInt(KEY_SEED_VER, 0) < 12 && sp.getString(Templates.KEY, null) != null) {
+            val olds = setOf(Templates.CONTRACT_V2, Templates.CONTRACT_OLD)
+            Templates.save(c, Templates.load(c).map { if (it.id == "t_contract" && it.body.trim() in olds) it.copy(body = Templates.CONTRACT, title = "") else it })
         }
         sp.edit().putInt(KEY_SEED_VER, SEED_VER).commit()
     }
