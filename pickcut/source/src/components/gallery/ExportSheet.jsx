@@ -8,6 +8,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { renderForExport } from '../../lib/watermark';
 import { makeExportFile, shareOrDownload } from '../../lib/exporter';
+import { isNative } from '../../lib/nativeBridge';
 
 export default function ExportSheet({ photos, watermark, onOpenWatermark, onClose }) {
   // 처음엔 전부 선택된 상태. 빼고 싶은 사진만 눌러서 해제
@@ -60,9 +61,11 @@ export default function ExportSheet({ photos, watermark, onOpenWatermark, onClos
     const outcome = await shareOrDownload(filesRef.current);
     if (outcome === 'cancelled') return; // 공유 창만 닫은 경우 → 다시 누를 수 있게 그대로 둠
     setResultText(
-      outcome === 'shared'
-        ? `${filesRef.current.length}장을 보냈어요.`
-        : `${filesRef.current.length}장을 다운로드했어요.`
+      outcome === 'saved'
+        ? `사진첩에 ${filesRef.current.length}장을 저장했어요.`
+        : outcome === 'shared'
+          ? `${filesRef.current.length}장을 보냈어요.`
+          : `${filesRef.current.length}장을 다운로드했어요.`
     );
     setStage('done');
   };
@@ -143,7 +146,7 @@ export default function ExportSheet({ photos, watermark, onOpenWatermark, onClos
 
         {stage === 'ready' && (
           <button onClick={save} className="w-full rounded-2xl bg-mark py-3.5 font-bold text-ink active:opacity-80">
-            {chosen.length}장 저장·공유하기
+            {chosen.length}장 {isNative ? '사진첩에 저장' : '저장·공유하기'}
           </button>
         )}
 
@@ -157,7 +160,9 @@ export default function ExportSheet({ photos, watermark, onOpenWatermark, onClos
         )}
 
         {stage === 'ready' && (
-          <p className="mt-2 text-center text-xs text-white/45">아이폰: 공유 창에서 '이미지 {chosen.length}개 저장'을 누르세요</p>
+          <p className="mt-2 text-center text-xs text-white/45">
+            {isNative ? '누르면 사진첩에 바로 저장돼요' : `아이폰: 공유 창에서 '이미지 ${chosen.length}개 저장'을 누르세요`}
+          </p>
         )}
       </div>
     </div>

@@ -10,10 +10,12 @@
 // ═════════════════════════════════════════════════════════════
 import { useState } from 'react';
 import ConfirmButton from '../common/ConfirmButton';
+import { isNative } from '../../lib/nativeBridge';
 
 export default function SimilarGroups({ groups, onKeepOnly, onCleanupAll, disabled }) {
   const [openIndex, setOpenIndex] = useState(null);
   const open = openIndex === null ? null : groups[openIndex];
+  const extraCount = groups.reduce((n, g) => n + g.length - 1, 0); // 정리하면 줄어드는 장수
 
   if (groups.length === 0) {
     return (
@@ -29,17 +31,44 @@ export default function SimilarGroups({ groups, onKeepOnly, onCleanupAll, disabl
     <>
       {/* 한 번에 정리: 묶음마다 추천(1등) 1장만 남기고 나머지 지우기 */}
       <div className="mb-3 grid gap-1.5">
-        <ConfirmButton
-          disabled={disabled}
-          label={`비슷한 사진 ${groups.reduce((n, g) => n + g.length - 1, 0)}장 정리하기 (묶음마다 베스트 1장만)`}
-          confirmLabel="한 번 더 누르면 정리해요"
-          onConfirm={onCleanupAll}
-          className="!border-mark/50"
-        />
-        <p className="text-xs text-white/50">
-          같은 장면 묶음 {groups.length}개 · 앱에서만 지워지고 폰 갤러리 원본은 그대로예요
-          {disabled && ' · 분석이 끝나면 정리할 수 있어요'}
-        </p>
+        {isNative ? (
+          <>
+            {/* 아이폰 앱: 사진첩에서 진짜로 삭제 → 아이폰이 확인 창을 띄움 */}
+            <ConfirmButton
+              direct
+              disabled={disabled}
+              label={`베스트만 남기고 사진첩에서 ${extraCount}장 삭제`}
+              onConfirm={() => onCleanupAll({ fromLibrary: true })}
+              className="!border-0 !bg-mark !text-ink"
+            />
+            <p className="text-xs leading-relaxed text-white/50">
+              같은 장면 묶음 {groups.length}개 · 누르면 아이폰이 한 번 더 물어봐요. 지운 사진은 사진 앱 '최근 삭제된 항목'에 30일
+              동안 남아요.
+              {disabled && ' · 분석이 끝나면 정리할 수 있어요'}
+            </p>
+            <ConfirmButton
+              disabled={disabled}
+              label="앱에서만 정리 (사진첩은 그대로)"
+              confirmLabel="한 번 더 누르면 앱에서만 정리해요"
+              onConfirm={() => onCleanupAll({ fromLibrary: false })}
+              className="!py-2 !text-xs !font-semibold"
+            />
+          </>
+        ) : (
+          <>
+            <ConfirmButton
+              disabled={disabled}
+              label={`비슷한 사진 ${extraCount}장 정리하기 (묶음마다 베스트 1장만)`}
+              confirmLabel="한 번 더 누르면 정리해요"
+              onConfirm={() => onCleanupAll({ fromLibrary: false })}
+              className="!border-mark/50"
+            />
+            <p className="text-xs text-white/50">
+              같은 장면 묶음 {groups.length}개 · 앱에서만 지워지고 폰 갤러리 원본은 그대로예요
+              {disabled && ' · 분석이 끝나면 정리할 수 있어요'}
+            </p>
+          </>
+        )}
       </div>
       <ul className="grid gap-3">
         {groups.map((group, gi) => {
@@ -85,9 +114,9 @@ export default function SimilarGroups({ groups, onKeepOnly, onCleanupAll, disabl
         <GroupSheet
           group={open}
           onClose={() => setOpenIndex(null)}
-          onKeep={(keepId) => {
-            onKeepOnly(open.map((p) => p.id), keepId);
-            setOpenIndex(null);
+          onKeep={async (keepId) => {
+            const ok = await onKeepOnly(open.map((p) => p.id), keepId, { fromLibrary: isNative });
+            if (ok) setOpenIndex(null);
           }}
         />
       )}
@@ -108,7 +137,7 @@ function GroupSheet({ group, onClose, onKeep }) {
         onClick={(e) => e.stopPropagation()}
       >
         <div className="mx-auto mb-3 h-1 w-10 rounded-full bg-white/20" />
-        <p className="mb-3 text-sm text-white/60">남길 사진 1장을 고르세요. 나머지 사진은 앱에서 지워져요 (폰 갤러리 원본은 그대로).</p>
+        <p className="mb-3 text-sm text-white/60">남길 사진 1장을 고르세요. {isNative ? '나머지 사진은 사진첩에서 삭제돼요 (최근 삭제된 항목에 30일 보관).' : '나머지 사진은 앱에서 지워져요 (폰 갤러리 원본은 그대로).'}</p>
 
         {/* 크게 보기: 편집용 사본(고화질)으로 표시 */}
         <div className="relative mb-3 overflow-hidden rounded-2xl bg-black">
@@ -146,7 +175,7 @@ function GroupSheet({ group, onClose, onKeep }) {
           onClick={() => onKeep(picked.id)}
           className="mt-4 w-full rounded-2xl bg-mark py-3.5 font-bold text-ink active:opacity-80"
         >
-          이 사진만 남기기 ({group.length - 1}장 지우기)
+          이 사진만 남기기 ({group.length - 1}장 {isNative ? '사진첩에서 삭제' : '지우기'})
         </button>
       </div>
     </div>

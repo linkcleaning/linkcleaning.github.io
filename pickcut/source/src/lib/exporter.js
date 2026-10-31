@@ -10,6 +10,7 @@
 // ═════════════════════════════════════════════════════════════
 
 import { stampCaptureDate } from './exif';
+import { isNative, saveToLibrary } from './nativeBridge';
 
 /**
  * 파일 이름 만들기
@@ -36,7 +37,8 @@ export function exportFileName(index, captured) {
  */
 export async function makeExportFile(jpeg, photo, index, usedNames) {
   // 날짜를 '추정'(파일 수정 시각)으로만 알면 사진 정보에는 넣지 않음 → 틀린 날짜가 박히는 것 방지
-  const reliable = photo?.captured?.source === 'exif' ? photo.captured : null;
+  // 'exif' = 사진 정보에서 읽음, 'library' = 아이폰 사진첩이 알려준 촬영 시각 → 둘 다 믿을 수 있음
+  const reliable = ['exif', 'library'].includes(photo?.captured?.source) ? photo.captured : null;
   const blob = reliable ? await stampCaptureDate(jpeg, reliable.exif, reliable.offset) : jpeg;
 
   let name = exportFileName(index, reliable);
@@ -61,9 +63,14 @@ export function canShareFiles(files) {
 /**
  * 파일들 내보내기
  * @param {File[]} files
- * @returns {Promise<'shared'|'downloaded'|'cancelled'>}
+ * @returns {Promise<'shared'|'downloaded'|'cancelled'|'saved'>}
  */
 export async function shareOrDownload(files) {
+  // 아이폰 앱 안: 공유 창 대신 사진첩에 바로 저장
+  if (isNative) {
+    await saveToLibrary(files);
+    return 'saved';
+  }
   if (canShareFiles(files)) {
     try {
       await navigator.share({ files });

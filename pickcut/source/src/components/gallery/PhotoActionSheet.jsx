@@ -3,6 +3,7 @@
 // 모바일 앱에서 흔한 패턴: 화면을 가리지 않고 엄지로 누르기 쉬움
 // ═════════════════════════════════════════════════════════════
 import { formatCapture } from '../../lib/exif';
+import { isNative } from '../../lib/nativeBridge';
 
 /** 눈 감음 검사 결과를 사람이 읽을 문장으로 */
 function eyesText(eyes) {
@@ -69,8 +70,17 @@ export default function PhotoActionSheet({ photo, onClose, onEdit, onOverride, o
             onClick={() => onRemove(photo.id)}
             className="rounded-2xl py-3 text-sm text-warn active:bg-white/5"
           >
-            목록에서 삭제
+            {isNative && photo.assetId ? '앱 목록에서만 빼기' : '목록에서 삭제'}
           </button>
+          {/* 아이폰 앱에서 불러온 사진: 사진첩에서 진짜로 삭제 */}
+          {isNative && photo.assetId && (
+            <button
+              onClick={() => onRemove(photo.id, { fromLibrary: true })}
+              className="rounded-2xl bg-warn/15 py-3 text-sm font-bold text-warn active:bg-warn/25"
+            >
+              사진첩에서 삭제
+            </button>
+          )}
         </div>
       </div>
     </div>

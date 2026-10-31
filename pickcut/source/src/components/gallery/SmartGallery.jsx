@@ -16,6 +16,8 @@ import ExportSheet from './ExportSheet';
 import WatermarkSheet from '../settings/WatermarkSheet';
 import { dayKey, formatCapture } from '../../lib/exif';
 import ConfirmButton from '../common/ConfirmButton';
+import LibraryImportSheet from './LibraryImportSheet';
+import { isNative } from '../../lib/nativeBridge';
 import { createSamplePhotos } from '../../lib/samplePhotos';
 
 // 탭 목록. 탭을 추가하려면 여기 한 줄 + usePhotoLibrary의 lists에 목록 추가
@@ -28,7 +30,7 @@ const TABS = [
 
 export default function SmartGallery({ library, watermark, onOpenEditor }) {
   const {
-    lists, photos, loaded, analyzingCount, addFiles, removePhoto, removeAll, overrideVerdict, keepOnlyInGroup, cleanupSimilar, removeRejected,
+    lists, photos, loaded, analyzingCount, addFiles, removePhoto, removeAll, overrideVerdict, keepOnlyInGroup, cleanupSimilar, removeRejected, addFromLibrary,
     notice, isFull, warnFull, maxPhotos,
   } = library;
   const [confirmClear, setConfirmClear] = useState(false); // '비우기' 두 번 눌러야 실행
@@ -41,7 +43,9 @@ export default function SmartGallery({ library, watermark, onOpenEditor }) {
   const current = lists[tab];
 
   // + 버튼: 꽉 찼으면 사진 선택 창을 열지 않고 안내만 띄움
-  const openPicker = () => (isFull ? warnFull() : fileInputRef.current?.click());
+  // 아이폰 앱 안에서는 '사진첩에서 기간으로 불러오기' 창을 먼저 띄움
+  const [importOpen, setImportOpen] = useState(false);
+  const openPicker = () => (isFull ? warnFull() : isNative ? setImportOpen(true) : fileInputRef.current?.click());
   const doneCount = photos.filter((p) => p.status === 'done').length;
 
   return (
@@ -157,13 +161,28 @@ export default function SmartGallery({ library, watermark, onOpenEditor }) {
           {/* 제외됨 탭: 한 번에 지우기 */}
           {tab === 'rejected' && (
             <div className="mb-3 grid gap-1.5">
-              <ConfirmButton
-                disabled={analyzingCount > 0}
-                label={`제외된 사진 ${lists.rejected.length}장 지우기`}
-                confirmLabel="한 번 더 누르면 지워요"
-                onConfirm={removeRejected}
-              />
-              <p className="text-xs text-white/50">앱에서만 지워지고 폰 갤러리 원본은 그대로예요</p>
+              {isNative ? (
+                <>
+                  <ConfirmButton
+                    direct
+                    disabled={analyzingCount > 0}
+                    label={`제외된 사진 ${lists.rejected.length}장 사진첩에서 삭제`}
+                    onConfirm={() => removeRejected({ fromLibrary: true })}
+                    className="!border-0 !bg-warn !text-ink"
+                  />
+                  <p className="text-xs text-white/50">누르면 아이폰이 한 번 더 물어봐요 · 최근 삭제된 항목에 30일 보관</p>
+                </>
+              ) : (
+                <>
+                  <ConfirmButton
+                    disabled={analyzingCount > 0}
+                    label={`제외된 사진 ${lists.rejected.length}장 지우기`}
+                    confirmLabel="한 번 더 누르면 지워요"
+                    onConfirm={() => removeRejected({ fromLibrary: false })}
+                  />
+                  <p className="text-xs text-white/50">앱에서만 지워지고 폰 갤러리 원본은 그대로예요</p>
+                </>
+              )}
             </div>
           )}
           {/* 베스트 탭: 한꺼번에 내보내기 */}
@@ -258,9 +277,8 @@ export default function SmartGallery({ library, watermark, onOpenEditor }) {
           overrideVerdict(id, verdict);
           setSelected(null);
         }}
-        onRemove={(id) => {
-          removePhoto(id);
-          setSelected(null);
+        onRemove={async (id, opts) => {
+          if (await removePhoto(id, opts)) setSelected(null);
         }}
       />
 
@@ -270,6 +288,19 @@ export default function SmartGallery({ library, watermark, onOpenEditor }) {
           watermark={watermark}
           onOpenWatermark={() => setWmOpen(true)}
           onClose={() => setExporting(false)}
+        />
+      )}
+
+      {/* 아이폰 앱: 사진첩에서 기간으로 불러오기 */}
+      {importOpen && (
+        <LibraryImportSheet
+          remaining={maxPhotos - photos.length}
+          onImport={addFromLibrary}
+          onPickFiles={() => {
+            setImportOpen(false);
+            fileInputRef.current?.click();
+          }}
+          onClose={() => setImportOpen(false)}
         />
       )}
 
@@ -317,7 +348,7 @@ function EmptyState({ onPick, onSample, maxPhotos }) {
       <div className="mb-5 grid h-24 w-24 place-items-center rounded-3xl border border-line bg-panel text-4xl">
         <span className="font-mono text-base text-mark">36 EXP</span>
       </div>
-      <p className="text-lg font-bold">여행 사진, 연사 사진 몽땅 올려보세요</p>
+      <p className="text-lg font-bold">{isNative ? '사진첩에서 기간만 고르세요' : '여행 사진, 연사 사진 몽땅 올려보세요'}</p>
       <p className="mt-2 text-sm leading-relaxed text-white/60">
         흔들린 사진, 너무 어둡거나 밝은 사진은 빼고
         <br />
@@ -328,12 +359,14 @@ function EmptyState({ onPick, onSample, maxPhotos }) {
         </span>
       </p>
       <button onClick={onPick} className="mt-6 rounded-full bg-mark px-6 py-3 font-bold text-ink active:opacity-80">
-        사진 고르기
+        {isNative ? '사진첩에서 불러오기' : '사진 고르기'}
       </button>
       {/* 개발·시연용: 실제 사진 없이 흔들림/어두움/연사 샘플 8장으로 체험 */}
-      <button onClick={onSample} className="mt-3 text-sm text-white/60 underline underline-offset-4">
-        샘플 사진 8장으로 체험하기
-      </button>
+      {!isNative && (
+        <button onClick={onSample} className="mt-3 text-sm text-white/60 underline underline-offset-4">
+          샘플 사진 8장으로 체험하기
+        </button>
+      )}
     </div>
   );
 }

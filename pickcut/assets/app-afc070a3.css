@@ -500,6 +500,9 @@
   .grid-cols-2 {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
+  .grid-cols-3 {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
   .grid-cols-4 {
     grid-template-columns: repeat(4, minmax(0, 1fr));
   }
@@ -584,6 +587,10 @@
     border-top-left-radius: var(--radius-3xl);
     border-top-right-radius: var(--radius-3xl);
   }
+  .\!border-0 {
+    border-style: var(--tw-border-style) !important;
+    border-width: 0px !important;
+  }
   .border {
     border-style: var(--tw-border-style);
     border-width: 1px;
@@ -623,6 +630,12 @@
     @supports (color: color-mix(in lab, red, red)) {
       border-color: color-mix(in oklab, var(--color-white) 70%, transparent);
     }
+  }
+  .\!bg-mark {
+    background-color: var(--color-mark) !important;
+  }
+  .\!bg-warn {
+    background-color: var(--color-warn) !important;
   }
   .bg-black {
     background-color: var(--color-black);
@@ -665,6 +678,12 @@
   }
   .bg-warn {
     background-color: var(--color-warn);
+  }
+  .bg-warn\/15 {
+    background-color: color-mix(in srgb, #f2b33d 15%, transparent);
+    @supports (color: color-mix(in lab, red, red)) {
+      background-color: color-mix(in oklab, var(--color-warn) 15%, transparent);
+    }
   }
   .bg-warn\/90 {
     background-color: color-mix(in srgb, #f2b33d 90%, transparent);
@@ -779,6 +798,9 @@
   .px-6 {
     padding-inline: calc(var(--spacing) * 6);
   }
+  .\!py-2 {
+    padding-block: calc(var(--spacing) * 2) !important;
+  }
   .py-0\.5 {
     padding-block: calc(var(--spacing) * 0.5);
   }
@@ -842,6 +864,10 @@
   .font-mono {
     font-family: var(--font-mono);
   }
+  .\!text-xs {
+    font-size: var(--text-xs) !important;
+    line-height: var(--tw-leading, var(--text-xs--line-height)) !important;
+  }
   .text-2xl {
     font-size: var(--text-2xl);
     line-height: var(--tw-leading, var(--text-2xl--line-height));
@@ -889,6 +915,10 @@
     --tw-leading: var(--leading-relaxed);
     line-height: var(--leading-relaxed);
   }
+  .\!font-semibold {
+    --tw-font-weight: var(--font-weight-semibold) !important;
+    font-weight: var(--font-weight-semibold) !important;
+  }
   .font-bold {
     --tw-font-weight: var(--font-weight-bold);
     font-weight: var(--font-weight-bold);
@@ -916,6 +946,9 @@
   .tracking-tight {
     --tw-tracking: var(--tracking-tight);
     letter-spacing: var(--tracking-tight);
+  }
+  .\!text-ink {
+    color: var(--color-ink) !important;
   }
   .text-ink {
     color: var(--color-ink);
@@ -1082,6 +1115,12 @@
   }
   .active\:scale-\[0\.98\]:active {
     scale: 0.98;
+  }
+  .active\:bg-warn\/25:active {
+    background-color: color-mix(in srgb, #f2b33d 25%, transparent);
+    @supports (color: color-mix(in lab, red, red)) {
+      background-color: color-mix(in oklab, var(--color-warn) 25%, transparent);
+    }
   }
   .active\:bg-white\/5:active {
     background-color: color-mix(in srgb, #fff 5%, transparent);

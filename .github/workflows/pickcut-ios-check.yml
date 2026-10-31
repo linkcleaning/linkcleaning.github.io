@@ -1,0 +1,132 @@
+name: 픽컷 iOS 검사
+
+# 아이폰 앱 코드가 바뀌면 GitHub의 맥 서버에서 실제로 빌드해 보고,
+# 결과를 ios/pickcut-app/ci-report.md 로 저장소에 남깁니다. (서명·업로드는 하지 않음)
+on:
+  push:
+    branches: [ main ]
+    paths:
+      - 'ios/pickcut-app/**'
+      - '!ios/pickcut-app/ci-report.md'
+      - '.github/workflows/pickcut-ios-check.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: pickcut-ios-check
+  cancel-in-progress: true
+
+jobs:
+  check:
+    runs-on: macos-15
+    timeout-minutes: 75
+    defaults:
+      run:
+        working-directory: ios/pickcut-app
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: 최신 Xcode 선택
+        run: |
+          X=$(ls -d /Applications/Xcode_*.app | grep -v -i beta | sort -V | tail -1)
+          sudo xcode-select -s "$X"
+          xcodebuild -version | tee $RUNNER_TEMP/0-xcode-version.log
+
+      - name: 1. 설치·버전 맞추기
+        id: install
+        continue-on-error: true
+        run: |
+          set -o pipefail
+          {
+            npm install --no-audit --no-fund
+            npx expo install react react-native react-native-webview expo-media-library expo-image-manipulator \
+              expo-file-system expo-status-bar expo-splash-screen react-native-safe-area-context
+            npx expo install --fix
+            echo "----- package.json -----"; cat package.json
+          } 2>&1 | tee $RUNNER_TEMP/1-install.log
+
+      - name: 2. 타입 검사 (없는 기능을 쓰는지 확인)
+        id: tsc
+        continue-on-error: true
+        run: |
+          set -o pipefail
+          npx tsc --noEmit 2>&1 | tee $RUNNER_TEMP/2-tsc.log
+
+      - name: 3. expo-doctor
+        id: doctor
+        continue-on-error: true
+        run: |
+          set -o pipefail
+          npx expo-doctor 2>&1 | tee $RUNNER_TEMP/3-doctor.log
+
+      - name: 4. JS 묶기
+        id: export
+        continue-on-error: true
+        run: |
+          set -o pipefail
+          npx expo export --platform ios --output-dir "$RUNNER_TEMP/dist" 2>&1 | tail -40 | tee $RUNNER_TEMP/4-export.log
+
+      - name: 5. 아이폰 프로젝트 만들기 (prebuild)
+        id: prebuild
+        continue-on-error: true
+        run: |
+          set -o pipefail
+          npx expo prebuild --platform ios --clean 2>&1 | tee $RUNNER_TEMP/5-prebuild.log
+
+      - name: 6. 시뮬레이터용 실제 빌드
+        id: xcode
+        continue-on-error: true
+        run: |
+          set -o pipefail
+          WS=$(ls -d ios/*.xcworkspace | head -1); SCHEME=$(basename "$WS" .xcworkspace)
+          echo "workspace=$WS scheme=$SCHEME" > $RUNNER_TEMP/6-xcode.log
+          xcodebuild -workspace "$WS" -scheme "$SCHEME" -configuration Release -sdk iphonesimulator \
+            -destination 'generic/platform=iOS Simulator' CODE_SIGNING_ALLOWED=NO build \
+            > $RUNNER_TEMP/6-xcode-full.log 2>&1 || true
+          grep -E "error:|\*\* BUILD" $RUNNER_TEMP/6-xcode-full.log | sort -u | head -60 >> $RUNNER_TEMP/6-xcode.log
+          echo "----- Info.plist -----" >> $RUNNER_TEMP/6-xcode.log
+          plutil -p ios/*/Info.plist | grep -E "CFBundleDisplayName|CFBundleIdentifier|NSPhoto|ITSApp|MinimumOS" >> $RUNNER_TEMP/6-xcode.log || true
+          grep -q "BUILD SUCCEEDED" $RUNNER_TEMP/6-xcode-full.log
+
+      - name: 결과 보고서를 저장소에 남기기
+        if: always()
+        working-directory: .
+        env:
+          S1: ${{ steps.install.outcome }}
+          S2: ${{ steps.tsc.outcome }}
+          S3: ${{ steps.doctor.outcome }}
+          S4: ${{ steps.export.outcome }}
+          S5: ${{ steps.prebuild.outcome }}
+          S6: ${{ steps.xcode.outcome }}
+        run: |
+          R=ios/pickcut-app/ci-report.md
+          L=$RUNNER_TEMP
+          sec() { echo; echo "## $1 — $2"; echo '```'; tail -n ${4:-60} "$3" 2>/dev/null; echo '```'; }
+          {
+            echo "# 픽컷 iOS 검사 결과"
+            echo "- 실행 번호: ${{ github.run_number }}  /  커밋: ${{ github.sha }}"
+            echo "- 시각(UTC): $(date -u '+%Y-%m-%d %H:%M')"
+            echo "- Xcode: $(head -1 $L/0-xcode-version.log)"
+            echo
+            echo "| 단계 | 결과 |"; echo "|---|---|"
+            echo "| 1 설치 | $S1 |"; echo "| 2 타입 검사 | $S2 |"; echo "| 3 expo-doctor | $S3 |"
+            echo "| 4 JS 묶기 | $S4 |"; echo "| 5 prebuild | $S5 |"; echo "| 6 시뮬레이터 빌드 | $S6 |"
+            sec "1 설치" "$S1" $L/1-install.log 80
+            sec "2 타입 검사" "$S2" $L/2-tsc.log
+            sec "3 expo-doctor" "$S3" $L/3-doctor.log
+            sec "4 JS 묶기" "$S4" $L/4-export.log 30
+            sec "5 prebuild" "$S5" $L/5-prebuild.log 30
+            sec "6 시뮬레이터 빌드" "$S6" $L/6-xcode.log 80
+          } > $R
+          git config user.name "github-actions[bot]"
+          git config user.email "41898283+github-actions[bot]@users.noreply.github.com"
+          git add $R ios/pickcut-app/package.json
+          [ -f ios/pickcut-app/package-lock.json ] && git add ios/pickcut-app/package-lock.json
+          git commit -q -m "픽컷 iOS 검사 결과 #${{ github.run_number }} [skip ci]" || exit 0
+          for i in 1 2 3 4 5; do git pull -q --rebase origin main && git push -q && break; sleep 7; done

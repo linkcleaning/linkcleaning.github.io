@@ -14,10 +14,10 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { analyzePhoto, averageHash, loadImage, resizeToBlob, toDetectCanvas } from '../lib/imageAnalysis';
 import { preloadFaceModel } from '../lib/faceDetector';
 import { computeEmbedding, isSimilar, preloadSimilarityModel } from '../lib/similarity';
-import { readCaptureDate } from '../lib/exif';
+import { readCaptureDate, tsToExif } from '../lib/exif';
+import { deleteLibraryPhotos, getLibraryPhoto, isNative, listLibraryPhotos, requestPhotoAccess } from '../lib/nativeBridge';
 import {
   clearPhotos,
-  deletePhoto,
   deletePhotos,
   loadAllPhotos,
   requestPersistentStorage,
@@ -35,6 +35,7 @@ import {
 //   hash: string | null       예전 방식 지문(AI 모델을 못 쓸 때 대체용)
 //   embedding: Float32Array    AI 지문(비슷한 사진 찾기용)
 //   captured: { exif, offset, ts, source } | null  촬영 날짜 (사진 정보에서 읽음)
+//   assetId: string | null   아이폰 앱에서 불러온 사진이면 사진첩 속 그 사진의 번호 (삭제할 때 사용)
 // }
 // '비슷한 사진' 기준값은 src/lib/similarity.js 의 SIMILAR_THRESHOLD 에서 조절
 
@@ -63,6 +64,7 @@ function recordToPhoto(rec) {
     hash: rec.hash,
     embedding: rec.embedding ?? null,
     captured: rec.captured ?? null, // 예전에 저장한 사진엔 없을 수 있음
+    assetId: rec.assetId ?? null,
   };
 }
 
@@ -77,8 +79,11 @@ export function usePhotoLibrary() {
   //   pendingRef : '받기로 했지만 아직 목록에 안 들어간' 사진 수
   const countRef = useRef(0);
   const pendingRef = useRef(0);
+  // 최신 사진 목록을 버튼 동작(콜백) 안에서도 읽기 위한 장치
+  const photosRef = useRef(photos);
   useEffect(() => {
     countRef.current = photos.length;
+    photosRef.current = photos;
   }, [photos]);
 
   const remember = (photo) => urlsRef.current.set(photo.id, [photo.thumbUrl, photo.url]);
@@ -112,9 +117,15 @@ export function usePhotoLibrary() {
     };
   }, []);
 
-  /** 사진 파일 여러 장 추가 → 한도 확인 → 하나씩 분석·저장 */
+  /**
+   * 사진 여러 장 추가 → 한도 확인 → 하나씩 분석·저장
+   * 받는 것: ① 사진 파일(File) 목록  또는  ② 아이폰 앱에서 만든 항목
+   *   { name, assetId, captured, getFile: () => Promise<File> }  (파일은 차례가 오면 그때 받아옴)
+   */
   const addFiles = useCallback(async (fileList) => {
-    const picked = Array.from(fileList).filter((f) => f.type.startsWith('image/'));
+    const picked = Array.from(fileList)
+      .map((x) => (x instanceof File ? { name: x.name, getFile: async () => x, isImage: x.type.startsWith('image/') } : x))
+      .filter((it) => it.isImage !== false);
     if (picked.length === 0) return;
 
     // ① 남은 자리 계산
@@ -123,24 +134,35 @@ export function usePhotoLibrary() {
       setNotice(fullMessage);
       return;
     }
-    const files = picked.slice(0, remaining);
-    const skipped = picked.length - files.length;
+    const items = picked.slice(0, remaining);
+    const skipped = picked.length - items.length;
     if (skipped > 0) {
       setNotice(
-        `한 번에 최대 ${MAX_PHOTOS}장까지 정리할 수 있어요. 앞의 ${files.length}장만 올리고 ${skipped}장은 제외했어요.`
+        `한 번에 최대 ${MAX_PHOTOS}장까지 정리할 수 있어요. 앞의 ${items.length}장만 올리고 ${skipped}장은 제외했어요.`
       );
     }
-    pendingRef.current += files.length;
+    pendingRef.current += items.length;
 
     let unreadable = 0;
-    for (const file of files) {
+    for (const item of items) {
       const id = `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
       const addedAt = Date.now();
 
-      // ② 사진 정보(EXIF)에서 촬영 날짜 읽기 — 줄이기 전에 원본에서 읽어야 함
-      const captured = await readCaptureDate(file);
+      // ② 사진 받기 (앱에서 불러온 사진은 이때 사진첩에서 꺼내옴)
+      let file;
+      try {
+        file = await item.getFile();
+      } catch {
+        pendingRef.current -= 1;
+        unreadable += 1;
+        continue;
+      }
 
-      // ③ 원본을 열어서 썸네일·작업용 사본 만들기
+      // ③ 촬영 날짜: 앱이 알려준 날짜가 있으면 그것, 없으면 사진 정보(EXIF)에서 — 줄이기 전에 원본에서 읽어야 함
+      const captured = item.captured ?? (await readCaptureDate(file));
+      const assetId = item.assetId ?? null;
+
+      // ④ 원본을 열어서 썸네일·작업용 사본 만들기
       let source;
       let thumb;
       let work;
@@ -157,10 +179,10 @@ export function usePhotoLibrary() {
         continue;
       }
 
-      // ④ 화면에 '분석 중'으로 바로 표시
+      // ⑤ 화면에 '분석 중'으로 바로 표시
       const photo = {
         id,
-        name: file.name,
+        name: item.name || file.name,
         addedAt,
         thumbUrl: URL.createObjectURL(thumb),
         url: URL.createObjectURL(work),
@@ -169,13 +191,14 @@ export function usePhotoLibrary() {
         hash: null,
         embedding: null,
         captured,
+        assetId,
       };
       remember(photo);
       pendingRef.current -= 1;
       countRef.current += 1;
       setPhotos((prev) => [...prev, photo]);
 
-      // ⑤ 분석
+      // ⑥ 분석
       let result = null;
       let hash = null;
       let embedding = null;
@@ -193,27 +216,50 @@ export function usePhotoLibrary() {
       // 원본은 분석이 끝나면 바로 메모리에서 해제 (썸네일·사본만 남김)
       URL.revokeObjectURL(source.url);
 
-      // ⑥ 폰 저장소에 저장 (실패해도 화면 사용엔 지장 없음)
-      savePhoto({ id, name: file.name, addedAt, thumb, work, result, hash, embedding, captured }).catch((err) => {
-        console.warn('[픽컷] 저장 실패(저장 공간 부족 등)', err);
-        setNotice('폰 저장 공간이 부족해 일부 사진은 앱을 다시 열면 사라질 수 있어요.');
-      });
+      // ⑦ 폰 저장소에 저장 (실패해도 화면 사용엔 지장 없음)
+      savePhoto({ id, name: photo.name, addedAt, thumb, work, result, hash, embedding, captured, assetId }).catch(
+        (err) => {
+          console.warn('[픽컷] 저장 실패(저장 공간 부족 등)', err);
+          setNotice('폰 저장 공간이 부족해 일부 사진은 앱을 다시 열면 사라질 수 있어요.');
+        }
+      );
 
       // 다음 사진 분석 전에 브라우저가 화면을 그릴 틈을 줌(버벅임 방지)
       await new Promise((r) => setTimeout(r, 0));
     }
 
     if (unreadable > 0) {
-      setNotice(`${unreadable}장은 열 수 없는 형식(HEIC 등)이라 건너뛰었어요.`);
+      setNotice(`${unreadable}장은 열 수 없어서 건너뛰었어요.`);
     }
   }, []);
 
-  /** 사진 1장 삭제 (화면 + 저장소) */
-  const removePhoto = useCallback((id) => {
-    setPhotos((prev) => prev.filter((p) => p.id !== id));
-    forget(id);
-    deletePhoto(id).catch(() => {});
-  }, []);
+  /**
+   * [아이폰 앱 전용] 사진첩에서 기간을 정해 바로 불러오기
+   * @returns {Promise<{ found: number, added: number, already: number } | { denied: true }>}
+   */
+  const addFromLibrary = useCallback(
+    async (fromTs, toTs) => {
+      const perm = await requestPhotoAccess();
+      if (!perm.granted) return { denied: true };
+
+      const remaining = MAX_PHOTOS - countRef.current - pendingRef.current;
+      const known = new Set(photosRef.current.map((p) => p.assetId).filter(Boolean));
+      // 이미 불러온 사진은 건너뛰므로 넉넉히 받아온 뒤 거름
+      const list = await listLibraryPhotos(fromTs, toTs, remaining + known.size + 50);
+      const fresh = list.filter((a) => !known.has(a.id));
+      const items = fresh.map((a) => ({
+        name: a.filename,
+        assetId: a.id,
+        // 사진첩이 알려주는 촬영 시각 = 믿을 수 있는 날짜 (저장할 때 그대로 넣음)
+        captured: { exif: tsToExif(a.creationTime), offset: null, ts: a.creationTime, source: 'library' },
+        getFile: () => getLibraryPhoto(a, WORK_SIZE),
+      }));
+      addFiles(items); // 기다리지 않음 → 화면에서 진행 상황을 바로 볼 수 있게
+      return { found: list.length, added: Math.min(items.length, Math.max(0, remaining)), already: list.length - fresh.length, access: perm.access };
+    },
+    [addFiles]
+  );
+
 
   /** 전체 비우기 */
   const removeAll = useCallback(() => {
@@ -236,24 +282,57 @@ export function usePhotoLibrary() {
   }, []);
 
   /**
-   * 비슷한 사진 묶음에서 '이 사진만 남기기'
-   * 고른 사진은 베스트, 같은 묶음의 나머지는 제외로 바꿉니다(사용자 지정 ✎).
+   * 여러 장을 한 번에 지우기
+   * @param {string[]} ids
+   * @param {{ fromLibrary?: boolean }} opts
+   *   fromLibrary = true (아이폰 앱에서만): 폰 사진첩에서도 진짜로 삭제
+   *     → 아이폰이 "N장을 삭제할까요?" 확인 창을 띄움. 취소하면 아무것도 지우지 않음
+   *     → 삭제된 사진은 사진 앱 '최근 삭제된 항목'에 30일 동안 남음
+   *   fromLibrary = false: 픽컷 안에서만 지움 (폰 사진첩 원본은 그대로)
+   * @returns {Promise<boolean>} 지웠으면 true, 취소·실패면 false
    */
-  /** 여러 장을 한 번에 앱에서 지우기 (폰 갤러리 원본은 그대로) */
-  const removeMany = useCallback((ids) => {
+  const removeMany = useCallback(async (ids, { fromLibrary = false } = {}) => {
     const del = new Set(ids);
-    if (del.size === 0) return;
+    if (del.size === 0) return true;
+
+    if (fromLibrary && isNative) {
+      const assetIds = photosRef.current.filter((p) => del.has(p.id) && p.assetId).map((p) => p.assetId);
+      let ok = false;
+      try {
+        ok = await deleteLibraryPhotos(assetIds);
+      } catch (err) {
+        setNotice(`사진첩에서 지우지 못했어요. (${err.message})`);
+        return false;
+      }
+      if (!ok) {
+        setNotice('삭제를 취소했어요. 아무것도 지우지 않았어요.');
+        return false;
+      }
+    }
+
     setPhotos((prev) => prev.filter((p) => !del.has(p.id)));
     del.forEach(forget);
     deletePhotos([...del]).catch((err) => console.warn('[픽컷] 저장소에서 지우기 실패', err));
+    return true;
   }, []);
+
+  /** 사진 1장 지우기 */
+  const removePhoto = useCallback((id, opts) => removeMany([id], opts), [removeMany]);
+
+  /** 지운 뒤 안내 문구 */
+  const doneMessage = (n, fromLibrary, what) =>
+    fromLibrary && isNative
+      ? `${what} ${n}장을 사진첩에서 삭제했어요. 사진 앱 '최근 삭제된 항목'에 30일 동안 남아 있어요.`
+      : `${what} ${n}장을 정리했어요.`;
 
   /**
    * 비슷한 사진 묶음에서 '이 사진만 남기기'
    * 고른 사진은 베스트로 지정하고, 같은 묶음의 나머지는 앱에서 지웁니다 → 장수가 줄어듦
    */
   const keepOnlyInGroup = useCallback(
-    (groupIds, keepId) => {
+    async (groupIds, keepId, opts) => {
+      const ok = await removeMany(groupIds.filter((id) => id !== keepId), opts);
+      if (!ok) return false;
       setPhotos((prev) =>
         prev.map((p) => {
           if (p.id !== keepId || !p.result) return p;
@@ -262,7 +341,7 @@ export function usePhotoLibrary() {
           return { ...p, result };
         })
       );
-      removeMany(groupIds.filter((id) => id !== keepId));
+      return true;
     },
     [removeMany]
   );
@@ -340,19 +419,24 @@ export function usePhotoLibrary() {
     return { enriched, groups };
   }, [photos]);
 
-  /** 제외된 사진(흔들림·어두움·눈 감음 등) 전부 앱에서 지우기 */
-  const removeRejected = useCallback(() => {
-    const ids = photos.filter((p) => p.result?.verdict === 'reject').map((p) => p.id);
-    removeMany(ids);
-    if (ids.length) setNotice(`제외된 사진 ${ids.length}장을 지웠어요.`);
-  }, [photos, removeMany]);
+  /** 제외된 사진(흔들림·어두움·눈 감음 등) 전부 지우기 */
+  const removeRejected = useCallback(
+    async (opts) => {
+      const ids = photosRef.current.filter((p) => p.result?.verdict === 'reject').map((p) => p.id);
+      if (ids.length && (await removeMany(ids, opts))) setNotice(doneMessage(ids.length, opts?.fromLibrary, '제외된 사진'));
+    },
+    [removeMany]
+  );
 
-  /** 비슷한 사진 전부 정리: 묶음마다 1등만 남기고 나머지는 앱에서 지우기 */
-  const cleanupSimilar = useCallback(() => {
-    const extra = groups.filter((g) => g.length > 1).flatMap((g) => g.slice(1).map((p) => p.id));
-    removeMany(extra);
-    if (extra.length) setNotice(`비슷한 사진 ${extra.length}장을 정리했어요. 묶음마다 베스트 1장만 남았어요.`);
-  }, [groups, removeMany]);
+  /** 비슷한 사진 전부 정리: 묶음마다 1등만 남기고 나머지 지우기 */
+  const cleanupSimilar = useCallback(
+    async (opts) => {
+      const extra = groups.filter((g) => g.length > 1).flatMap((g) => g.slice(1).map((p) => p.id));
+      if (extra.length && (await removeMany(extra, opts)))
+        setNotice(doneMessage(extra.length, opts?.fromLibrary, '비슷한 사진') + ' 묶음마다 베스트 1장만 남았어요.');
+    },
+    [groups, removeMany]
+  );
 
   // 화면 탭별 목록
   const lists = useMemo(() => {
@@ -406,6 +490,7 @@ export function usePhotoLibrary() {
     removeAll,
     overrideVerdict,
     keepOnlyInGroup,
+    addFromLibrary,
     cleanupSimilar,
     removeRejected,
     notice,

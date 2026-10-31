@@ -1,0 +1,38 @@
+{
+  "expo": {
+    "name": "PickCut Linkclean",
+    "slug": "pickcut",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/icon.png",
+    "userInterfaceStyle": "dark",
+    "backgroundColor": "#121014",
+    "ios": {
+      "bundleIdentifier": "com.linkclean.pickcut",
+      "supportsTablet": false,
+      "infoPlist": {
+        "CFBundleDisplayName": "픽컷",
+        "CFBundleDevelopmentRegion": "ko",
+        "ITSAppUsesNonExemptEncryption": false
+      }
+    },
+    "plugins": [
+      [
+        "expo-media-library",
+        {
+          "photosPermission": "베스트 컷을 고르고, 비슷한 사진·흔들린 사진을 정리하려면 사진첩에 접근해야 해요. 사진은 폰 밖으로 나가지 않아요.",
+          "savePhotosPermission": "로고를 넣거나 편집한 사진을 사진첩에 저장해요.",
+          "isAccessMediaLocationEnabled": false
+        }
+      ],
+      [
+        "expo-splash-screen",
+        {
+          "image": "./assets/splash-icon.png",
+          "imageWidth": 160,
+          "backgroundColor": "#121014"
+        }
+      ]
+    ]
+  }
+}
