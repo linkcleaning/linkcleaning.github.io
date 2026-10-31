@@ -804,8 +804,7 @@ async function sendCard() {
     const ready = (_card.key === cardKey()) ? _card.blob : null;
     await navigator.clipboard.write([new ClipboardItem({ 'image/png': ready || cardBlob() })]);
     record('예약카드');
-    $('pasteMore').textContent = '카드를 붙여넣은 뒤, 계좌번호 글자도 함께 전송돼요 (고객이 복사 가능).';
-    $('pasteMore').classList.remove('hidden');
+    $('pasteMore').classList.add('hidden');
     $('pasteSheet').classList.remove('hidden');
     toast('📋 예약 카드 복사 완료! 아래 버튼을 누르세요', 'ok');
   } catch (e) { toast('복사에 실패했어요. 다시 시도해 주세요', 'err'); }
@@ -850,10 +849,7 @@ if ($('btnImgSms')) $('btnImgSms').onclick = async () => {
     location.href = smsHref();
   } catch (e) { toast("사진 복사에 실패했어요. '📤 공유'로 보내 주세요", 'err'); }
 };
-$('btnOpenSms').onclick = () => {
-  // 예약 카드는 계좌 정보를 글자로도 넣어 고객이 복사 가능하게. 일반 사진은 문구가 사진에 있으니 번호만
-  location.href = isCardTpl(curTpl()) ? smsHrefText(cardAccountText()) : smsHref(true);
-};
+$('btnOpenSms').onclick = () => { location.href = smsHref(true); }; // 문구가 사진/카드에 있으니 번호만
 
 // 문자 편집 중에는 하단 버튼을 숨겨 입력칸을 가리지 않게
 $('draft').addEventListener('focus', () => $('sendBar').classList.add('hidden'));
