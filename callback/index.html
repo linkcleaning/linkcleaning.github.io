@@ -756,8 +756,7 @@ async function pasteNumber(silentFail) {
   } catch (e) { if (!silentFail) toast("붙여넣기 권한이 거부됐어요. 팝업에서 '붙여넣기'를 눌러주세요", 'err'); return false; }
 }
 $('btnPaste').onclick = () => { vib(); pasteNumber(false); };
-// 번호 칸을 눌렀을 때 비어 있으면 복사된 번호를 자동으로 채워줌
-$('phone').addEventListener('focus', () => { if (!digits($('phone').value)) pasteNumber(true); });
+// (번호 칸 자동 붙여넣기는 아이폰에서 '복사하기' 말풍선이 떠서 제거함 — 위의 큰 붙여넣기 버튼 사용)
 $('chips').onclick = e => { const b = e.target.closest('[data-pick]'); if (b) pick(b.dataset.pick); };
 $('draft').addEventListener('input', () => { draftDirty = true; $('btnRestore').classList.remove('hidden'); renderCount(); prebuildPicked(); });
 $('btnRestore').onclick = () => { setDraftFromTpl(); toast('↩ 원래 문구로 되돌렸어요'); };
