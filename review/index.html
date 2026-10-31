@@ -1,0 +1,1102 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, maximum-scale=1, user-scalable=no" />
+<title>링크클린 후기부스터</title>
+<meta name="description" content="작업 완료 → 후기 요청 → 후기 확인 → 감사 선물까지. 링크클린 후기 관리 앱" />
+<meta name="theme-color" content="#0d4a36" />
+<meta name="apple-mobile-web-app-capable" content="yes" />
+<meta name="mobile-web-app-capable" content="yes" />
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+<meta name="apple-mobile-web-app-title" content="후기부스터" />
+<meta name="format-detection" content="telephone=no" />
+<link rel="manifest" href="manifest.webmanifest?v=1" />
+<link rel="apple-touch-icon" href="apple-touch-icon.png?v=1" />
+<link rel="icon" type="image/png" href="favicon-32.png?v=1" />
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css" />
+<style>
+:root{
+  --g9:#0a3528;--g8:#0d4a36;--g7:#115e45;--g6:#15805c;--g5:#1c9e70;--g2:#cdeedd;--g1:#ebf8f1;
+  --gold:#fbb024;--gold2:#ffd36b;--goldd:#c98200;--coffee:#e8692c;--coffee1:#fff1e8;
+  --ink:#14231d;--ink2:#34443d;--mut:#74827c;--line:#e7ebe8;--bg:#f3f0e9;--card:#fff;
+  --red:#e5484d;--red1:#fdecec;--blue:#2f7cf6;--blue1:#eaf2ff;--amber1:#fff6df;
+  --r:22px;--sh:0 1px 2px rgba(16,40,30,.06),0 8px 24px -10px rgba(16,40,30,.18);
+}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;background:var(--bg);color:var(--ink);font-family:Pretendard,-apple-system,BlinkMacSystemFont,'Apple SD Gothic Neo',sans-serif;-webkit-font-smoothing:antialiased;overscroll-behavior-y:none}
+body{min-height:100vh}
+button{font:inherit;color:inherit;border:0;background:none;cursor:pointer;padding:0}
+input,textarea,select{font:inherit;font-size:17px;color:var(--ink)}
+.app{max-width:480px;margin:0 auto;min-height:100vh;position:relative;padding-bottom:calc(110px + env(safe-area-inset-bottom))}
+.press{transition:transform .12s ease,filter .12s}.press:active{transform:scale(.965);filter:brightness(.97)}
+.hide{display:none!important}
+
+/* ---------- header ---------- */
+.hd{position:relative;overflow:hidden;color:#fff;padding:calc(env(safe-area-inset-top) + 14px) 18px 22px;background:
+ radial-gradient(120px 120px at 92% 8%,rgba(255,211,107,.35),transparent 70%),
+ radial-gradient(200px 160px at 10% 120%,rgba(28,158,112,.55),transparent 70%),
+ linear-gradient(160deg,var(--g7),var(--g9));border-radius:0 0 30px 30px;box-shadow:0 14px 30px -18px rgba(10,53,40,.8)}
+.hd .spark{position:absolute;color:var(--gold2);opacity:.55;font-size:12px}
+.hd-row{display:flex;align-items:center;gap:12px;position:relative}
+.hd-logo{width:52px;height:52px;border-radius:50%;background:#fff;padding:2px;box-shadow:0 6px 16px -6px rgba(0,0,0,.5);flex-shrink:0}
+.hd-t1{font-size:12.5px;font-weight:600;color:var(--g2);letter-spacing:.02em}
+.hd-t2{font-size:23px;font-weight:900;letter-spacing:-.03em;line-height:1.15}
+.hd-t2 b{color:var(--gold2)}
+.hd-act{margin-left:auto;display:flex;gap:8px;align-items:center}
+.icon-btn{width:42px;height:42px;border-radius:14px;background:rgba(255,255,255,.14);display:grid;place-items:center;font-size:20px;backdrop-filter:blur(6px)}
+.me-chip{display:inline-flex;align-items:center;gap:6px;margin-top:14px;background:rgba(255,255,255,.14);padding:7px 12px 7px 8px;border-radius:999px;font-size:14px;font-weight:700}
+.me-chip .av{width:24px;height:24px;border-radius:50%;background:var(--gold);color:var(--g9);display:grid;place-items:center;font-size:12px;font-weight:900}
+.sync-dot{width:9px;height:9px;border-radius:50%;background:#9fb3aa;display:inline-block}
+.sync-dot.ok{background:#4ade80;box-shadow:0 0 0 3px rgba(74,222,128,.25)}
+.sync-dot.ing{background:var(--gold);animation:blink 1s infinite}
+.sync-dot.err{background:#ff6b6b}
+@keyframes blink{50%{opacity:.3}}
+
+main{padding:16px 14px 0}
+.sec-t{display:flex;align-items:center;justify-content:space-between;margin:22px 4px 10px;font-size:17px;font-weight:800;letter-spacing:-.02em}
+.sec-t small{font-size:13px;color:var(--mut);font-weight:600}
+.card{background:var(--card);border-radius:var(--r);box-shadow:var(--sh);padding:16px}
+
+/* ---------- hero ---------- */
+.hero{display:flex;gap:16px;align-items:center;padding:18px;margin-top:-4px;position:relative;overflow:hidden}
+.hero:after{content:"";position:absolute;right:-40px;top:-40px;width:140px;height:140px;border-radius:50%;background:radial-gradient(circle,var(--amber1),transparent 70%)}
+.ring{position:relative;width:118px;height:118px;flex-shrink:0}
+.ring svg{transform:rotate(-90deg)}
+.ring .num{position:absolute;inset:0;display:grid;place-items:center;text-align:center}
+.ring .num b{font-size:34px;font-weight:900;letter-spacing:-.04em;line-height:1}
+.ring .num span{font-size:12.5px;color:var(--mut);font-weight:700;display:block;margin-top:2px}
+.hero-txt{position:relative;z-index:1}
+.hero-txt .k{font-size:13px;font-weight:700;color:var(--g6)}
+.hero-txt .h{font-size:19px;font-weight:900;letter-spacing:-.03em;margin:4px 0 8px;line-height:1.3}
+.pill{display:inline-flex;align-items:center;gap:4px;padding:5px 10px;border-radius:999px;font-size:12.5px;font-weight:800;background:var(--g1);color:var(--g7);margin:2px 4px 2px 0}
+.pill.gold{background:var(--amber1);color:var(--goldd)}
+
+.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-top:12px}
+.stat{background:#fff;border-radius:18px;padding:13px 10px;text-align:center;box-shadow:var(--sh);position:relative}
+.stat .e{font-size:22px}
+.stat b{display:block;font-size:26px;font-weight:900;letter-spacing:-.03em;margin-top:2px}
+.stat span{font-size:12.5px;font-weight:700;color:var(--mut)}
+.stat.blue b{color:var(--blue)}.stat.amber b{color:var(--goldd)}.stat.coffee b{color:var(--coffee)}
+
+/* ---------- todo ---------- */
+.todo{display:flex;align-items:center;gap:12px;padding:13px 14px;background:#fff;border-radius:18px;box-shadow:var(--sh);margin-bottom:10px}
+.todo .ic{width:44px;height:44px;border-radius:14px;display:grid;place-items:center;font-size:21px;flex-shrink:0}
+.todo .tx{flex:1;min-width:0}
+.todo .tx b{display:block;font-size:16px;font-weight:800;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.todo .tx span{font-size:13px;color:var(--mut);font-weight:600}
+.btn-s{padding:10px 13px;border-radius:13px;font-size:14.5px;font-weight:800;white-space:nowrap}
+.bg-blue{background:var(--blue1);color:var(--blue)}.bg-amber{background:var(--amber1);color:var(--goldd)}.bg-green{background:var(--g1);color:var(--g7)}.bg-coffee{background:var(--coffee1);color:var(--coffee)}.bg-red{background:var(--red1);color:var(--red)}
+.solid-blue{background:var(--blue);color:#fff}.solid-amber{background:var(--gold);color:var(--g9)}.solid-green{background:var(--g6);color:#fff}.solid-coffee{background:var(--coffee);color:#fff}
+.empty{text-align:center;padding:26px 16px;color:var(--mut);font-weight:600;font-size:15px}
+.empty .big{font-size:44px;margin-bottom:6px}
+
+/* ---------- leaderboard ---------- */
+.lb-row{display:flex;align-items:center;gap:12px;padding:10px 4px;border-bottom:1px dashed var(--line)}
+.lb-row:last-child{border:0}
+.lb-medal{width:34px;text-align:center;font-size:22px}
+.lb-name{flex:1;font-weight:800;font-size:16px}
+.lb-bar{height:8px;border-radius:9px;background:var(--g1);margin-top:6px;overflow:hidden}
+.lb-bar i{display:block;height:100%;border-radius:9px;background:linear-gradient(90deg,var(--g5),var(--gold))}
+.lb-n{font-weight:900;font-size:18px;color:var(--g7)}
+
+.tip{display:flex;gap:12px;align-items:flex-start;background:linear-gradient(135deg,#fffaf0,#fff);border:1.5px solid #f6e3b4;border-radius:20px;padding:15px}
+.tip .ti{font-size:26px}
+.tip b{display:block;font-size:15px;margin-bottom:3px;color:var(--goldd)}
+.tip p{margin:0;font-size:14.5px;line-height:1.55;color:var(--ink2)}
+.tip-nav{display:flex;justify-content:flex-end;margin-top:8px}
+
+/* ---------- list ---------- */
+.search{display:flex;align-items:center;gap:8px;background:#fff;border-radius:16px;padding:0 14px;box-shadow:var(--sh)}
+.search input{flex:1;border:0;outline:0;padding:14px 0;background:transparent}
+.chips{display:flex;gap:8px;overflow-x:auto;padding:12px 2px 4px;scrollbar-width:none}
+.chips::-webkit-scrollbar{display:none}
+.chip{flex-shrink:0;padding:9px 14px;border-radius:999px;background:#fff;font-weight:700;font-size:14.5px;color:var(--ink2);border:1.5px solid var(--line)}
+.chip.on{background:var(--g8);color:#fff;border-color:var(--g8);box-shadow:0 6px 14px -8px rgba(13,74,54,.8)}
+.chip .c{display:inline-block;min-width:20px;padding:0 6px;margin-left:4px;border-radius:999px;background:rgba(0,0,0,.07);font-size:12px}
+.chip.on .c{background:rgba(255,255,255,.2)}
+.cust{background:#fff;border-radius:var(--r);box-shadow:var(--sh);padding:15px;margin-top:12px}
+.cust-top{display:flex;gap:12px;align-items:center}
+.avatar{width:46px;height:46px;border-radius:16px;display:grid;place-items:center;font-weight:900;font-size:19px;color:#fff;flex-shrink:0}
+.cust-name{font-size:17px;font-weight:900;letter-spacing:-.02em}
+.cust-sub{font-size:13px;color:var(--mut);font-weight:600;margin-top:2px}
+.tag{display:inline-block;padding:3px 8px;border-radius:8px;font-size:12px;font-weight:800;background:var(--g1);color:var(--g7);margin-right:4px}
+.steps{display:flex;align-items:center;margin:14px 2px 12px}
+.step{display:flex;flex-direction:column;align-items:center;gap:4px;font-size:11.5px;font-weight:700;color:#a5b1ac;width:52px}
+.step i{width:26px;height:26px;border-radius:50%;display:grid;place-items:center;font-style:normal;font-size:13px;background:#eef1ef;color:#a5b1ac}
+.step.on{color:var(--g7)}.step.on i{background:var(--g6);color:#fff}
+.step.cur i{box-shadow:0 0 0 4px var(--g2)}
+.bar{flex:1;height:3px;border-radius:3px;background:#eef1ef;margin-bottom:18px}
+.bar.on{background:var(--g6)}
+.cust-act{display:flex;gap:8px}
+.cust-act .btn-l{flex:1}
+.btn-l{display:flex;align-items:center;justify-content:center;gap:6px;padding:14px;border-radius:16px;font-size:16px;font-weight:800}
+.btn-ghost{background:#f1f4f2;color:var(--ink2)}
+.warn-line{margin-top:10px;font-size:13px;font-weight:700;color:var(--goldd);background:var(--amber1);padding:8px 10px;border-radius:12px}
+
+/* ---------- bottom nav ---------- */
+.nav{position:fixed;left:50%;transform:translateX(-50%);bottom:0;width:100%;max-width:480px;z-index:40;padding:0 12px calc(env(safe-area-inset-bottom) + 10px)}
+.nav-in{display:flex;align-items:center;background:rgba(255,255,255,.92);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);border-radius:26px;box-shadow:0 10px 30px -10px rgba(10,53,40,.35),0 0 0 1px rgba(0,0,0,.04);height:70px;padding:0 6px}
+.nav-b{flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;font-size:11.5px;font-weight:800;color:#93a19b}
+.nav-b .ni{font-size:22px;filter:grayscale(1) opacity(.6);transition:.2s}
+.nav-b.on{color:var(--g7)}.nav-b.on .ni{filter:none;transform:translateY(-1px) scale(1.08)}
+.fab{width:64px;height:64px;margin-top:-34px;border-radius:22px;background:linear-gradient(145deg,var(--g5),var(--g8));color:#fff;font-size:34px;font-weight:400;display:grid;place-items:center;box-shadow:0 12px 24px -8px rgba(13,74,54,.7),0 0 0 5px var(--bg);flex-shrink:0;margin-left:4px;margin-right:4px}
+.fab span{margin-top:-3px}
+
+/* ---------- sheet ---------- */
+.ov{position:fixed;inset:0;z-index:80;background:rgba(10,30,22,.45);opacity:0;transition:opacity .25s;backdrop-filter:blur(2px)}
+.ov.show{opacity:1}
+.sheet{position:fixed;left:50%;bottom:0;transform:translate(-50%,105%);width:100%;max-width:480px;max-height:92vh;overflow-y:auto;z-index:81;background:var(--bg);border-radius:28px 28px 0 0;padding:10px 16px calc(env(safe-area-inset-bottom) + 18px);transition:transform .32s cubic-bezier(.2,.9,.25,1)}
+.sheet.show{transform:translate(-50%,0)}
+.grab{width:44px;height:5px;border-radius:5px;background:#cfd6d2;margin:2px auto 12px}
+.sh-x{position:sticky;top:0;float:right;margin:-6px -4px 0 0;width:38px;height:38px;border-radius:50%;background:#e4e8e5;font-size:16px;font-weight:800;color:var(--ink2);z-index:2}
+.sh-t{font-size:21px;font-weight:900;letter-spacing:-.03em;margin:4px 2px 4px}
+.sh-s{font-size:14px;color:var(--mut);font-weight:600;margin:0 2px 14px}
+.fld{margin-bottom:14px}
+.fld label{display:block;font-size:14px;font-weight:800;color:var(--ink2);margin:0 2px 7px}
+.fld label small{color:var(--mut);font-weight:600}
+.inp{width:100%;padding:14px 15px;border-radius:15px;border:1.5px solid var(--line);background:#fff;outline:0;transition:border .15s}
+.inp:focus{border-color:var(--g5);box-shadow:0 0 0 4px var(--g1)}
+textarea.inp{min-height:120px;line-height:1.55;resize:vertical}
+.opts{display:flex;flex-wrap:wrap;gap:7px}
+.opt{padding:10px 13px;border-radius:13px;background:#fff;border:1.5px solid var(--line);font-weight:700;font-size:15px}
+.opt.on{background:var(--g8);border-color:var(--g8);color:#fff}
+.toggle{display:flex;align-items:center;gap:12px;background:#fff;border:1.5px solid var(--line);border-radius:15px;padding:13px 14px}
+.toggle .tt{flex:1;font-weight:700;font-size:15px;line-height:1.4}
+.toggle .tt small{display:block;color:var(--mut);font-weight:600;font-size:12.5px}
+.sw{width:50px;height:30px;border-radius:30px;background:#d5dcd8;position:relative;transition:.2s;flex-shrink:0}
+.sw:after{content:"";position:absolute;top:3px;left:3px;width:24px;height:24px;border-radius:50%;background:#fff;box-shadow:0 2px 4px rgba(0,0,0,.2);transition:.2s}
+.sw.on{background:var(--g6)}.sw.on:after{left:23px}
+.btn-main{width:100%;padding:17px;border-radius:18px;background:linear-gradient(145deg,var(--g6),var(--g8));color:#fff;font-size:17.5px;font-weight:900;box-shadow:0 10px 22px -10px rgba(13,74,54,.8)}
+.btn-row{display:flex;gap:8px;margin-top:10px}
+.btn-row>*{flex:1}
+.preview{background:#fff;border-radius:18px;padding:14px;border:1.5px solid var(--line)}
+.preview textarea{width:100%;border:0;outline:0;min-height:230px;line-height:1.6;font-size:15.5px;resize:vertical;background:transparent}
+.seg{display:flex;background:#e6e9e4;border-radius:15px;padding:4px;gap:4px;margin-bottom:12px;overflow-x:auto}
+.seg button{flex:1;padding:10px 8px;border-radius:12px;font-weight:800;font-size:14px;color:var(--ink2);white-space:nowrap}
+.seg button.on{background:#fff;color:var(--g8);box-shadow:0 2px 8px -2px rgba(0,0,0,.15)}
+.info{display:grid;grid-template-columns:auto 1fr;gap:9px 14px;font-size:15px}
+.info dt{color:var(--mut);font-weight:700}.info dd{margin:0;font-weight:700}
+.log{margin-top:6px}
+.log li{list-style:none;position:relative;padding:0 0 12px 22px;font-size:14px;color:var(--ink2);font-weight:600}
+.log li:before{content:"";position:absolute;left:5px;top:6px;width:8px;height:8px;border-radius:50%;background:var(--g5)}
+.log li:after{content:"";position:absolute;left:8.5px;top:16px;bottom:0;width:1.5px;background:var(--line)}
+.log li:last-child:after{display:none}
+.log li small{color:var(--mut);margin-left:6px}
+.link-warn{background:var(--red1);color:#b42318;padding:11px 13px;border-radius:14px;font-size:14px;font-weight:700;margin-bottom:12px;line-height:1.45}
+.mini-a{color:var(--g6);font-weight:800;text-decoration:underline}
+
+/* ---------- QR ---------- */
+.qr-card{background:#fff;border-radius:28px;box-shadow:var(--sh);padding:22px 20px;text-align:center;position:relative;overflow:hidden}
+.qr-card:before{content:"";position:absolute;inset:0 0 auto 0;height:96px;background:linear-gradient(160deg,var(--g7),var(--g9))}
+.qr-head{position:relative;color:#fff}
+.qr-head .t{font-size:22px;font-weight:900;letter-spacing:-.03em}
+.qr-head .s{font-size:14px;color:var(--g2);font-weight:600;margin-top:3px}
+.qr-box{position:relative;margin:22px auto 14px;width:100%;max-width:280px;aspect-ratio:1;background:#fff;border-radius:20px;padding:12px;box-shadow:0 0 0 6px var(--gold2),0 18px 30px -16px rgba(0,0,0,.35)}
+.qr-box canvas{width:100%;height:100%;display:block}
+.qr-steps{display:flex;justify-content:center;gap:6px;flex-wrap:wrap;margin-top:6px}
+.qr-steps span{font-size:13px;font-weight:800;background:var(--g1);color:var(--g7);padding:6px 10px;border-radius:10px}
+.qr-note{margin-top:10px;font-size:13px;color:var(--mut);font-weight:600;line-height:1.5}
+.qr-full{position:fixed;inset:0;z-index:95;background:#fff;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:24px;text-align:center}
+.qr-full .t{font-size:30px;font-weight:900;letter-spacing:-.04em;color:var(--g8)}
+.qr-full .s{font-size:18px;font-weight:700;color:var(--mut);margin-top:6px}
+.qr-full canvas{width:min(78vw,440px);height:min(78vw,440px);margin:26px 0}
+.qr-full .x{position:absolute;top:calc(env(safe-area-inset-top) + 14px);right:16px;width:48px;height:48px;border-radius:50%;background:#eef1ef;font-size:22px}
+
+/* ---------- reply ---------- */
+.rv{background:#fff;border-radius:20px;box-shadow:var(--sh);padding:16px;margin-top:12px;position:relative}
+.rv .no{font-size:12.5px;font-weight:900;color:var(--g6);margin-bottom:6px}
+.rv p{margin:0;font-size:15.5px;line-height:1.65;white-space:pre-wrap}
+.rv .cp{margin-top:12px}
+.mood{display:flex;gap:10px;align-items:center;padding:12px 14px;border-radius:16px;font-weight:800;font-size:15px;margin-top:12px}
+
+/* ---------- settings ---------- */
+.set-g{background:#fff;border-radius:var(--r);box-shadow:var(--sh);padding:16px;margin-bottom:14px}
+.set-g h3{margin:0 0 4px;font-size:17px;font-weight:900;letter-spacing:-.02em}
+.set-g .d{font-size:13.5px;color:var(--mut);font-weight:600;margin:0 0 14px;line-height:1.5}
+.help{background:var(--g1);border-radius:14px;padding:12px 14px;font-size:13.5px;line-height:1.65;color:var(--ink2);font-weight:600;margin:-4px 0 14px}
+.help b{color:var(--g7)}
+.staff-chip{display:inline-flex;align-items:center;gap:6px;padding:8px 8px 8px 13px;background:var(--g1);border-radius:12px;font-weight:800;color:var(--g7);margin:0 6px 6px 0}
+.staff-chip button{width:24px;height:24px;border-radius:8px;background:rgba(0,0,0,.06);font-size:13px}
+.var-chips{display:flex;flex-wrap:wrap;gap:5px;margin:8px 0 2px}
+.var-chips button{font-size:12.5px;font-weight:800;padding:5px 8px;border-radius:9px;background:var(--amber1);color:var(--goldd)}
+
+/* ---------- toast & confetti ---------- */
+#toast{position:fixed;left:50%;top:calc(env(safe-area-inset-top) + 12px);transform:translate(-50%,-160%);z-index:120;background:var(--g9);color:#fff;padding:14px 20px;border-radius:18px;font-weight:800;font-size:15.5px;box-shadow:0 14px 30px -10px rgba(0,0,0,.45);transition:transform .35s cubic-bezier(.2,.9,.3,1.2);max-width:92%;text-align:center}
+#toast.show{transform:translate(-50%,0)}
+#confetti{position:fixed;inset:0;pointer-events:none;z-index:130}
+.fade-in{animation:fi .35s ease both}
+@keyframes fi{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+</style>
+</head>
+<body>
+<div id="toast"></div>
+<canvas id="confetti"></canvas>
+
+<div class="app">
+  <header class="hd">
+    <span class="spark" style="left:58%;top:18px">✦</span><span class="spark" style="left:72%;top:52px;font-size:9px">✦</span><span class="spark" style="left:46%;top:70px;font-size:8px">✦</span>
+    <div class="hd-row">
+      <img class="hd-logo" src="logo-sm.png" alt="링크클린" />
+      <div>
+        <div class="hd-t1">링크클린 LINKCLEAN</div>
+        <div class="hd-t2">후기<b>부스터</b> ⭐</div>
+      </div>
+      <div class="hd-act">
+        <button class="icon-btn press" id="btnSync" title="동기화" aria-label="동기화"><span class="sync-dot" id="syncDot"></span></button>
+        <button class="icon-btn press" id="btnSettings" aria-label="설정">⚙️</button>
+      </div>
+    </div>
+    <button class="me-chip press" id="meChip"><span class="av" id="meAv">?</span><span id="meName">사용자 선택</span> ▾</button>
+  </header>
+
+  <main id="v-home" class="view"></main>
+  <main id="v-list" class="view hide"></main>
+  <main id="v-qr" class="view hide"></main>
+  <main id="v-reply" class="view hide"></main>
+  <main id="v-settings" class="view hide"></main>
+</div>
+
+<nav class="nav">
+  <div class="nav-in">
+    <button class="nav-b on" data-go="home"><span class="ni">🏠</span>홈</button>
+    <button class="nav-b" data-go="list"><span class="ni">👥</span>고객</button>
+    <button class="fab press" id="fab" aria-label="작업 완료 등록"><span>+</span></button>
+    <button class="nav-b" data-go="qr"><span class="ni">📱</span>QR</button>
+    <button class="nav-b" data-go="reply"><span class="ni">💬</span>답글</button>
+  </div>
+</nav>
+
+<div class="ov hide" id="ov"></div>
+<div class="sheet" id="sheet"></div>
+
+<script src="qr.js"></script>
+<script>
+'use strict';
+/* =========================================================
+   기본 데이터
+   ========================================================= */
+const $ = s => document.querySelector(s);
+const LS_DATA = 'rb_data_v1', LS_LOCAL = 'rb_local_v1';
+const SERVICES = ['입주청소','이사청소','거주청소','준공청소','사무실·상가','특수청소','유품정리','폐기물 수거','유리창 청소','오존 살균탈취','외벽청소'];
+const SVC_COLOR = {'입주청소':'#15805c','이사청소':'#2f7cf6','거주청소':'#0ea5a4','준공청소':'#7c5cff','사무실·상가':'#475569','특수청소':'#e5484d','유품정리':'#8b6b4a','폐기물 수거':'#c2410c','유리창 청소':'#0284c7','오존 살균탈취':'#16a34a','외벽청소':'#9333ea'};
+const ST = {
+  done:     {t:'요청 전',     short:'작업완료', icon:'🧹'},
+  asked:    {t:'후기 기다리는 중', short:'요청',  icon:'📨'},
+  reviewed: {t:'후기 완료',   short:'후기',    icon:'⭐'},
+  rewarded: {t:'선물 완료',   short:'선물',    icon:'☕'}
+};
+const ORDER = ['done','asked','reviewed','rewarded'];
+
+const DEFAULT_TPL = {
+ask:
+`[{업체}] {고객님}, 오늘 {서비스} 맡겨주셔서 진심으로 감사드립니다 🙏
+
+저희는 제주에서 직접 발로 뛰는 작은 청소업체라, 고객님 후기 한 줄이 다음 고객님께 큰 믿음이 됩니다.
+
+솔직한 후기를 남겨주시면 감사의 마음으로 {선물}을 보내드려요 ☕
+(별점이나 내용과 상관없이 모두 드립니다)
+
+▶ 후기 쓰기
+{링크}
+
+✔ 영수증(또는 카드 결제내역) 인증 후 작성할 수 있어요
+✔ 후기 첫 줄에 "링크클린 후기 이벤트 참여"라고 꼭 적어주세요 (공정위 표시 규정)
+
+담당 {담당} 드림 · {전화}`,
+remind:
+`[{업체}] {고객님}, 청소 후 며칠 지내보시니 어떠세요? 😊
+혹시 마음에 걸리는 부분이 있으면 편하게 연락 주세요. 바로 확인해드리겠습니다.
+
+괜찮으셨다면 시간 되실 때 짧은 후기 부탁드려요 🙏
+{링크}
+(후기 남겨주시면 {선물} 보내드려요 · 첫 줄에 "링크클린 후기 이벤트 참여" 표기 부탁드려요)
+
+{전화}`,
+thanks:
+`[{업체}] {고객님}, 소중한 후기 정말 감사합니다! 💚
+약속드린 {선물} 보내드렸어요. 맛있게 드세요 ☕
+
+주변에 청소·정리가 필요한 분이 계시면 링크클린을 소개해주세요.
+소개로 작업이 진행되면 소개해주신 분께도 {소개선물}을 드려요 🎁
+
+{전화}`,
+referral:
+`[{업체}] {소개자}님, 링크클린을 소개해주셔서 정말 감사합니다 🙏
+덕분에 {고객님} 댁 {서비스} 잘 마쳤습니다.
+감사의 마음으로 {소개선물} 보내드렸어요 ☕
+앞으로도 믿고 맡기실 수 있게 더 꼼꼼히 하겠습니다!
+
+{전화}`
+};
+const TPL_NAME = {ask:'후기 부탁', remind:'한 번 더 부탁', thanks:'후기 감사', referral:'소개 감사'};
+const VARS = ['{고객님}','{서비스}','{링크}','{선물}','{소개선물}','{담당}','{전화}','{업체}','{소개자}'];
+
+const TIPS = [
+  ['🧾','영수증부터 챙기세요','네이버 방문자 후기는 영수증이나 카드 결제내역을 인증해야 플레이스에 노출돼요. 작업이 끝나면 카드 영수증이나 현금영수증을 꼭 드리세요.'],
+  ['📢','이벤트 표시는 필수','커피 같은 선물을 주는 후기는 후기 첫 부분에 "이벤트 참여"를 적도록 안내해야 해요 (공정위 추천·보증 심사지침). 기본 문자에 이미 넣어뒀어요.'],
+  ['⭐','"좋게 써주세요"는 금지','별점이나 칭찬을 조건으로 선물을 주면 안 돼요. "솔직한 후기"를 부탁하고, 내용과 상관없이 선물을 드리세요.'],
+  ['⏰','3개월 안에 풀어드리세요','2026년 7월부터 네이버 후기는 작성 3개월이 지나면 수정할 수 없어요. 아쉬운 후기는 빨리 전화로 풀어드리는 게 좋아요.'],
+  ['💬','답글은 꼭 달아요','모든 후기에 답글을 달면 다음 고객이 "관리 잘 하는 업체"로 봐요. 답글 탭에서 10초면 만들 수 있어요.'],
+  ['📅','요청은 작업 직후에','고객 만족이 가장 큰 순간은 청소가 끝나고 집을 둘러볼 때예요. 그 자리에서 QR을 보여주거나 바로 문자를 보내세요.'],
+  ['🗓️','네이버 예약도 써보세요','네이버 예약으로 받은 고객은 예약자 후기를 쓸 수 있어서 영수증 인증보다 쉬워요.'],
+  ['🔎','답글에 지역+서비스','답글에 "제주 입주청소"처럼 지역과 서비스 이름을 자연스럽게 넣어두면 검색하는 고객이 보기 좋아요. 답글 탭에서 켜고 끌 수 있어요.']
+];
+
+function defShared(){
+  return {
+    staff:['대표','팀장','직원1'],
+    branches:[{id:'jeju',name:'제주시점',url:''},{id:'sgp',name:'서귀포점',url:''}],
+    googleUrl:'', company:'링크클린',
+    reward:'스타벅스 아메리카노 1잔', referralReward:'스타벅스 아메리카노 1잔',
+    goal:15, phone:'064-763-4545', remindDays:2,
+    tpl:Object.assign({},DEFAULT_TPL), updatedAt:0
+  };
+}
+function load(){
+  let d=null; try{ d=JSON.parse(localStorage.getItem(LS_DATA)); }catch(e){}
+  if(!d||!d.shared) d={shared:defShared(),recs:{},dirty:{},sharedDirty:false};
+  d.shared=Object.assign(defShared(),d.shared); d.shared.tpl=Object.assign({},DEFAULT_TPL,d.shared.tpl||{});
+  d.recs=d.recs||{}; d.dirty=d.dirty||{};
+  return d;
+}
+function loadLocal(){ let l=null; try{ l=JSON.parse(localStorage.getItem(LS_LOCAL)); }catch(e){} return Object.assign({me:'',syncUrl:'',syncKey:'linkclean',lastSync:0,tip:0,kw:true},l||{}); }
+let S=load(), L=loadLocal();
+function save(){ try{ localStorage.setItem(LS_DATA,JSON.stringify(S)); }catch(e){ toast('⚠️ 저장 공간이 부족해요'); } }
+function saveLocal(){ try{ localStorage.setItem(LS_LOCAL,JSON.stringify(L)); }catch(e){} }
+
+/* =========================================================
+   유틸
+   ========================================================= */
+const esc = s => String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const uid = () => Date.now().toString(36)+Math.random().toString(36).slice(2,7);
+const now = () => Date.now();
+const pad = n => String(n).padStart(2,'0');
+const todayStr = () => { const d=new Date(); return d.getFullYear()+'-'+pad(d.getMonth()+1)+'-'+pad(d.getDate()); };
+const DOW='일월화수목금토';
+function fmtDate(v){ if(!v) return ''; const d=new Date(typeof v==='string'?v+'T00:00:00':v); return (d.getMonth()+1)+'월 '+d.getDate()+'일 ('+DOW[d.getDay()]+')'; }
+function fmtDT(ts){ const d=new Date(ts); return (d.getMonth()+1)+'/'+d.getDate()+' '+pad(d.getHours())+':'+pad(d.getMinutes()); }
+const daysSince = ts => ts ? Math.floor((now()-ts)/86400000) : 0;
+function inThisMonth(ts){ if(!ts) return false; const a=new Date(ts), b=new Date(); return a.getFullYear()===b.getFullYear()&&a.getMonth()===b.getMonth(); }
+function fmtPhone(v){ const n=String(v||'').replace(/\D/g,'').slice(0,11);
+  if(n.startsWith('02')){ if(n.length<=2) return n; if(n.length<=5) return n.slice(0,2)+'-'+n.slice(2); if(n.length<=9) return n.slice(0,2)+'-'+n.slice(2,5)+'-'+n.slice(5); return n.slice(0,2)+'-'+n.slice(2,6)+'-'+n.slice(6,10); }
+  if(n.length<=3) return n; if(n.length<=6) return n.slice(0,3)+'-'+n.slice(3); if(n.length<=10) return n.slice(0,3)+'-'+n.slice(3,6)+'-'+n.slice(6); return n.slice(0,3)+'-'+n.slice(3,7)+'-'+n.slice(7); }
+const isIOS = /iPhone|iPad|iPod/i.test(navigator.userAgent) || (navigator.platform==='MacIntel'&&navigator.maxTouchPoints>1);
+function smsLink(phone, body){ const n=String(phone||'').replace(/[^\d+]/g,''); const b=encodeURIComponent(body||''); return isIOS?`sms:${n}&body=${b}`:`sms:${n}?body=${b}`; }
+function initial(name){ return (name||'고객').trim().charAt(0)||'고'; }
+function recs(){ return Object.values(S.recs).filter(r=>!r.deleted); }
+function branch(id){ return S.shared.branches.find(b=>b.id===id)||S.shared.branches[0]; }
+function reviewUrl(r, which){
+  if(which==='google') return S.shared.googleUrl||'';
+  const b=r?branch(r.branch):S.shared.branches[0];
+  return (b&&b.url)||'';
+}
+function fallbackUrl(r){ const b=r?branch(r.branch):S.shared.branches[0]; return 'https://m.search.naver.com/search.naver?query='+encodeURIComponent('링크클린 '+(b?b.name:'')); }
+
+let toastT;
+function toast(msg){ const t=$('#toast'); t.textContent=msg; t.classList.add('show'); clearTimeout(toastT); toastT=setTimeout(()=>t.classList.remove('show'),2300); }
+async function copyText(txt){
+  try{ await navigator.clipboard.writeText(txt); return true; }
+  catch(e){ const ta=document.createElement('textarea'); ta.value=txt; ta.style.position='fixed'; ta.style.opacity='0'; document.body.appendChild(ta); ta.select(); let ok=false; try{ok=document.execCommand('copy');}catch(_){} ta.remove(); return ok; }
+}
+
+/* =========================================================
+   기록 변경
+   ========================================================= */
+function touch(r, logText){
+  r.updatedAt=now();
+  if(logText){ r.log=r.log||[]; r.log.push({t:logText,ts:now(),by:L.me||''}); }
+  S.recs[r.id]=r; S.dirty[r.id]=1; save(); scheduleSync(); renderAll();
+}
+function setShared(fn){ fn(S.shared); S.shared.updatedAt=now(); S.sharedDirty=true; save(); scheduleSync(); }
+
+function advance(r, to){
+  const t=now();
+  if(to==='asked'){ if(r.status==='done'){ r.status='asked'; r.askedAt=t; touch(r,'후기 요청 문자 보냄'); } else if(r.status==='asked'){ r.remindCount=(r.remindCount||0)+1; r.remindedAt=t; touch(r,'한 번 더 부탁 문자 보냄'); } }
+  else if(to==='reviewed'){ r.status='reviewed'; r.reviewedAt=t; if(!r.askedAt) r.askedAt=t; touch(r,'⭐ 후기 확인'); confetti(); }
+  else if(to==='rewarded'){ r.status='rewarded'; r.rewardedAt=t; if(!r.reviewedAt) r.reviewedAt=t; touch(r,'☕ 선물 보냄'); }
+}
+
+/* =========================================================
+   할 일 계산
+   ========================================================= */
+function todos(){
+  const list=[], rd=Number(S.shared.remindDays)||2;
+  recs().forEach(r=>{
+    const nm=r.name?r.name+'님':fmtPhone(r.phone)||'이름 없는 고객';
+    if(r.status==='done') list.push({r,p:1,ic:'📨',cls:'bg-blue',t:nm,s:`${r.service||'청소'} · 후기 요청 전`,btn:'요청 보내기',act:'send:ask'});
+    if(r.status==='asked'){ const base=r.remindedAt||r.askedAt, d=daysSince(base);
+      if(d>=rd && (r.remindCount||0)<2) list.push({r,p:2,ic:'🔔',cls:'bg-amber',t:nm,s:`요청 후 ${daysSince(r.askedAt)}일째 · 아직 후기 없음`,btn:'한 번 더',act:'send:remind'}); }
+    if(r.status==='reviewed') list.push({r,p:0,ic:'☕',cls:'bg-coffee',t:nm,s:`후기 완료! ${S.shared.reward} 보낼 차례`,btn:'선물 보냄',act:'gift'});
+    if(r.referrer && !r.referrerRewarded && r.status!=='done') list.push({r,p:3,ic:'🎁',cls:'bg-green',t:`${r.referrer}님 (소개)`,s:`${r.name||'고객'} 소개 감사 선물`,btn:'선물 보냄',act:'refgift'});
+  });
+  return list.sort((a,b)=>a.p-b.p);
+}
+
+/* =========================================================
+   화면: 홈
+   ========================================================= */
+function renderHome(){
+  const all=recs();
+  const monthRev=all.filter(r=>(r.status==='reviewed'||r.status==='rewarded')&&inThisMonth(r.reviewedAt));
+  const goal=Math.max(1,Number(S.shared.goal)||15);
+  const pct=Math.min(1,monthRev.length/goal);
+  const askedAll=all.filter(r=>r.status!=='done').length;
+  const revAll=all.filter(r=>r.status==='reviewed'||r.status==='rewarded').length;
+  const rate=askedAll?Math.round(revAll/askedAll*100):0;
+  const cnt=k=>all.filter(r=>r.status===k).length;
+  const C=2*Math.PI*50;
+  const left=goal-monthRev.length;
+  const m=new Date().getMonth()+1;
+  const td=todos();
+
+  // 직원 순위
+  const by={}; S.shared.staff.forEach(s=>by[s]={rev:0,ask:0});
+  all.forEach(r=>{ const s=r.staff||'미지정'; by[s]=by[s]||{rev:0,ask:0};
+    if((r.status==='reviewed'||r.status==='rewarded')&&inThisMonth(r.reviewedAt)) by[s].rev++;
+    if(r.askedAt&&inThisMonth(r.askedAt)) by[s].ask++; });
+  const lb=Object.entries(by).filter(([k,v])=>v.rev||v.ask||S.shared.staff.includes(k)).sort((a,b)=>b[1].rev-a[1].rev||b[1].ask-a[1].ask);
+  const mx=Math.max(1,...lb.map(x=>x[1].rev));
+  const medals=['🥇','🥈','🥉'];
+  const tip=TIPS[(L.tip||0)%TIPS.length];
+
+  $('#v-home').innerHTML=`
+  <div class="card hero fade-in">
+    <div class="ring">
+      <svg width="118" height="118" viewBox="0 0 118 118">
+        <defs><linearGradient id="rg" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#1c9e70"/><stop offset="1" stop-color="#fbb024"/></linearGradient></defs>
+        <circle cx="59" cy="59" r="50" fill="none" stroke="#edf1ee" stroke-width="12"/>
+        <circle cx="59" cy="59" r="50" fill="none" stroke="url(#rg)" stroke-width="12" stroke-linecap="round" stroke-dasharray="${C}" stroke-dashoffset="${C*(1-pct)}" style="transition:stroke-dashoffset 1s ease"/>
+      </svg>
+      <div class="num"><div><b>${monthRev.length}</b><span>/ ${goal}개</span></div></div>
+    </div>
+    <div class="hero-txt">
+      <div class="k">${m}월 후기 목표</div>
+      <div class="h">${left>0?`목표까지 <span style="color:var(--coffee)">${left}개</span> 남았어요!`:'이번 달 목표 달성! 🎉'}</div>
+      <span class="pill">📈 후기 전환율 ${rate}%</span><span class="pill gold">⭐ 누적 ${revAll}개</span>
+    </div>
+  </div>
+
+  <div class="stats fade-in">
+    <button class="stat blue press" data-filter="done"><div class="e">📨</div><b>${cnt('done')}</b><span>요청 보낼 고객</span></button>
+    <button class="stat amber press" data-filter="asked"><div class="e">⏳</div><b>${cnt('asked')}</b><span>후기 기다림</span></button>
+    <button class="stat coffee press" data-filter="reviewed"><div class="e">☕</div><b>${cnt('reviewed')}</b><span>선물 보낼 고객</span></button>
+  </div>
+
+  <div class="sec-t">✅ 지금 할 일 <small>${td.length}건</small></div>
+  ${td.length?td.slice(0,8).map(x=>`
+    <div class="todo fade-in">
+      <div class="ic ${x.cls}">${x.ic}</div>
+      <button class="tx" style="text-align:left" data-open="${x.r.id}"><b>${esc(x.t)}</b><span>${esc(x.s)}</span></button>
+      <button class="btn-s ${x.cls} press" data-act="${x.act}" data-id="${x.r.id}">${x.btn}</button>
+    </div>`).join('') + (td.length>8?`<button class="btn-l btn-ghost press" style="width:100%" data-go="list">전체 보기 (${td.length})</button>`:'')
+  :`<div class="card empty"><div class="big">🎉</div>할 일을 모두 끝냈어요!<br><span style="font-size:13px">작업이 끝나면 아래 <b>+</b> 버튼으로 고객을 등록하세요.</span></div>`}
+
+  <div class="sec-t">🏆 ${m}월 후기왕 <small>후기 수 기준</small></div>
+  <div class="card">
+    ${lb.length?lb.map(([n,v],i)=>`
+      <div class="lb-row">
+        <div class="lb-medal">${v.rev&&i<3?medals[i]:'<span style="font-size:15px;color:var(--mut);font-weight:800">'+(i+1)+'</span>'}</div>
+        <div style="flex:1"><div class="lb-name">${esc(n)}${n===L.me?' <span class="tag">나</span>':''}</div><div class="lb-bar"><i style="width:${v.rev/mx*100}%"></i></div></div>
+        <div style="text-align:right"><div class="lb-n">${v.rev}<span style="font-size:13px">개</span></div><div style="font-size:12px;color:var(--mut);font-weight:700">요청 ${v.ask}</div></div>
+      </div>`).join(''):'<div class="empty">아직 기록이 없어요</div>'}
+  </div>
+
+  <div class="sec-t">💡 후기 꿀팁</div>
+  <div class="tip"><div class="ti">${tip[0]}</div><div><b>${tip[1]}</b><p>${tip[2]}</p></div></div>
+  <div class="tip-nav"><button class="btn-s bg-amber press" id="nextTip">다음 팁 ›</button></div>
+  `;
+  $('#nextTip').onclick=()=>{ L.tip=(L.tip||0)+1; saveLocal(); renderHome(); };
+}
+
+/* =========================================================
+   화면: 고객 목록
+   ========================================================= */
+let F={st:'all',q:'',mine:false};
+function stepsHTML(r){
+  const idx=ORDER.indexOf(r.status);
+  return `<div class="steps">${ORDER.map((k,i)=>`${i?`<div class="bar ${i<=idx?'on':''}"></div>`:''}<div class="step ${i<=idx?'on':''} ${i===idx?'cur':''}"><i>${i<=idx?(i===idx?ST[k].icon:'✓'):i+1}</i>${ST[k].short}</div>`).join('')}</div>`;
+}
+function actionBtns(r){
+  if(r.status==='done') return `<button class="btn-l solid-blue press" data-act="send:ask" data-id="${r.id}">📨 후기 요청 보내기</button>`;
+  if(r.status==='asked') return `<button class="btn-l bg-amber press" data-act="send:remind" data-id="${r.id}" style="flex:.8">🔔 한 번 더</button><button class="btn-l solid-green press" data-act="reviewed" data-id="${r.id}">⭐ 후기 올라왔어요</button>`;
+  if(r.status==='reviewed') return `<button class="btn-l solid-coffee press" data-act="gift" data-id="${r.id}">☕ 선물 보냈어요</button>`;
+  return `<button class="btn-l bg-green press" data-act="send:thanks" data-id="${r.id}">💚 감사 문자 다시 보기</button>`;
+}
+function custCard(r){
+  const col=SVC_COLOR[r.service]||'#15805c';
+  const rd=Number(S.shared.remindDays)||2;
+  let warn='';
+  if(r.status==='asked'&&daysSince(r.remindedAt||r.askedAt)>=rd&&(r.remindCount||0)<2) warn=`<div class="warn-line">🔔 요청한 지 ${daysSince(r.askedAt)}일 — 한 번 더 부탁해볼까요?</div>`;
+  if(!r.receipt&&r.status==='done') warn+=`<div class="warn-line" style="background:var(--red1);color:#b42318">🧾 영수증을 아직 안 드렸다면 꼭 드리세요 (후기 인증에 필요)</div>`;
+  return `<div class="cust fade-in">
+    <button class="cust-top" style="width:100%;text-align:left" data-open="${r.id}">
+      <div class="avatar" style="background:${col}">${esc(initial(r.name))}</div>
+      <div style="flex:1;min-width:0"><div class="cust-name">${esc(r.name||'이름 없음')} <span style="font-size:13px;color:var(--mut);font-weight:700">${esc(fmtPhone(r.phone))}</span></div>
+      <div class="cust-sub"><span class="tag" style="background:${col}1a;color:${col}">${esc(r.service||'청소')}</span>${esc(branch(r.branch)?.name||'')} · ${esc(r.staff||'')} · ${fmtDate(r.workDate)}</div></div>
+      <span style="color:#b6c0bb;font-size:20px">›</span>
+    </button>
+    ${stepsHTML(r)}
+    <div class="cust-act">${actionBtns(r)}</div>${warn}
+  </div>`;
+}
+function renderList(){
+  const all=recs().sort((a,b)=>(b.updatedAt||0)-(a.updatedAt||0));
+  const cnt=k=>k==='all'?all.length:all.filter(r=>r.status===k).length;
+  let list=all.filter(r=>F.st==='all'||r.status===F.st);
+  if(F.mine&&L.me) list=list.filter(r=>r.staff===L.me);
+  if(F.q){ const q=F.q.replace(/-/g,''); list=list.filter(r=>((r.name||'')+(r.phone||'')+(r.service||'')+(r.memo||'')+(r.staff||'')+(r.referrer||'')).replace(/-/g,'').includes(q)); }
+  const chips=[['all','전체'],['done','📨 요청 전'],['asked','⏳ 기다림'],['reviewed','⭐ 후기'],['rewarded','☕ 완료']];
+  $('#v-list').innerHTML=`
+    <div class="search"><span>🔍</span><input id="q" placeholder="이름·전화번호·서비스 검색" value="${esc(F.q)}" /></div>
+    <div class="chips">${chips.map(([k,t])=>`<button class="chip ${F.st===k?'on':''}" data-st="${k}">${t}<span class="c">${cnt(k)}</span></button>`).join('')}
+      <button class="chip ${F.mine?'on':''}" id="mine">🙋 내 고객만</button></div>
+    ${list.length?list.map(custCard).join(''):`<div class="card empty" style="margin-top:12px"><div class="big">🗂️</div>${all.length?'조건에 맞는 고객이 없어요':'아직 등록된 고객이 없어요.<br>작업이 끝나면 <b>+</b> 버튼을 눌러주세요.'}</div>`}
+    <div style="height:10px"></div>`;
+  const q=$('#q'); q.oninput=e=>{ F.q=e.target.value.trim(); clearTimeout(q._t); q._t=setTimeout(()=>{ renderList(); const n=$('#q'); n.focus(); n.setSelectionRange(n.value.length,n.value.length); },350); };
+  document.querySelectorAll('[data-st]').forEach(b=>b.onclick=()=>{F.st=b.dataset.st;renderList();});
+  $('#mine').onclick=()=>{ if(!L.me){ pickMe(); return; } F.mine=!F.mine; renderList(); };
+}
+
+/* =========================================================
+   QR 코드
+   ========================================================= */
+let logoImg=new Image(); logoImg.src='logo-sm.png';
+function drawQR(canvas, text, px){
+  const q=qrcode(0,'H'); q.addData(text); q.make();
+  const n=q.getModuleCount(), quiet=2, cell=Math.floor(px/(n+quiet*2)), size=cell*(n+quiet*2);
+  canvas.width=size; canvas.height=size;
+  const c=canvas.getContext('2d'); c.fillStyle='#fff'; c.fillRect(0,0,size,size);
+  c.fillStyle='#0a3528';
+  for(let y=0;y<n;y++)for(let x=0;x<n;x++) if(q.isDark(y,x)) c.fillRect((x+quiet)*cell,(y+quiet)*cell,cell,cell);
+  const ls=Math.round(size*0.22), lx=(size-ls)/2;
+  c.fillStyle='#fff'; roundRect(c,lx-cell*0.6,lx-cell*0.6,ls+cell*1.2,ls+cell*1.2,ls*0.28); c.fill();
+  const drawLogo=()=>{ c.save(); c.beginPath(); c.arc(size/2,size/2,ls/2,0,Math.PI*2); c.clip(); c.drawImage(logoImg,lx,lx,ls,ls); c.restore(); };
+  if(logoImg.complete&&logoImg.naturalWidth) drawLogo(); else logoImg.onload=drawLogo;
+}
+function roundRect(c,x,y,w,h,r){ c.beginPath(); c.moveTo(x+r,y); c.arcTo(x+w,y,x+w,y+h,r); c.arcTo(x+w,y+h,x,y+h,r); c.arcTo(x,y+h,x,y,r); c.arcTo(x,y,x+w,y,r); c.closePath(); }
+let QRsel='b0';
+function qrTargets(){
+  const t=S.shared.branches.map((b,i)=>({k:'b'+i,label:'네이버 '+b.name,url:b.url,brand:'네이버',name:b.name}));
+  t.push({k:'g',label:'구글',url:S.shared.googleUrl,brand:'구글',name:'구글 지도'});
+  return t;
+}
+function renderQR(){
+  const ts=qrTargets(); let cur=ts.find(t=>t.k===QRsel)||ts[0]; QRsel=cur.k;
+  $('#v-qr').innerHTML=`
+    <div class="seg">${ts.map(t=>`<button class="${t.k===QRsel?'on':''}" data-qr="${t.k}">${esc(t.label)}</button>`).join('')}</div>
+    ${cur.url?`
+    <div class="qr-card fade-in">
+      <div class="qr-head"><div class="t">링크클린 후기 남기기 ⭐</div><div class="s">휴대폰 카메라로 비춰주세요 · ${esc(cur.brand)} ${esc(cur.brand==='구글'?'':cur.name)}</div></div>
+      <div class="qr-box"><canvas id="qrc"></canvas></div>
+      <div class="qr-steps">${cur.brand==='네이버'?'<span>① QR 찍기</span><span>② 영수증 인증</span><span>③ 솔직한 후기</span>':'<span>① QR 찍기</span><span>② 별점 선택</span><span>③ 한 줄 후기</span>'}</div>
+      <div class="qr-note">후기 이벤트 참여 시 첫 줄에 <b>"링크클린 후기 이벤트 참여"</b>를 적어주세요</div>
+    </div>
+    <div class="btn-row"><button class="btn-l solid-green press" id="qrFull">🔆 크게 보여주기</button></div>
+    <div class="btn-row"><button class="btn-l btn-ghost press" id="qrSave">🖼️ 이미지 저장</button><button class="btn-l btn-ghost press" id="qrCopy">🔗 링크 복사</button></div>
+    <p style="font-size:13px;color:var(--mut);font-weight:600;text-align:center;line-height:1.6;margin-top:14px">저장한 이미지는 명함·스티커·견적서에 넣어 쓰세요.<br>고객 폰 앞에서 <b>크게 보여주기</b>를 누르면 화면이 하얗게 커져요.</p>
+    `:`
+    <div class="card empty fade-in"><div class="big">🔗</div><b style="color:var(--ink)">${esc(cur.label)} 후기 링크가 아직 없어요</b><br><span style="font-size:14px">설정에서 링크를 한 번만 넣어두면<br>QR이 자동으로 만들어져요.</span>
+    <div style="margin-top:16px"><button class="btn-l solid-green press" style="width:100%" data-gosettings="links">⚙️ 링크 넣으러 가기</button></div></div>`}
+  `;
+  document.querySelectorAll('[data-qr]').forEach(b=>b.onclick=()=>{QRsel=b.dataset.qr;renderQR();});
+  if(!cur.url) return;
+  drawQR($('#qrc'),cur.url,560);
+  $('#qrCopy').onclick=async()=>{ if(await copyText(cur.url)) toast('🔗 링크를 복사했어요'); };
+  $('#qrFull').onclick=()=>showFullQR(cur);
+  $('#qrSave').onclick=()=>saveQRImage(cur);
+}
+let wakeLock=null;
+async function showFullQR(cur){
+  const d=document.createElement('div'); d.className='qr-full';
+  d.innerHTML=`<button class="x" aria-label="닫기">✕</button><img src="logo-sm.png" style="width:64px;height:64px;border-radius:50%"><div class="t" style="margin-top:12px">링크클린 후기 남기기 ⭐</div><div class="s">카메라로 이 화면을 찍어주세요</div><canvas></canvas><div style="font-size:17px;font-weight:800;color:var(--g7);line-height:1.6">${cur.brand==='네이버'?'① QR 찍기 → ② 영수증 인증 → ③ 솔직한 후기':'① QR 찍기 → ② 별점 → ③ 한 줄 후기'}<br><span style="color:var(--goldd);font-size:15px">첫 줄에 "링크클린 후기 이벤트 참여" 적어주세요 ☕</span></div>`;
+  document.body.appendChild(d); drawQR(d.querySelector('canvas'),cur.url,880);
+  try{ if('wakeLock' in navigator) wakeLock=await navigator.wakeLock.request('screen'); }catch(e){}
+  d.querySelector('.x').onclick=()=>{ d.remove(); try{wakeLock&&wakeLock.release();}catch(e){} };
+}
+async function saveQRImage(cur){
+  try{ await document.fonts.ready; }catch(e){}
+  const W=1080,H=1440,c=document.createElement('canvas'); c.width=W;c.height=H; const x=c.getContext('2d');
+  const g=x.createLinearGradient(0,0,W,H); g.addColorStop(0,'#115e45'); g.addColorStop(1,'#0a3528'); x.fillStyle=g; x.fillRect(0,0,W,H);
+  x.fillStyle='rgba(255,211,107,.18)'; x.beginPath(); x.arc(W-80,90,260,0,Math.PI*2); x.fill();
+  const F='Pretendard, "Apple SD Gothic Neo", sans-serif';
+  if(logoImg.naturalWidth){ x.save(); x.beginPath(); x.arc(W/2,170,80,0,Math.PI*2); x.fillStyle='#fff'; x.fill(); x.clip(); x.drawImage(logoImg,W/2-76,94,152,152); x.restore(); }
+  x.textAlign='center'; x.fillStyle='#fff'; x.font=`900 78px ${F}`; x.fillText('링크클린 후기 남기기',W/2,340);
+  x.fillStyle='#ffd36b'; x.font=`800 40px ${F}`; x.fillText('★★★★★  솔직한 후기가 큰 힘이 됩니다',W/2,410);
+  x.fillStyle='#fff'; roundRect(x,150,470,780,780,56); x.fill();
+  const qc=document.createElement('canvas'); drawQR(qc,cur.url,700);
+  await new Promise(r=>setTimeout(r,120)); x.drawImage(qc,190,510,700,700);
+  x.fillStyle='#cdeedd'; x.font=`800 38px ${F}`;
+  x.fillText(cur.brand==='네이버'?'① QR 찍기  ② 영수증 인증  ③ 후기 쓰기':'① QR 찍기  ② 별점  ③ 한 줄 후기',W/2,1325);
+  x.fillStyle='#fff'; x.font=`700 30px ${F}`; x.fillText(`${S.shared.company} · ${S.shared.phone}`,W/2,1385);
+  c.toBlob(async blob=>{
+    const file=new File([blob],'linkclean-review-qr.png',{type:'image/png'});
+    if(navigator.canShare&&navigator.canShare({files:[file]})){ try{ await navigator.share({files:[file],title:'링크클린 후기 QR'}); return; }catch(e){ if(e.name==='AbortError') return; } }
+    const a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download='linkclean-review-qr.png'; a.click(); toast('🖼️ 이미지를 저장했어요');
+  },'image/png');
+}
+
+/* =========================================================
+   답글 도우미
+   ========================================================= */
+const pick=a=>a[Math.floor(Math.random()*a.length)];
+const shuffle=a=>a.map(v=>[Math.random(),v]).sort((x,y)=>x[0]-y[0]).map(v=>v[1]);
+const TOPICS=[
+  [/친절|상냥|설명|응대|소통|매너|웃|인사/, ['친절했다는 말씀이 저희에겐 가장 큰 칭찬입니다. 늘 고객님 입장에서 먼저 생각하겠습니다.','작업 내내 편하게 대해주셔서 저희도 즐겁게 일할 수 있었습니다.']],
+  [/꼼꼼|깨끗|깔끔|반짝|완벽|디테일|구석|새집/, ['보이지 않는 구석까지 신경 쓴 부분을 알아봐 주셔서 정말 감사합니다.','손이 잘 닿지 않는 틈새와 구석까지 하나하나 꼼꼼히 챙기려고 노력했습니다.']],
+  [/시간|빠르|약속|일찍|정시|신속|늦지/, ['약속 시간을 지키는 것은 저희가 가장 중요하게 생각하는 원칙입니다.','바쁜 일정에 맞춰 빠르게 진행할 수 있어 저희도 다행이었습니다.']],
+  [/곰팡이|물때|찌든|기름때|얼룩|먼지|때가|석회/, ['오래된 물때와 찌든 때는 전용 약품과 장비로 뿌리부터 잡으려고 신경 썼습니다.','곰팡이와 찌든 때까지 시원하게 지워져서 저희도 뿌듯했습니다.']],
+  [/냄새|악취|탈취|오존|향기|공기/, ['냄새까지 잡혀야 진짜 청소라고 생각합니다. 상쾌한 공간이 되었다니 다행입니다.']],
+  [/가격|비용|합리|저렴|견적|가성비/, ['합리적인 가격으로 만족을 드리려는 마음을 알아주셔서 감사합니다.']],
+  [/유품|어머니|아버지|부모님|고인|돌아가/, ['소중한 물건 하나하나 마음을 다해 정리했습니다. 깊은 위로의 마음을 전합니다.']],
+  [/아이|아기|애기|반려|강아지|고양이/, ['가족 모두가 안심하고 지낼 수 있도록 세제 하나까지 신경 썼습니다.']],
+  [/다음|또|재이용|단골|추천|소개|지인/, ['다음에도 필요하실 때 언제든 불러주세요. 반갑게 다시 찾아뵙겠습니다!','주변 분들께도 추천해주신다니 정말 큰 힘이 됩니다.']]
+];
+const NEG=/아쉽|아쉬|불만|별로|실망|늦었|늦게|남아|덜 |안 됐|안됐|안 되|불편|화나|최악|비싸|파손|깨졌|깨진|긁|흠집|부족|미흡|대충|엉망|다시 해|재작업/;
+const SVC_LINE={
+  '입주청소':['새 보금자리의 첫 시작을 링크클린에 맡겨주셔서 영광이었습니다.','{kw}을 믿고 맡겨주셔서 감사합니다.'],
+  '이사청소':['이사로 바쁘신 와중에 링크클린을 찾아주셔서 감사합니다.','{kw}을 맡겨주셔서 감사합니다.'],
+  '거주청소':['매일 지내시는 공간이라 더 정성껏 작업했습니다.','{kw}을 맡겨주셔서 감사합니다.'],
+  '준공청소':['공사 먼지가 많아 쉽지 않은 현장이었는데 만족하셨다니 기쁩니다.','{kw}을 믿고 맡겨주셔서 감사합니다.'],
+  '사무실·상가':['매장과 사무실은 첫인상이 중요해서 더 꼼꼼히 챙겼습니다.','{kw}을 맡겨주셔서 감사합니다.'],
+  '특수청소':['쉽지 않은 상황에서 저희를 믿어주셔서 감사합니다. 끝까지 책임지고 마무리했습니다.','{kw}을 믿고 맡겨주셔서 감사합니다.'],
+  '유품정리':['어려운 시간에 저희를 믿고 맡겨주셔서 감사합니다. 귀중품과 서류는 빠짐없이 전해드렸습니다.','{kw}을 맡겨주셔서 감사합니다.'],
+  '폐기물 수거':['한 번에 깔끔하게 비워드릴 수 있어서 저희도 기뻤습니다.','{kw}을 맡겨주셔서 감사합니다.'],
+  '유리창 청소':['맑아진 창으로 제주 풍경을 더 시원하게 즐기시길 바랍니다.','{kw}을 맡겨주셔서 감사합니다.'],
+  '오존 살균탈취':['눈에 보이지 않는 세균과 냄새까지 잡는 작업이라 더 신경 썼습니다.','{kw}을 맡겨주셔서 감사합니다.'],
+  '외벽청소':['높은 곳 작업이라 안전을 최우선으로 꼼꼼하게 진행했습니다.','{kw}을 맡겨주셔서 감사합니다.']
+};
+function eul(w){ const c=w.charCodeAt(w.length-1); if(c<0xAC00||c>0xD7A3) return w+'을(를)'; return w+((c-0xAC00)%28?'을':'를'); }
+function kwFor(svc){ return '제주 '+(svc||'청소').replace('·',' ').replace('사무실 상가','사무실 청소'); }
+function makeReplies(text,name,svc,kw){
+  const nm=name?name+'님':'고객님', ph=S.shared.phone;
+  const neg=NEG.test(text), pos=/좋|만족|감사|최고|추천|깨끗|친절|꼼꼼|대박|감동|훌륭/.test(text);
+  const hits=TOPICS.filter(([re])=>re.test(text)).map(([,s])=>pick(s));
+  const sv=SVC_LINE[svc]||['링크클린을 찾아주셔서 감사합니다.','{kw}을 맡겨주셔서 감사합니다.'];
+  const svcLine=kw?sv[1].replace('{kw}을',eul(kwFor(svc))).replace('{kw}',kwFor(svc)):sv[0];
+  const out=[];
+  for(let i=0;i<3;i++){
+    let p=[];
+    if(neg&&!pos){
+      p.push(pick([`${nm}, 링크클린입니다. 먼저 불편을 드려 진심으로 죄송합니다.`,`${nm}, 소중한 의견 남겨주셔서 감사합니다. 만족스러운 결과를 드리지 못해 정말 죄송합니다.`,`${nm}, 링크클린 담당자입니다. 기대에 못 미쳐 죄송한 마음입니다.`]));
+      p.push(pick(['말씀해주신 부분은 팀 전체가 함께 확인하고 바로 개선하겠습니다.','같은 일이 다시 생기지 않도록 작업 점검표를 다시 정비하겠습니다.']));
+      p.push(pick([`번거로우시겠지만 ${ph} 번호로 연락 주시면 직접 찾아뵙고 다시 꼼꼼히 확인해드리겠습니다.`,`편하신 시간에 ${ph} 번호로 연락 주세요. 책임지고 다시 살펴보겠습니다.`]));
+      if(kw) p.push(`${eul(kwFor(svc))} 믿고 맡겨주신 마음에 보답할 수 있도록 더 노력하겠습니다.`);
+      p.push('- 링크클린 드림');
+    } else {
+      p.push(pick([`${nm}, 링크클린입니다 😊 소중한 후기 정말 감사드립니다!`,`안녕하세요 ${nm}! 바쁘신 와중에 후기 남겨주셔서 감사합니다 🙏`,`${nm}, 따뜻한 후기 읽고 저희 팀 모두 힘이 났습니다 💚`,`${nm}, 정성 가득한 후기 감사합니다!`]));
+      p.push(i===1?sv[0]:svcLine);
+      const h=shuffle(hits).slice(0,2); p.push(...h);
+      if(neg) p.push(pick(['다만 아쉬우셨던 부분은 꼭 개선하겠습니다. 언제든 편하게 말씀해주세요.',`아쉬웠던 점은 ${ph} 번호로 알려주시면 바로 챙기겠습니다.`]));
+      if(!h.length) p.push(pick(['고객님 한마디 한마디가 저희에게 큰 힘이 됩니다.','앞으로도 처음 마음 그대로 정성껏 일하겠습니다.']));
+      p.push(pick(['새 공간에서 늘 건강하고 행복하시길 바랍니다 🍀','주변에 청소가 필요한 분 계시면 링크클린 꼭 기억해주세요 😊','다음에도 필요하실 때 언제든 불러주세요. 감사합니다!']));
+      p.push('- 링크클린 드림');
+    }
+    out.push([...new Set(p)].join('\n'));
+  }
+  return {neg:neg&&!pos,mixed:neg&&pos,list:[...new Set(out)]};
+}
+function detectSvc(t){ const m={'입주':'입주청소','이사':'이사청소','준공':'준공청소','사무실':'사무실·상가','상가':'사무실·상가','매장':'사무실·상가','유품':'유품정리','특수':'특수청소','쓰레기':'특수청소','폐기물':'폐기물 수거','수거':'폐기물 수거','유리':'유리창 청소','오존':'오존 살균탈취','탈취':'오존 살균탈취','외벽':'외벽청소'}; for(const k in m) if(t.includes(k)) return m[k]; return ''; }
+let RP={svc:'입주청소'};
+function renderReply(){
+  $('#v-reply').innerHTML=`
+    <div class="card fade-in">
+      <div style="font-size:18px;font-weight:900;letter-spacing:-.02em">💬 후기 답글 도우미</div>
+      <div style="font-size:13.5px;color:var(--mut);font-weight:600;margin:4px 0 14px">고객 후기를 복사해서 붙여넣으면 답글 3개를 만들어드려요</div>
+      <div class="fld"><textarea class="inp" id="rvText" placeholder="예) 입주청소 맡겼는데 화장실 물때까지 싹 없어졌어요. 직원분들도 친절하고 시간도 정확했어요!"></textarea></div>
+      <div class="fld"><label>고객 이름 <small>(선택 · 닉네임도 돼요)</small></label><input class="inp" id="rvName" placeholder="예) 김민지" /></div>
+      <div class="fld"><label>서비스</label><div class="opts" id="rvSvc">${SERVICES.map(s=>`<button class="opt ${RP.svc===s?'on':''}" data-s="${s}">${s}</button>`).join('')}</div></div>
+      <div class="toggle" id="rvKw"><div class="tt">🔎 검색 키워드 넣기<small>"${esc(kwFor(RP.svc))}"처럼 지역+서비스를 자연스럽게 넣어요</small></div><div class="sw ${L.kw?'on':''}"></div></div>
+      <button class="btn-main press" id="rvGo" style="margin-top:14px">✨ 답글 만들기</button>
+    </div>
+    <div id="rvOut"></div>`;
+  const t=$('#rvText');
+  t.oninput=()=>{ const s=detectSvc(t.value); if(s&&s!==RP.svc){ RP.svc=s; document.querySelectorAll('#rvSvc .opt').forEach(o=>o.classList.toggle('on',o.dataset.s===s)); $('#rvKw small').textContent=`"${kwFor(s)}"처럼 지역+서비스를 자연스럽게 넣어요`; } };
+  document.querySelectorAll('#rvSvc .opt').forEach(o=>o.onclick=()=>{ RP.svc=o.dataset.s; document.querySelectorAll('#rvSvc .opt').forEach(x=>x.classList.toggle('on',x===o)); $('#rvKw small').textContent=`"${kwFor(RP.svc)}"처럼 지역+서비스를 자연스럽게 넣어요`; });
+  $('#rvKw').onclick=()=>{ L.kw=!L.kw; saveLocal(); $('#rvKw .sw').classList.toggle('on',L.kw); };
+  $('#rvGo').onclick=genReplies;
+}
+function genReplies(){
+  const text=$('#rvText').value.trim();
+  if(!text){ toast('✍️ 고객 후기를 먼저 붙여넣어 주세요'); $('#rvText').focus(); return; }
+  const res=makeReplies(text,$('#rvName').value.trim(),RP.svc,L.kw);
+  $('#rvOut').innerHTML=`
+    ${res.neg?`<div class="mood bg-red"><span>😥 아쉬운 후기 같아요 — 답글보다 <u>전화 먼저</u> 드리는 게 좋아요</span></div>`:res.mixed?`<div class="mood bg-amber">🤔 칭찬과 아쉬움이 함께 있어요 — 아쉬운 점도 꼭 챙겨주세요</div>`:`<div class="mood bg-green">😊 좋은 후기네요! 마음에 드는 답글을 복사하세요</div>`}
+    ${res.list.map((r,i)=>`<div class="rv fade-in"><div class="no">답글 ${i+1}</div><p>${esc(r)}</p><button class="btn-l bg-green press cp" style="width:100%" data-copy="${i}">📋 복사하기</button></div>`).join('')}
+    <button class="btn-l btn-ghost press" style="width:100%;margin-top:12px" id="rvAgain">🔄 다른 문장으로 다시 만들기</button>`;
+  document.querySelectorAll('[data-copy]').forEach(b=>b.onclick=async()=>{ if(await copyText(res.list[b.dataset.copy])){ toast('📋 복사했어요! 네이버 답글 칸에 붙여넣으세요'); b.textContent='✅ 복사됨'; } });
+  $('#rvAgain').onclick=genReplies;
+  $('#rvOut').scrollIntoView({behavior:'smooth',block:'start'});
+}
+
+/* =========================================================
+   시트(아래에서 올라오는 창)
+   ========================================================= */
+function openSheet(html){
+  const ov=$('#ov'), sh=$('#sheet');
+  sh.innerHTML='<button class="sh-x press" aria-label="닫기" onclick="closeSheet()">✕</button><div class="grab"></div>'+html; sh.scrollTop=0;
+  ov.classList.remove('hide'); requestAnimationFrame(()=>{ ov.classList.add('show'); sh.classList.add('show'); });
+}
+function closeSheet(){ const ov=$('#ov'), sh=$('#sheet'); ov.classList.remove('show'); sh.classList.remove('show'); setTimeout(()=>{ ov.classList.add('hide'); },280); }
+$('#ov').onclick=closeSheet;
+
+/* ---------- 고객 등록/수정 ---------- */
+function openForm(r){
+  const isNew=!r;
+  r=r?Object.assign({},r):{id:uid(),name:'',phone:'',service:'입주청소',branch:S.shared.branches[0].id,staff:L.me||S.shared.staff[0]||'',workDate:todayStr(),receipt:true,referrer:'',referrerPhone:'',memo:'',status:'done',createdAt:now(),log:[]};
+  openSheet(`
+    <div class="sh-t">${isNew?'🧹 작업 완료 등록':'✏️ 고객 정보 수정'}</div>
+    <div class="sh-s">${isNew?'청소가 끝난 고객을 등록하고 바로 후기를 부탁해요':'바꿀 내용을 고친 뒤 저장하세요'}</div>
+    <div class="fld"><label>전화번호 <small>(문자 받을 번호)</small></label><input class="inp" id="fPhone" inputmode="tel" placeholder="010-0000-0000" value="${esc(fmtPhone(r.phone))}"></div>
+    <div class="fld"><label>고객 이름 <small>(선택)</small></label><input class="inp" id="fName" placeholder="예) 김민지 / 노형동 아파트" value="${esc(r.name)}"></div>
+    <div class="fld"><label>서비스</label><div class="opts" id="fSvc">${SERVICES.map(s=>`<button class="opt ${r.service===s?'on':''}" data-v="${s}">${s}</button>`).join('')}</div></div>
+    <div class="fld"><label>지점</label><div class="opts" id="fBr">${S.shared.branches.map(b=>`<button class="opt ${r.branch===b.id?'on':''}" data-v="${b.id}">📍 ${esc(b.name)}</button>`).join('')}</div></div>
+    <div class="fld"><label>담당 직원</label><div class="opts" id="fStaff">${S.shared.staff.map(s=>`<button class="opt ${r.staff===s?'on':''}" data-v="${esc(s)}">${esc(s)}</button>`).join('')}</div></div>
+    <div class="fld"><label>작업 날짜</label><input class="inp" type="date" id="fDate" value="${esc(r.workDate)}"></div>
+    <div class="fld"><div class="toggle" id="fRc"><div class="tt">🧾 영수증 드렸어요<small>카드 영수증·현금영수증이 있어야 네이버 후기 인증이 돼요</small></div><div class="sw ${r.receipt?'on':''}"></div></div></div>
+    <div class="fld"><label>소개해주신 분 <small>(지인 소개 이벤트 · 선택)</small></label>
+      <div style="display:flex;gap:8px"><input class="inp" id="fRef" placeholder="이름" value="${esc(r.referrer)}" style="flex:1"><input class="inp" id="fRefP" inputmode="tel" placeholder="전화번호" value="${esc(fmtPhone(r.referrerPhone))}" style="flex:1.3"></div></div>
+    <div class="fld"><label>메모 <small>(선택)</small></label><input class="inp" id="fMemo" placeholder="예) 34평 · 베란다 곰팡이 심했음" value="${esc(r.memo)}"></div>
+    <button class="btn-main press" id="fSave">${isNew?'등록하고 후기 부탁하기 →':'💾 저장'}</button>
+    ${isNew?'<button class="btn-l btn-ghost press" style="width:100%;margin-top:8px" id="fSaveOnly">등록만 하기 (나중에 보낼게요)</button>':''}
+  `);
+  const bindOpts=(id,key)=>document.querySelectorAll(id+' .opt').forEach(o=>o.onclick=()=>{ r[key]=o.dataset.v; document.querySelectorAll(id+' .opt').forEach(x=>x.classList.toggle('on',x===o)); });
+  bindOpts('#fSvc','service'); bindOpts('#fBr','branch'); bindOpts('#fStaff','staff');
+  $('#fRc').onclick=()=>{ r.receipt=!r.receipt; $('#fRc .sw').classList.toggle('on',r.receipt); };
+  ['#fPhone','#fRefP'].forEach(s=>$(s).oninput=e=>{ e.target.value=fmtPhone(e.target.value); });
+  const collect=()=>{
+    r.phone=$('#fPhone').value.replace(/\D/g,''); r.name=$('#fName').value.trim(); r.workDate=$('#fDate').value||todayStr();
+    r.referrer=$('#fRef').value.trim(); r.referrerPhone=$('#fRefP').value.replace(/\D/g,''); r.memo=$('#fMemo').value.trim();
+    r.branchName=branch(r.branch)?.name||'';
+    if(r.phone.length<9){ toast('📱 전화번호를 확인해주세요'); $('#fPhone').focus(); return false; }
+    return true;
+  };
+  $('#fSave').onclick=()=>{ if(!collect()) return;
+    if(isNew){ touch(r,'작업 완료 등록'); openSend(r.id,'ask'); }
+    else { const old=S.recs[r.id]; Object.assign(old,r); touch(old,'정보 수정'); closeSheet(); toast('💾 저장했어요'); } };
+  if(isNew) $('#fSaveOnly').onclick=()=>{ if(!collect()) return; touch(r,'작업 완료 등록'); closeSheet(); toast('✅ 등록했어요. 홈의 할 일에 있어요'); };
+}
+
+/* ---------- 문자 보내기 ---------- */
+function fill(tpl,r){
+  const link=reviewUrl(r,'naver')||fallbackUrl(r);
+  const map={'{고객님}':r.name?r.name+'님':'고객님','{서비스}':r.service||'청소','{링크}':link,'{선물}':S.shared.reward,'{소개선물}':S.shared.referralReward,'{담당}':r.staff||L.me||S.shared.company,'{전화}':S.shared.phone,'{업체}':S.shared.company,'{소개자}':r.referrer||'소개해주신 분'};
+  return tpl.replace(/\{[^}]+\}/g,m=>m in map?map[m]:m);
+}
+function openSend(id,kind){
+  const r=S.recs[id]; if(!r) return;
+  let k=kind||({done:'ask',asked:'remind',reviewed:'thanks',rewarded:'thanks'}[r.status]);
+  const noLink=!reviewUrl(r,'naver');
+  const draw=()=>{
+    const to=k==='referral'?r.referrerPhone:r.phone;
+    openSheet(`
+      <div class="sh-t">📨 ${k==='referral'?esc(r.referrer||'소개자')+'님께':esc(r.name||fmtPhone(r.phone))+'님께'} 문자</div>
+      <div class="sh-s">${esc(fmtPhone(to))||'전화번호 없음'} · 내용을 고쳐서 보내도 돼요</div>
+      <div class="seg">${Object.keys(TPL_NAME).filter(x=>x!=='referral'||r.referrer).map(x=>`<button class="${x===k?'on':''}" data-k="${x}">${TPL_NAME[x]}</button>`).join('')}</div>
+      ${noLink&&(k==='ask'||k==='remind')?`<div class="link-warn">⚠️ ${esc(branch(r.branch)?.name||'')} 네이버 후기 링크가 아직 없어서 네이버 검색 링크를 넣었어요. <button class="mini-a" data-gosettings="links">설정에서 넣기 ›</button></div>`:''}
+      <div class="preview"><textarea id="sBody">${esc(fill(S.shared.tpl[k],r))}</textarea></div>
+      <button class="btn-main press" id="sSms" style="margin-top:12px">📱 문자 앱으로 보내기</button>
+      <div class="btn-row"><button class="btn-l btn-ghost press" id="sShare">💬 카톡 등 공유</button><button class="btn-l btn-ghost press" id="sCopy">📋 복사</button></div>
+      <p style="font-size:12.5px;color:var(--mut);font-weight:600;text-align:center;margin:12px 0 0">보내기를 누르면 상태가 자동으로 바뀌어요</p>
+    `);
+    document.querySelectorAll('#sheet [data-k]').forEach(b=>b.onclick=()=>{ k=b.dataset.k; draw(); });
+    const done=()=>{
+      if(k==='ask'||k==='remind') advance(r,'asked');
+      else { r.log=r.log||[]; touch(r,TPL_NAME[k]+' 문자 보냄'); }
+    };
+    $('#sSms').onclick=()=>{ if(!to){ toast('전화번호가 없어요'); return; } const body=$('#sBody').value; done(); closeSheet(); location.href=smsLink(to,body); };
+    $('#sShare').onclick=async()=>{ const body=$('#sBody').value;
+      if(navigator.share){ try{ await navigator.share({text:body}); done(); closeSheet(); toast('✅ 보냈어요'); }catch(e){} }
+      else if(await copyText(body)){ done(); closeSheet(); toast('📋 복사했어요. 카톡에 붙여넣으세요'); } };
+    $('#sCopy').onclick=async()=>{ if(await copyText($('#sBody').value)){ done(); closeSheet(); toast('📋 복사했어요'); } };
+  };
+  draw();
+}
+
+/* ---------- 고객 상세 ---------- */
+function openDetail(id){
+  const r=S.recs[id]; if(!r) return;
+  const col=SVC_COLOR[r.service]||'#15805c';
+  openSheet(`
+    <div style="display:flex;gap:12px;align-items:center;margin-bottom:6px">
+      <div class="avatar" style="background:${col};width:54px;height:54px;font-size:22px">${esc(initial(r.name))}</div>
+      <div><div class="sh-t" style="margin:0">${esc(r.name||'이름 없음')}</div><div style="color:var(--mut);font-weight:700">${ST[r.status].icon} ${ST[r.status].t}</div></div>
+    </div>
+    ${stepsHTML(r)}
+    <div class="cust-act" style="margin-bottom:14px">${actionBtns(r)}</div>
+    <div class="card" style="margin-bottom:12px">
+      <dl class="info" style="margin:0">
+        <dt>전화</dt><dd>${esc(fmtPhone(r.phone))}</dd>
+        <dt>서비스</dt><dd>${esc(r.service)}</dd>
+        <dt>지점</dt><dd>${esc(branch(r.branch)?.name||'')}</dd>
+        <dt>담당</dt><dd>${esc(r.staff)}</dd>
+        <dt>작업일</dt><dd>${fmtDate(r.workDate)}</dd>
+        <dt>영수증</dt><dd>${r.receipt?'✅ 드림':'❌ 아직'}</dd>
+        ${r.referrer?`<dt>소개</dt><dd>${esc(r.referrer)} ${esc(fmtPhone(r.referrerPhone))} ${r.referrerRewarded?'· ☕ 선물 완료':'· 선물 전'}</dd>`:''}
+        ${r.memo?`<dt>메모</dt><dd>${esc(r.memo)}</dd>`:''}
+      </dl>
+    </div>
+    <div class="btn-row" style="margin-top:0">
+      <a class="btn-l btn-ghost press" href="tel:${esc(r.phone)}" style="text-decoration:none">📞 전화</a>
+      <button class="btn-l btn-ghost press" data-act="send" data-id="${r.id}">✉️ 문자</button>
+      <button class="btn-l btn-ghost press" id="dEdit">✏️ 수정</button>
+    </div>
+    ${r.referrer&&!r.referrerRewarded?`<button class="btn-l bg-green press" style="width:100%;margin-top:8px" data-act="refgift" data-id="${r.id}">🎁 ${esc(r.referrer)}님께 소개 선물 보냈어요</button>`:''}
+    <div class="sec-t" style="margin-top:18px">🕒 기록</div>
+    <ul class="log" style="padding:0;margin:0">${(r.log||[]).slice().reverse().map(l=>`<li>${esc(l.t)}<small>${fmtDT(l.ts)}${l.by?' · '+esc(l.by):''}</small></li>`).join('')||'<li>기록 없음</li>'}</ul>
+    <div class="btn-row" style="margin-top:16px">
+      ${r.status!=='done'?'<button class="btn-l btn-ghost press" id="dBack">↩️ 한 단계 되돌리기</button>':''}
+      <button class="btn-l bg-red press" id="dDel">🗑️ 삭제</button>
+    </div>
+  `);
+  $('#dEdit').onclick=()=>openForm(r);
+  const back=$('#dBack'); if(back) back.onclick=()=>{ const i=ORDER.indexOf(r.status); r.status=ORDER[i-1]; if(r.status==='done'){r.askedAt=null;r.remindCount=0;r.remindedAt=null;} if(r.status==='asked') r.reviewedAt=null; if(r.status==='reviewed') r.rewardedAt=null; touch(r,'↩️ '+ST[r.status].t+'(으)로 되돌림'); openDetail(r.id); };
+  $('#dDel').onclick=()=>{ if(!confirm('이 고객 기록을 삭제할까요?')) return; r.deleted=true; touch(r,'삭제'); closeSheet(); toast('🗑️ 삭제했어요'); };
+}
+
+/* ---------- 액션 공통 ---------- */
+function doAct(act,id){
+  const r=S.recs[id]; if(!r) return;
+  if(act==='send') return openSend(id);
+  if(act.startsWith('send:')) return openSend(id,act.slice(5));
+  if(act==='reviewed'){ advance(r,'reviewed'); toast('⭐ 후기 확인! 이제 선물을 보내주세요');
+    setTimeout(()=>{
+      openSheet(`<div style="text-align:center;padding:10px 0 4px"><div style="font-size:60px">🎉</div><div class="sh-t">후기 +1 달성!</div><div class="sh-s">${esc(r.name||'고객')}님께 ${esc(S.shared.reward)}을 보내고<br>감사 문자를 보내볼까요?</div></div>
+      <button class="btn-main press" id="gNow">☕ 선물 보냈어요 + 감사 문자</button><button class="btn-l btn-ghost press" style="width:100%;margin-top:8px" id="gLater">나중에 할게요</button>`);
+      $('#gNow').onclick=()=>{ advance(r,'rewarded'); openSend(r.id,'thanks'); };
+      $('#gLater').onclick=closeSheet;
+    },400);
+    return; }
+  if(act==='gift'){ advance(r,'rewarded'); toast('☕ 선물 완료!'); openSend(r.id,'thanks'); return; }
+  if(act==='refgift'){ r.referrerRewarded=true; r.referrerRewardedAt=now(); touch(r,`🎁 소개자 ${r.referrer}님 선물 보냄`); if(r.referrerPhone) openSend(r.id,'referral'); else { closeSheet(); toast('🎁 소개 선물 완료!'); } }
+}
+document.addEventListener('click',e=>{
+  const a=e.target.closest('[data-act]'); if(a){ e.preventDefault(); doAct(a.dataset.act,a.dataset.id); return; }
+  const o=e.target.closest('[data-open]'); if(o){ openDetail(o.dataset.open); return; }
+  const g=e.target.closest('[data-go]'); if(g){ go(g.dataset.go); return; }
+  const f=e.target.closest('[data-filter]'); if(f){ F.st=f.dataset.filter; go('list'); return; }
+  const s=e.target.closest('[data-gosettings]'); if(s){ closeSheet(); go('settings'); setTimeout(()=>{ const el=document.getElementById('set-'+s.dataset.gosettings); if(el) el.scrollIntoView({behavior:'smooth'}); },60); return; }
+});
+
+/* ---------- 사용자 선택 ---------- */
+function pickMe(first){
+  openSheet(`
+    <div style="text-align:center"><img src="logo-sm.png" style="width:70px;height:70px;border-radius:50%;box-shadow:var(--sh)"></div>
+    <div class="sh-t" style="text-align:center;margin-top:10px">${first?'후기부스터에 오신 걸 환영해요! 👋':'누가 쓰고 있나요?'}</div>
+    <div class="sh-s" style="text-align:center">이 폰을 쓰는 사람을 골라주세요.<br>내가 등록한 고객과 후기 성적이 따로 집계돼요.</div>
+    <div class="opts" style="justify-content:center">${S.shared.staff.map(s=>`<button class="opt ${L.me===s?'on':''}" data-me="${esc(s)}" style="padding:14px 18px;font-size:17px">${esc(s)}</button>`).join('')}</div>
+    <div class="fld" style="margin-top:16px"><label>목록에 없으면 이름 입력</label><div style="display:flex;gap:8px"><input class="inp" id="newMe" placeholder="예) 김팀장"><button class="btn-s solid-green press" id="addMe" style="padding:0 18px">추가</button></div></div>
+  `);
+  document.querySelectorAll('[data-me]').forEach(b=>b.onclick=()=>setMe(b.dataset.me));
+  $('#addMe').onclick=()=>{ const v=$('#newMe').value.trim(); if(!v) return; if(!S.shared.staff.includes(v)) setShared(s=>s.staff.push(v)); setMe(v); };
+}
+function setMe(n){ L.me=n; saveLocal(); closeSheet(); renderHeader(); renderAll(); toast(`👋 ${n}님, 반가워요!`); }
+function renderHeader(){
+  $('#meName').textContent=L.me||'사용자 선택'; $('#meAv').textContent=L.me?L.me.charAt(0):'?';
+}
+$('#meChip').onclick=()=>pickMe(false);
+
+/* =========================================================
+   설정
+   ========================================================= */
+function renderSettings(){
+  const s=S.shared;
+  $('#v-settings').innerHTML=`
+    <div style="display:flex;align-items:center;gap:10px;margin:2px 2px 14px"><button class="icon-btn press" style="background:#fff;box-shadow:var(--sh)" data-go="home">←</button><div style="font-size:21px;font-weight:900">⚙️ 설정</div></div>
+
+    <div class="set-g" id="set-links">
+      <h3>🔗 후기 링크</h3>
+      <p class="d">한 번만 넣어두면 문자와 QR에 자동으로 들어가요.</p>
+      <div class="help">
+        <b>네이버 링크 찾는 법</b><br>
+        ① 네이버 지도 앱에서 "링크클린" 검색 → 해당 지점 선택<br>
+        ② <b>공유</b> 버튼 → <b>링크 복사</b> (naver.me/… 주소)<br>
+        ③ 아래 칸에 붙여넣기<br>
+        <span style="color:var(--mut)">※ 스마트플레이스에서 받은 <b>리뷰 QR·리뷰 쓰기 링크</b>가 있으면 그걸 넣는 게 더 좋아요 (고객이 바로 후기 화면으로 가요).</span>
+      </div>
+      ${s.branches.map((b,i)=>`
+        <div class="fld"><label>📍 ${esc(b.name)} 네이버 후기 링크</label><input class="inp" data-burl="${i}" placeholder="https://naver.me/..." value="${esc(b.url)}" inputmode="url"></div>`).join('')}
+      <div class="help" style="margin-top:4px"><b>구글 링크 찾는 법</b><br>구글 비즈니스 프로필 → <b>리뷰 받기</b>(더 많은 리뷰 받기) → 링크 복사</div>
+      <div class="fld"><label>🟢 구글 후기 링크 <small>(선택)</small></label><input class="inp" id="gUrl" placeholder="https://g.page/r/.../review" value="${esc(s.googleUrl)}" inputmode="url"></div>
+      <div class="fld"><label>지점 이름</label><div style="display:flex;gap:8px">${s.branches.map((b,i)=>`<input class="inp" data-bname="${i}" value="${esc(b.name)}">`).join('')}</div></div>
+    </div>
+
+    <div class="set-g" id="set-staff">
+      <h3>👥 직원</h3>
+      <p class="d">담당자 선택과 후기왕 순위에 쓰여요.</p>
+      <div>${s.staff.map((n,i)=>`<span class="staff-chip">${esc(n)}<button data-delstaff="${i}" aria-label="삭제">✕</button></span>`).join('')}</div>
+      <div style="display:flex;gap:8px;margin-top:6px"><input class="inp" id="newStaff" placeholder="직원 이름 추가"><button class="btn-s solid-green press" id="addStaff" style="padding:0 18px">추가</button></div>
+      <div class="toggle press" style="margin-top:12px" id="whoAmI"><div class="tt">🙋 이 폰 사용자: <b>${esc(L.me||'선택 안 함')}</b><small>눌러서 바꾸기</small></div><span>›</span></div>
+    </div>
+
+    <div class="set-g">
+      <h3>🎁 이벤트 · 목표</h3>
+      <div class="fld"><label>후기 감사 선물</label><input class="inp" id="rw" value="${esc(s.reward)}"></div>
+      <div class="fld"><label>지인 소개 감사 선물</label><input class="inp" id="rrw" value="${esc(s.referralReward)}"></div>
+      <div style="display:flex;gap:8px">
+        <div class="fld" style="flex:1"><label>월 후기 목표</label><input class="inp" id="goal" type="number" inputmode="numeric" value="${esc(s.goal)}"></div>
+        <div class="fld" style="flex:1"><label>다시 부탁 (며칠 후)</label><input class="inp" id="rd" type="number" inputmode="numeric" value="${esc(s.remindDays)}"></div>
+      </div>
+      <div style="display:flex;gap:8px">
+        <div class="fld" style="flex:1"><label>업체명</label><input class="inp" id="co" value="${esc(s.company)}"></div>
+        <div class="fld" style="flex:1"><label>대표 전화</label><input class="inp" id="ph" inputmode="tel" value="${esc(s.phone)}"></div>
+      </div>
+    </div>
+
+    <div class="set-g">
+      <h3>✉️ 문자 문구</h3>
+      <p class="d">아래 이름표를 누르면 커서 위치에 들어가요. 보낼 때 자동으로 바뀌어요.</p>
+      <div class="seg" id="tplSeg">${Object.keys(TPL_NAME).map((k,i)=>`<button class="${i?'':'on'}" data-tk="${k}">${TPL_NAME[k]}</button>`).join('')}</div>
+      <textarea class="inp" id="tplTa" style="min-height:260px;font-size:15px"></textarea>
+      <div class="var-chips">${VARS.map(v=>`<button data-var="${v}">${v}</button>`).join('')}</div>
+      <button class="btn-l btn-ghost press" style="width:100%;margin-top:10px" id="tplReset">↺ 이 문구 기본값으로</button>
+    </div>
+
+    <div class="set-g" id="set-sync">
+      <h3>🔄 직원 공유 (구글 시트)</h3>
+      <p class="d">설정하면 모든 직원 폰의 고객·후기 기록이 하나의 구글 시트로 합쳐져요. 안 해도 이 폰에서는 잘 돌아가요.</p>
+      <div class="help">
+        <b>처음 한 번만 (대표님 5분)</b><br>
+        ① 구글 시트 새로 만들기 → <b>확장 프로그램 → Apps Script</b><br>
+        ② 아래 <b>설치 코드 복사</b> → 붙여넣고 저장<br>
+        ③ <b>배포 → 새 배포 → 웹 앱</b>, 액세스 권한 <b>"모든 사용자"</b> → 배포<br>
+        ④ 나온 주소(…/exec)를 아래에 붙여넣기 → 직원 폰에도 똑같이
+      </div>
+      <button class="btn-l bg-green press" style="width:100%;margin-bottom:12px" id="copyGs">📋 설치 코드 복사</button>
+      <div class="fld"><label>웹 앱 주소</label><input class="inp" id="syncUrl" placeholder="https://script.google.com/macros/s/.../exec" value="${esc(L.syncUrl)}" inputmode="url"></div>
+      <div class="fld"><label>팀 암호 <small>(설치 코드의 TEAM_KEY와 같게)</small></label><input class="inp" id="syncKey" value="${esc(L.syncKey)}"></div>
+      <button class="btn-main press" id="syncNow">🔄 지금 동기화</button>
+      <p style="font-size:13px;color:var(--mut);font-weight:600;text-align:center;margin:10px 0 0" id="syncInfo">${L.lastSync?'마지막 동기화: '+fmtDT(L.lastSync):'아직 동기화 안 함'}</p>
+    </div>
+
+    <div class="set-g">
+      <h3>💾 백업</h3>
+      <p class="d">폰을 바꾸거나 혹시 모를 때를 대비해 가끔 백업하세요.</p>
+      <div class="btn-row" style="margin-top:0"><button class="btn-l btn-ghost press" id="bkOut">⬇️ 백업 파일</button><button class="btn-l btn-ghost press" id="bkIn">⬆️ 불러오기</button></div>
+      <button class="btn-l btn-ghost press" style="width:100%;margin-top:8px" id="csvOut">📊 엑셀(CSV)로 내보내기</button>
+      <input type="file" id="bkFile" accept=".json,application/json" class="hide">
+    </div>
+
+    <div class="set-g">
+      <h3>📲 홈 화면에 설치</h3>
+      <p class="d" style="margin:0">${isIOS?'사파리 아래쪽 <b>공유 버튼(□↑)</b> → <b>홈 화면에 추가</b>':'크롬 오른쪽 위 <b>⋮</b> → <b>홈 화면에 추가</b> 또는 <b>앱 설치</b>'}를 누르면 앱처럼 쓸 수 있어요.</p>
+    </div>
+    <p style="text-align:center;color:var(--mut);font-size:12px;font-weight:600">링크클린 후기부스터 v1.0</p>
+  `;
+  const ch=(sel,fn)=>{ const el=$(sel); if(el) el.onchange=e=>fn(e.target.value.trim()); };
+  document.querySelectorAll('[data-burl]').forEach(el=>el.onchange=()=>{ const v=el.value.trim(); setShared(s=>s.branches[+el.dataset.burl].url=v); toast('🔗 저장했어요'); });
+  document.querySelectorAll('[data-bname]').forEach(el=>el.onchange=()=>{ const v=el.value.trim()||'지점'; setShared(s=>s.branches[+el.dataset.bname].name=v); renderSettings(); });
+  ch('#gUrl',v=>{ setShared(s=>s.googleUrl=v); toast('🔗 저장했어요'); });
+  ch('#rw',v=>setShared(s=>s.reward=v||'감사 선물'));
+  ch('#rrw',v=>setShared(s=>s.referralReward=v||'감사 선물'));
+  ch('#goal',v=>setShared(s=>s.goal=Math.max(1,parseInt(v)||15)));
+  ch('#rd',v=>setShared(s=>s.remindDays=Math.max(1,parseInt(v)||2)));
+  ch('#co',v=>setShared(s=>s.company=v||'링크클린'));
+  ch('#ph',v=>setShared(s=>s.phone=v));
+  document.querySelectorAll('[data-delstaff]').forEach(b=>b.onclick=()=>{ const n=s.staff[+b.dataset.delstaff]; if(!confirm(n+' 님을 목록에서 뺄까요?')) return; setShared(x=>x.staff.splice(+b.dataset.delstaff,1)); renderSettings(); });
+  $('#addStaff').onclick=()=>{ const v=$('#newStaff').value.trim(); if(!v||s.staff.includes(v)) return; setShared(x=>x.staff.push(v)); renderSettings(); };
+  $('#whoAmI').onclick=()=>pickMe(false);
+  // 템플릿
+  let tk='ask'; const ta=$('#tplTa'); ta.value=s.tpl[tk];
+  document.querySelectorAll('[data-tk]').forEach(b=>b.onclick=()=>{ tk=b.dataset.tk; ta.value=S.shared.tpl[tk]; document.querySelectorAll('[data-tk]').forEach(x=>x.classList.toggle('on',x===b)); });
+  ta.onchange=()=>{ setShared(x=>x.tpl[tk]=ta.value); toast('✉️ 문구 저장'); };
+  document.querySelectorAll('[data-var]').forEach(b=>b.onclick=()=>{ const v=b.dataset.var, p=ta.selectionStart||ta.value.length; ta.value=ta.value.slice(0,p)+v+ta.value.slice(ta.selectionEnd||p); ta.focus(); ta.setSelectionRange(p+v.length,p+v.length); setShared(x=>x.tpl[tk]=ta.value); });
+  $('#tplReset').onclick=()=>{ if(!confirm('기본 문구로 되돌릴까요?')) return; ta.value=DEFAULT_TPL[tk]; setShared(x=>x.tpl[tk]=DEFAULT_TPL[tk]); toast('↺ 되돌렸어요'); };
+  // 동기화
+  $('#syncUrl').onchange=e=>{ L.syncUrl=e.target.value.trim(); saveLocal(); };
+  $('#syncKey').onchange=e=>{ L.syncKey=e.target.value.trim(); saveLocal(); };
+  $('#syncNow').onclick=()=>{ L.syncUrl=$('#syncUrl').value.trim(); L.syncKey=$('#syncKey').value.trim(); saveLocal(); if(!L.syncUrl){ toast('웹 앱 주소를 먼저 넣어주세요'); return; } sync(true); };
+  $('#copyGs').onclick=async()=>{ try{ const t=await (await fetch('sync-apps-script.gs',{cache:'no-store'})).text(); if(await copyText(t)) toast('📋 설치 코드를 복사했어요'); }catch(e){ toast('복사 실패 — 인터넷 연결을 확인해주세요'); } };
+  // 백업
+  $('#bkOut').onclick=()=>{ const blob=new Blob([JSON.stringify({app:'review-booster',v:1,at:now(),shared:S.shared,recs:S.recs},null,1)],{type:'application/json'}); const a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download=`후기부스터_백업_${todayStr()}.json`; a.click(); };
+  $('#bkIn').onclick=()=>$('#bkFile').click();
+  $('#bkFile').onchange=async e=>{ const f=e.target.files[0]; if(!f) return; try{ const d=JSON.parse(await f.text()); if(!d.recs) throw 0; let n=0; Object.values(d.recs).forEach(r=>{ const l=S.recs[r.id]; if(!l||(r.updatedAt||0)>(l.updatedAt||0)){ S.recs[r.id]=r; S.dirty[r.id]=1; n++; } }); if(d.shared&&(d.shared.updatedAt||0)>(S.shared.updatedAt||0)){ S.shared=Object.assign(defShared(),d.shared); S.sharedDirty=true; } save(); renderAll(); toast(`⬆️ ${n}건 불러왔어요`); scheduleSync(); }catch(_){ toast('⚠️ 백업 파일이 아니에요'); } };
+  $('#csvOut').onclick=()=>{
+    const head=['이름','전화','서비스','지점','담당','작업일','상태','요청일','후기일','선물일','소개자','영수증','메모'];
+    const d=t=>t?new Date(t).toLocaleDateString('ko-KR'):'';
+    const rows=recs().map(r=>[r.name,fmtPhone(r.phone),r.service,branch(r.branch)?.name,r.staff,r.workDate,ST[r.status].t,d(r.askedAt),d(r.reviewedAt),d(r.rewardedAt),r.referrer,r.receipt?'O':'X',r.memo]);
+    const csv='﻿'+[head,...rows].map(r=>r.map(v=>`"${String(v==null?'':v).replace(/"/g,'""')}"`).join(',')).join('\n');
+    const a=document.createElement('a'); a.href=URL.createObjectURL(new Blob([csv],{type:'text/csv'})); a.download=`후기부스터_${todayStr()}.csv`; a.click();
+  };
+}
+
+/* =========================================================
+   구글 시트 동기화
+   ========================================================= */
+let syncT=null, syncing=false;
+function setDot(st){ $('#syncDot').className='sync-dot '+(st||''); }
+function scheduleSync(){ if(!L.syncUrl) return; clearTimeout(syncT); syncT=setTimeout(()=>sync(false),1500); }
+async function sync(manual){
+  if(!L.syncUrl||syncing){ if(manual&&!L.syncUrl) toast('설정 → 직원 공유에서 주소를 넣어주세요'); return; }
+  syncing=true; setDot('ing');
+  const ids=Object.keys(S.dirty);
+  const out=ids.map(id=>S.recs[id]).filter(Boolean);
+  if(S.sharedDirty) out.push({id:'__settings',updatedAt:S.shared.updatedAt,shared:S.shared});
+  try{
+    const res=await fetch(L.syncUrl,{method:'POST',body:JSON.stringify({key:L.syncKey,records:out})});
+    const j=await res.json();
+    if(!j.ok) throw new Error(j.error==='key'?'팀 암호가 달라요':'응답 오류');
+    ids.forEach(id=>{ if(S.recs[id]&&S.recs[id].updatedAt<=((out.find(o=>o.id===id)||{}).updatedAt||0)) delete S.dirty[id]; });
+    S.sharedDirty=false;
+    let changed=0;
+    (j.records||[]).forEach(r=>{
+      if(!r||!r.id) return;
+      if(r.id==='__settings'){ if((r.updatedAt||0)>(S.shared.updatedAt||0)&&r.shared){ S.shared=Object.assign(defShared(),r.shared); S.shared.tpl=Object.assign({},DEFAULT_TPL,r.shared.tpl||{}); changed++; } return; }
+      const l=S.recs[r.id]; if(!l||(r.updatedAt||0)>(l.updatedAt||0)){ S.recs[r.id]=r; changed++; }
+    });
+    L.lastSync=now(); saveLocal(); save(); setDot('ok');
+    if(changed&&!$('#sheet').classList.contains('show')) renderAll();
+    const si=$('#syncInfo'); if(si) si.textContent='마지막 동기화: '+fmtDT(L.lastSync);
+    if(manual) toast(`🔄 동기화 완료${changed?` (${changed}건 받음)`:''}`);
+  }catch(e){ setDot('err'); if(manual) toast('⚠️ 동기화 실패: '+(e.message||'주소를 확인해주세요')); }
+  syncing=false;
+}
+$('#btnSync').onclick=()=>{ if(!L.syncUrl){ go('settings'); setTimeout(()=>$('#set-sync').scrollIntoView({behavior:'smooth'}),60); toast('직원끼리 공유하려면 여기서 설정해요'); } else sync(true); };
+document.addEventListener('visibilitychange',()=>{ if(document.visibilityState==='visible') sync(false); });
+setInterval(()=>{ if(document.visibilityState==='visible') sync(false); },60000);
+
+/* =========================================================
+   화면 전환
+   ========================================================= */
+let VIEW='home';
+function go(v){
+  VIEW=v;
+  document.querySelectorAll('.view').forEach(m=>m.classList.toggle('hide',m.id!=='v-'+v));
+  document.querySelectorAll('.nav-b').forEach(b=>b.classList.toggle('on',b.dataset.go===v));
+  if(v==='settings') renderSettings();
+  if(v==='reply'&&!$('#v-reply').innerHTML) renderReply();
+  if(v==='list') renderList();
+  if(v==='qr') renderQR();
+  if(v==='home') renderHome();
+  window.scrollTo({top:0});
+}
+function renderAll(){
+  if(VIEW==='home') renderHome();
+  if(VIEW==='list') renderList();
+  if(VIEW==='qr') renderQR();
+}
+$('#fab').onclick=()=>openForm();
+$('#btnSettings').onclick=()=>go(VIEW==='settings'?'home':'settings');
+
+/* =========================================================
+   축하 꽃가루
+   ========================================================= */
+function confetti(){
+  const c=$('#confetti'), x=c.getContext('2d'); c.width=innerWidth; c.height=innerHeight;
+  const cols=['#fbb024','#1c9e70','#ffd36b','#e8692c','#2f7cf6','#ffffff'];
+  const P=Array.from({length:140},()=>({x:innerWidth/2+(Math.random()-.5)*80,y:innerHeight*.42,vx:(Math.random()-.5)*14,vy:-Math.random()*15-5,r:Math.random()*7+4,c:cols[Math.random()*cols.length|0],a:Math.random()*6,s:Math.random()<.3}));
+  let f=0; (function tick(){ x.clearRect(0,0,c.width,c.height); P.forEach(p=>{ p.vy+=.45; p.vx*=.99; p.x+=p.vx; p.y+=p.vy; p.a+=.15; x.save(); x.translate(p.x,p.y); x.rotate(p.a); x.fillStyle=p.c;
+    if(p.s){ x.beginPath(); for(let i=0;i<10;i++){ const R=i%2?p.r*.45:p.r; x.lineTo(R*Math.cos(i*Math.PI/5),R*Math.sin(i*Math.PI/5)); } x.fill(); } else x.fillRect(-p.r/2,-p.r/4,p.r,p.r/2);
+    x.restore(); }); if(++f<130) requestAnimationFrame(tick); else x.clearRect(0,0,c.width,c.height); })();
+}
+
+/* =========================================================
+   시작
+   ========================================================= */
+renderHeader(); go('home');
+if(!L.me) setTimeout(()=>pickMe(true),350);
+if(L.syncUrl) sync(false);
+if('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js').catch(()=>{});
+</script>
+</body>
+</html>
