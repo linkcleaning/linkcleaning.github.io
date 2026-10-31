@@ -766,11 +766,14 @@ $('phone').addEventListener('input', e => {
   // 번호를 다 넣으면(휴대폰 11자리) 자판 자동으로 내리기
   if (digits(e.target.value).length >= 11) e.target.blur();
 });
-// 화면을 내리면(스크롤) 번호 자판 닫기
+// 화면을 내리면(스크롤) 열려있는 자판 닫기 (번호·예약 정보 등 모든 입력칸)
 let _scrollT;
 window.addEventListener('scroll', () => {
   clearTimeout(_scrollT);
-  _scrollT = setTimeout(() => { if (document.activeElement === $('phone')) $('phone').blur(); }, 80);
+  _scrollT = setTimeout(() => {
+    const a = document.activeElement;
+    if (a && (a.tagName === 'INPUT' || a.tagName === 'TEXTAREA') && a.type !== 'date' && a.type !== 'time') a.blur();
+  }, 80);
 }, { passive: true });
 const clearPhone = () => { $('phone').value = ''; checkPhone(); toast('🧹 번호를 지웠어요'); vib(); };
 $('btnClear').onclick = clearPhone; $('btnClearX').onclick = clearPhone;
