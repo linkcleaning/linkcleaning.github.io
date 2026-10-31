@@ -621,12 +621,18 @@ function renderSendImgs() {
   const cardMode = isCardTpl(curTpl());
   ['draft', 'charInfo'].forEach(id => $(id) && $(id).classList.toggle('hidden', cardMode));
   if (cardMode) {
-    $('btnRestore').classList.add('hidden'); $('sendImgsLabel').classList.add('hidden');
+    $('btnRestore').classList.add('hidden'); $('sendImgsLabel').classList.add('hidden'); $('sendImgs').classList.remove('hidden');
     $('sendImgs').innerHTML = `<div class="w-full"><p class="mb-2 rounded-xl bg-brand-50 px-3 py-2 text-[14px] font-bold text-brand-700 ring-1 ring-brand-200">📇 예약 문자는 이 카드 사진 한 장만 보내요<br><span class="font-medium">위 예약 정보를 입력하면 카드에 바로 들어가요</span></p>
-      <img id="cardPrev" class="w-full rounded-2xl ring-1 ring-slate-200" src="${_card.url || ''}" alt="예약 카드"/></div>`;
+      <img id="cardPrev" class="w-full rounded-2xl ring-1 ring-slate-200" style="-webkit-touch-callout:none;-webkit-user-select:none;user-select:none;pointer-events:none" src="${_card.url || ''}" alt="예약 카드"/></div>`;
+    // 카드는 보낼 게 한 가지뿐 → 버튼 하나만
+    $('btnShareAll').classList.add('hidden');
+    $('btnSms').classList.remove('mb-2');
+    $('btnSms').innerHTML = '📇 예약 카드 보내기';
     renderCardPreview();
     return;
   }
+  // 일반 문자 버튼 라벨 원복
+  $('btnSms').innerHTML = '💬 문자만 보내기 <span class="rounded-full bg-white/25 px-2 py-0.5 text-[12px]">글만</span>';
   const imgs = tplImgs(curTpl());
   if (pickedImg >= imgs.length) pickedImg = 0;
   $('sendImgsLabel').classList.toggle('hidden', imgs.length < 2);
@@ -638,6 +644,11 @@ function renderSendImgs() {
           ${on ? '<span class="absolute inset-x-0 bottom-0 bg-brand-600 py-0.5 text-center text-[11px] font-bold text-white">보낼 사진</span>' : ''}</button>`;
       }).join('')
     : `<button data-goto-edit="1" class="flex h-20 w-full items-center justify-center rounded-xl border-2 border-dashed border-slate-300 text-[13px] font-semibold text-slate-400">📷 이 문자에 사진이 없어요 · 눌러서 추가</button>`;
+  // 사진이 없는 문자에서는 '사진+문자 보내기'를 숨기고 문자 버튼만 크게
+  const hasImg = imgs.length > 0;
+  $('sendImgs').classList.remove('hidden');
+  $('btnShareAll').classList.toggle('hidden', !hasImg);
+  $('btnSms').classList.toggle('mb-2', hasImg);
   prebuildPicked();
 }
 const pickedImgUrl = () => { const imgs = tplImgs(curTpl()); return imgs[pickedImg] || imgs[0]; };
