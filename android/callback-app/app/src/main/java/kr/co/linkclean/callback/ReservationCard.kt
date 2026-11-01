@@ -69,7 +69,7 @@ object ReservationCard {
         cv.drawText("예금주 링크클린", W - 110f, 1258f, p(0xFF475569.toInt(), 36f, true, Paint.Align.RIGHT))
 
         cv.drawText("입금 확인 후 예약이 확정됩니다", W / 2f, 1345f, p(0xFF334155.toInt(), 34f, true, Paint.Align.CENTER))
-        cv.drawText("정확한 주소(동·호수)를 문자로 남겨주세요 · 064-763-4545", W / 2f, 1400f, p(0xFF64748B.toInt(), 30f, true, Paint.Align.CENTER))
+        cv.drawText("정확한 주소(동·호수)를 문자로 남겨주세요 · 010-7161-1144", W / 2f, 1400f, p(0xFF64748B.toInt(), 30f, true, Paint.Align.CENTER))
         return bmp
     }
 
@@ -116,7 +116,7 @@ object ReservationCard {
         cv.drawText("링크클린", W - 110f, 910f, p(0xFF0F172A.toInt(), 46f, Paint.Align.RIGHT))
 
         cv.drawText("입금 후 문자로 알려주시면 바로 확인해 드립니다", W / 2f, 1025f, p(0xFF334155.toInt(), 34f, Paint.Align.CENTER))
-        cv.drawText("링크클린 · 064-763-4545", W / 2f, 1075f, p(0xFF64748B.toInt(), 30f, Paint.Align.CENTER))
+        cv.drawText("링크클린 · 010-7161-1144", W / 2f, 1075f, p(0xFF64748B.toInt(), 30f, Paint.Align.CENTER))
         return bmp
     }
 

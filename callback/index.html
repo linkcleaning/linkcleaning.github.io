@@ -618,7 +618,7 @@ async function drawReservationCard() {
   x.fillStyle = '#0f172a'; x.font = F(46); x.fillText('토스뱅크 1000-1626-3066', 110, 1258);
   x.textAlign = 'right'; x.fillStyle = '#475569'; x.font = F(36); x.fillText('예금주 링크클린', 970, 1258);
   x.textAlign = 'center'; x.fillStyle = '#334155'; x.font = F(34); x.fillText('입금 확인 후 예약이 확정됩니다', 540, 1345);
-  x.fillStyle = '#64748b'; x.font = F(30); x.fillText('정확한 주소(동·호수)를 문자로 남겨주세요', 540, 1400);
+  x.fillStyle = '#64748b'; x.font = F(30); x.fillText('정확한 주소(동·호수)를 문자로 남겨주세요 · 010-7161-1144', 540, 1400);
   return new Promise((res, rej) => c.toBlob(b => b ? res(b) : rej(), 'image/png'));
 }
 const isAccountTpl = t => t && t.id === 't_account';
@@ -646,7 +646,7 @@ async function drawAccountCard() {
   x.textAlign = 'left'; x.fillStyle = '#64748b'; x.font = F(38); x.fillText('예금주', 110, 910);
   x.textAlign = 'right'; x.fillStyle = '#0f172a'; x.font = F(46); x.fillText('링크클린', 970, 910);
   x.textAlign = 'center'; x.fillStyle = '#334155'; x.font = F(34); x.fillText('입금 후 문자로 알려주시면 바로 확인해 드립니다', 540, 1025);
-  x.fillStyle = '#64748b'; x.font = F(30); x.fillText('링크클린 · 064-763-4545', 540, 1075);
+  x.fillStyle = '#64748b'; x.font = F(30); x.fillText('링크클린 · 010-7161-1144', 540, 1075);
   return new Promise((res, rej) => c.toBlob(b => b ? res(b) : rej(), 'image/png'));
 }
 async function accountBlob() {
