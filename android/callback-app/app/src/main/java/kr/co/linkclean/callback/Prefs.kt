@@ -94,7 +94,7 @@ https://www.instagram.com/linkcleaning
     const val DEFAULT_SUBJECT = ""  // 제목 없음
     const val MAX_IMAGES = 3
     private const val KEY_SEED_VER = "seed_ver"
-    private const val SEED_VER = 12
+    private const val SEED_VER = 13
 
     const val KEY_ENABLED = "enabled"
     const val KEY_MESSAGE = "message"
@@ -279,6 +279,10 @@ https://www.instagram.com/linkcleaning
         if (sp.getInt(KEY_SEED_VER, 0) < 12 && sp.getString(Templates.KEY, null) != null) {
             val olds = setOf(Templates.CONTRACT_V2, Templates.CONTRACT_OLD)
             Templates.save(c, Templates.load(c).map { if (it.id == "t_contract" && it.body.trim() in olds) it.copy(body = Templates.CONTRACT, title = "") else it })
+        }
+        // v13: 예금주를 링크클린으로
+        if (sp.getInt(KEY_SEED_VER, 0) < 13 && sp.getString(Templates.KEY, null) != null) {
+            Templates.save(c, Templates.load(c).map { it.copy(body = Templates.fixDepositor(it.body)) })
         }
         sp.edit().putInt(KEY_SEED_VER, SEED_VER).commit()
     }

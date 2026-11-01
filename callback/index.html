@@ -278,7 +278,7 @@ const DEFAULT_TEMPLATES = () => [
   { id:'t_miss', icon:'⏳', name:'부재중 안내', type:'부재중', title:'링크클린', sign:true, imgs:[],
     body:'안녕하세요, 링크클린입니다. 현재 현장 작업 중이라 전화를 받지 못했습니다. 문의주신 내용을 문자로 남겨주시면 작업 종료 후 가장 먼저 연락드리겠습니다. 감사합니다!' },
   { id:'t_contract', icon:'🤝', name:'계약 확정', type:'기타', title:'링크클린', sign:false, useCommon:false, imgs:[],
-    body:`[링크클린]\n\n안녕하세요, 제주 청소 전문 "링크클린"입니다.\n소중한 인연을 맺어주셔서 진심으로 감사드립니다. 🙏\n\n${LINE}\n📅 청소 일정 : {청소날짜}\n⏰ 도착 시간 : {도착시간}경\n💰 청소 비용 : {청소비용}\n💳 계약금 : {계약금}\n${LINE}\n\n🏦 계약금 입금 계좌\n토스뱅크 1000-1626-3066\n예금주 : 한승우\n\n✔ 계약금 입금이 확인되면 예약이 최종 확정됩니다.\n✔ 정확한 주소와 동·호수를 문자로 남겨주세요.\n✔ 현관 비밀번호가 있다면 함께 알려주시면 편리합니다.\n\n깨끗한 공간으로 보답하겠습니다. 감사합니다!\n📞 064-763-4545` },
+    body:`[링크클린]\n\n안녕하세요, 제주 청소 전문 "링크클린"입니다.\n소중한 인연을 맺어주셔서 진심으로 감사드립니다. 🙏\n\n${LINE}\n📅 청소 일정 : {청소날짜}\n⏰ 도착 시간 : {도착시간}경\n💰 청소 비용 : {청소비용}\n💳 계약금 : {계약금}\n${LINE}\n\n🏦 계약금 입금 계좌\n토스뱅크 1000-1626-3066\n예금주 : 링크클린\n\n✔ 계약금 입금이 확인되면 예약이 최종 확정됩니다.\n✔ 정확한 주소와 동·호수를 문자로 남겨주세요.\n✔ 현관 비밀번호가 있다면 함께 알려주시면 편리합니다.\n\n깨끗한 공간으로 보답하겠습니다. 감사합니다!\n📞 064-763-4545` },
 ];
 const TYPES = ['수신','발신','부재중','기타'];
 const TYPE_COLOR = { '수신':'text-brand-700 bg-brand-50', '발신':'text-emerald-700 bg-emerald-50', '부재중':'text-red-600 bg-red-50', '기타':'text-slate-600 bg-slate-100' };
@@ -346,7 +346,7 @@ async function loadImgs() {
   } catch (e) {}
 }
 // 기본 홍보 사진 넣기 (버전이 오르면 한 번만 다시 적용)
-const SEED_V = 7;
+const SEED_V = 8;
 const COMMON_DEFAULT = ['img_thanks','img_services','img_waste'];
 const PROMO = { img_thanks:'promo/thanks.jpg', img_services:'promo/services.jpg', img_move:'promo/move.jpg', img_waste:'promo/waste.jpg' };
 const PROMO_MAP = { t_in:['img_thanks','img_services'], t_out:['img_thanks','img_services'], t_miss:['img_services'], t_move:['img_move'], t_waste:['img_waste'] };
@@ -387,6 +387,8 @@ async function seedPromo() {
       const t = S.templates.find(x => x.id === 't_in');
       if (t && t.body.includes('pf.kakao.com')) t.body = DEFAULT_TEMPLATES().find(x => x.id === 't_in').body;
     }
+    // v8: 예금주를 링크클린으로
+    if ((S.seedV || 0) < 8) S.templates.forEach(t => { t.body = t.body.replace(/예금주 : 한승우/g, '예금주 : 링크클린').replace(/예금주 한승우/g, '예금주 링크클린').replace(/3066 \(한승우\)/g, '3066 (링크클린)'); });
     S.seedV = SEED_V; save(); cleanupImgs();
   } catch (e) {}
 }
@@ -612,7 +614,7 @@ async function drawReservationCard() {
   x.fillStyle = '#fffbeb'; rr(60, 1140, 1020, 1290, 32); x.fill(); x.strokeStyle = '#fcd34d'; x.lineWidth = 4; x.stroke();
   x.textAlign = 'left'; x.fillStyle = '#92400e'; x.font = F(34); x.fillText('계약금 입금 계좌', 110, 1198);
   x.fillStyle = '#0f172a'; x.font = F(46); x.fillText('토스뱅크 1000-1626-3066', 110, 1258);
-  x.textAlign = 'right'; x.fillStyle = '#475569'; x.font = F(36); x.fillText('예금주 한승우', 970, 1258);
+  x.textAlign = 'right'; x.fillStyle = '#475569'; x.font = F(36); x.fillText('예금주 링크클린', 970, 1258);
   x.textAlign = 'center'; x.fillStyle = '#334155'; x.font = F(34); x.fillText('입금 확인 후 예약이 확정됩니다', 540, 1345);
   x.fillStyle = '#64748b'; x.font = F(30); x.fillText('정확한 주소(동·호수)를 문자로 남겨주세요', 540, 1400);
   return new Promise((res, rej) => c.toBlob(b => b ? res(b) : rej(), 'image/png'));
