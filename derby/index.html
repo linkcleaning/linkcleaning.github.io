@@ -1488,6 +1488,25 @@ function MiniHorse({h,w=150,hgt=96}){
 }
 
 /* ---------------- 패독 & 예상지 ---------------- */
+/* ---------------- 출전마·기수 프로필 (출전표용 재미 요소) ---------------- */
+const PROFILES = {
+  '하나토탈이': { tag:'만능 청소기', horse:'어떤 주로든 싹 쓸고 지나가는 올라운더. 지나간 자리엔 먼지 한 톨 안 남는다는 전설이 있다.', jockey:'코너에서 절대 흔들리지 않는 "정리정돈" 기승. 대열 정리가 특기.' },
+  '링크돌이':   { tag:'간판 스타', horse:'링크클린의 간판 말. 막판 스퍼트 때는 대걸레질하듯 주로를 쓸어버린다.', jockey:'구단주 겸 기수. 12년 현장 경험에서 나오는 노련한 페이스 조절.' },
+  '기훈짱':     { tag:'자신감 100%', horse:'이름부터 짱. 게이트만 열리면 "내가 1등"이라고 믿고 달린다.', jockey:'거침없는 직진 본능. 채찍보다 관중 응원에 더 힘이 나는 스타일.' },
+  '링크순이':   { tag:'꼼꼼 마스터', horse:'링크돌이의 단짝. 섬세한 발놀림 덕에 진흙 주로에서도 털끝 하나 안 젖는다.', jockey:'꼼꼼함의 대명사. 작은 틈도 놓치지 않는 진로 선택이 장기.' },
+  '핑크공주':   { tag:'경마장 아이돌', horse:'관중석 인기 투표 1위. 결승선보다 카메라를 먼저 찾는다는 소문이 있다.', jockey:'밝은 에너지로 말과 호흡이 척척. 미소 한 번에 말이 반 마신 더 간다?' },
+  '리턴팩토리': { tag:'역전 공장', horse:'한 번 뒤처져도 반드시 돌아온다! 역전 드라마를 찍어내는 귀환 전문가.', jockey:'끝까지 포기하지 않는 뚝심. 최후미에서 웃는 기수.' },
+  '까스돌이':   { tag:'연료 만땅', horse:'가스 충전만 끝나면 폭발적으로 가속하는 터보 엔진 탑재 말.', jockey:'맹렬하게 길을 여는 돌파형. 막히면 뚫고, 안 막히면 더 빨리.' },
+  '크림어스':   { tag:'달콤한 준마', horse:'광안리 크리머스에서 자란 디저트계 명마. 생크림처럼 부드러운 주법이 일품.', jockey:'섬세한 손놀림으로 케이크 마무리하듯 깔끔하게 결승선을 장식한다.' },
+};
+function horseTalk(h,S){
+  const r=seeded(S.raceNo*131+h.no*17+3), pk=a=>a[Math.floor(r()*a.length)];
+  const cond={5:['오늘 아침 당근 다섯 개 완식! 컨디션 최상!','조교에서 역대 최고 기록. 마구간이 술렁인다.'],4:['몸이 가볍다며 조교사가 엄지척.','털에 윤기가 좌르르, 기대해 볼 만하다.'],3:['평소와 다름없는 표정. 무난한 출발 예상.','밥은 잘 먹었는데 말수가 적다(?).'],2:['어젯밤 잠을 좀 설쳤다는 소문…','조교 시간에 하품을 세 번 했다고 한다.'],1:['오늘은 영 기분이 별로인 듯. 고집을 부리는 중.','마구간 담당자 왈: "오늘은 쉬고 싶은 눈치예요."']}[h.cond];
+  const sty={'도주':['초반에 못 잡으면 그대로 끝. 출발을 주목!','앞에서 끌고 가야 마음이 편한 성격.'],'선행':['선두 바로 뒤가 명당. 기회만 오면 치고 나간다.','2~3번째 자리에서 숨을 고르는 영리한 타입.'],'선입':['중단에서 힘을 아끼다 직선에서 승부!','무리하지 않고 꾸준히 따라가는 실속파.'],'추입':['마지막 200m를 노려라. 불꽃 추입 주의보!','뒤에서 웃는 자가 진짜 승자라고 믿는다.']}[h.style];
+  const wx={'비':['비 오는 날이면 신이 나는 진흙 마니아.','빗소리에 살짝 예민해지는 편.'],'야간':['조명 아래서 더 빛나는 야행성 체질.','밤 경주는 조금 졸리다나.'],'노을':['노을빛에 갈기가 반짝반짝.','해 질 녘이면 감성이 충만해진다.'],'흐림':['흐린 날씨가 오히려 시원해서 좋단다.','구름 낀 하늘처럼 속을 알 수 없는 오늘.'],'맑음':['햇볕을 받으면 힘이 솟는 광합성 체질(?).','맑은 날엔 기록이 잘 나오는 편.']}[S.weather]||[''];
+  return pk([pk(cond),pk(sty),pk(wx),pk(cond)]);
+}
+
 function HorseCard({h,setup,selected,onPick,type}){
   const ci=COND_INFO[h.cond]; const wo=setup.odds.win[h.no], po=setup.odds.place[h.no];
   const pop=setup.pop[h.no], mark=setup.marks[h.no];
@@ -1526,7 +1545,13 @@ function HorseCard({h,setup,selected,onPick,type}){
               </div>
             </div>
           </div>
-          <div className="flex items-center gap-1 mt-1 text-[11px] text-blue-200/80">
+          {(()=>{ const pf=PROFILES[h.name]; const talk=horseTalk(h,setup); return (
+            <div className="mt-1.5 rounded-xl bg-black/25 px-2.5 py-2 space-y-1 text-[12px] leading-snug">
+              {pf && <div><span className="inline-block mr-1 px-1.5 rounded bg-yellow-400/20 text-yellow-200 text-[10px] font-black align-middle">{pf.tag}</span><span className="text-blue-50/90">🐎 {pf.horse}</span></div>}
+              {pf && <div className="text-blue-100/80">🏇 <b className="text-white">{h.jockey}</b> 기수 — {pf.jockey}</div>}
+              <div className="text-amber-200/90">💬 오늘의 한마디: {talk}</div>
+            </div>); })()}
+          <div className="flex items-center gap-1 mt-1.5 text-[11px] text-blue-200/80">
             최근 5전
             {h.recent.map((r,i)=><span key={i} className={`w-5 h-5 inline-flex items-center justify-center rounded font-bold ${r===1?'bg-yellow-400 text-black':r===2?'bg-slate-300 text-black':r===3?'bg-amber-700 text-white':'bg-white/10'}`}>{r}</span>)}
           </div>
