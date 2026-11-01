@@ -1829,7 +1829,7 @@ function QuinMatrix({setup,sel,onPair}){
   );
 }
 
-function Paddock({setup,credit,bets,setBets,onStart,onQuiz,onRps,onEvent,evLabel,onOwner,stable,barn,history,stats,daily,setDaily,onCredit}){
+function Paddock({setup,credit,bets,setBets,onStart,onQuiz,onRps,onLeague,onEvent,evLabel,onOwner,stable,barn,history,stats,daily,setDaily,onCredit}){
   const [tab,setTab]=useState('card');
   const [type,setType]=useState('WIN');
   const [sel,setSel]=useState([]);
@@ -1927,6 +1927,7 @@ function Paddock({setup,credit,bets,setBets,onStart,onQuiz,onRps,onEvent,evLabel
       </div>
       <button onClick={()=>{Sound.init();Sound.click();onRps&&onRps();}} className="w-full mt-1.5 rounded-xl py-2 flex items-center justify-center gap-2 text-[13px] font-black" style={{background:'linear-gradient(90deg,#111,#1e293b,#111)',border:'2px solid #2563eb',boxShadow:'0 0 10px rgba(37,99,235,.5)'}}>
         <span>✌️✊✋</span><span className="text-yellow-300">짱켐보이</span><span className="text-[10.5px] text-blue-200/80 font-bold">🪙 1판 10 CR · 도전 or 스톱</span></button>
+      <button onClick={()=>{Sound.init();Sound.click();onLeague&&onLeague();}} className="w-full mt-1.5 rounded-xl py-1.5 flex items-center justify-center gap-2 text-[13px] font-black bg-gradient-to-r from-amber-500/30 to-yellow-400/20" style={{border:'1px solid rgba(255,212,59,.45)'}}>🏆 8인 크레딧 순위 <span className="text-[10.5px] text-yellow-100/80 font-bold">누가 1등?</span></button>
       {/* 탭: 출전표 / 마권 구매 */}
       <div className="sticky top-[52px] z-20 mt-2 -mx-3 px-3 py-1.5 bg-[#070d1f]/90 backdrop-blur">
         <div className="grid grid-cols-2 gap-1 p-1 rounded-2xl bg-white/5">
@@ -2531,6 +2532,55 @@ function TicketConfirm({setup,bets,onGo}){
     </div>);
 }
 
+/* ---------------- 🏆 8인 크레딧 순위 (공유 서버: Firebase Realtime Database REST) ---------------- */
+const LEAGUE_URL='';   // 예: https://link-derby-xxxx-default-rtdb.asia-southeast1.firebasedatabase.app  (비어 있으면 공유 꺼짐)
+const League={
+  on(){ return !!LEAGUE_URL; },
+  key(n){ return encodeURIComponent(n.replace(/[.#$\[\]\/]/g,'_')); },
+  async push(me,data){ if(!this.on()||!me) return false;
+    try{ const r=await fetch(`${LEAGUE_URL.replace(/\/$/,'')}/derby/players/${this.key(me)}.json`,{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify({...data,name:me,ts:Date.now()})}); return r.ok; }catch(e){ return false; } },
+  async list(){ if(!this.on()) return null;
+    try{ const r=await fetch(`${LEAGUE_URL.replace(/\/$/,'')}/derby/players.json`); if(!r.ok) return null; const d=await r.json()||{}; return Object.values(d).filter(x=>x&&x.name).sort((a,b)=>(b.credit||0)-(a.credit||0)); }catch(e){ return null; } } };
+function thumb(dataUrl,cb){ if(!dataUrl) return cb(''); const im=new Image(); im.onload=()=>{ const c=document.createElement('canvas'); c.width=c.height=48; c.getContext('2d').drawImage(im,0,0,48,48); cb(c.toDataURL('image/jpeg',0.7)); }; im.onerror=()=>cb(''); im.src=dataUrl; }
+function myRecord(me,credit,stable,stats){ const c=Club.get(); return {credit:Math.round(credit),horse:ROSTER[me]||(stable&&stable.name)||'',club:c.name||'',prize:(stable&&stable.prize)||0,wins:(stable&&stable.w&&stable.w[0])||0,hits:(stats&&stats.hits)||0,races:(stats&&stats.races)||0,best:(stats&&stats.best)||0}; }
+function LeagueModal({me,credit,stable,stats,onClose,onWho}){
+  const [list,setList]=useState(null); const [err,setErr]=useState(false); const [busy,setBusy]=useState(false);
+  const load=async()=>{ setBusy(true); if(me){ const rec=myRecord(me,credit,stable,stats); await new Promise(r=>thumb(Club.get().logo,t=>{ rec.logo=t; r(); })); await League.push(me,rec); }
+    const l=await League.list(); setErr(l===null); setList(l||[]); setBusy(false); };
+  useEffect(()=>{ if(League.on()) load(); },[]);
+  const share=()=>{ const r=myRecord(me,credit,stable,stats); const t=`🏇 LINK DERBY 내 기록\n👤 ${me||'?'} · 🐎 ${r.horse}${r.club?` · ${r.club}`:''}\n💰 크레딧 ${fmt(r.credit)} CR\n🏆 내 말 우승 ${r.wins}회 · 적중 ${r.hits}/${r.races}\n👉 https://linkcleaning.github.io/derby/`;
+    try{ if(navigator.share) navigator.share({text:t}); else { navigator.clipboard.writeText(t); alert('복사됐어요! 카톡에 붙여넣기 하세요.'); } }catch(e){} };
+  const medal=i=>i===0?'🥇':i===1?'🥈':i===2?'🥉':`${i+1}`;
+  return (<div className="fixed inset-0 overflow-y-auto" style={{zIndex:60,background:'rgba(0,0,0,.88)'}} onClick={onClose}>
+    <div className="max-w-md mx-auto p-3 pt-6" onClick={e=>e.stopPropagation()}>
+      <div className="glass rounded-3xl p-4 pop">
+        <div className="flex items-center"><div className="fx-title text-[22px] gold">🏆 크레딧 순위</div><button onClick={onClose} className="ml-auto w-9 h-9 rounded-full bg-white/10 text-xl">×</button></div>
+        {!me && <button onClick={onWho} className="w-full mt-2 py-2 rounded-xl bg-yellow-300 text-black font-black text-[13px]">🙋 먼저 '나는 누구?'를 골라 주세요</button>}
+        {League.on() ? <>
+          <div className="flex items-center mt-1 text-[11.5px] text-blue-200/80"><span>8명의 크레딧이 실시간으로 모여요</span><button onClick={load} disabled={busy} className="ml-auto px-2.5 py-1 rounded-lg bg-white/10 font-bold">{busy?'불러오는 중…':'🔄 새로고침'}</button></div>
+          {err && <div className="mt-2 text-[12px] text-red-300">순위 서버에 연결하지 못했어요. 인터넷을 확인해 주세요.</div>}
+          <div className="mt-2 space-y-1.5">{(list||[]).map((p,i)=>{ const mine=p.name===me; return (
+            <div key={p.name} className={`flex items-center gap-2.5 rounded-2xl px-3 py-2 ${mine?'bg-yellow-300/20 ring-2 ring-yellow-300':i<3?'bg-white/10':'bg-white/5'}`}>
+              <div className="w-7 text-center font-black text-[18px]">{medal(i)}</div>
+              {p.logo?<img src={p.logo} alt="" style={{width:34,height:34,borderRadius:17,objectFit:'cover',border:'2px solid #ffd43b'}}/>:<div className="rounded-full bg-white/10 flex items-center justify-center text-[16px]" style={{width:34,height:34}}>🐎</div>}
+              <div className="flex-1 min-w-0"><div className="font-black text-[14.5px] truncate">{p.name}{mine&&<span className="text-yellow-300 text-[11px]"> (나)</span>}</div>
+                <div className="text-[11px] text-blue-200/80 truncate">🐎 {p.horse}{p.club?` · ${p.club}`:''} · 우승 {p.wins||0}회</div></div>
+              <div className="text-right"><div className="font-black text-[16px] text-yellow-300">{fmt(p.credit||0)}</div><div className="text-[9.5px] text-blue-200/60">{p.ts?new Date(p.ts).toLocaleDateString('ko-KR',{month:'numeric',day:'numeric'}):''}</div></div>
+            </div>); })}
+            {list&&!list.length&&!err && <div className="text-center text-[12.5px] text-blue-200/70 py-4">아직 아무도 없어요. 첫 번째 주인공이 되어 보세요!</div>}
+          </div></> :
+          <div className="mt-2 rounded-2xl bg-white/5 p-3 text-[12.5px] text-blue-100/85 leading-relaxed">
+            <div className="font-black text-white mb-1">📡 순위 서버 연결 준비 중</div>
+            8명의 순위를 자동으로 모으는 서버가 아직 연결되지 않았어요. 연결되면 여기서 실시간 순위를 볼 수 있어요.<br/>지금은 아래 버튼으로 내 기록을 카톡으로 보내 순위를 겨뤄 보세요!
+            <div className="mt-2 rounded-xl bg-black/30 p-2.5">
+              <div>👤 {me||'?'} · 🐎 {ROSTER[me]||'-'}</div>
+              <div className="font-black text-yellow-300 text-[18px]">💰 {fmt(credit)} CR</div>
+            </div>
+          </div>}
+        <button onClick={share} className="w-full mt-3 py-2.5 rounded-xl font-black text-black text-[14px]" style={{background:'#FEE500'}}>💬 내 기록 카톡으로 자랑하기</button>
+      </div></div></div>);
+}
+
 /* ---------------- ✊ 레트로 가위바위보 ---------------- */
 const RPS_PRIZE={1:100,2:300,3:500,4:1000};  // 이길 때마다 상금 상승 → 도전 or 스톱 (4연승이 최종)
 const RPS_MAX=4;
@@ -2890,6 +2940,8 @@ function App(){
   const [stable,setStable]=useState(()=>ls.get('sd_stable',null));
   const [claims,setClaims]=useState(()=>ls.get('sd_claims',[]));
   const [vtest,setVtest]=useState(false);
+  const [league,setLeague]=useState(false);
+  const lastPush=useRef(0);
   const [me,setMe]=useState(()=>ls.get('sd_me',''));
   const [who,setWho]=useState(()=>!ls.get('sd_me',''));
   const pickMe=j=>{ Sound.init(); Sound.coin(); setMe(j); ls.set('sd_me',j); setWho(false);
@@ -2923,6 +2975,8 @@ function App(){
   useEffect(()=>{ if(firstItems.current){ firstItems.current=false; return; } if(phase!=='paddock'||!stable) return;
     const t=setTimeout(()=>{ setBets([]); setSetup(makeRaceSetup(raceNo,ls.get('sd_stable',null),ls.get('sd_barn',null))); },50); return ()=>clearTimeout(t); },[itemsKey]);
   useEffect(()=>ls.set('sd_credit',credit),[credit]);
+  useEffect(()=>{ if(!League.on()||!me) return; const wait=Math.max(0,20000-(Date.now()-lastPush.current));
+    const t=setTimeout(()=>{ lastPush.current=Date.now(); const rec=myRecord(me,credit,stable,stats); thumb(Club.get().logo,tb=>{ rec.logo=tb; League.push(me,rec); }); },wait+800); return ()=>clearTimeout(t); },[credit,me]);
   useEffect(()=>ls.set('sd_race',raceNo),[raceNo]);
   useEffect(()=>ls.set('sd_hist',history),[history]);
   useEffect(()=>{ Sound.setMuted(muted); if(muted) Voice.stop(); },[muted]);
@@ -2986,7 +3040,7 @@ function App(){
       </header>
       {!setup ? <div className="text-center py-24"><div className="fx-title text-3xl gold animate-pulse">예상지 집계 중...</div><div className="text-blue-200/70 mt-2 text-sm">배당률 계산 중입니다</div></div> :
         phase==='ticket' ? <TicketConfirm setup={setup} bets={bets} onGo={()=>setPhase('race')}/> :
-        phase==='paddock' ? <Paddock setup={setup} credit={credit} bets={bets} setBets={setBets} onStart={start} onQuiz={()=>setQuiz(true)} onRps={()=>setRps('game')} onEvent={()=>setModal('event')} evLabel={cupsOf(claims)>=COFFEE_MAX?(()=>{const se=seasonOf(ev); return [`${se.icon} 시즌 ${se.no}`,`${se.name} ${Math.min(seasonVal(ev,se),se.goal)>=se.goal?'✅':''}`];})():['☕ 커피 이벤트',cupsOf(claims)?`남은 1잔 · 2만 CR`:'3만·5만 CR 교환']} onOwner={()=>setModal('owner')} stable={stable} barn={barn} history={history} stats={stats} daily={daily} setDaily={setDaily} onCredit={n=>setCredit(c=>c+n)}/> :
+        phase==='paddock' ? <Paddock setup={setup} credit={credit} bets={bets} setBets={setBets} onStart={start} onQuiz={()=>setQuiz(true)} onRps={()=>setRps('game')} onLeague={()=>setLeague(true)} onEvent={()=>setModal('event')} evLabel={cupsOf(claims)>=COFFEE_MAX?(()=>{const se=seasonOf(ev); return [`${se.icon} 시즌 ${se.no}`,`${se.name} ${Math.min(seasonVal(ev,se),se.goal)>=se.goal?'✅':''}`];})():['☕ 커피 이벤트',cupsOf(claims)?`남은 1잔 · 2만 CR`:'3만·5만 CR 교환']} onOwner={()=>setModal('owner')} stable={stable} barn={barn} history={history} stats={stats} daily={daily} setDaily={setDaily} onCredit={n=>setCredit(c=>c+n)}/> :
         <RaceView key={setup.raceNo} setup={setup} bets={bets} onDone={done} onCheer={()=>setDaily(d=>({...d,cheer:(d.cheer||0)+1}))}/>}
       {attendMsg && <div className="fixed inset-0 z-[70] bg-black/70 flex items-center justify-center p-6" onClick={()=>setAttendMsg(null)}>
         <div className="glass rounded-3xl p-5 w-full max-w-xs text-center pop">
@@ -2999,6 +3053,7 @@ function App(){
           <button onClick={()=>{Sound.init();Sound.coin();setAttendMsg(null);}} className="w-full mt-3 py-3 rounded-xl font-black bg-gradient-to-b from-yellow-300 to-orange-500 text-black">받기</button>
         </div>
       </div>}
+      {league && <LeagueModal me={me} credit={credit} stable={stable} stats={stats} onClose={()=>setLeague(false)} onWho={()=>{ setLeague(false); setWho(true); }}/>}
       {who && <WhoModal me={me} onPick={pickMe} onClose={()=>me&&setWho(false)}/>}
       {rps==='game' && <RpsModal credit={credit} onClose={()=>setRps(false)} onReward={n=>setCredit(c=>c+n)}/>}
       {quiz && setup && <QuizModal setup={setup} onClose={()=>setQuiz(false)} onReward={n=>setCredit(c=>c+n)}/>}
