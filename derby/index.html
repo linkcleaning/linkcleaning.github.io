@@ -1749,7 +1749,7 @@ function QuinMatrix({setup,sel,onPair}){
   );
 }
 
-function Paddock({setup,credit,bets,setBets,onStart,onQuiz,onEvent,onOwner,stable,history,stats,daily,setDaily,onCredit}){
+function Paddock({setup,credit,bets,setBets,onStart,onQuiz,onEvent,evLabel,onOwner,stable,history,stats,daily,setDaily,onCredit}){
   const [tab,setTab]=useState('card');
   const [type,setType]=useState('WIN');
   const [sel,setSel]=useState([]);
@@ -1841,7 +1841,7 @@ function Paddock({setup,credit,bets,setBets,onStart,onQuiz,onEvent,onOwner,stabl
       {daily && <DailyPanel daily={daily} setDaily={setDaily} onReward={n=>onCredit(n)}/>}
       {/* 메뉴: 커피 이벤트 / 내 구단 / 퀴즈 */}
       <div className="grid grid-cols-3 gap-1.5 mt-2">
-        <button onClick={()=>{Sound.init();Sound.click();onEvent();}} className="rounded-xl py-2 bg-gradient-to-b from-emerald-600 to-teal-800 text-[12.5px] font-black leading-tight">☕ 커피 이벤트<div className="text-[9.5px] font-bold opacity-80">3만·5만 CR 교환</div></button>
+        <button onClick={()=>{Sound.init();Sound.click();onEvent();}} className="rounded-xl py-2 bg-gradient-to-b from-emerald-600 to-teal-800 text-[12.5px] font-black leading-tight">{evLabel?evLabel[0]:'☕ 커피 이벤트'}<div className="text-[9.5px] font-bold opacity-80 truncate px-1">{evLabel?evLabel[1]:'3만·5만 CR 교환'}</div></button>
         <button onClick={()=>{Sound.init();Sound.click();onOwner();}} className="rounded-xl py-2 bg-gradient-to-b from-amber-500 to-orange-700 text-[12.5px] font-black leading-tight">🏇 내 구단<div className="text-[9.5px] font-bold opacity-80">{stable?`👑 ${stable.name}`:'구단주 되기'}</div></button>
         <button onClick={()=>{Sound.init();Sound.click();onQuiz();}} className="rounded-xl py-2 bg-gradient-to-b from-fuchsia-500 to-purple-700 text-[12.5px] font-black leading-tight">🧠 퀴즈<div className="text-[9.5px] font-bold opacity-80">오늘 {fmtN(quizToday())}/5,000</div></button>
       </div>
@@ -2202,25 +2202,55 @@ function QuizModal({setup,onClose,onReward}){
 
 /* ---------------- ☕ 스타벅스 커피 이벤트 ---------------- */
 const EVENT_TIERS=[{cr:30000,cups:1,label:'스타벅스 원하는 커피 1잔'},{cr:50000,cups:2,label:'스타벅스 원하는 커피 2잔'}];
+const COFFEE_MAX=2;            // 1인당 최대 2잔 (= 5만 CR)
+const KAKAO_NAME='운영자 카카오톡';  // 교환권 캡처 보낼 곳 (표시용)
+const KAKAO_URL='';            // 카카오톡 오픈채팅/채널 주소를 넣으면 '카카오톡으로 보내기' 버튼이 생겨요
+const cupsOf=claims=>claims.reduce((s,c)=>s+(c.cups||0),0);
+function coffeeTiers(claims){ const used=cupsOf(claims);
+  if(used>=COFFEE_MAX) return [];
+  if(used===1) return [{cr:20000,cups:1,label:'남은 커피 1잔 (5만 CR 완성)'}];   // 3만으로 1잔 받았으면 2만 더 내고 1잔 → 총 5만 2잔
+  return EVENT_TIERS; }
+
+/* ---------------- 🏆 연속 시즌 이벤트 (커피 5만 CR 완료 후 차례로 열림) ---------------- */
+const SEASONS=[
+  {id:'tour',  icon:'🌍', name:'월드 투어 정복',   desc:'서로 다른 경마장 {g}곳에서 마권 적중', key:'venues', goal:5, rw:3000, grow:1, max:9},
+  {id:'jack',  icon:'💎', name:'잭팟 헌터',        desc:'배당 10배 이상 마권 {g}번 적중',        key:'big',    goal:1, rw:5000, grow:1},
+  {id:'quin',  icon:'🎯', name:'복승 마스터',      desc:'복승식 {g}번 적중',                     key:'quin',   goal:3, rw:5000, grow:2},
+  {id:'owner', icon:'👑', name:'구단주의 영광',    desc:'내 구단 말이 1착 {g}번 (내 구단 필요)',  key:'own',    goal:2, rw:7000, grow:1},
+  {id:'fire',  icon:'🔥', name:'연승 행진',        desc:'{g}연속 적중 달성',                     key:'streak', goal:4, rw:8000, grow:1, max:8},
+  {id:'legend',icon:'🏆', name:'레전드 더비',      desc:'시즌 순수익 {g} CR 달성',               key:'profit', goal:20000, rw:10000, grow:10000},
+];
+function seasonOf(ev){ const base=SEASONS[ev.s%SEASONS.length], lap=Math.floor(ev.s/SEASONS.length);
+  const goal=Math.min(base.max||1e12, base.goal+base.grow*lap); const rw=Math.round(base.rw*(1+0.5*lap));
+  return {...base, no:ev.s+2, lap, goal, rw, text:base.desc.replace('{g}',goal>=1000?fmt(goal):goal)}; }
+function seasonVal(ev,se){ const p=ev.prog||{}; return se.key==='venues'?(p.venues||[]).length:(p[se.key]||0); }
+const newProg=()=>({venues:[],big:0,quin:0,own:0,streak:0,profit:0,races:0});
+function loadEv(){ return ls.get('sd_ev',{s:0,prog:newProg(),badges:[]}); }
+
 function hashStr(str){ let h1=0xdeadbeef^str.length, h2=0x41c6ce57^str.length; for(let i=0;i<str.length;i++){ const c=str.charCodeAt(i); h1=Math.imul(h1^c,2654435761); h2=Math.imul(h2^c,1597334677); }
   h1=Math.imul(h1^(h1>>>16),2246822507)^Math.imul(h2^(h2>>>13),3266489909); h2=Math.imul(h2^(h2>>>16),2246822507)^Math.imul(h1^(h1>>>13),3266489909);
   return (4294967296*(2097151&h2)+(h1>>>0)).toString(36).toUpperCase().padStart(10,'0'); }
 function claimCode(nick,cups,ts){ const hs=hashStr(`${nick}|${cups}|${ts}|STARDERBY-LINKCLEAN`); return `LD-${hs.slice(0,4)}-${hs.slice(4,8)}-${cups}`; }
-function EventModal({credit,onClose,onClaim,claims}){
+function EventModal({credit,onClose,onClaim,claims,ev,onSeasonClear}){
   const [nick,setNick]=useState(()=>ls.get('sd_nick',''));
   const [confirm,setConfirm]=useState(null);
   const [show,setShow]=useState(null);
-  const next=EVENT_TIERS.find(t=>credit<t.cr)||EVENT_TIERS[EVENT_TIERS.length-1];
-  const pct=Math.min(100,credit/EVENT_TIERS[EVENT_TIERS.length-1].cr*100);
+  const [badge,setBadge]=useState(null);
+  const tiers=coffeeTiers(claims), used=cupsOf(claims);
   if(show) return <Certificate c={show} onClose={()=>setShow(null)}/>;
+  if(badge) return <BadgeCert b={badge} onClose={()=>setBadge(null)}/>;
+  if(!tiers.length) return <SeasonPanel ev={ev} claims={claims} nick={nick} onClose={onClose} onShowCoffee={setShow} onShowBadge={setBadge} onClear={b=>{ onSeasonClear(b); setBadge(b); }}/>;
+  const next=tiers.find(t=>credit<t.cr)||tiers[tiers.length-1];
+  const pct=Math.min(100,credit/tiers[tiers.length-1].cr*100);
   return (
     <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm overflow-y-auto" onClick={onClose}>
       <div className="max-w-md mx-auto p-3 pt-6" onClick={e=>e.stopPropagation()}>
         <div className="glass rounded-3xl p-4 pop">
           <div className="flex items-center"><div className="fx-title text-2xl gold">☕ 커피 교환 이벤트</div><button onClick={onClose} className="ml-auto w-9 h-9 rounded-full bg-white/10 text-xl">×</button></div>
-          <p className="text-[13px] text-blue-100/85 mt-1 leading-relaxed">경마로 모은 CREDIT을 스타벅스 커피로 바꿔 드려요! 교환 후 나오는 <b className="text-yellow-200">교환권 화면을 캡처(사진)</b>해서 이벤트 담당자에게 보내 주시면 확인 후 지급됩니다.</p>
+          <p className="text-[13px] text-blue-100/85 mt-1 leading-relaxed">경마로 모은 CREDIT을 스타벅스 커피로 바꿔 드려요! 교환 후 나오는 <b className="text-yellow-200">교환권 화면을 캡처</b>해서 <b className="text-yellow-200">{KAKAO_NAME}</b>으로 보내 주시면 확인 후 지급됩니다.</p>
+          <div className="mt-2 rounded-xl bg-emerald-900/40 px-3 py-2 text-[12px] flex items-center gap-2"><span>1인당 최대 <b>커피 2잔(5만 CR)</b></span><span className="ml-auto font-black">{'☕'.repeat(used)}{'○'.repeat(COFFEE_MAX-used)} {used}/{COFFEE_MAX}</span></div>
           <div className="grid gap-2 mt-3">
-            {EVENT_TIERS.map(t=>{ const ok=credit>=t.cr; return (
+            {tiers.map(t=>{ const ok=credit>=t.cr; return (
               <div key={t.cr} className={`rounded-2xl p-3 flex items-center gap-3 ${ok?'bg-gradient-to-r from-emerald-600/50 to-teal-700/50 ring-2 ring-emerald-300':'bg-white/5'}`}>
                 <div className="text-3xl">{'☕'.repeat(t.cups)}</div>
                 <div className="flex-1"><div className="font-black">{t.label}</div><div className="text-[12px] text-blue-200/80">{fmt(t.cr)} CREDIT</div></div>
@@ -2228,12 +2258,14 @@ function EventModal({credit,onClose,onClaim,claims}){
               </div>); })}
           </div>
           <div className="mt-3">
-            <div className="flex justify-between text-[12px] text-blue-200/80"><span>내 CREDIT {fmt(credit)}</span><span>{credit<next.cr?`${next.label.replace('스타벅스 원하는 ','')}까지 ${fmt(next.cr-credit)}`:'커피 2잔 달성!'}</span></div>
-            <div className="h-3 rounded-full bg-white/10 mt-1 overflow-hidden relative"><div className="h-full bg-gradient-to-r from-emerald-400 to-yellow-300" style={{width:pct+'%'}}/><div className="absolute top-0 bottom-0 w-0.5 bg-white/70" style={{left:'60%'}}/></div>
-            <div className="flex justify-between text-[10px] text-blue-200/60 mt-0.5"><span>0</span><span style={{marginLeft:'45%'}}>3만 ☕</span><span>5만 ☕☕</span></div>
+            <div className="flex justify-between text-[12px] text-blue-200/80"><span>내 CREDIT {fmt(credit)}</span><span>{credit<next.cr?`${next.label.replace('스타벅스 원하는 ','')}까지 ${fmt(next.cr-credit)}`:'교환 가능!'}</span></div>
+            <div className="h-3 rounded-full bg-white/10 mt-1 overflow-hidden relative"><div className="h-full bg-gradient-to-r from-emerald-400 to-yellow-300" style={{width:pct+'%'}}/>{tiers.length>1&&<div className="absolute top-0 bottom-0 w-0.5 bg-white/70" style={{left:'60%'}}/>}</div>
+            {tiers.length>1?<div className="flex justify-between text-[10px] text-blue-200/60 mt-0.5"><span>0</span><span style={{marginLeft:'45%'}}>3만 ☕</span><span>5만 ☕☕</span></div>
+              :<div className="flex justify-between text-[10px] text-blue-200/60 mt-0.5"><span>0</span><span>2만 ☕</span></div>}
           </div>
           <ul className="mt-3 text-[11.5px] text-blue-200/75 list-disc pl-4 space-y-0.5">
-            <li>교환하면 해당 CREDIT이 차감됩니다.</li>
+            <li>교환하면 해당 CREDIT이 차감됩니다. 3만으로 1잔을 받았다면 2만을 더 모아 나머지 1잔을 받을 수 있어요.</li>
+            <li>커피 2잔(5만 CR)을 다 받으면 <b>🏆 시즌 도전 이벤트</b>가 차례로 열려요!</li>
             <li>교환권의 교환 코드·닉네임·시간이 확인용으로 쓰입니다.</li>
             <li>지급 방식과 기간은 이벤트 담당자 안내를 따릅니다.</li>
           </ul>
@@ -2279,11 +2311,75 @@ function Certificate({c,onClose}){
             <div className="col-span-2"><div className="text-[11px] text-gray-500">교환 일시</div><b>{d.toLocaleString('ko-KR')}</b></div>
           </div>
         </div>
-        <div className="px-5 pb-5 text-center text-white text-[13px] leading-relaxed">📸 <b>이 화면을 캡처</b>해서<br/>이벤트 담당자에게 보내 주세요!</div>
+        <div className="px-5 pb-5 text-center text-white text-[13px] leading-relaxed">📸 <b>이 화면을 캡처</b>해서<br/><b>{KAKAO_NAME}</b>으로 보내 주세요!</div>
       </div>
-      <button onClick={onClose} className="mt-5 px-6 py-3 rounded-2xl bg-white/10 text-white font-black">닫기</button>
+      {KAKAO_URL && <a href={KAKAO_URL} target="_blank" rel="noopener" onClick={e=>e.stopPropagation()} className="mt-4 px-6 py-3 rounded-2xl font-black text-black" style={{background:'#FEE500'}}>💬 카카오톡으로 보내기</a>}
+      <button onClick={onClose} className="mt-3 px-6 py-3 rounded-2xl bg-white/10 text-white font-black">닫기</button>
     </div>
   );
+}
+
+function SeasonPanel({ev,claims,nick,onClose,onShowCoffee,onShowBadge,onClear}){
+  const se=seasonOf(ev), v=seasonVal(ev,se), ok=v>=se.goal, pct=Math.min(100,v/se.goal*100);
+  const upcoming=Array.from({length:3},(_,i)=>seasonOf({s:ev.s+1+i}));
+  const p=ev.prog||newProg();
+  return (
+    <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm overflow-y-auto" onClick={onClose}>
+      <div className="max-w-md mx-auto p-3 pt-6" onClick={e=>e.stopPropagation()}>
+        <div className="glass rounded-3xl p-4 pop">
+          <div className="flex items-center"><div className="fx-title text-2xl gold">🏆 시즌 도전</div><button onClick={onClose} className="ml-auto w-9 h-9 rounded-full bg-white/10 text-xl">×</button></div>
+          <p className="text-[12.5px] text-blue-100/85 mt-1">☕ 커피 이벤트 완료! 이제 시즌 미션을 하나씩 깨 보세요. 깨면 다음 시즌이 바로 열려요.</p>
+          <div className="mt-3 rounded-2xl p-4 bg-gradient-to-br from-indigo-600/60 to-fuchsia-700/50 ring-2 ring-fuchsia-300/60">
+            <div className="flex items-center gap-2"><span className="px-2 py-0.5 rounded bg-black/30 text-[11px] font-black">SEASON {se.no}</span>{se.lap>0&&<span className="px-2 py-0.5 rounded bg-red-500/50 text-[11px] font-black">하드 {se.lap}</span>}</div>
+            <div className="flex items-center gap-3 mt-2"><div className="text-5xl">{se.icon}</div><div><div className="fx-title text-[22px]">{se.name}</div><div className="text-[13px] text-blue-100/90">{se.text}</div></div></div>
+            <div className="h-3 rounded-full bg-black/30 mt-3 overflow-hidden"><div className="h-full bg-gradient-to-r from-yellow-300 to-orange-400" style={{width:pct+'%'}}/></div>
+            <div className="flex justify-between text-[12px] mt-1"><span>진행 {se.key==='profit'?fmt(Math.max(0,v)):v} / {se.key==='profit'?fmt(se.goal):se.goal}</span><span className="font-black text-yellow-200">보상 +{fmt(se.rw)} CR + {se.icon} 배지</span></div>
+            {se.key==='venues'&&p.venues.length>0&&<div className="mt-1 text-[16px]">{p.venues.map(id=>(VENUES.find(x=>x.id===id)||{}).flag).join(' ')}</div>}
+            {se.key==='streak'&&<div className="mt-1 text-[11.5px] text-blue-100/80">현재 연속 적중: {p.cur||0}</div>}
+            <button disabled={!ok} onClick={()=>{ const ts=Date.now(); const nm=nick.trim()||ls.get('sd_nick','')||'익명 구단주';
+                const b={id:se.id,no:se.no,icon:se.icon,name:se.name,text:se.text,rw:se.rw,ts,nick:nm,code:claimCode(nm,'S'+se.no,ts)}; Sound.jackpot(true); onClear(b); }}
+              className={`w-full mt-3 py-3 rounded-xl font-black ${ok?'bg-gradient-to-b from-yellow-300 to-orange-500 text-black animate-pulse':'bg-white/10 text-white/40'}`}>{ok?'🎉 시즌 클리어! 보상 받기':'도전 중...'}</button>
+          </div>
+          <div className="mt-3 text-[12px] font-bold">⏭️ 다음 시즌 예고</div>
+          <div className="grid gap-1 mt-1">{upcoming.map(u=><div key={u.no} className="flex items-center gap-2 rounded-lg bg-white/5 px-2 py-1.5 text-[12px]"><span className="text-lg">{u.icon}</span><span className="font-bold">S{u.no} {u.name}</span><span className="ml-auto text-blue-200/70 truncate">{u.text}</span></div>)}</div>
+          <ul className="mt-3 text-[11.5px] text-blue-200/75 list-disc pl-4 space-y-0.5">
+            <li>진행도는 시즌이 시작된 뒤의 경주만 셉니다.</li>
+            <li>6개 시즌을 모두 깨면 목표가 커진 하드 시즌이 계속 이어져요.</li>
+            <li>배지 인증서를 캡처해서 {KAKAO_NAME}으로 보내면 명예의 전당에 올라가요.</li>
+          </ul>
+          {(ev.badges.length>0||claims.length>0)&&<div className="mt-3 rounded-xl bg-black/30 p-2">
+            <div className="text-[12px] font-bold mb-1">🎖️ 내 배지 · 교환권</div>
+            <div className="flex flex-wrap gap-1 mb-1">{ev.badges.map(b=><button key={b.code} onClick={()=>onShowBadge(b)} className="px-2 py-1 rounded-lg bg-white/10 text-[12px]">{b.icon} S{b.no}</button>)}</div>
+            {claims.map(c=><button key={c.code} onClick={()=>onShowCoffee(c)} className="w-full flex items-center gap-2 text-left text-[12px] px-2 py-1.5 rounded-lg bg-white/5 mb-1">{'☕'.repeat(c.cups)}<span className="font-mono">{c.code}</span><span className="ml-auto text-blue-200/70">{new Date(c.ts).toLocaleDateString('ko-KR')}</span></button>)}
+          </div>}
+        </div>
+      </div>
+    </div>);
+}
+function BadgeCert({b,onClose}){
+  return (
+    <div style={{background:"#0b0820"}} className="fixed inset-0 z-[60] flex flex-col items-center justify-center p-5" onClick={onClose}>
+      <div className="w-full max-w-sm rounded-3xl overflow-hidden shadow-2xl pop" style={{background:'linear-gradient(160deg,#5b21b6,#1e1b4b)'}} onClick={e=>e.stopPropagation()}>
+        <div className="px-5 pt-5 text-white text-center">
+          <div className="text-[12px] tracking-widest opacity-80">LINK DERBY · SEASON {b.no}</div>
+          <div className="mt-2" style={{fontSize:72,lineHeight:1.1}}>{b.icon}</div>
+          <div className="fx-title text-[28px] gold mt-1">{b.name}</div>
+          <div className="text-[13px] opacity-90">{b.text} — 클리어!</div>
+        </div>
+        <div className="mx-5 my-4 rounded-2xl bg-white p-4" style={{color:"#1e1b4b"}}>
+          <div className="text-[11px] text-gray-500">인증 코드</div>
+          <div className="font-mono text-[22px] font-black tracking-wider">{b.code}</div>
+          <div className="grid grid-cols-2 gap-2 mt-3 text-[13px]">
+            <div><div className="text-[11px] text-gray-500">닉네임</div><b>{b.nick}</b></div>
+            <div><div className="text-[11px] text-gray-500">보상</div><b>+{fmt(b.rw)} CR</b></div>
+            <div className="col-span-2"><div className="text-[11px] text-gray-500">달성 일시</div><b>{new Date(b.ts).toLocaleString('ko-KR')}</b></div>
+          </div>
+        </div>
+        <div className="px-5 pb-5 text-center text-white text-[13px] leading-relaxed">📸 캡처해서 <b>{KAKAO_NAME}</b>으로 보내면<br/>명예의 전당에 올라가요!</div>
+      </div>
+      {KAKAO_URL && <a href={KAKAO_URL} target="_blank" rel="noopener" onClick={e=>e.stopPropagation()} className="mt-4 px-6 py-3 rounded-2xl font-black text-black" style={{background:'#FEE500'}}>💬 카카오톡으로 보내기</a>}
+      <button onClick={onClose} className="mt-3 px-6 py-3 rounded-2xl bg-white/10 text-white font-black">다음 시즌 도전 ▶</button>
+    </div>);
 }
 
 /* ---------------- 🏇 내 구단 (구단주 모드) ---------------- */
@@ -2379,6 +2475,8 @@ function App(){
   const [quiz,setQuiz]=useState(false);
   const [stable,setStable]=useState(()=>ls.get('sd_stable',null));
   const [claims,setClaims]=useState(()=>ls.get('sd_claims',[]));
+  const [ev,setEv]=useState(()=>loadEv());
+  useEffect(()=>ls.set('sd_ev',ev),[ev]);
   const [modal,setModal]=useState(null);
   const [daily,setDaily]=useState(()=>loadDaily());
   const [attendMsg,setAttendMsg]=useState(null);
@@ -2419,6 +2517,11 @@ function App(){
     setOwnerPrize(op);
     setPayouts(pays); setResult(res); setCredit(c=>c+win+bn+op);
     setHistory(h=>[[o[0],o[1]],...h].slice(0,20));
+    if(cupsOf(claims)>=COFFEE_MAX){ const spent=bets.reduce((s,b)=>s+b.amount,0), net=win+bn+op-spent;
+      const isQ=bets.some((b,i)=>b.type==='QUIN'&&pays[i]>0), big=bets.some((b,i)=>pays[i]>0&&b.odds>=10), ownWin=!!(own&&stable&&stable.name===own.name&&o[0]===own.no), vid=setup.venue&&setup.venue.id;
+      setEv(e=>{ const p={...newProg(),...e.prog}; const cur=win>0?(p.cur||0)+1:0;
+        return {...e,prog:{...p,races:p.races+1,profit:p.profit+net,quin:p.quin+(isQ?1:0),big:p.big+(big?1:0),own:p.own+(ownWin?1:0),cur,streak:Math.max(p.streak,cur),
+          venues:(win>0&&vid&&!p.venues.includes(vid))?[...p.venues,vid]:p.venues}}; }); }
     setDaily(d=>({...d,races:d.races+1,hits:d.hits+(win>0?1:0),quin:d.quin+(bets.some((b,i)=>b.type==='QUIN'&&pays[i]>0)?1:0)}));
     setPhase('result');
     if(win>0){ const big=bets.some((b,i)=>pays[i]>0&&b.odds>=10); Sound.jackpot(big); }
@@ -2439,7 +2542,7 @@ function App(){
         </div>
       </header>
       {!setup ? <div className="text-center py-24"><div className="fx-title text-3xl gold animate-pulse">예상지 집계 중...</div><div className="text-blue-200/70 mt-2 text-sm">배당률 계산 중입니다</div></div> :
-        phase==='paddock' ? <Paddock setup={setup} credit={credit} bets={bets} setBets={setBets} onStart={start} onQuiz={()=>setQuiz(true)} onEvent={()=>setModal('event')} onOwner={()=>setModal('owner')} stable={stable} history={history} stats={stats} daily={daily} setDaily={setDaily} onCredit={n=>setCredit(c=>c+n)}/> :
+        phase==='paddock' ? <Paddock setup={setup} credit={credit} bets={bets} setBets={setBets} onStart={start} onQuiz={()=>setQuiz(true)} onEvent={()=>setModal('event')} evLabel={cupsOf(claims)>=COFFEE_MAX?(()=>{const se=seasonOf(ev); return [`${se.icon} 시즌 ${se.no}`,`${se.name} ${Math.min(seasonVal(ev,se),se.goal)>=se.goal?'✅':''}`];})():['☕ 커피 이벤트',cupsOf(claims)?`남은 1잔 · 2만 CR`:'3만·5만 CR 교환']} onOwner={()=>setModal('owner')} stable={stable} history={history} stats={stats} daily={daily} setDaily={setDaily} onCredit={n=>setCredit(c=>c+n)}/> :
         <RaceView key={setup.raceNo} setup={setup} bets={bets} onDone={done} onCheer={()=>setDaily(d=>({...d,cheer:(d.cheer||0)+1}))}/>}
       {attendMsg && <div className="fixed inset-0 z-[70] bg-black/70 flex items-center justify-center p-6" onClick={()=>setAttendMsg(null)}>
         <div className="glass rounded-3xl p-5 w-full max-w-xs text-center pop">
@@ -2454,7 +2557,7 @@ function App(){
       </div>}
       {quiz && setup && <QuizModal setup={setup} onClose={()=>setQuiz(false)} onReward={n=>setCredit(c=>c+n)}/>}
       {phase==='result' && result && <ResultModal setup={setup} result={result} bets={bets} payouts={payouts} bonus={bonus} streak={stats.streak} ownerPrize={ownerPrize} onNext={next}/>}
-      {modal==='event' && <EventModal credit={credit} claims={claims} onClose={()=>setModal(null)} onClaim={c=>{ setCredit(x=>x-c.cr); setClaims(L=>[c,...L]); }}/>}
+      {modal==='event' && <EventModal credit={credit} claims={claims} ev={ev} onClose={()=>setModal(null)} onClaim={c=>{ setCredit(x=>x-c.cr); setClaims(L=>[c,...L]); if(cupsOf(claims)+c.cups>=COFFEE_MAX) setEv(e=>({...e,prog:newProg()})); }} onSeasonClear={b=>{ setCredit(x=>x+b.rw); setEv(e=>({s:e.s+1,prog:newProg(),badges:[...e.badges,b]})); }}/>}
       {modal==='owner' && <OwnerModal credit={credit} stable={stable} setStable={setStable} spend={n=>setCredit(x=>x-n)} onClose={()=>setModal(null)}/>}
     </div>
   );
