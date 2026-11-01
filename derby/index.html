@@ -2492,7 +2492,7 @@ function TicketConfirm({setup,bets,onGo}){
 
 /* ---------------- ✊ 레트로 가위바위보 ---------------- */
 const RPS_PRIZE={3:50,5:100,8:200};          // 연속 승리 보상
-const RPS_DAILY=5;                            // 하루 도전 횟수
+const RPS_DAILY=Infinity;                     // 하루 도전 횟수 (제한 없음)
 const RPS_HANDS=[{k:'가위',e:'✌️',c:'linear-gradient(180deg,#ff5a5f,#c81e1e)',ring:'#7a0f12'},{k:'바위',e:'✊',c:'linear-gradient(180deg,#4f8dff,#1d4ed8)',ring:'#0b2a6b'},{k:'보',e:'✋',c:'linear-gradient(180deg,#ffc53d,#d97706)',ring:'#7a4b00'}];
 const LED_FONT={W:['10001','10001','10001','10101','10101','10101','01010'],I:['01110','00100','00100','00100','00100','00100','01110'],N:['10001','11001','11001','10101','10011','10011','10001'],
   L:['10000','10000','10000','10000','10000','10000','11111'],O:['01110','10001','10001','10001','10001','10001','01110'],S:['01111','10000','10000','01110','00001','00001','11110'],
@@ -2565,7 +2565,7 @@ function RpsModal({onClose,onReward}){
       // 가위0 vs 바위1: 짐, 바위1 vs 보2: 짐, 보2 vs 가위0: 짐
       st.current.res=r; setRes({me:i,cpu,r}); setPhase('show');
       if(r==='draw'){ Sound.beep(400); setMsg('비겼어요! 한 번 더!'); return; }
-      if(r==='lose'){ Sound.miss(); setActive(false); setMsg(`아쉽다! ${base}연승에서 멈췄어요.${leftNow>0?` (오늘 남은 도전 ${leftNow}번)`:' 오늘 도전 끝!'}`); setDay(d=>({...d,best:Math.max(d.best,base)})); return; }
+      if(r==='lose'){ Sound.miss(); setActive(false); setMsg(`아쉽다! ${base}연승에서 멈췄어요.`); setDay(d=>({...d,best:Math.max(d.best,base)})); return; }
       const ns=base+1; setStreak(ns); setDay(d=>({...d,best:Math.max(d.best,ns)}));
       const prize=RPS_PRIZE[ns];
       if(prize){ onReward(prize); Sound.jackpot(ns>=8); setPop({n:ns,p:prize}); setTimeout(()=>setPop(null),1800); }
@@ -2589,7 +2589,7 @@ function RpsModal({onClose,onReward}){
           <div className="flex justify-center mt-3">
             <button key={nudge} onClick={startRun} disabled={active} className={`px-4 py-1.5 rounded-full text-[13px] font-black tracking-wider ${nudge?'pop':''}`}
               style={active?{background:'#2b2b2b',color:'#777',boxShadow:'inset 0 2px 4px #000'}:{background:'linear-gradient(180deg,#34d399,#059669)',color:'#fff',boxShadow:'0 4px 0 #065f46, 0 0 12px rgba(52,211,153,.6)'}}>
-              {active?`도전 중 · ${streak}연승`:left>0?`▶ START (남은 ${left}회)`:'오늘 끝! 내일 또'}</button>
+              {active?`도전 중 · ${streak}연승`:'▶ START'}</button>
           </div>
           {/* 연승 램프 */}
           <div className="flex justify-center gap-1.5 mt-3">{Array.from({length:8},(_,k)=>{ const lit=k<streak, ms=RPS_PRIZE[k+1];
@@ -2603,8 +2603,8 @@ function RpsModal({onClose,onReward}){
               <span className={`rounded-full flex flex-col items-center justify-center active:translate-y-1 transition-transform`} style={{width:86,height:86,background:h.c,boxShadow:`0 8px 0 ${h.ring}, 0 12px 18px rgba(0,0,0,.6), inset 0 6px 10px rgba(255,255,255,.35)`}}>
                 <span style={{fontSize:30,lineHeight:1}}>{h.e}</span><span className="text-[14px] font-black text-white" style={{textShadow:'0 2px 0 rgba(0,0,0,.4)'}}>{h.k}</span></span>
             </button>)}</div>
-          <div className="flex justify-between text-[11px] text-blue-200/70 mt-4 px-1"><span>오늘 남은 도전 <b className="text-white">{Math.max(0,left)}</b> / {RPS_DAILY}</span><span>오늘 최고 {day.best}연승</span></div>
-          <div className="text-[10.5px] text-blue-200/50 mt-1 px-1">START 1번 = 도전 1회. 질 때까지(또는 8연승까지) 계속, 비기면 다시 냅니다.</div>
+          <div className="flex justify-between text-[11px] text-blue-200/70 mt-4 px-1"><span>오늘 도전 <b className="text-white">{day.runs}</b>회</span><span>오늘 최고 {day.best}연승</span></div>
+          <div className="text-[10.5px] text-blue-200/50 mt-1 px-1">START를 누르면 도전 시작! 질 때까지(또는 8연승까지) 계속, 비기면 다시 냅니다.</div>
         </div>
       </div>
     </div>);
