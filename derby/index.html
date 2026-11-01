@@ -2698,7 +2698,7 @@ function App(){
           <div className="fx-title text-[19px] leading-none whitespace-nowrap"><span className="gold">★ LINK</span> <span className="text-white">DERBY</span></div>
           
           <div className="ml-auto flex items-center gap-2">
-            {Voice.ok && <button onClick={()=>{ Sound.init(); if(muted) setMuted(false); Sound.muted=false; Voice.on=true; Voice.kick('안녕하세요! 링크 더비 아나운서입니다. 소리 잘 들리시죠?'); setVtest(true); }} className="h-8 px-2 shrink-0 rounded-full bg-white/10 text-[11px] font-black whitespace-nowrap">🎙️ 테스트</button>}
+            
             <button onClick={()=>{Sound.init(); setMuted(m=>!m);}} className="w-8 h-8 shrink-0 rounded-full bg-white/10 text-base">{muted?'🔇':'🔊'}</button>
             <div className="rounded-full bg-gradient-to-b from-yellow-300 to-amber-500 text-black px-2.5 py-1 font-black text-[13px] shadow whitespace-nowrap">💰 {fmt(credit)}</div>
           </div>
@@ -2718,7 +2718,6 @@ function App(){
           <button onClick={()=>{Sound.init();Sound.coin();setAttendMsg(null);}} className="w-full mt-3 py-3 rounded-xl font-black bg-gradient-to-b from-yellow-300 to-orange-500 text-black">받기</button>
         </div>
       </div>}
-      {vtest && <VoiceTest onClose={()=>setVtest(false)}/>}
       {quiz && setup && <QuizModal setup={setup} onClose={()=>setQuiz(false)} onReward={n=>setCredit(c=>c+n)}/>}
       {phase==='result' && result && <ResultModal setup={setup} result={result} bets={bets} payouts={payouts} bonus={bonus} streak={stats.streak} ownerPrize={ownerPrize} wpBonus={wpBonus} onNext={next}/>}
       {modal==='event' && <EventModal credit={credit} claims={claims} ev={ev} onClose={()=>setModal(null)} onClaim={c=>{ setCredit(x=>x-c.cr); setClaims(L=>[c,...L]); if(cupsOf(claims)+c.cups>=COFFEE_MAX) setEv(e=>({...e,prog:newProg()})); }} onSeasonClear={b=>{ setCredit(x=>x+b.rw); setEv(e=>({s:e.s+1,prog:newProg(),badges:[...e.badges,b]})); }}/>}
