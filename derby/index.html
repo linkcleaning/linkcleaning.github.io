@@ -1039,7 +1039,7 @@ class RaceEngine{
     { const lastR=o[o.length-1], solo=!this.slowLock && !a.fin && this.state==='run' && (a.pos-b.pos)>3.0 && this.simT>6;
       let tgt=this.ppmBase;
       if(solo){ const need=(a.pos-lastR.pos)+7; tgt=Math.max(15,Math.min(this.ppmBase,W*0.88/(need*sZ(0.5)))); focus=(a.pos+lastR.pos)/2-0.5; this.shot=null; this.zoomT=1;
-        if(!this.wide){ this.wide=true; if(this.real-(this.wideSaidT||-99)>12){ this.wideSaidT=this.real; this.say(`${iga(lblOf(a.h))} 단독 선두! 후미 ${lblOf(lastR.h)}까지 약 ${Math.max(1,Math.round((a.pos-lastR.pos)/2.4))}마신 차이입니다!`); } } }
+        if(!this.wide){ this.wide=true; if(this.real-(this.wideSaidT||-99)>12){ this.wideSaidT=this.real; this.say(`${iga(lblOf(a.h))} 단독 선두! 후미 ${lblOf(lastR.h)}까지 약 ${Math.max(2,Math.round(a.pos-lastR.pos))}미터 차이입니다!`); } } }
       else this.wide=false;
       this.ppm+=(tgt-this.ppm)*Math.min(1,dt*2.6); }
     const pcx=this.camX;
@@ -1110,7 +1110,7 @@ class RaceEngine{
     // ---- 실제 중계식 콜: 순위 변화 추적 + 구간별 전개 읽기 ----
     if(this.real-(this.histT||0)>1){ this.histT=this.real; this.hist=this.hist||[]; this.hist.push(o.map(r=>r.h.no)); if(this.hist.length>5) this.hist.shift(); }
     const L=r=>`${r.h.no}번 ${r.h.name}`;
-    const gapTxt=m=>{ const l=m/2.4; return l<0.3?'머리 차이':l<0.75?'반 마신':l<1.3?'한 마신':l<1.8?'한 마신 반':`${Math.round(l)}마신`; };
+    const gapTxt=m=>m<0.6?'간발':m<1.5?'1미터 남짓':`약 ${Math.round(m)}미터`;
     const side=r=>r.lane>0.58?'바깥쪽':r.lane<0.28?'안쪽 펜스':'가운데';
     const p=a.pos/D;
     const interval=remain<300?2.2:(remain<700?3.0:3.8);
@@ -1149,7 +1149,7 @@ class RaceEngine{
           else if(k===2) msg=PF('pack',[
             ()=>`그 뒤로 ${o[3].h.no}번 ${nm(o[3])}, ${o[4].h.no}번 ${nm(o[4])}, 최후미에 ${L(LST)}.`,
             ()=>`중단에는 ${wagwa(nm(o[3]))} ${nm(o[4])}, 맨 뒤에서 ${iga(nm(LST))} 따라갑니다.`,
-            ()=>`선두와 최후미 차이는 약 ${spread}마신. ${spread<6?'마군이 촘촘합니다!':'대열이 길게 늘어졌습니다.'}`,
+            ()=>`선두와 최후미 차이는 약 ${Math.round(spread*2.4)}미터. ${spread<6?'마군이 촘촘합니다!':'대열이 길게 늘어졌습니다.'}`,
             ()=>`${L(o[3])}, 마군 속에 갇혀 진로를 찾고 있습니다.`,
             ()=>`후미의 ${nm(LST)}, ${LST.h.style==='추입'?'추입마답게 뒤에서 기회를 엿봅니다.':'좀처럼 순위를 올리지 못합니다.'}`]);
           else msg=PF('color',[
@@ -1203,8 +1203,7 @@ class RaceEngine{
       if(i===0){ res.push(''); continue; }
       const m=(o[i].finT-o[i-1].finT)*o[i].finV;
       let t;
-      if(m<0.12) t='코'; else if(m<0.35) t='머리'; else if(m<0.7) t='목'; else if(m<1.5) t='1/2마신'; else if(m<2.1) t='3/4마신';
-      else if(m>24) t='대차'; else { const L=Math.round(m/2.4*2)/2; t=`${L}마신`; }
+      if(m<0.1) t='간발'; else if(m>30) t='큰 차이'; else t=(m<10?m.toFixed(1):Math.round(m))+'m';
       res.push(t);
     }
     return res;
@@ -1685,7 +1684,7 @@ const PROFILES = {
   '링크돌이':   { tag:'간판 스타', horse:'링크클린의 간판 말. 막판 스퍼트 때는 대걸레질하듯 주로를 쓸어버린다.', jockey:'구단주 겸 기수. 12년 현장 경험에서 나오는 노련한 페이스 조절.' },
   '기훈짱':     { tag:'자신감 100%', horse:'이름부터 짱. 게이트만 열리면 "내가 1등"이라고 믿고 달린다.', jockey:'거침없는 직진 본능. 채찍보다 관중 응원에 더 힘이 나는 스타일.' },
   '링크순이':   { tag:'꼼꼼 마스터', horse:'링크돌이의 단짝. 섬세한 발놀림 덕에 진흙 주로에서도 털끝 하나 안 젖는다.', jockey:'꼼꼼함의 대명사. 작은 틈도 놓치지 않는 진로 선택이 장기.' },
-  '핑크공주':   { tag:'경마장 아이돌', horse:'관중석 인기 투표 1위. 결승선보다 카메라를 먼저 찾는다는 소문이 있다.', jockey:'밝은 에너지로 말과 호흡이 척척. 미소 한 번에 말이 반 마신 더 간다?' },
+  '핑크공주':   { tag:'경마장 아이돌', horse:'관중석 인기 투표 1위. 결승선보다 카메라를 먼저 찾는다는 소문이 있다.', jockey:'밝은 에너지로 말과 호흡이 척척. 미소 한 번에 말이 한 뼘 더 간다?' },
   '리턴팩토리': { tag:'역전 공장', horse:'한 번 뒤처져도 반드시 돌아온다! 역전 드라마를 찍어내는 귀환 전문가.', jockey:'끝까지 포기하지 않는 뚝심. 최후미에서 웃는 기수.' },
   '까스돌이':   { tag:'연료 만땅', horse:'가스 충전만 끝나면 폭발적으로 가속하는 터보 엔진 탑재 말.', jockey:'맹렬하게 길을 여는 돌파형. 막히면 뚫고, 안 막히면 더 빨리.' },
   '크림어스':   { tag:'달콤한 준마', horse:'광안리 크리머스에서 자란 디저트계 명마. 생크림처럼 부드러운 주법이 일품.', jockey:'섬세한 손놀림으로 케이크 마무리하듯 깔끔하게 결승선을 장식한다.' },
@@ -2039,7 +2038,7 @@ function ResultModal({setup,result,bets,payouts,bonus,streak,ownerPrize,wpBonus,
         </div>}
         <div className="flex-1 min-h-0 overflow-y-auto rounded-xl bg-black/35 no-scrollbar">
           <table className="w-full text-[12.5px]">
-            <thead className="bg-white/10 text-blue-200 text-[10.5px] sticky top-0"><tr><th className="py-1 w-9">착순</th><th className="text-left">마명</th><th>기록</th><th className="pr-2">착차</th></tr></thead>
+            <thead className="bg-white/10 text-blue-200 text-[10.5px] sticky top-0"><tr><th className="py-1 w-9">착순</th><th className="text-left">마명</th><th>기록</th><th className="pr-2 whitespace-nowrap">앞 말과</th></tr></thead>
             <tbody>
               {o.map((no,i)=>(
                 <tr key={no} className={`border-t border-white/5 ${i===0?'bg-yellow-400/15':''}`}>
