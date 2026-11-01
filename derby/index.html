@@ -382,7 +382,7 @@ const Voice={ on:true, ok:typeof window!=='undefined'&&'speechSynthesis' in wind
   tok:0, waitStart:0,
   say(text,hot,I){
     if(!this.ok||!this.on||Sound.muted) return;
-    const t=text.replace(/!{2,}/g,'!').replace(/[🔥🎙️]/g,'');
+    const t=text.replace(/\([^)]*\)/g,'').replace(/!{2,}/g,'!').replace(/[🔥🎙️]/g,'').replace(/(\d+)번 /g,'$1번, ');
     const it={t,hot,I:I==null?0.3:I,at:Date.now()};
     if(hot || !this.q.length || !this.q[0].hot) this.q=[it];   // 대기열엔 가장 최신(긴박한 것 우선) 한 문장만
     if(!this.busy) this.next();
@@ -404,8 +404,8 @@ const Voice={ on:true, ok:typeof window!=='undefined'&&'speechSynthesis' in wind
       if(speechSynthesis.paused) speechSynthesis.resume();
       const u=new SpeechSynthesisUtterance(it.t);
       u.lang='ko-KR'; if(this.v) u.voice=this.v;
-      u.rate=Math.min(1.9,1.32+0.45*it.I+(it.hot?0.06:0));
-      u.pitch=this.male?(0.9+0.28*it.I):(0.52+0.16*it.I);
+      u.rate=Math.min(1.3,1.0+0.22*it.I+(it.hot?0.05:0));   // 또렷하게 들리도록 속도 완화
+      u.pitch=this.male?(1.0+0.12*it.I):(0.88+0.1*it.I);     // 음높이를 과하게 낮추면 뭉개져서 자연스럽게
       u.volume=1;
       this.cur=u;
       let done=false; const fin=()=>{ if(done||myTok!==this.tok) return; done=true; this.cur=null; this.wd=setTimeout(()=>this.next(),120); };
