@@ -366,6 +366,8 @@ const Sound = {
     setTimeout(()=>{ try{ [c.a,c.b,c.v].forEach(n=>{ n.s.stop(); n.g.disconnect(); }); c.lfo.stop(); }catch(e){} },900);
     this.crowd=null;
   },
+  cheerBurst(){ if(!this.ok()) return; const t=this.ctx.currentTime; this.noise(t,0.35,0.22,'bandpass',900+Math.random()*500,1.2,0.04); this.noise(t,0.08,0.18,'highpass',3000,0.7,0.002); },
+  boom(){ if(!this.ok()) return; const t=this.ctx.currentTime; this.osc('sine',70,t,0.005,0.6,0.5,30); this.noise(t,0.5,0.3,'lowpass',600,0.7,0.005); },
   setCrowd(level){
     if(!this.crowd) return;
     const t=this.ctx.currentTime;
@@ -871,6 +873,53 @@ class RaceEngine{
       return b.pos-a.pos;
     });
   }
+  cheer(){
+    if(this.state!=='run') return;
+    this.cheerN=(this.cheerN||0)+1; this.cheerBoost=Math.min(1,(this.cheerBoost||0)+0.12);
+    const E=['📣','👏','🔥','❤️','🙌','🎉','⭐'];
+    for(let k=0;k<3;k++) (this.emo=this.emo||[]).push({e:pick(E),x:W*0.15+Math.random()*W*0.7,y:H-140,vy:-(3+Math.random()*3),vx:(Math.random()-0.5)*2,life:1.4,s:28+Math.random()*18});
+    if(this.emo.length>80) this.emo.splice(0,this.emo.length-80);
+    Sound.cheerBurst();
+    const n=this.cheerN; if([15,40,80].includes(n)) this.say(n===15?'관중석 응원 열기가 뜨거워지고 있습니다!':n===40?'와! 응원 소리가 경기장을 뒤흔듭니다!':'역대급 응원! 말들도 귀를 쫑긋 세웁니다!',true);
+  }
+  happen(o){
+    // 경주 중 한 번, 확률적으로 재미있는 돌발 해프닝 (결과에는 영향 없음)
+    if(this.hap!==undefined) return;
+    const p=o[0].pos/this.D; if(p<0.32) return;
+    if(!window.__forceHap && Math.random()<0.5){ this.hap=null; return; }
+    const night=this.wx==='야간', kinds=['pigeons','balloon','drone','hat',night?'fireworks':'rainbow'];
+    const k=window.__forceHap||pick(kinds); this.hap={k,t:this.real};
+    const r=pick(o.slice(2)), L=r=>`${r.h.no}번 ${r.h.name}`;
+    const msg={pigeons:'앗, 비둘기 떼가 경기장을 가로지릅니다! 말들은 침착하게 달립니다!',balloon:'하늘 위로 링크클린 열기구가 떠오릅니다! 경기장 분위기 최고조!',
+      drone:'중계 드론이 선두를 바짝 따라붙습니다! 생생한 화면 보내드립니다!',hat:`어이쿠, ${L(r)} 기수 ${r.h.jockey}의 모자 장식이 바람에 날아갑니다!`,
+      fireworks:'밤하늘에 축포가 터집니다! 나이트 경마의 묘미!',rainbow:'경기장 위로 무지개가 떴습니다! 행운의 징조일까요?'}[k];
+    this.hapRunner=r; this.say(msg,false);
+  }
+  drawHappening(ctx){
+    const h=this.hap; if(!h) return; const e=this.real-h.t; if(e>7) return;
+    const sky=BY+40;
+    if(h.k==='pigeons'){ ctx.fillStyle='#e9ecef'; for(let i=0;i<14;i++){ const x=W+60-e*260+((i*53)%140), y=sky+90+((i*37)%70)+Math.sin(e*8+i)*6, f=Math.sin(e*16+i)*5;
+        ctx.beginPath(); ctx.moveTo(x-9,y-f); ctx.quadraticCurveTo(x-3,y-2,x,y); ctx.quadraticCurveTo(x+3,y-2,x+9,y-f); ctx.lineTo(x,y+2); ctx.closePath(); ctx.fill(); } }
+    else if(h.k==='balloon'){ const x=W*0.15+e*30, y=sky+170-e*22; ctx.fillStyle='#0ca678'; ctx.beginPath(); ctx.ellipse(x,y,38,46,0,0,6.283); ctx.fill();
+      ctx.fillStyle='#fff'; ctx.fillRect(x-38,y-6,76,12); ctx.fillStyle='#0ca678'; ctx.font='700 11px "Noto Sans KR",sans-serif'; ctx.textAlign='center'; ctx.textBaseline='middle'; ctx.fillText('링크클린',x,y);
+      ctx.strokeStyle='#5c3d1e'; ctx.lineWidth=1.5; ctx.beginPath(); ctx.moveTo(x-14,y+40); ctx.lineTo(x-9,y+62); ctx.moveTo(x+14,y+40); ctx.lineTo(x+9,y+62); ctx.stroke(); ctx.fillStyle='#8a5a2b'; ctx.fillRect(x-10,y+60,20,13); }
+    else if(h.k==='drone'){ const x=W*0.62+Math.sin(e*1.5)*40, y=Y_FAR-70+Math.sin(e*3)*8; ctx.fillStyle='#212529'; ctx.fillRect(x-14,y-3,28,6);
+      ctx.strokeStyle='#212529'; ctx.lineWidth=2; ctx.beginPath(); ctx.moveTo(x-14,y); ctx.lineTo(x-24,y-6); ctx.moveTo(x+14,y); ctx.lineTo(x+24,y-6); ctx.stroke();
+      ctx.fillStyle='rgba(200,200,200,0.6)'; for(const dx of [-24,24]){ ctx.beginPath(); ctx.ellipse(x+dx,y-7,10*Math.abs(Math.sin(e*40)),2,0,0,6.283); ctx.fill(); }
+      ctx.fillStyle=Math.floor(e*4)%2?'#ff4d4f':'#a61e1e'; ctx.beginPath(); ctx.arc(x,y+5,2.5,0,6.283); ctx.fill(); }
+    else if(h.k==='hat' && this.hapRunner){ const r=this.hapRunner, x0=this.fx+(this.X(r.pos-1.2,r.lane)-this.fx)*this.zoom, y0=yZ(r.lane)-125;
+      const x=x0-e*90, y=y0-e*40+e*e*10; ctx.save(); ctx.translate(x,y); ctx.rotate(e*5); ctx.fillStyle=r.h.cap; ctx.beginPath(); ctx.arc(0,0,9,Math.PI,0); ctx.fill(); ctx.fillStyle=r.h.silk.accent; ctx.beginPath(); ctx.arc(0,-8,3,0,6.283); ctx.fill(); ctx.restore(); }
+    else if(h.k==='rainbow'){ ctx.save(); ctx.globalAlpha=Math.min(0.55,e*0.4)*(e>6?7-e:1); ['#ff6b6b','#ffa94d','#ffe066','#69db7c','#4dabf7','#9775fa'].forEach((c,i)=>{ ctx.strokeStyle=c; ctx.lineWidth=7; ctx.beginPath(); ctx.arc(W*0.5,sky+260,300-i*7,Math.PI*1.05,Math.PI*1.95); ctx.stroke(); }); ctx.restore(); }
+    else if(h.k==='fireworks'){ ctx.save(); ctx.globalCompositeOperation='lighter'; for(let b=0;b<4;b++){ const te=e-b*1.3; if(te<0||te>1.6) continue; const cx=W*(0.2+0.2*b), cy=sky+60+((b*47)%80), col=['#ff6b6b','#ffd43b','#74c0fc','#f783ac'][b];
+        ctx.fillStyle=col; ctx.globalAlpha=Math.max(0,1-te/1.6); for(let i=0;i<24;i++){ const a=i/24*6.283, rr=te*70; ctx.beginPath(); ctx.arc(cx+Math.cos(a)*rr,cy+Math.sin(a)*rr+te*te*12,2.4,0,6.283); ctx.fill(); }
+        if(!h['b'+b]){ h['b'+b]=1; Sound.boom(); } } ctx.restore(); }
+  }
+  drawCheer(ctx){
+    if(this.emo&&this.emo.length){ ctx.textAlign='center'; ctx.textBaseline='middle';
+      for(const m of this.emo){ m.life-=1/60; m.y+=m.vy; m.x+=m.vx; ctx.globalAlpha=Math.max(0,Math.min(1,m.life)); ctx.font=`${m.s}px sans-serif`; ctx.fillText(m.e,m.x,m.y); }
+      ctx.globalAlpha=1; this.emo=this.emo.filter(m=>m.life>0); }
+    if(this.cheerN){ const b=this.cheerBoost||0; if(b>0.02){ ctx.fillStyle=`rgba(255,212,59,${0.25+0.6*b})`; ctx.font='700 22px "Noto Sans KR",sans-serif'; ctx.textAlign='left'; ctx.fillText(`📣 응원 x${this.cheerN}`,18,H-170); } }
+  }
   update(dt){
     this.real+=dt;
     this.flash=Math.max(0,this.flash-dt*1.6);
@@ -1010,6 +1059,7 @@ class RaceEngine{
     const prog=Math.max(0,Math.min(1,a.pos/D));
     let lv=0.18+0.5*Math.pow(prog,3)+(remain<200?0.18:0);
     if(this.slowLock) lv=1;
+    lv=Math.min(1,lv+(this.cheerBoost||0)*0.4);
     if(a.fin && !this.slowLock) this.crowdLv=this.state==='run'?Math.max(0.3,this.crowdLv-dt*0.12):Math.max(0,this.crowdLv-dt*0.3);   // 경기 끝나면 함성이 서서히 잦아들어 0으로
     else this.crowdLv+=(lv-this.crowdLv)*Math.min(1,dt*2);
     Sound.setCrowd(this.crowdLv);
@@ -1090,6 +1140,8 @@ class RaceEngine{
       }
       if(msg) this.say(msg,hot);
     }
+    if(!a.fin) this.happen(o);
+    this.cheerBoost=Math.max(0,(this.cheerBoost||0)-dt*0.5);
     // 결승 처리
     if(a.fin && !this.firstFinSaid){
       this.firstFinSaid=true; this.flash=this.slowLock?0.95:0.5; Sound.shutter(); this.winT=this.real;
@@ -1161,6 +1213,7 @@ class RaceEngine{
     // 우승 꽃가루
     if(this.confetti){ const cf=this.confetti; ctx.save(); for(const c of cf){ c.y+=c.vy; c.x+=c.vx+Math.sin(this.real*3+c.p)*0.8; c.r+=c.vr; if(c.y>H+20) continue;
         ctx.save(); ctx.translate(c.x,c.y); ctx.rotate(c.r); ctx.fillStyle=c.col; ctx.fillRect(-c.w/2,-c.h/2*Math.abs(Math.cos(c.r*1.7)),c.w,c.h*Math.abs(Math.cos(c.r*1.7))+0.5); ctx.restore(); } ctx.restore(); }
+    this.drawHappening(ctx); this.drawCheer(ctx);
     this.drawHUD(ctx);
     // 위너 배너
     if(this.winT && this.state!=='photo'){ const e=this.real-this.winT; if(e<4.5){ const w=this.order[0].h, a=Math.min(1,e*3)*(e>4?(4.5-e)*2:1), sx=(1-Math.min(1,e*3))*400;
@@ -1696,7 +1749,7 @@ function QuinMatrix({setup,sel,onPair}){
   );
 }
 
-function Paddock({setup,credit,bets,setBets,onStart,onQuiz,onEvent,onOwner,stable,history,stats}){
+function Paddock({setup,credit,bets,setBets,onStart,onQuiz,onEvent,onOwner,stable,history,stats,daily,setDaily,onCredit}){
   const [tab,setTab]=useState('card');
   const [type,setType]=useState('WIN');
   const [sel,setSel]=useState([]);
@@ -1785,6 +1838,7 @@ function Paddock({setup,credit,bets,setBets,onStart,onQuiz,onEvent,onOwner,stabl
         </div>}
       </div>
 
+      {daily && <DailyPanel daily={daily} setDaily={setDaily} onReward={n=>onCredit(n)}/>}
       {/* 메뉴: 커피 이벤트 / 내 구단 / 퀴즈 */}
       <div className="grid grid-cols-3 gap-1.5 mt-2">
         <button onClick={()=>{Sound.init();Sound.click();onEvent();}} className="rounded-xl py-2 bg-gradient-to-b from-emerald-600 to-teal-800 text-[12.5px] font-black leading-tight">☕ 커피 이벤트<div className="text-[9.5px] font-bold opacity-80">3만·5만 CR 교환</div></button>
@@ -1872,7 +1926,7 @@ function Paddock({setup,credit,bets,setBets,onStart,onQuiz,onEvent,onOwner,stabl
 }
 
 /* ---------------- 레이스 중계 화면 (세로 전체화면) ---------------- */
-function RaceView({setup,bets,onDone}){
+function RaceView({setup,bets,onDone,onCheer}){
   const cvRef=useRef(null), engRef=useRef(null), wrapRef=useRef(null);
   const [comm,setComm]=useState(null);
   const [ff,setFf]=useState(false);
@@ -1897,6 +1951,7 @@ function RaceView({setup,bets,onDone}){
         {comm && <div key={comm.id} className="tick-in absolute left-2 right-2 bottom-12 rounded-xl bg-black/65 backdrop-blur-sm px-3 py-2 border border-white/10">
           <div className={`text-[15px] font-bold leading-snug ${comm.hot?'text-yellow-300':'text-white'}`}><span className="text-red-400 mr-1">🎙️</span>{comm.text}</div>
         </div>}
+        <button onPointerDown={e=>{ e.preventDefault(); Sound.init(); if(engRef.current&&engRef.current.state==='run'){ engRef.current.cheer(); onCheer&&onCheer(); } }} className="absolute right-3 rounded-full w-[68px] h-[68px] bg-gradient-to-b from-pink-500 to-red-600 text-white font-black text-[13px] shadow-[0_0_20px_rgba(255,80,80,.6)] active:scale-90 select-none" style={{bottom:'150px',touchAction:'manipulation'}}>📣<div className="text-[11px] leading-none">응원!</div></button>
         <div className="absolute bottom-2 right-2 left-2 flex justify-end gap-1.5">
           {bets.length>0 && <div className="mr-auto px-2 py-1 rounded-lg text-[11px] font-bold bg-black/60 text-yellow-200">🎫 마권 {bets.length}장 · {fmt(bets.reduce((s,b)=>s+b.amount,0))} CR</div>}
           {Voice.ok && <button onClick={()=>{ const v=!vo; setVo(v); Voice.on=v; if(!v) Voice.stop(); else Voice.unlock(); }} className={`px-2.5 py-1 rounded-lg text-xs font-black ${vo?'bg-red-600 text-white':'bg-black/60 text-white'}`}>🎙️ {vo?'ON':'OFF'}</button>}
@@ -2287,6 +2342,29 @@ function OwnerModal({credit,stable,setStable,spend,onClose}){
     </div>);
 }
 
+/* ---------------- 📅 출석 체크 & 오늘의 미션 ---------------- */
+const MISSIONS=[{id:'race3',t:'오늘 3번 출주하기',goal:3,key:'races',rw:200},{id:'hit1',t:'마권 1번 적중하기',goal:1,key:'hits',rw:300},{id:'quin1',t:'복승식 적중하기',goal:1,key:'quin',rw:500},{id:'cheer',t:'응원 버튼 30번 누르기',goal:30,key:'cheer',rw:100}];
+function loadDaily(){ const d=ls.get('sd_daily',null), k=todayKey(); if(d&&d.d===k) return d; return {d:k,races:0,hits:0,quin:0,cheer:0,claimed:[],attend:false,streak:d?d.streak:0,last:d?d.last:''}; }
+function DailyPanel({daily,setDaily,onReward}){
+  const [open,setOpen]=useState(false);
+  const left=MISSIONS.filter(m=>!daily.claimed.includes(m.id)).length, ready=MISSIONS.filter(m=>daily[m.key]>=m.goal&&!daily.claimed.includes(m.id)).length;
+  return (<div className="mt-2 rounded-2xl bg-white/5 ring-1 ring-white/10">
+    <button onClick={()=>{Sound.click();setOpen(o=>!o);}} className="w-full flex items-center gap-2 px-3 py-2 text-left">
+      <span className="font-black text-[14px]">📅 오늘의 미션</span>
+      {ready>0 && <span className="px-1.5 py-0.5 rounded-full bg-red-500 text-white text-[10px] font-black animate-pulse">보상 {ready}개 받기!</span>}
+      <span className="ml-auto text-[11px] text-blue-200/70">남은 미션 {left} · 출석 {daily.streak}일째 {open?'▲':'▼'}</span>
+    </button>
+    {open && <div className="px-3 pb-3 space-y-1.5">
+      {MISSIONS.map(m=>{ const v=Math.min(m.goal,daily[m.key]||0), done=daily.claimed.includes(m.id), ok=v>=m.goal;
+        return <div key={m.id} className="flex items-center gap-2 rounded-xl bg-black/30 px-2.5 py-2">
+          <div className="flex-1"><div className="text-[13px] font-bold">{m.t}</div><div className="h-1.5 rounded bg-white/10 mt-1 overflow-hidden"><div className="h-full bg-emerald-400" style={{width:(v/m.goal*100)+'%'}}/></div></div>
+          <span className="text-[11px] text-blue-200/80 w-10 text-right">{v}/{m.goal}</span>
+          <button disabled={!ok||done} onClick={()=>{ onReward(m.rw); Sound.coin(); setDaily(d=>({...d,claimed:[...d.claimed,m.id]})); }} className={`px-2 py-1.5 rounded-lg text-[11px] font-black w-[64px] ${done?'bg-white/5 text-white/40':ok?'bg-yellow-300 text-black':'bg-white/10 text-white/40'}`}>{done?'완료':`+${m.rw}`}</button>
+        </div>; })}
+    </div>}
+  </div>);
+}
+
 /* ---------------- 앱 ---------------- */
 function App(){
   const [credit,setCredit]=useState(()=>ls.get('sd_credit',1000));
@@ -2302,6 +2380,12 @@ function App(){
   const [stable,setStable]=useState(()=>ls.get('sd_stable',null));
   const [claims,setClaims]=useState(()=>ls.get('sd_claims',[]));
   const [modal,setModal]=useState(null);
+  const [daily,setDaily]=useState(()=>loadDaily());
+  const [attendMsg,setAttendMsg]=useState(null);
+  useEffect(()=>ls.set('sd_daily',daily),[daily]);
+  useEffect(()=>{ if(!daily.attend){ const y=new Date(Date.now()-864e5), yk=`${y.getFullYear()}-${y.getMonth()+1}-${y.getDate()}`;
+      const streak=daily.last===yk?Math.min(7,(daily.streak||0)+1):1, rw=100+streak*100;   // 연속 출석할수록 보너스 (최대 7일째 800)
+      setDaily(d=>({...d,attend:true,streak,last:todayKey()})); setCredit(c=>c+rw); setAttendMsg({streak,rw}); } },[]);
   const [ownerPrize,setOwnerPrize]=useState(0);
   useEffect(()=>ls.set('sd_stable',stable),[stable]);
   useEffect(()=>ls.set('sd_claims',claims),[claims]);
@@ -2335,6 +2419,7 @@ function App(){
     setOwnerPrize(op);
     setPayouts(pays); setResult(res); setCredit(c=>c+win+bn+op);
     setHistory(h=>[[o[0],o[1]],...h].slice(0,20));
+    setDaily(d=>({...d,races:d.races+1,hits:d.hits+(win>0?1:0),quin:d.quin+(bets.some((b,i)=>b.type==='QUIN'&&pays[i]>0)?1:0)}));
     setPhase('result');
     if(win>0){ const big=bets.some((b,i)=>pays[i]>0&&b.odds>=10); Sound.jackpot(big); }
     else if(bets.length) Sound.miss();
@@ -2354,8 +2439,19 @@ function App(){
         </div>
       </header>
       {!setup ? <div className="text-center py-24"><div className="fx-title text-3xl gold animate-pulse">예상지 집계 중...</div><div className="text-blue-200/70 mt-2 text-sm">배당률 계산 중입니다</div></div> :
-        phase==='paddock' ? <Paddock setup={setup} credit={credit} bets={bets} setBets={setBets} onStart={start} onQuiz={()=>setQuiz(true)} onEvent={()=>setModal('event')} onOwner={()=>setModal('owner')} stable={stable} history={history} stats={stats}/> :
-        <RaceView key={setup.raceNo} setup={setup} bets={bets} onDone={done}/>}
+        phase==='paddock' ? <Paddock setup={setup} credit={credit} bets={bets} setBets={setBets} onStart={start} onQuiz={()=>setQuiz(true)} onEvent={()=>setModal('event')} onOwner={()=>setModal('owner')} stable={stable} history={history} stats={stats} daily={daily} setDaily={setDaily} onCredit={n=>setCredit(c=>c+n)}/> :
+        <RaceView key={setup.raceNo} setup={setup} bets={bets} onDone={done} onCheer={()=>setDaily(d=>({...d,cheer:(d.cheer||0)+1}))}/>}
+      {attendMsg && <div className="fixed inset-0 z-[70] bg-black/70 flex items-center justify-center p-6" onClick={()=>setAttendMsg(null)}>
+        <div className="glass rounded-3xl p-5 w-full max-w-xs text-center pop">
+          <div className="text-5xl">📅</div>
+          <div className="fx-title text-2xl gold mt-1">출석 {attendMsg.streak}일째!</div>
+          <div className="text-[13px] text-blue-200/85 mt-1">오늘의 출석 보너스</div>
+          <div className="text-3xl font-black text-yellow-300 mt-1">+{fmt(attendMsg.rw)} CR</div>
+          <div className="flex justify-center gap-1 mt-3">{Array.from({length:7},(_,i)=><div key={i} className={`w-7 h-7 rounded-lg text-[11px] font-black flex items-center justify-center ${i<attendMsg.streak?'bg-yellow-300 text-black':'bg-white/10 text-white/40'}`}>{i+1}</div>)}</div>
+          <p className="text-[11px] text-blue-200/70 mt-2">매일 접속하면 보너스가 커져요 (최대 7일째 800 CR)</p>
+          <button onClick={()=>{Sound.init();Sound.coin();setAttendMsg(null);}} className="w-full mt-3 py-3 rounded-xl font-black bg-gradient-to-b from-yellow-300 to-orange-500 text-black">받기</button>
+        </div>
+      </div>}
       {quiz && setup && <QuizModal setup={setup} onClose={()=>setQuiz(false)} onReward={n=>setCredit(c=>c+n)}/>}
       {phase==='result' && result && <ResultModal setup={setup} result={result} bets={bets} payouts={payouts} bonus={bonus} streak={stats.streak} ownerPrize={ownerPrize} onNext={next}/>}
       {modal==='event' && <EventModal credit={credit} claims={claims} onClose={()=>setModal(null)} onClaim={c=>{ setCredit(x=>x-c.cr); setClaims(L=>[c,...L]); }}/>}
