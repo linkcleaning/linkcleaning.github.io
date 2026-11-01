@@ -123,7 +123,12 @@ const WORLD_HORSES=[
   {id:'thames', name:'로열템스',    flag:'🇬🇧', home:'london',  grade:4, price:22000, wp:5, style:'추입', coat:2, tag:'왕실 혈통', desc:'왕실 마구간 출신. 비 오는 날 진흙 주로를 사랑한다.'},
   {id:'kstorm', name:'켄터키스톰',  flag:'🇺🇸', home:'kentucky',grade:5, price:35000, wp:8, style:'선행', coat:0, tag:'더비 챔피언 혈통', desc:'켄터키 더비 명문가의 막내. 전설은 이제 시작이다.'},
 ];
-const WP_MAX=30;   // 승리 포인트 1점 = 마권 적중금 +1% (최대 30%)
+const WP_MAX=30;
+const DAILY_RATE=0.03;                       // 보유 말 1마리당 매일 구매가의 3% 구단 수익
+const appearFee=g=>100*g;                    // 출전 수당 (결과 상관없이)
+const worldPrize=(rk,g)=>rk<3?PRIZE[rk]*(1+g):0;   // 3착 안 상금: 등급만큼 배로
+const OWN_BET_BONUS=0.2;                     // 내 출전마 마권 적중 시 +20%
+const barnDaily=barn=>Math.round((barn&&barn.horses||[]).reduce((s,x)=>s+((WORLD_HORSES.find(w=>w.id===x.id)||{}).price||0)*DAILY_RATE,0));   // 승리 포인트 1점 = 마권 적중금 +1% (최대 30%)
 const barnWP=barn=>Math.min(WP_MAX,(barn&&barn.horses||[]).reduce((s,x)=>s+((WORLD_HORSES.find(w=>w.id===x.id)||{}).wp||0),0));
 function loadBarn(){ return ls.get('sd_barn',{horses:[],entry:null}); }
 
@@ -247,7 +252,7 @@ function makeRaceSetup(raceNo,stable,barn){
     if(owned){ // 구단주 투자 효과: 스피드·지구력·순발력 레벨, 컨디션 관리
       abil += 0.0002*(stable.spd||0); stam += 0.006*(stable.sta||0); h.kickB=0.0012*(stable.kick||0);
       if(stable.care) cond=5; }
-    if(h.world){ abil += 0.00035*h.world.grade + (h.world.home?0.0008:0); stam += 0.01*h.world.grade; cond=Math.max(cond,3); }
+    if(h.world){ h.hidden=0.00018*h.world.grade+(h.world.home?0.0004:0); abil += 0.00018*h.world.grade + (h.world.home?0.0004:0); stam += 0.01*h.world.grade; cond=Math.max(cond,3); }
     const q = (abil-0.996)/0.008;
     const recent = [];
     for(let k=0;k<5;k++){ const rr=Math.min(6,Math.max(1,Math.round(1+Math.random()*5*(1.15-q*0.8)))); recent.push(rr); }
@@ -255,6 +260,7 @@ function makeRaceSetup(raceNo,stable,barn){
       weightKg: 440+Math.floor(Math.random()*70), delta: (Math.floor(Math.random()*9)-4)*2 };
   });
   const odds = computeOdds(horses,D,GOING_MUL[going],380);
+  horses.forEach(h=>{ if(h.hidden) h.abil+=h.hidden; });   // 숨은 실력: 배당표엔 안 잡힌 구단주 관리 효과
   const byOdds = horses.map(h=>h.no).sort((a,b)=>odds.win[a]-odds.win[b]);
   const pop={}; byOdds.forEach((no,i)=>pop[no]=i+1);
   const expert = horses.map(h=>({no:h.no, s:Math.log(odds.win[h.no])+(Math.random()-0.5)*0.9})).sort((a,b)=>a.s-b.s);
@@ -1865,7 +1871,7 @@ function Paddock({setup,credit,bets,setBets,onStart,onQuiz,onEvent,evLabel,onOwn
       {/* 메뉴: 커피 이벤트 / 내 구단 / 퀴즈 */}
       <div className="grid grid-cols-3 gap-1.5 mt-2">
         <button onClick={()=>{Sound.init();Sound.click();onEvent();}} className="rounded-xl py-2 bg-gradient-to-b from-emerald-600 to-teal-800 text-[12.5px] font-black leading-tight">{evLabel?evLabel[0]:'☕ 커피 이벤트'}<div className="text-[9.5px] font-bold opacity-80 truncate px-1">{evLabel?evLabel[1]:'3만·5만 CR 교환'}</div></button>
-        <button onClick={()=>{Sound.init();Sound.click();onOwner();}} className="rounded-xl py-2 bg-gradient-to-b from-amber-500 to-orange-700 text-[12.5px] font-black leading-tight">🏇 내 구단<div className="text-[9.5px] font-bold opacity-80">{(barn&&barn.horses.length)?`🐎 ${barn.horses.length+(stable?1:0)}마리 · WP ${barnWP(barn)}`:stable?`👑 ${stable.name}`:'구단주 되기 · 말 시장'}</div></button>
+        <button onClick={()=>{Sound.init();Sound.click();onOwner();}} className="rounded-xl py-2 bg-gradient-to-b from-amber-500 to-orange-700 text-[12.5px] font-black leading-tight">🏇 내 구단<div className="text-[9.5px] font-bold opacity-80">{(barn&&barn.horses.length)?(barn.lastPay!==todayKey()?`💰 수익 ${fmt(barnDaily(barn))} 받기!`:`🐎 ${barn.horses.length+(stable?1:0)}마리 · WP ${barnWP(barn)}`):stable?`👑 ${stable.name}`:'구단주 되기 · 말 시장'}</div></button>
         <button onClick={()=>{Sound.init();Sound.click();onQuiz();}} className="rounded-xl py-2 bg-gradient-to-b from-fuchsia-500 to-purple-700 text-[12.5px] font-black leading-tight">🧠 퀴즈<div className="text-[9.5px] font-bold opacity-80">오늘 {fmtN(quizToday())}/5,000</div></button>
       </div>
       {/* 탭: 출전표 / 마권 구매 */}
@@ -2066,8 +2072,8 @@ function ResultModal({setup,result,bets,payouts,bonus,streak,ownerPrize,wpBonus,
           </div>
           {bonus>0 && <div className="mt-1 text-center text-[12.5px] font-black text-orange-200 bg-red-600/30 rounded-md py-0.5">🔥 {streak}연속 적중 보너스 +{fmt(bonus)} CR</div>}
         </div>}
-        {wpBonus>0 && <div className="shrink-0 text-center text-[12.5px] font-black text-sky-100 bg-sky-700/50 rounded-xl py-1">🌍 구단 승리 포인트 보너스 +{fmt(wpBonus)} CR</div>}
-        {ownerPrize>0 && <div className="shrink-0 text-center text-[13px] font-black text-yellow-100 bg-gradient-to-r from-amber-600/60 to-orange-700/60 rounded-xl py-1.5">👑 구단주 상금 +{fmt(ownerPrize)} CR</div>}
+        {wpBonus>0 && <div className="shrink-0 text-center text-[12.5px] font-black text-sky-100 bg-sky-700/50 rounded-xl py-1">🌍 구단 보너스 (승리 포인트·내 말 응원 배당) +{fmt(wpBonus)} CR</div>}
+        {ownerPrize>0 && <div className="shrink-0 text-center text-[13px] font-black text-yellow-100 bg-gradient-to-r from-amber-600/60 to-orange-700/60 rounded-xl py-1.5">👑 구단주 상금·출전 수당 +{fmt(ownerPrize)} CR</div>}
         <button onClick={onNext} className="shrink-0 w-full py-3 rounded-2xl fx-title text-xl bg-gradient-to-b from-yellow-300 to-orange-500 text-black active:scale-[.98]">다음 경주 ▶</button>
       </div>
     </div>
@@ -2420,7 +2426,7 @@ function OwnerModal(props){
 }
 function MarketModal({credit,spend,onClose,barn,setBarn,tabs}){
   const [ask,setAsk]=useState(null);
-  const own=id=>barn.horses.find(x=>x.id===id), wp=barnWP(barn);
+  const own=id=>barn.horses.find(x=>x.id===id), wp=barnWP(barn), daily=barnDaily(barn), canPay=daily>0&&barn.lastPay!==todayKey();
   return (
     <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm overflow-y-auto" onClick={onClose}>
       <div className="max-w-md mx-auto p-3 pt-6" onClick={e=>e.stopPropagation()}>
@@ -2430,7 +2436,20 @@ function MarketModal({credit,spend,onClose,barn,setBarn,tabs}){
           <div className="rounded-2xl p-3 bg-gradient-to-r from-sky-700/60 to-indigo-700/60">
             <div className="flex items-center"><span className="font-black">⚡ 구단 승리 포인트</span><span className="ml-auto fx-title text-2xl text-yellow-300">{wp} WP</span></div>
             <div className="h-2 rounded bg-black/30 mt-1 overflow-hidden"><div className="h-full bg-yellow-300" style={{width:(wp/WP_MAX*100)+'%'}}/></div>
-            <div className="text-[11.5px] text-blue-100/85 mt-1">말을 살수록 WP가 쌓여요. <b>1 WP = 마권 적중금 +1%</b> (최대 {WP_MAX}%). 출전 등록한 말은 다음 경주에 직접 뛰고, 3착 안에 들면 등급만큼 커진 상금을 받아요!</div>
+            <div className="text-[11.5px] text-blue-100/85 mt-1"><b>1 WP = 모든 마권 적중금 +1%</b> (최대 {WP_MAX}%)</div>
+          </div>
+          <div className="mt-2 rounded-2xl p-3 bg-gradient-to-r from-amber-600/50 to-orange-700/50 flex items-center gap-2">
+            <div className="flex-1"><div className="font-black text-[14px]">💰 오늘의 구단 수익</div><div className="text-[11px] text-amber-100/85">보유 말마다 매일 구매가의 3%씩 들어와요</div></div>
+            <button disabled={!canPay} onClick={()=>{ spend(-daily); Sound.jackpot(false); setBarn({...barn,lastPay:todayKey()}); }} className={`px-3 py-2 rounded-xl font-black text-[13px] ${canPay?'bg-yellow-300 text-black animate-pulse':'bg-white/10 text-white/40'}`}>{daily===0?'말 없음':canPay?`+${fmt(daily)} 받기`:'내일 또!'}</button>
+          </div>
+          <div className="mt-2 rounded-2xl bg-black/30 p-2.5 text-[11.5px] leading-relaxed">
+            <div className="font-black text-[13px] mb-0.5">🎁 말 주인 혜택</div>
+            <div>💰 <b>매일 수익</b> 구매가의 3% (켄터키스톰이면 하루 1,050 CR)</div>
+            <div>🏁 <b>출전 수당</b> 뛰기만 해도 ★×100 CR</div>
+            <div>🏆 <b>상금</b> 3착 안이면 기본 상금 × (1+★)배 — ★5 우승 3,000 CR</div>
+            <div>🎯 <b>내 말 응원 배당</b> 내 출전마가 들어간 마권이 맞으면 +20%</div>
+            <div>🤫 <b>숨은 실력</b> 배당표엔 실력이 절반만 잡혀서, 내 말 배당이 실제보다 후해요</div>
+            <div>⚡ <b>승리 포인트</b> 모든 마권 적중금 +WP%</div>
           </div>
           <div className="grid gap-2 mt-3">
             {WORLD_HORSES.map(w=>{ const o=own(w.id), ent=barn.entry===w.id, c=COATS[w.coat]; return (
@@ -2597,9 +2616,10 @@ function App(){
     const bn=win>0&&streak>=2?Math.round(win*Math.min(0.5,0.1*(streak-1))):0;   // 연속 적중 보너스 (2연속 10% ~ 최대 50%)
     setStats(st=>({streak, best:Math.max(st.best,streak), earned:st.earned+win+bn, hits:st.hits+(win>0?1:0), races:st.races+1}));
     setBonus(bn);
-    const wpb=win>0?Math.round(win*barnWP(barn)/100):0; setWpBonus(wpb);
+    const ownHit=setup.horses.find(h=>h.world); const ownWinAmt=ownHit?bets.reduce((s2,b,i)=>s2+((b.sel.includes(ownHit.no)&&pays[i]>0)?pays[i]:0),0):0;
+    const wpb=(win>0?Math.round(win*barnWP(barn)/100):0)+Math.round(ownWinAmt*OWN_BET_BONUS); setWpBonus(wpb);
     const wh=setup.horses.find(h=>h.world); let wpz=0;
-    if(wh){ const rk=o.indexOf(wh.no); wpz=rk<3?Math.round(PRIZE[rk]*(1+0.25*wh.world.grade)):0;
+    if(wh){ const rk=o.indexOf(wh.no); wpz=worldPrize(rk,wh.world.grade)+appearFee(wh.world.grade);
       setBarn(B=>({...B,horses:B.horses.map(x=>x.id===wh.world.id?{...x,races:(x.races||0)+1,prize:(x.prize||0)+wpz,w:(x.w||[0,0,0]).map((v,i)=>i===rk?v+1:v)}:x)})); }
     const own=setup.horses.find(h=>h.owned&&!h.world); let op=0;
     if(own && stable && stable.name===own.name){ const rk=o.indexOf(own.no); op=rk<3?PRIZE[rk]:0;
