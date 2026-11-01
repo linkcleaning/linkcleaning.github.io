@@ -1794,7 +1794,7 @@ function QuinMatrix({setup,sel,onPair}){
   );
 }
 
-function Paddock({setup,credit,bets,setBets,onStart,onQuiz,onEvent,evLabel,onOwner,stable,barn,history,stats,daily,setDaily,onCredit}){
+function Paddock({setup,credit,bets,setBets,onStart,onQuiz,onRps,onEvent,evLabel,onOwner,stable,barn,history,stats,daily,setDaily,onCredit}){
   const [tab,setTab]=useState('card');
   const [type,setType]=useState('WIN');
   const [sel,setSel]=useState([]);
@@ -1890,6 +1890,8 @@ function Paddock({setup,credit,bets,setBets,onStart,onQuiz,onEvent,evLabel,onOwn
         <button onClick={()=>{Sound.init();Sound.click();onOwner();}} className="rounded-xl py-2 bg-gradient-to-b from-amber-500 to-orange-700 text-[12.5px] font-black leading-tight">🏇 내 구단<div className="text-[9.5px] font-bold opacity-80">{(barn&&barn.horses.length)?(barn.lastPay!==todayKey()?`💰 수익 ${fmt(barnDaily(barn))} 받기!`:`🐎 ${barn.horses.length+(stable?1:0)}마리 · WP ${barnWP(barn)}`):stable?`👑 ${stable.name}`:'구단주 되기 · 말 시장'}</div></button>
         <button onClick={()=>{Sound.init();Sound.click();onQuiz();}} className="rounded-xl py-2 bg-gradient-to-b from-fuchsia-500 to-purple-700 text-[12.5px] font-black leading-tight">🧠 퀴즈<div className="text-[9.5px] font-bold opacity-80">오늘 {fmtN(quizToday())}/5,000</div></button>
       </div>
+      <button onClick={()=>{Sound.init();Sound.click();onRps&&onRps();}} className="w-full mt-1.5 rounded-xl py-2 flex items-center justify-center gap-2 text-[13px] font-black" style={{background:'linear-gradient(90deg,#111,#1e293b,#111)',border:'2px solid #2563eb',boxShadow:'0 0 10px rgba(37,99,235,.5)'}}>
+        <span>✌️✊✋</span><span className="text-yellow-300">레트로 가위바위보</span><span className="text-[10.5px] text-blue-200/80 font-bold">3연승 50 · 5연승 100 · 8연승 200</span></button>
       {/* 탭: 출전표 / 마권 구매 */}
       <div className="sticky top-[52px] z-20 mt-2 -mx-3 px-3 py-1.5 bg-[#070d1f]/90 backdrop-blur">
         <div className="grid grid-cols-2 gap-1 p-1 rounded-2xl bg-white/5">
@@ -2488,6 +2490,117 @@ function TicketConfirm({setup,bets,onGo}){
     </div>);
 }
 
+/* ---------------- ✊ 레트로 가위바위보 ---------------- */
+const RPS_PRIZE={3:50,5:100,8:200};          // 연속 승리 보상
+const RPS_DAILY=5;                            // 하루 도전 횟수
+const RPS_HANDS=[{k:'가위',e:'✌️',c:'linear-gradient(180deg,#ff5a5f,#c81e1e)',ring:'#7a0f12'},{k:'바위',e:'✊',c:'linear-gradient(180deg,#4f8dff,#1d4ed8)',ring:'#0b2a6b'},{k:'보',e:'✋',c:'linear-gradient(180deg,#ffc53d,#d97706)',ring:'#7a4b00'}];
+const LED_FONT={W:['10001','10001','10001','10101','10101','10101','01010'],I:['01110','00100','00100','00100','00100','00100','01110'],N:['10001','11001','11001','10101','10011','10011','10001'],
+  L:['10000','10000','10000','10000','10000','10000','11111'],O:['01110','10001','10001','10001','10001','10001','01110'],S:['01111','10000','10000','01110','00001','00001','11110'],
+  E:['11111','10000','10000','11110','10000','10000','11111'],D:['11110','10001','10001','10001','10001','10001','11110'],R:['11110','10001','10001','11110','10100','10010','10001'],A:['01110','10001','10001','11111','10001','10001','10001'],' ':['00000','00000','00000','00000','00000','00000','00000']};
+const handMaskCache={};
+function handMask(i,N){ const key=i+'_'+N; if(handMaskCache[key]) return handMaskCache[key];
+  const K=8, S=N*K, c=document.createElement('canvas'); c.width=c.height=S; const x=c.getContext('2d'), u=S/N;
+  // 직접 그린 손 모양 (가위·바위·보) — 기기마다 다른 이모지 대신 도트용 실루엣
+  const box=(X,Y,w,h,r)=>{ rr(x,X*u,Y*u,w*u,h*u,r*u); x.fill(); };
+  const rot=(cx,cy,ang,w,h)=>{ x.save(); x.translate(cx*u,cy*u); x.rotate(ang); rr(x,-w*u/2,-h*u,w*u,h*u,w*u/2); x.fill(); x.restore(); };
+  const cut=(X,Y,w,h)=>{ x.save(); x.globalCompositeOperation='destination-out'; x.fillRect(X*u,Y*u,w*u,h*u); x.restore(); };
+  x.fillStyle='#fff';
+  if(i===2){ // 보: 손가락 4개 + 엄지
+    box(5.2,10.5,12.8,9.5,3.2); [[6.4,3.2],[9.8,1.6],[13.2,2.2],[16.6,4.6]].forEach(([fx,fy],k)=>rot(fx,12,0.05*(k-1.5),2.4,12-fy)); rot(5.6,15,-0.95,2.5,7.5); box(8,19,7.5,3,1); }
+  else if(i===1){ // 바위: 주먹
+    box(4.6,6.5,14,12.5,3.6); cut(8.0,6,0.9,5.2); cut(11.4,6,0.9,5.2); cut(14.8,6,0.9,5.2); cut(4.6,11.3,9.5,0.9); cut(13.2,11.3,0.9,3); box(7.5,18.5,8.5,3.5,1); }
+  else { // 가위: 검지·중지 V
+    box(5.5,11,12.5,9,3.2); rot(10.2,13,-0.28,2.6,11.5); rot(14,13,0.28,2.6,11.5); cut(5.5,14.2,6.2,0.9); cut(11.2,14.2,0.9,5.8); box(8,19.5,7.5,2.5,1); }
+  const d=x.getImageData(0,0,S,S).data, cov=[];
+  for(let yy=0;yy<N;yy++){ cov.push([]); for(let xx=0;xx<N;xx++){ let a=0; for(let v=0;v<K;v++) for(let u=0;u<K;u++) a+=d[(((yy*K+v)*S)+(xx*K+u))*4+3]>100?1:0; cov[yy].push(a/(K*K)); } }
+  const on=(a,b)=>a>=0&&b>=0&&a<N&&b<N&&cov[b][a]>0.42, m=[];
+  for(let yy=0;yy<N;yy++){ const row=[]; for(let xx=0;xx<N;xx++){ const f=on(xx,yy); row.push(f&&(!on(xx-1,yy)||!on(xx+1,yy)||!on(xx,yy-1)||!on(xx,yy+1))?2:f?1:0); } m.push(row); }
+  return handMaskCache[key]=m; }
+function drawLedText(ctx,txt,x0,y0,dot,lit,col){ let x=x0; for(const ch of txt){ const g=LED_FONT[ch]||LED_FONT[' '];
+    for(let r=0;r<7;r++) for(let cc=0;cc<5;cc++){ const on=g[r][cc]==='1'; ctx.fillStyle=on?(lit?col:'#3a3a3a'):'#1c1c1c'; ctx.beginPath(); ctx.arc(x+cc*dot+dot/2,y0+r*dot+dot/2,dot*0.36,0,7); ctx.fill(); if(on&&lit){ ctx.save(); ctx.globalAlpha=0.35; ctx.beginPath(); ctx.arc(x+cc*dot+dot/2,y0+r*dot+dot/2,dot*0.62,0,7); ctx.fill(); ctx.restore(); } }
+    x+=dot*6; } }
+function RpsModal({onClose,onReward}){
+  const ld=()=>{ const d=ls.get('sd_rps',null); return d&&d.d===todayKey()?d:{d:todayKey(),runs:0,best:(d&&d.best)||0}; };
+  const [day,setDay]=useState(ld);
+  const [streak,setStreak]=useState(0);
+  const [active,setActive]=useState(false);       // 도전 진행 중
+  const [phase,setPhase]=useState('idle');          // idle | roll | show
+  const [res,setRes]=useState(null);                // {me,cpu,r:'win'|'lose'|'draw'}
+  const [msg,setMsg]=useState('버튼을 눌러 도전 시작!');
+  const [pop,setPop]=useState(null);
+  const top=useRef(null), disp=useRef(null), st=useRef({cpu:1,rolling:false,res:null,t:0});
+  useEffect(()=>ls.set('sd_rps',day),[day]);
+  const left=RPS_DAILY-day.runs;
+  // 그리기 루프
+  useEffect(()=>{ let raf; const loop=()=>{ raf=requestAnimationFrame(loop); const S=st.current; S.t+=1;
+      const c=disp.current, tc=top.current; if(!c||!tc) return;
+      const x=c.getContext('2d'), W=c.width, N=23, cell=W/ (N+2);
+      x.fillStyle='#111'; x.fillRect(0,0,W,W);
+      const idx=S.rolling?Math.floor(S.t/4)%3:S.cpu, m=handMask(idx,N), col=S.res==='lose'?'#ff3b30':S.res==='win'?'#ffd43b':'#ff5a2a';
+      const cx=W/2, R2=(W/2-cell*0.6);
+      for(let yy=0;yy<N;yy++) for(let xx=0;xx<N;xx++){ const px=cell*(xx+1.5), py=cell*(yy+1.5); if((px-cx)**2+(py-cx)**2>R2*R2) continue;
+        const v=m[yy][xx], on=v===2||(v===1&&false); x.fillStyle=on?col:'#2b2b2b'; x.beginPath(); x.arc(px,py,cell*0.34,0,7); x.fill();
+        if(on){ x.save(); x.globalAlpha=0.3; x.beginPath(); x.arc(px,py,cell*0.6,0,7); x.fill(); x.restore(); } }
+      // 상단 WIN / LOSE 전광판
+      const t=tc.getContext('2d'), TW=tc.width, TH=tc.height; t.fillStyle='#0d0d0d'; t.fillRect(0,0,TW,TH);
+      const dot=TH/8.2, blink=Math.floor(S.t/10)%2===0;
+      drawLedText(t,'WIN',TW*0.04,dot*0.6,dot,(S.res==='win'||S.res==='draw')&&blink,S.res==='draw'?'#7cf':'#ffd43b');
+      drawLedText(t,'LOSE',TW*0.96-dot*24,dot*0.6,dot,(S.res==='lose'||S.res==='draw')&&blink,S.res==='draw'?'#7cf':'#ff3b30');
+    }; loop(); return ()=>cancelAnimationFrame(raf); },[]);
+  // 대기 중엔 천천히 손 모양이 바뀜
+  useEffect(()=>{ if(phase!=='idle') return; const t=setInterval(()=>{ st.current.cpu=(st.current.cpu+1)%3; },900); return ()=>clearInterval(t); },[phase]);
+  const play=i=>{
+    if(phase==='roll') return;
+    Sound.init(); const base=active?streak:0;
+    if(!active){ if(left<=0){ setMsg('오늘 도전 횟수를 다 썼어요. 내일 또 만나요!'); Sound.miss(); return; }
+      setActive(true); setStreak(0); setDay(d=>({...d,runs:d.runs+1})); }
+    setPhase('roll'); setRes(null); st.current.res=null; st.current.rolling=true; setMsg(`${RPS_HANDS[i].k}! 과연...`); const leftNow=active?left:left-1;
+    let n=0; const tick=setInterval(()=>{ Sound.beep(520+(n%3)*160); n++; },90);
+    setTimeout(()=>{ clearInterval(tick); const cpu=Math.floor(Math.random()*3); st.current.rolling=false; st.current.cpu=cpu;
+      const r=cpu===i?'draw':((i+1)%3===cpu? 'lose':'win');   // 가위(0)<바위(1)<보(2)<가위
+      // 가위0 vs 바위1: 짐, 바위1 vs 보2: 짐, 보2 vs 가위0: 짐
+      st.current.res=r; setRes({me:i,cpu,r}); setPhase('show');
+      if(r==='draw'){ Sound.beep(400); setMsg('비겼어요! 한 번 더!'); return; }
+      if(r==='lose'){ Sound.miss(); setActive(false); setMsg(`아쉽다! ${base}연승에서 멈췄어요.${leftNow>0?` (오늘 남은 도전 ${leftNow}번)`:' 오늘 도전 끝!'}`); setDay(d=>({...d,best:Math.max(d.best,base)})); return; }
+      const ns=base+1; setStreak(ns); setDay(d=>({...d,best:Math.max(d.best,ns)}));
+      const prize=RPS_PRIZE[ns];
+      if(prize){ onReward(prize); Sound.jackpot(ns>=8); setPop({n:ns,p:prize}); setTimeout(()=>setPop(null),1800); }
+      else Sound.coin();
+      if(ns>=8){ setActive(false); setMsg('🎉 8연승 완주! 전설의 가위바위보 왕!'); }
+      else { const nx=[3,5,8].find(k=>k>ns); setMsg(`${ns}연승! 다음 보상까지 ${nx-ns}승 (+${RPS_PRIZE[nx]} CR)`); }
+    },1100);
+  };
+  return (
+    <div className="fixed inset-0 overflow-y-auto" style={{zIndex:60,background:'rgba(0,0,0,0.9)'}} onClick={onClose}>
+      <div className="max-w-md mx-auto p-3 pt-5" onClick={e=>e.stopPropagation()}>
+        <div className="rounded-[28px] p-3 pb-4 relative" style={{background:'linear-gradient(180deg,#1a1a1a,#0a0a0a)',border:'6px solid #1d4ed8',boxShadow:'0 0 24px rgba(37,99,235,.55), inset 0 0 30px rgba(0,0,0,.8)'}}>
+          <div className="flex items-center"><div className="fx-title text-[20px] gold">✊ 레트로 가위바위보</div><button onClick={onClose} className="ml-auto w-9 h-9 rounded-full bg-white/10 text-xl">×</button></div>
+          <div className="text-[11.5px] text-blue-200/80 mt-0.5">연속으로 이기면 보상! 3연승 <b className="text-yellow-300">+50</b> · 5연승 <b className="text-yellow-300">+100</b> · 8연승 <b className="text-yellow-300">+200</b> CR</div>
+          <canvas ref={top} width={660} height={84} className="w-full mt-2 rounded-lg" style={{aspectRatio:'660/84'}}/>
+          <div className="relative mx-auto mt-3" style={{width:'74%',aspectRatio:'1'}}>
+            <div className="absolute inset-0 rounded-full" style={{boxShadow:'0 0 0 7px #1d4ed8, 0 0 22px 8px rgba(37,99,235,.6)'}}/>
+            <canvas ref={disp} width={420} height={420} className="absolute inset-0 w-full h-full rounded-full"/>
+            {pop && <div className="absolute inset-0 flex flex-col items-center justify-center pop"><div className="fx-title text-yellow-300" style={{fontSize:44,textShadow:'0 0 16px #000,0 0 6px #000'}}>{pop.n}연승!</div><div className="fx-title" style={{fontSize:30,color:'#7CFC00',textShadow:'0 0 10px #000'}}>+{pop.p} CR</div></div>}
+          </div>
+          {/* 연승 램프 */}
+          <div className="flex justify-center gap-1.5 mt-3">{Array.from({length:8},(_,k)=>{ const lit=k<streak, ms=RPS_PRIZE[k+1];
+            return <div key={k} className="flex flex-col items-center"><div className="rounded-full" style={{width:24,height:24,background:lit?(ms?'#ffd43b':'#ff5a2a'):'#2b2b2b',boxShadow:lit?`0 0 10px ${ms?'#ffd43b':'#ff5a2a'}`:'inset 0 2px 4px #000',border:ms?'2px solid #ffd43b88':'2px solid #000'}}/><div className="text-[9.5px] mt-0.5 font-bold" style={{color:ms?'#ffd43b':'#666'}}>{ms?`+${ms}`:k+1}</div></div>; })}</div>
+          <div className="text-center mt-2 min-h-[40px] text-[14px] font-black text-white">{msg}</div>
+          {res && <div className="text-center text-[12px] text-blue-200/80">나: {RPS_HANDS[res.me].e} {RPS_HANDS[res.me].k} &nbsp;vs&nbsp; 기계: {RPS_HANDS[res.cpu].e} {RPS_HANDS[res.cpu].k}</div>}
+          {/* 버튼 */}
+          <div className="grid grid-cols-3 gap-3 mt-3 px-1">{RPS_HANDS.map((h,i)=>
+            <button key={i} disabled={phase==='roll'} onPointerDown={e=>{ e.preventDefault(); play(i); }} className="flex flex-col items-center select-none">
+              <span className="px-2 py-0.5 rounded-md text-[10px] font-black mb-1" style={{background:h.ring,color:'#fff'}}>CLICK!</span>
+              <span className={`rounded-full flex flex-col items-center justify-center active:translate-y-1 transition-transform`} style={{width:86,height:86,background:h.c,boxShadow:`0 8px 0 ${h.ring}, 0 12px 18px rgba(0,0,0,.6), inset 0 6px 10px rgba(255,255,255,.35)`}}>
+                <span style={{fontSize:30,lineHeight:1}}>{h.e}</span><span className="text-[14px] font-black text-white" style={{textShadow:'0 2px 0 rgba(0,0,0,.4)'}}>{h.k}</span></span>
+            </button>)}</div>
+          <div className="flex justify-between text-[11px] text-blue-200/70 mt-4 px-1"><span>오늘 남은 도전 <b className="text-white">{Math.max(0,left-(active?0:0))}</b> / {RPS_DAILY}</span><span>오늘 최고 {day.best}연승</span></div>
+          <div className="text-[10.5px] text-blue-200/50 mt-1 px-1">한 번 도전 = 질 때까지(또는 8연승까지). 비기면 다시 냅니다.</div>
+        </div>
+      </div>
+    </div>);
+}
+
 /* ---------------- 🏇 내 구단 (구단주 모드) ---------------- */
 const FOUND_COST=1000, CARE_COST=200, PRIZE=[500,250,120];
 const trainCost=lv=>300+200*lv;
@@ -2649,6 +2762,7 @@ function App(){
   const [payouts,setPayouts]=useState([]);
   const [muted,setMuted]=useState(false);
   const [quiz,setQuiz]=useState(false);
+  const [rps,setRps]=useState(false);
   const [stable,setStable]=useState(()=>ls.get('sd_stable',null));
   const [claims,setClaims]=useState(()=>ls.get('sd_claims',[]));
   const [vtest,setVtest]=useState(false);
@@ -2731,7 +2845,7 @@ function App(){
       </header>
       {!setup ? <div className="text-center py-24"><div className="fx-title text-3xl gold animate-pulse">예상지 집계 중...</div><div className="text-blue-200/70 mt-2 text-sm">배당률 계산 중입니다</div></div> :
         phase==='ticket' ? <TicketConfirm setup={setup} bets={bets} onGo={()=>setPhase('race')}/> :
-        phase==='paddock' ? <Paddock setup={setup} credit={credit} bets={bets} setBets={setBets} onStart={start} onQuiz={()=>setQuiz(true)} onEvent={()=>setModal('event')} evLabel={cupsOf(claims)>=COFFEE_MAX?(()=>{const se=seasonOf(ev); return [`${se.icon} 시즌 ${se.no}`,`${se.name} ${Math.min(seasonVal(ev,se),se.goal)>=se.goal?'✅':''}`];})():['☕ 커피 이벤트',cupsOf(claims)?`남은 1잔 · 2만 CR`:'3만·5만 CR 교환']} onOwner={()=>setModal('owner')} stable={stable} barn={barn} history={history} stats={stats} daily={daily} setDaily={setDaily} onCredit={n=>setCredit(c=>c+n)}/> :
+        phase==='paddock' ? <Paddock setup={setup} credit={credit} bets={bets} setBets={setBets} onStart={start} onQuiz={()=>setQuiz(true)} onRps={()=>setRps(true)} onEvent={()=>setModal('event')} evLabel={cupsOf(claims)>=COFFEE_MAX?(()=>{const se=seasonOf(ev); return [`${se.icon} 시즌 ${se.no}`,`${se.name} ${Math.min(seasonVal(ev,se),se.goal)>=se.goal?'✅':''}`];})():['☕ 커피 이벤트',cupsOf(claims)?`남은 1잔 · 2만 CR`:'3만·5만 CR 교환']} onOwner={()=>setModal('owner')} stable={stable} barn={barn} history={history} stats={stats} daily={daily} setDaily={setDaily} onCredit={n=>setCredit(c=>c+n)}/> :
         <RaceView key={setup.raceNo} setup={setup} bets={bets} onDone={done} onCheer={()=>setDaily(d=>({...d,cheer:(d.cheer||0)+1}))}/>}
       {attendMsg && <div className="fixed inset-0 z-[70] bg-black/70 flex items-center justify-center p-6" onClick={()=>setAttendMsg(null)}>
         <div className="glass rounded-3xl p-5 w-full max-w-xs text-center pop">
@@ -2744,6 +2858,7 @@ function App(){
           <button onClick={()=>{Sound.init();Sound.coin();setAttendMsg(null);}} className="w-full mt-3 py-3 rounded-xl font-black bg-gradient-to-b from-yellow-300 to-orange-500 text-black">받기</button>
         </div>
       </div>}
+      {rps && <RpsModal onClose={()=>setRps(false)} onReward={n=>setCredit(c=>c+n)}/>}
       {quiz && setup && <QuizModal setup={setup} onClose={()=>setQuiz(false)} onReward={n=>setCredit(c=>c+n)}/>}
       {phase==='result' && result && <ResultModal setup={setup} result={result} bets={bets} payouts={payouts} bonus={bonus} streak={stats.streak} ownerPrize={ownerPrize} wpBonus={wpBonus} onNext={next}/>}
       {modal==='event' && <EventModal credit={credit} claims={claims} ev={ev} onClose={()=>setModal(null)} onClaim={c=>{ setCredit(x=>x-c.cr); setClaims(L=>[c,...L]); if(cupsOf(claims)+c.cups>=COFFEE_MAX) setEv(e=>({...e,prog:newProg()})); }} onSeasonClear={b=>{ setCredit(x=>x+b.rw); setEv(e=>({s:e.s+1,prog:newProg(),badges:[...e.badges,b]})); }}/>}
