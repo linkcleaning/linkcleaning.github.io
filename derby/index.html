@@ -1,0 +1,2009 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<meta name="theme-color" content="#0b1530">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="스타더비">
+<title>STAR DERBY 스타더비 - 아케이드 경마</title>
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<link rel="icon" type="image/png" href="icon-192.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;700;900&display=swap" rel="stylesheet">
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.2.0/umd/react.production.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.production.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/7.23.5/babel.min.js"></script>
+<style>
+  html,body{margin:0;background:#070d1f;color:#e9eefc;font-family:'Noto Sans KR',system-ui,sans-serif;-webkit-tap-highlight-color:transparent;overscroll-behavior:none}
+  .fx-title{font-family:'Noto Sans KR',system-ui,sans-serif;font-weight:700;letter-spacing:-.01em}
+  .font-black{font-weight:700!important}
+  body{-webkit-font-smoothing:antialiased;-moz-osx-font-smoothing:grayscale}
+  .glass{background:linear-gradient(180deg,rgba(25,40,80,.92),rgba(12,20,45,.95));border:1px solid rgba(120,160,255,.18)}
+  .gold{color:#ffd54a;text-shadow:0 0 12px rgba(255,200,40,.45)}
+  @keyframes tickIn{from{transform:translateX(40px);opacity:0}to{transform:none;opacity:1}}
+  .tick-in{animation:tickIn .35s ease-out}
+  @keyframes pulseRed{0%,100%{opacity:1}50%{opacity:.25}}
+  .live-dot{animation:pulseRed 1s infinite}
+  @keyframes pop{0%{transform:scale(.6);opacity:0}70%{transform:scale(1.08)}100%{transform:scale(1);opacity:1}}
+  .pop{animation:pop .45s cubic-bezier(.2,.9,.3,1.3)}
+  @keyframes shine{0%{background-position:-200% 0}100%{background-position:200% 0}}
+  .shine{background:linear-gradient(90deg,#ffd54a,#fff6c8,#ffb300,#ffd54a);background-size:200% 100%;-webkit-background-clip:text;background-clip:text;color:transparent;animation:shine 2s linear infinite}
+  .no-scrollbar::-webkit-scrollbar{display:none}
+  canvas{display:block}
+</style>
+</head>
+<body>
+<div id="root"></div>
+
+<script>
+/* =========================================================
+   STAR DERBY — 엔진 (시뮬레이션 / 렌더링 / 사운드)
+   ========================================================= */
+/*SIM_START*/
+const FRAME = {1:{bg:'#ffffff',fg:'#111111'},2:{bg:'#141414',fg:'#ffffff'},3:{bg:'#e03131',fg:'#ffffff'},
+               4:{bg:'#1971c2',fg:'#ffffff'},5:{bg:'#fcc419',fg:'#111111'},6:{bg:'#2f9e44',fg:'#ffffff'},7:{bg:'#f76707',fg:'#ffffff'},8:{bg:'#f06595',fg:'#ffffff'}};
+const FIELD=8;
+const LANE_HALF=0.38/(FIELD-1);
+const COND_MUL = {5:1.0018,4:1.0009,3:1.0,2:0.9991,1:0.9982};
+const COND_INFO = {5:{a:'↑',t:'최상',c:'#ff4d4f'},4:{a:'↗',t:'양호',c:'#ff9f43'},3:{a:'→',t:'보통',c:'#c7cbd6'},
+                   2:{a:'↘',t:'저조',c:'#4dabf7'},1:{a:'↓',t:'나쁨',c:'#748ffc'}};
+const GOING_MUL = {'양호':1.0,'다습':0.985,'불량':0.97};
+const K_PROF = 0.6;
+const RACE_NAMES = [['제주 그랑프리','G1'],['한라산 스테이크스','G2'],['광안리 오션컵','G3'],['탐라 마일','G2'],
+  ['부산 해운대 더비','G1'],['성산 일출배','G3'],['링크클린 컵','G2'],['하나토탈컵','G1'],['이케이클린컵','G2'],['크리머스 스위트 스테이크스','G3']];
+
+/* ---- 매 경주 새로 편성되는 출전마 (랜덤 이름·털색·무늬·복색·각질) ---- */
+const COATS=[
+  {n:'밤색',coat:'#8a4b22',dark:'#4a2610',mane:'#1a0f0a',w:5},
+  {n:'흑갈색',coat:'#5e3a1f',dark:'#2e1a0c',mane:'#120c08',w:4},
+  {n:'흑마',coat:'#2a2321',dark:'#0d0a09',mane:'#080606',w:2},
+  {n:'적토',coat:'#b4471e',dark:'#6c280e',mane:'#7a2c0c',w:3},
+  {n:'회색',coat:'#a3a3a1',dark:'#5e5e5c',mane:'#454544',dapple:true,w:2},
+  {n:'백마',coat:'#eeeae2',dark:'#b9b2a6',mane:'#d6cfc2',w:1},
+  {n:'금색',coat:'#d6a85a',dark:'#9a7232',mane:'#f4e8c8',w:1.2},
+  {n:'청모',coat:'#7d8186',dark:'#45484c',mane:'#2a2b2d',w:1}];
+const SILK_COLORS=['#e03131','#1c7ed6','#2f9e44','#fcc419','#ff5fa2','#5b2ca0','#ffffff','#212529','#ff922b','#12b886','#74c0fc','#a61e4d','#e8590c','#364fc7','#94d82d'];
+const PATTERNS=['hoops','sash','diamonds','stars','chevron','halves','plain','spots','quarters','cross'];
+const NAME_A=['번개','천둥','질풍','황금','백설','흑','청룡','적','은빛','바람','한라','탐라','태양','달빛','별빛','폭풍','불꽃','무지개','초원','해무','파도','설악','광안','동백','유채','오름','올레','성산','새벽','노을','하늘','천마','구름','은하','벽력','해운대','용두','다이아'];
+const NAME_B=['호','마','왕','킹','스타','드림','특급','가도','질주','천하','공주','기사','대장','파워','로켓','선풍','전설','신화','엔진','일섬','여왕','장군','돌풍'];
+const NAME_FULL=['닥터 스피드','미스터 제주','럭키 스트라이크','골든 크림','블루 오션','레드 썬더','실버 애로우','다크 호스','캡틴 링크','스카이 러너','미드나잇 런','슈가 러시','오션 블리츠','썬셋 레이서','퀵 실버','윈드 브레이커','크림 캐슬','카멜 킹','라스트 댄스','문라이트 소나타'];
+const J_SUR=['김','이','박','최','정','강','조','윤','장','임','한','오','서','신','권','황','안','송','고','문'];
+const J_GIV=['하늘','태양','바람','영웅','민준','서준','도윤','지호','현우','준혁','시우','건우','우진','선우','유찬','한결','다온','이안','라온','지안'];
+function shuffle(a){ for(let i=a.length-1;i>0;i--){ const j=Math.floor(Math.random()*(i+1)); [a[i],a[j]]=[a[j],a[i]]; } return a; }
+function horseName(used){
+  for(let t=0;t<50;t++){
+    const n = Math.random()<0.25 ? pick(NAME_FULL) : pick(NAME_A)+pick(NAME_B);
+    if(!used.has(n) && n.length<=7){ used.add(n); return n; }
+  }
+  return '무명'+used.size;
+}
+function generateField(){
+  const used=new Set();
+  const jockeys=shuffle(['안영삼','한승우','김기훈','한정민','한정호','이은경','맹길이','박시은']);
+  const FIXED={'안영삼':'하나토탈이','한승우':'링크돌이','김기훈':'기훈짱','이은경':'링크순이','한정민':'핑크공주','맹길이':'까스돌이','박시은':'크림어스','한정호':'리턴팩토리'};
+  Object.values(FIXED).forEach(n=>used.add(n));
+  const styles=shuffle(['도주','추입',...shuffle(['도주','선행','선행','선입','선입','추입','추입','도주']).slice(0,FIELD-2)]);
+  return styles.map((style,i)=>{
+    const c=pickW(COATS,COATS.map(x=>x.w));
+    let base=pick(SILK_COLORS), acc=pick(SILK_COLORS); while(acc===base) acc=pick(SILK_COLORS);
+    return { no:i+1, name:FIXED[jockeys[i]]||horseName(used), coatName:c.n, coat:c.coat, coatDark:c.dark, mane:c.mane, dapple:!!c.dapple,
+      blaze: Math.random()<0.45 ? pick(['star','stripe','blaze']) : null,
+      socks: [0,1,2,3].map(()=>Math.random()<0.22),
+      style, dirtFit:0.99+Math.random()*0.02, sex:pickW(['수','암','거'],[5,3,2]), age:3+Math.floor(Math.random()*4),
+      silk:{base,accent:acc,pattern:pick(PATTERNS)}, cap:Math.random()<0.5?acc:base, jockey:jockeys[i] };
+  });
+}
+
+function laneZ(i){ return 0.12 + i*(0.76/(FIELD-1)); }
+function pick(a){ return a[Math.floor(Math.random()*a.length)]; }
+function pickW(a,w){ let s=0; for(const x of w) s+=x; let r=Math.random()*s; for(let i=0;i<a.length;i++){ r-=w[i]; if(r<=0) return a[i]; } return a[a.length-1]; }
+function quinKey(a,b){ return a<b ? a+'-'+b : b+'-'+a; }
+
+function profileMul(style,p,r){
+  let m;
+  const st = r.h.stam;
+  if(style==='도주'){ m = p<0.6 ? 1.031 : 1.031 - ((p-0.6)/0.4)*0.118*(2-st); }
+  else if(style==='선행'){ m = p<0.65 ? 1.012 : 1.012 - ((p-0.65)/0.35)*0.027*(2-st); }
+  else if(style==='선입'){ m = p<0.3 ? 0.995 : (p<0.72 ? 1.0 : 1.0 + Math.min(1,(p-0.72)/0.06)*0.03); }
+  else { m = p<r.spurtAt ? 0.977 : 0.977 + Math.min(1,(p-r.spurtAt)/0.05)*0.14; }
+  return 1 + K_PROF*(m-1);
+}
+function speedOf(r,D,going){
+  const h=r.h, p=Math.max(0,r.pos)/D;
+  const base = 16.6*h.abil*COND_MUL[h.cond]*r.luck*going;
+  const wave = 1 + 0.005*Math.sin(r.t*r.w1+r.p1) + 0.003*Math.sin(r.t*r.w2+r.p2);
+  return base*profileMul(h.style,p,r)*wave;
+}
+function makeRunner(h,i){
+  return { h, i, pos:-0.6, prev:-0.6, v:0, t:0,
+    luck: 1+(Math.random()-0.5)*0.017,
+    w1:0.25+Math.random()*0.35, w2:0.8+Math.random()*0.7, p1:Math.random()*6.283, p2:Math.random()*6.283,
+    spurtAt: 0.73+Math.random()*0.07, react: 0.05+Math.random()*0.3, kick: 1+(Math.random()-0.5)*0.02,
+    fin:false, finT:0, finV:0, spurting:false, spurtSaid:false,
+    lane: laneZ(i), phase: Math.random()*6.283 };
+}
+function stepRunner(r,dt,D,going,leadPos){
+  r.t += dt;
+  if(r.t < r.react) return;
+  let tgt = r.fin ? Math.max(4, 9 - (r.t-r.finT)*0.9) : speedOf(r,D,going);
+  if(!r.fin){
+    const p=r.pos/D;
+    // 중반까지는 뒤쪽 말이 바람막이 효과로 따라붙어 마군이 촘촘하게 유지됨 → 막판 대혼전
+    if(leadPos!=null && p>0.05 && p<0.78){ const gap=leadPos-r.pos; if(gap>1.5) tgt*=1+Math.min(0.012,(gap-1.5)*0.0012); }
+    if(p>0.72) tgt*=r.kick;   // 막판 컨디션 변수 → 역전 드라마
+  }
+  const rate = r.v<tgt ? (r.h.style==='도주'?0.95:(r.h.style==='추입'?0.7:0.82)) : 0.5;
+  r.v += (tgt-r.v)*Math.min(1,rate*dt);
+  r.prev = r.pos; r.pos += r.v*dt;
+  if(!r.fin && r.pos>=D){
+    r.fin = true; r.finV = r.v;
+    r.finT = r.t - dt*(r.pos-D)/Math.max(1e-6, r.pos-r.prev);
+  }
+  if(r.h.style==='추입' && !r.spurting && !r.fin && r.pos/D>=r.spurtAt) r.spurting = true;
+}
+function runSim(horses,D,going){
+  const rs = horses.map((h,i)=>makeRunner(h,i));
+  let t=0;
+  while(t<600){
+    let all=true;
+    let lp=-1e9; for(const r of rs) if(r.pos>lp) lp=r.pos;
+    for(const r of rs){ stepRunner(r,0.1,D,going,lp); if(!r.fin) all=false; }
+    t+=0.1; if(all) break;
+  }
+  return rs.sort((a,b)=>a.finT-b.finT);
+}
+function computeOdds(horses,D,going,N){
+  N = N||500;
+  const win={}, top2={}, pair={};
+  horses.forEach(h=>{ win[h.no]=0; top2[h.no]=0; });
+  for(let n=0;n<N;n++){
+    const o = runSim(horses,D,going);
+    const a=o[0].h.no, b=o[1].h.no;
+    win[a]++; top2[a]++; top2[b]++;
+    const k=quinKey(a,b); pair[k]=(pair[k]||0)+1;
+  }
+  const R=0.8, r1=x=>Math.round(x*10)/10;
+  const odds={win:{},place:{},quin:{}};
+  horses.forEach(h=>{
+    const pw=(win[h.no]+0.6)/(N+3.6);
+    const noise = 1+(Math.random()-0.5)*0.08;
+    odds.win[h.no] = r1(Math.min(99.9, Math.max(1.2, R/pw*noise)));
+    const p2=(top2[h.no]+1)/(N+3);
+    odds.place[h.no] = r1(Math.min(30, Math.max(1.1, R/p2)));
+  });
+  for(let a=1;a<=FIELD;a++) for(let b=a+1;b<=FIELD;b++){
+    const k=quinKey(a,b);
+    const pp=((pair[k]||0)+0.3)/(N+4.5);
+    odds.quin[k] = r1(Math.min(999.9, Math.max(1.5, R/pp)));
+  }
+  return odds;
+}
+function makeRaceSetup(raceNo){
+  const nm = RACE_NAMES[(raceNo-1)%RACE_NAMES.length];
+  const D = pick([1200,1400,1600,1800]);
+  const surface = Math.random()<0.6 ? 'turf' : 'dirt';
+  const weather = pickW(['맑음','흐림','비','노을','야간'],[4,2,1.8,1.5,1.7]);
+  const going = weather==='비' ? pickW(['다습','불량'],[1,1.2]) : weather==='흐림' ? pickW(['양호','다습'],[3,1]) : pickW(['양호','다습'],[7,1]);
+  const horses = generateField().map(h=>{
+    const cond = pickW([1,2,3,4,5],[1,2,4,3,1.5]);
+    let abil = 0.997+Math.random()*0.006;
+    if(surface==='dirt') abil *= 1+(h.dirtFit-1)*0.14;
+    const stam = 0.95+Math.random()*0.1;
+    const q = (abil-0.996)/0.008;
+    const recent = [];
+    for(let k=0;k<5;k++){ const rr=Math.min(6,Math.max(1,Math.round(1+Math.random()*5*(1.15-q*0.8)))); recent.push(rr); }
+    return { ...h, cond, abil, stam, recent,
+      weightKg: 440+Math.floor(Math.random()*70), delta: (Math.floor(Math.random()*9)-4)*2 };
+  });
+  const odds = computeOdds(horses,D,GOING_MUL[going],380);
+  const byOdds = horses.map(h=>h.no).sort((a,b)=>odds.win[a]-odds.win[b]);
+  const pop={}; byOdds.forEach((no,i)=>pop[no]=i+1);
+  const expert = horses.map(h=>({no:h.no, s:Math.log(odds.win[h.no])+(Math.random()-0.5)*0.9})).sort((a,b)=>a.s-b.s);
+  const marks={}; ['◎','○','▲','△','△','','',''].slice(0,expert.length).forEach((m,i)=>marks[expert[i].no]=m);
+  return { raceNo, name:nm[0], grade:nm[1], D, surface, going, goingMul:GOING_MUL[going], weather, horses, odds, pop, marks };
+}
+/*SIM_END*/
+
+/* ---------- 한글 조사 ---------- */
+function hasJong(w){ const s=String(w); const c=s.charCodeAt(s.length-1); if(c<0xAC00||c>0xD7A3) return false; return (c-0xAC00)%28!==0; }
+const iga  = w => w+(hasJong(w)?'이':'가');
+const eul  = w => w+(hasJong(w)?'을':'를');
+const wagwa= w => w+(hasJong(w)?'과':'와');
+const eun  = w => w+(hasJong(w)?'은':'는');
+const lblOf = h => `${h.no}번 ${h.name}`;
+
+/* =========================================================
+   사운드 (Web Audio API)
+   ========================================================= */
+const Sound = {
+  ctx:null, master:null, muted:false, noiseBuf:null, crowd:null,
+  init(){
+    try{
+      if(!this.ctx){
+        const AC = window.AudioContext||window.webkitAudioContext; if(!AC) return;
+        this.ctx = new AC();
+        const comp = this.ctx.createDynamicsCompressor();
+        comp.threshold.value=-14; comp.ratio.value=4;
+        this.master = this.ctx.createGain(); this.master.gain.value = this.muted?0:0.9;
+        this.master.connect(comp); comp.connect(this.ctx.destination);
+        const len = this.ctx.sampleRate*2;
+        const b = this.ctx.createBuffer(1,len,this.ctx.sampleRate); const d=b.getChannelData(0);
+        for(let i=0;i<len;i++) d[i]=Math.random()*2-1;
+        this.noiseBuf = b;
+      }
+      if(this.ctx.state==='suspended') this.ctx.resume();
+    }catch(e){}
+  },
+  setMuted(m){ this.muted=m; if(this.master) this.master.gain.setTargetAtTime(m?0:0.9,this.ctx.currentTime,0.05); },
+  ok(){ return !!(this.ctx && this.master); },
+  env(g,t,a,peak,d){
+    g.gain.setValueAtTime(0.0001,t);
+    g.gain.exponentialRampToValueAtTime(Math.max(0.0002,peak),t+a);
+    g.gain.exponentialRampToValueAtTime(0.0001,t+a+d);
+  },
+  osc(type,f,t,a,d,vol,f2){
+    const c=this.ctx, o=c.createOscillator(), g=c.createGain();
+    o.type=type; o.frequency.setValueAtTime(f,t);
+    if(f2) o.frequency.exponentialRampToValueAtTime(f2,t+a+d);
+    this.env(g,t,a,vol,d); o.connect(g); g.connect(this.master);
+    o.start(t); o.stop(t+a+d+0.05);
+  },
+  noise(t,dur,vol,ftype,freq,q,a){
+    const c=this.ctx, s=c.createBufferSource(), f=c.createBiquadFilter(), g=c.createGain();
+    s.buffer=this.noiseBuf; f.type=ftype; f.frequency.value=freq; f.Q.value=q||1;
+    this.env(g,t,a||0.003,vol,dur);
+    s.connect(f); f.connect(g); g.connect(this.master);
+    s.start(t, Math.random()*1.5, dur+0.1);
+  },
+  brass(freq,t,dur,vol){
+    const c=this.ctx;
+    const lp=c.createBiquadFilter(); lp.type='lowpass'; lp.Q.value=2;
+    lp.frequency.setValueAtTime(500,t); lp.frequency.linearRampToValueAtTime(3200,t+0.05); lp.frequency.linearRampToValueAtTime(1800,t+Math.max(0.08,dur));
+    const g=c.createGain();
+    g.gain.setValueAtTime(0.0001,t); g.gain.exponentialRampToValueAtTime(vol,t+0.03);
+    g.gain.setValueAtTime(vol*0.85,t+Math.max(0.04,dur-0.04)); g.gain.exponentialRampToValueAtTime(0.0001,t+dur+0.12);
+    const lfo=c.createOscillator(), lg=c.createGain(); lfo.frequency.value=5.5; lg.gain.setValueAtTime(0,t); lg.gain.linearRampToValueAtTime(freq*0.006,t+Math.min(dur,0.3));
+    lfo.connect(lg);
+    [-6,6].forEach(det=>{
+      const o=c.createOscillator(); o.type='sawtooth'; o.frequency.value=freq; o.detune.value=det;
+      lg.connect(o.frequency); o.connect(lp); o.start(t); o.stop(t+dur+0.2);
+    });
+    const sq=c.createOscillator(); sq.type='square'; sq.frequency.value=freq; const sg=c.createGain(); sg.gain.value=0.3;
+    sq.connect(sg); sg.connect(lp); sq.start(t); sq.stop(t+dur+0.2);
+    lfo.start(t); lfo.stop(t+dur+0.2);
+    lp.connect(g); g.connect(this.master);
+  },
+  fanfare(){
+    if(!this.ok()) return;
+    const t0=this.ctx.currentTime+0.08;
+    const G4=392,C5=523.25,E5=659.25,G5=783.99,C6=1046.5;
+    const seq=[[0,G4,.13],[.16,C5,.13],[.32,E5,.13],[.48,G5,.4],[.95,E5,.13],[1.11,G5,.7],
+               [1.95,C5,.13],[2.11,E5,.13],[2.27,G5,.13],[2.43,C6,.42],[2.93,G5,.13],[3.09,E5,.13],[3.25,G5,.13],[3.41,C6,1.15]];
+    seq.forEach(([dt,f,d])=>this.brass(f,t0+dt,d,0.16));
+    this.brass(G5,t0+3.41,1.15,0.09); this.brass(E5,t0+3.41,1.15,0.08); this.brass(C5,t0+3.41,1.15,0.07);
+    for(let i=0;i<14;i++) this.noise(t0+2.7+i*0.05,0.04,0.12+i*0.012,'bandpass',2200,0.8);
+    this.noise(t0+3.41,1.4,0.35,'highpass',5000,0.7,0.005);
+    this.osc('sine',90,t0+3.41,0.005,0.6,0.5,45);
+  },
+  bang(){
+    if(!this.ok()) return;
+    const t=this.ctx.currentTime+0.005;
+    // 출발 신호 "땅!" — 날카로운 파열음 + 저음 충격 + 경기장 메아리
+    this.noise(t,0.12,1.0,'highpass',900,0.6,0.001);
+    this.noise(t,0.35,0.7,'lowpass',2600,0.5,0.001);
+    this.osc('sine',95,t,0.001,0.3,0.9,35);
+    this.osc('triangle',180,t,0.001,0.12,0.4,60);
+    [0.16,0.34,0.55].forEach((d,i)=>{ this.noise(t+d,0.25,0.28/(i+1),'bandpass',1400-i*300,0.8,0.002); });
+  },
+  gate(){
+    if(!this.ok()) return;
+    const t=this.ctx.currentTime+0.01;
+    this.osc('sine',110,t,0.003,0.25,0.8,38);
+    this.noise(t,0.09,0.7,'bandpass',3000,2);
+    [523,1187,1781,2490,3320].forEach((f,i)=>this.osc('square',f,t,0.002,0.28-i*0.03,0.05));
+    this.noise(t+0.075,0.07,0.55,'bandpass',2000,3);
+    this.osc('triangle',740,t+0.075,0.002,0.2,0.12,700);
+    for(let i=0;i<10;i++){ this.osc('sine',1850,t+0.1+i*0.07,0.003,0.06,0.07); this.osc('sine',2960,t+0.1+i*0.07,0.003,0.05,0.035); }
+  },
+  hoof(vol,dirt){
+    if(!this.ok()||vol<0.01) return;
+    const t=this.ctx.currentTime+0.005;
+    this.osc('sine',150+Math.random()*30,t,0.002,0.08,vol,48);
+    this.noise(t,0.05,vol*0.55,'lowpass',dirt?1500:800,0.7);
+  },
+  crowdStart(){
+    if(!this.ok()||this.crowd) return;
+    const c=this.ctx;
+    const mk=(type,freq,q)=>{ const s=c.createBufferSource(); s.buffer=this.noiseBuf; s.loop=true;
+      const f=c.createBiquadFilter(); f.type=type; f.frequency.value=freq; f.Q.value=q;
+      const g=c.createGain(); g.gain.value=0; s.connect(f); f.connect(g); g.connect(this.master); s.start(); return {s,f,g}; };
+    const a=mk('bandpass',1100,0.6), b=mk('lowpass',320,0.7), v=mk('bandpass',600,2.5);
+    const lfo=c.createOscillator(); lfo.frequency.value=0.35; const lg=c.createGain(); lg.gain.value=180;
+    lfo.connect(lg); lg.connect(v.f.frequency); lfo.start();
+    this.crowd={a,b,v,lfo};
+  },
+  setCrowd(level){
+    if(!this.crowd) return;
+    const t=this.ctx.currentTime;
+    this.crowd.a.g.gain.setTargetAtTime(level*0.42,t,0.25);
+    this.crowd.b.g.gain.setTargetAtTime(level*0.32,t,0.25);
+    this.crowd.v.g.gain.setTargetAtTime(level*level*0.5,t,0.25);
+    this.crowd.a.f.frequency.setTargetAtTime(900+level*700,t,0.3);
+  },
+  click(){ if(!this.ok()) return; const t=this.ctx.currentTime; this.osc('sine',880,t,0.002,0.06,0.15,660); },
+  coin(delay){
+    if(!this.ok()) return; const t=this.ctx.currentTime+(delay||0);
+    this.osc('square',988,t,0.002,0.06,0.09); this.osc('square',1319,t+0.07,0.002,0.28,0.09);
+  },
+  jackpot(big){
+    if(!this.ok()) return; const t=this.ctx.currentTime;
+    const n = big?26:10;
+    for(let i=0;i<n;i++) this.coin(i*0.085+Math.random()*0.03);
+    [523,659,784,1047,1319,1568].forEach((f,i)=>this.osc('triangle',f,t+i*0.08,0.005,0.35,0.13));
+    if(big){ [1047,1319,1568,2093].forEach(f=>this.osc('triangle',f,t+0.6,0.01,1.2,0.08)); this.noise(t+0.6,1.0,0.2,'highpass',6000,0.5); }
+  },
+  rainStart(){ if(!this.ok()||this.rain) return; const c=this.ctx, s=c.createBufferSource(); s.buffer=this.noiseBuf; s.loop=true;
+    const f=c.createBiquadFilter(); f.type='highpass'; f.frequency.value=1800; const g=c.createGain(); g.gain.value=0; g.gain.setTargetAtTime(0.16,c.currentTime,0.8);
+    s.connect(f); f.connect(g); g.connect(this.master); s.start(); this.rain={s,g}; },
+  rainStop(){ if(!this.rain) return; try{ this.rain.g.gain.setTargetAtTime(0,this.ctx.currentTime,0.3); const s=this.rain.s; setTimeout(()=>{ try{s.stop();}catch(e){} },1500); }catch(e){} this.rain=null; },
+  thunder(){ if(!this.ok()) return; const t=this.ctx.currentTime; this.noise(t,0.25,0.6,'highpass',1500,0.5,0.002); this.noise(t+0.05,2.4,0.7,'lowpass',180,0.8,0.08); this.osc('sine',48,t+0.05,0.05,2.0,0.5,30); },
+  shutter(){
+    if(!this.ok()) return; const t=this.ctx.currentTime;
+    this.noise(t,0.03,0.6,'highpass',4000,0.7); this.noise(t+0.09,0.04,0.5,'highpass',3000,0.7);
+    this.osc('sine',2400,t,0.001,0.04,0.2,1200);
+  },
+  beep(f){ if(!this.ok()) return; const t=this.ctx.currentTime; this.osc('square',f,t,0.003,0.16,0.12); this.osc('sine',f*2,t,0.003,0.12,0.05); },
+  drum(v){ if(!this.ok()) return; const t=this.ctx.currentTime; this.osc('sine',72,t,0.004,0.22,v,38); this.noise(t,0.08,v*0.35,'lowpass',300,0.7); this.osc('sine',66,t+0.16,0.004,0.18,v*0.7,36); },
+  miss(){ if(!this.ok()) return; const t=this.ctx.currentTime; this.osc('sawtooth',300,t,0.01,0.35,0.07,150); this.osc('sawtooth',220,t+0.25,0.01,0.5,0.07,110); }
+};
+
+
+/* =========================================================
+   아나운서 음성 중계 (Web Speech API, 한국어 TTS)
+   ========================================================= */
+const MALE_RE=/injoon|in-joon|minsu|min-su|jian|hyunsu|bongjin|gookmin|seoyeon_m|male|남성|남자|kod|koc|ko-kr-standard-c|ko-kr-standard-d|wavenet-c|wavenet-d|neural2-c/i;
+const Voice={ on:true, ok:typeof window!=='undefined'&&'speechSynthesis' in window, v:null, curHot:false, male:false,
+  list(){ try{ return speechSynthesis.getVoices().filter(v=>/^ko/i.test(v.lang)); }catch(e){ return []; } },
+  pickVoice(){ try{
+    const ko=this.list(); let saved=null; try{ saved=localStorage.getItem('sd_voice'); }catch(e){}
+    this.v = (saved&&ko.find(v=>v.name===saved)) || ko.find(v=>MALE_RE.test(v.name)) || ko[0] || null;
+    this.male = !!(this.v && MALE_RE.test(this.v.name));
+  }catch(e){} },
+  setVoice(name){ try{ localStorage.setItem('sd_voice',name); }catch(e){} this.pickVoice(); this.say('안녕하세요, 스타더비 중계를 맡은 아나운서입니다!',true); },
+  unlock(){ if(!this.ok) return; try{ this.pickVoice(); const u=new SpeechSynthesisUtterance(' '); u.volume=0; u.lang='ko-KR'; speechSynthesis.speak(u); }catch(e){} },
+  // 자체 대기열 + 감시 타이머: iOS/크롬에서 onend가 안 오거나 cancel 직후 speak가 씹혀서 소리가 끊기는 문제 방지
+  q:[], busy:false, cur:null, wd:null,
+  // 겹침 방지: 절대 끊지(cancel) 않고, 기기가 아직 말하는 중이면 끝날 때까지 기다렸다가 다음 문장을 말함
+  tok:0, waitStart:0,
+  say(text,hot,I){
+    if(!this.ok||!this.on||Sound.muted) return;
+    const t=text.replace(/!{2,}/g,'!').replace(/[🔥🎙️]/g,'');
+    const it={t,hot,I:I==null?0.3:I,at:Date.now()};
+    if(hot || !this.q.length || !this.q[0].hot) this.q=[it];   // 대기열엔 가장 최신(긴박한 것 우선) 한 문장만
+    if(!this.busy) this.next();
+  },
+  next(){
+    clearTimeout(this.wd);
+    if(!this.on){ this.busy=false; return; }
+    let speaking=false; try{ speaking=speechSynthesis.speaking||speechSynthesis.pending; }catch(e){}
+    if(speaking){
+      if(!this.waitStart) this.waitStart=Date.now();
+      if(Date.now()-this.waitStart<12000){ this.busy=true; this.wd=setTimeout(()=>this.next(),200); return; }
+    }
+    this.waitStart=0;
+    let it=this.q.shift();
+    while(it && !it.hot && Date.now()-it.at>4500) it=this.q.shift();   // 너무 지난 멘트는 버림
+    if(!it){ this.busy=false; return; }
+    this.busy=true; const myTok=++this.tok;
+    try{
+      if(speechSynthesis.paused) speechSynthesis.resume();
+      const u=new SpeechSynthesisUtterance(it.t);
+      u.lang='ko-KR'; if(this.v) u.voice=this.v;
+      u.rate=Math.min(1.9,1.32+0.45*it.I+(it.hot?0.06:0));
+      u.pitch=this.male?(0.9+0.28*it.I):(0.52+0.16*it.I);
+      u.volume=1;
+      this.cur=u;
+      let done=false; const fin=()=>{ if(done||myTok!==this.tok) return; done=true; this.cur=null; this.wd=setTimeout(()=>this.next(),120); };
+      u.onend=fin; u.onerror=fin;
+      speechSynthesis.speak(u);
+      // onend가 끝내 오지 않는 기기 대비 (끊지 않고 다음으로만 진행; next()가 발화 종료를 다시 확인함)
+      this.wd=setTimeout(fin, 3000+it.t.length*260);
+    }catch(e){ this.busy=false; }
+  },
+  stop(){ this.q=[]; clearTimeout(this.wd); this.busy=false; try{ if(this.ok) speechSynthesis.cancel(); }catch(e){} }
+};
+if(Voice.ok){ try{ Voice.pickVoice(); speechSynthesis.onvoiceschanged=()=>Voice.pickVoice(); }catch(e){} }
+/* =========================================================
+   그리기 유틸
+   ========================================================= */
+function rr(ctx,x,y,w,h,r){ ctx.beginPath(); ctx.moveTo(x+r,y); ctx.lineTo(x+w-r,y); ctx.quadraticCurveTo(x+w,y,x+w,y+r);
+  ctx.lineTo(x+w,y+h-r); ctx.quadraticCurveTo(x+w,y+h,x+w-r,y+h); ctx.lineTo(x+r,y+h); ctx.quadraticCurveTo(x,y+h,x,y+h-r);
+  ctx.lineTo(x,y+r); ctx.quadraticCurveTo(x,y,x+r,y); ctx.closePath(); }
+function shade(hex,amt){ let c=hex.replace('#',''); if(c.length===3) c=c.split('').map(x=>x+x).join('');
+  let r=parseInt(c.substr(0,2),16),g=parseInt(c.substr(2,2),16),b=parseInt(c.substr(4,2),16);
+  r=Math.max(0,Math.min(255,Math.round(r+amt))); g=Math.max(0,Math.min(255,Math.round(g+amt))); b=Math.max(0,Math.min(255,Math.round(b+amt)));
+  return `rgb(${r},${g},${b})`; }
+function star(ctx,x,y,r){ ctx.beginPath(); for(let i=0;i<10;i++){ const a=-Math.PI/2+i*Math.PI/5, rad=i%2?r*0.45:r; ctx.lineTo(x+Math.cos(a)*rad,y+Math.sin(a)*rad);} ctx.closePath(); ctx.fill(); }
+
+/* ---- 사실적인 갤럽(습보) 보법: 4박자 착지 순서 + 공중기 + 2관절 IK ---- */
+const GAIT_LEGS=[ // 착지 순서: 왼뒷다리 → 오른뒷다리 → 왼앞다리 → 오른앞다리 → 공중기
+  {fore:false,far:true, off:0.00, sock:2},
+  {fore:true, far:true, off:0.30, sock:0},
+  {fore:false,far:false,off:0.10, sock:3},
+  {fore:true, far:false,off:0.40, sock:1}];
+const DUTY=0.32;
+function frac(x){ return x-Math.floor(x); }
+function footPath(fore,u,amp){
+  // 반환: [x(엉덩이/팔꿈치 기준), y(지면=0, 위가 음수), 굴곡도 0~1]
+  const reach=fore?26:18, back=fore?-20:-30, nX=fore?1:-4;
+  let x,y,flex;
+  if(u<DUTY){ const s=u/DUTY; x=reach+(back-reach)*s; y=0; flex=0; }
+  else{
+    const s=(u-DUTY)/(1-DUTY);
+    const e=s<0.5?2*s*s:1-2*(1-s)*(1-s);
+    x=back+(reach-back)*e;
+    const lift=Math.sin(Math.PI*Math.min(1,s*1.15));
+    y=-(fore?34:26)*Math.max(0,lift);
+    if(fore) x+=8*Math.sin(Math.PI*s);
+    flex=Math.max(0,Math.sin(Math.PI*Math.min(1,s*1.25)));
+  }
+  return [nX+(x-nX)*amp, y*amp, flex*amp];
+}
+function ik(hx,hy,fx,fy,L1,L2,sign){
+  let dx=fx-hx, dy=fy-hy, d=Math.hypot(dx,dy);
+  const mx=L1+L2-0.5; if(d>mx){ fx=hx+dx/d*mx; fy=hy+dy/d*mx; dx=fx-hx; dy=fy-hy; d=mx; }
+  d=Math.max(d,Math.abs(L1-L2)+1);
+  const a=Math.atan2(dy,dx), cb=Math.max(-1,Math.min(1,(L1*L1+d*d-L2*L2)/(2*L1*d))), b=Math.acos(cb);
+  const ja=a+sign*b;
+  return [hx+Math.cos(ja)*L1, hy+Math.sin(ja)*L1, fx, fy];
+}
+function drawGallopLeg(ctx,h,leg,u,amp,P,col){
+  const fore=leg.fore;
+  const hip=fore?P(22,-52):P(-30,-62);
+  const [fxr,fyr,flex]=footPath(fore,frac(u-leg.off),amp);
+  const fx=hip[0]+fxr, fy=fyr-8;                         // 구절(fetlock) 위치
+  const L1=fore?26:31, L2=fore?27:30;
+  const [jx,jy,ex,ey]=ik(hip[0],hip[1],fx,fy,L1,L2,fore?-1:1);
+  ctx.lineCap='round'; ctx.lineJoin='round'; ctx.strokeStyle=col;
+  // 상완/대퇴 근육
+  ctx.lineWidth=fore?13:17; ctx.beginPath(); ctx.moveTo(hip[0],hip[1]-6); ctx.lineTo((hip[0]+jx)/2,(hip[1]+jy)/2); ctx.stroke();
+  ctx.lineWidth=fore?9:10; ctx.beginPath(); ctx.moveTo(hip[0],hip[1]); ctx.lineTo(jx,jy); ctx.stroke();
+  // 관부(정강이)
+  const sock=h.socks&&h.socks[leg.sock];
+  ctx.lineWidth=fore?6:6.5; ctx.beginPath(); ctx.moveTo(jx,jy); ctx.lineTo(ex,ey); ctx.stroke();
+  // 계부 + 발굽 (착지 시 평평, 들 때 뒤로 접힘)
+  const la=Math.atan2(ey-jy,ex-jx);
+  const pa = fyr>-0.5 ? Math.PI/2-0.75 : la+(fore?1.1:0.7)*flex;
+  const px=ex+Math.cos(pa)*7, py=ey+Math.sin(pa)*7;
+  if(sock){ ctx.strokeStyle='#f3f1ea'; ctx.lineWidth=6.5; ctx.beginPath(); ctx.moveTo((jx+ex*2)/3,(jy+ey*2)/3); ctx.lineTo(ex,ey); ctx.lineTo(px,py); ctx.stroke(); }
+  else { ctx.lineWidth=5.5; ctx.beginPath(); ctx.moveTo(ex,ey); ctx.lineTo(px,py); ctx.stroke(); }
+  ctx.fillStyle='#16110e'; ctx.save(); ctx.translate(px,py); ctx.rotate(pa-Math.PI/2); ctx.beginPath();
+  ctx.moveTo(-3.5,-1); ctx.lineTo(3.5,-1); ctx.lineTo(5,3.5); ctx.lineTo(-4,3.5); ctx.closePath(); ctx.fill(); ctx.restore();
+}
+function drawSilk(ctx,silk,path){
+  ctx.save(); path(); ctx.fillStyle=silk.base; ctx.fill(); ctx.clip();
+  ctx.fillStyle=silk.accent; ctx.strokeStyle=silk.accent;
+  const p=silk.pattern;
+  if(p==='hoops'){ for(let x=-16;x<34;x+=9) ctx.fillRect(x,-125,4,40); }
+  else if(p==='sash'){ ctx.lineWidth=7; ctx.beginPath(); ctx.moveTo(-8,-90); ctx.lineTo(26,-118); ctx.stroke(); }
+  else if(p==='diamonds'){ for(let x=-10;x<32;x+=9) for(let y=-122;y<-86;y+=9){ ctx.save(); ctx.translate(x+((y/9)%2?4:0),y); ctx.rotate(Math.PI/4); ctx.fillRect(-2.5,-2.5,5,5); ctx.restore(); } }
+  else if(p==='stars'){ for(let x=-8;x<32;x+=10) for(let y=-120;y<-88;y+=10) star(ctx,x,y,3.4); }
+  else if(p==='chevron'){ ctx.lineWidth=3.5; for(let k=0;k<4;k++){ ctx.beginPath(); ctx.moveTo(-10+k*9,-120); ctx.lineTo(-2+k*9,-104); ctx.lineTo(-10+k*9,-88); ctx.stroke(); } }
+  else if(p==='halves'){ ctx.fillRect(-20,-130,22,50); }
+  else if(p==='spots'){ for(let x=-8;x<32;x+=8) for(let y=-120;y<-88;y+=8){ ctx.beginPath(); ctx.arc(x+((y/8)%2?4:0),y,2.2,0,6.283); ctx.fill(); } }
+  else if(p==='quarters'){ ctx.fillRect(-20,-130,22,25); ctx.fillRect(2,-105,30,25); }
+  else if(p==='cross'){ ctx.fillRect(5,-130,5,50); ctx.fillRect(-20,-106,50,5); }
+  ctx.restore();
+}
+/* 경주마 + 기수 그리기 (로컬 좌표: 원점=몸통 아래 지면, 오른쪽이 진행방향) */
+function drawHorse(ctx,h,x,y,s,phase,amp,o){
+  o=o||{};
+  const u=frac(phase/6.283);
+  ctx.save(); ctx.translate(x,y); ctx.scale(s,s);
+  { ctx.save(); ctx.translate(-14,2); ctx.scale(1,0.13); const sg=ctx.createRadialGradient(0,0,10,0,0,74); sg.addColorStop(0,'rgba(0,0,0,0.42)'); sg.addColorStop(0.7,'rgba(0,0,0,0.2)'); sg.addColorStop(1,'rgba(0,0,0,0)'); ctx.fillStyle=sg; ctx.beginPath(); ctx.arc(0,0,74,0,6.283); ctx.fill(); ctx.restore(); }
+  if(o.fire){
+    ctx.save(); ctx.globalCompositeOperation='lighter';
+    const fg=ctx.createRadialGradient(-30,-70,6,-30,-70,95); fg.addColorStop(0,'rgba(255,190,40,0.55)'); fg.addColorStop(0.5,'rgba(255,90,0,0.25)'); fg.addColorStop(1,'rgba(255,40,0,0)');
+    ctx.fillStyle=fg; ctx.beginPath(); ctx.ellipse(-30,-70,100,60,0,0,Math.PI*2); ctx.fill(); ctx.restore();
+  }
+  // 몸의 상하 반동(공중기에 최고점)과 앞뒤 기울기(rocking)
+  const by=-amp*(1.5+4.5*(0.5+0.5*Math.cos(6.283*(u-0.86))));
+  const pitch=amp*0.075*Math.sin(6.283*(u-0.12));
+  const cx=0, cy=-66, cp=Math.cos(pitch), sp=Math.sin(pitch);
+  const P=(lx,ly)=>{ const dx=lx-cx, dy=ly-cy; return [cx+dx*cp-dy*sp, cy+dx*sp+dy*cp+by]; };
+  // 먼 쪽 다리
+  const farCol=shade(h.coatDark,-28);
+  GAIT_LEGS.filter(l=>l.far).forEach(l=>drawGallopLeg(ctx,h,l,u,amp,P,farCol));
+  ctx.save(); ctx.translate(0,by); ctx.translate(cx,cy); ctx.rotate(pitch); ctx.translate(-cx,-cy);
+  // 꼬리: 여러 가닥이 속도에 따라 뒤로 흩날림
+  const sway=Math.sin(phase+1)*5*amp+(1-amp)*4;
+  ctx.strokeStyle=h.mane; ctx.lineCap='round';
+  ctx.lineWidth=9; ctx.beginPath(); ctx.moveTo(-46,-77); ctx.quadraticCurveTo(-58,-82,-66,-76+6*(1-amp)); ctx.stroke();
+  for(let k=0;k<7;k++){
+    const sp=k-3, w=Math.sin(phase*1.3+k*0.9)*3*amp;
+    ctx.globalAlpha=0.55+0.45*(1-Math.abs(sp)/3.5); ctx.lineWidth=2.6-Math.abs(sp)*0.25;
+    ctx.beginPath(); ctx.moveTo(-60,-78+sp*0.6);
+    ctx.quadraticCurveTo(-80,-78+sp*1.5+16*(1-amp)+w,-98-amp*4+sp*0.8,-64+sp*3+40*(1-amp)+sway+w*1.5); ctx.stroke();
+  }
+  ctx.globalAlpha=1;
+  // 몸통 (Path2D로 만들어 음영·윤곽·근육 하이라이트를 겹겹이)
+  const body=new Path2D();
+  body.moveTo(-48,-74); body.bezierCurveTo(-47,-93,-12,-87,6,-85); body.bezierCurveTo(24,-85,40,-92,47,-75);
+  body.bezierCurveTo(50,-58,38,-47,22,-49); body.bezierCurveTo(8,-47,-6,-50,-16,-50); body.bezierCurveTo(-34,-47,-53,-53,-48,-74); body.closePath();
+  const g=ctx.createLinearGradient(0,-92,0,-46); g.addColorStop(0,shade(h.coat,34)); g.addColorStop(0.45,h.coat); g.addColorStop(1,shade(h.coatDark,-10));
+  ctx.fillStyle=g; ctx.fill(body);
+  ctx.save(); ctx.clip(body);
+  const mus=(mx,my,r,a)=>{ const rg=ctx.createRadialGradient(mx-r*0.3,my-r*0.35,1,mx,my,r); rg.addColorStop(0,`rgba(255,250,235,${a})`); rg.addColorStop(1,'rgba(255,250,235,0)'); ctx.fillStyle=rg; ctx.beginPath(); ctx.arc(mx,my,r,0,6.283); ctx.fill(); };
+  mus(-30,-74,24,0.30); mus(26,-72,20,0.26); mus(-2,-80,18,0.12);              // 엉덩이·어깨·등 근육 광택
+  const sh=(mx,my,r,a)=>{ const rg=ctx.createRadialGradient(mx,my,1,mx,my,r); rg.addColorStop(0,`rgba(0,0,0,${a})`); rg.addColorStop(1,'rgba(0,0,0,0)'); ctx.fillStyle=rg; ctx.beginPath(); ctx.arc(mx,my,r,0,6.283); ctx.fill(); };
+  sh(-12,-52,22,0.28); sh(10,-66,10,0.12);                                         // 배·견갑 뒤 그늘
+  if(h.dapple){ ctx.fillStyle='rgba(255,255,255,0.26)'; [[-30,-72,5],[-18,-66,4],[-36,-62,4],[-6,-74,4],[8,-64,3.5],[22,-72,4],[-22,-78,3],[-42,-70,3],[14,-76,3]].forEach(([a,b,r])=>{ctx.beginPath();ctx.arc(a,b,r,0,6.283);ctx.fill();}); }
+  // 땀 광택 (속도 붙으면)
+  if(amp>0.6){ ctx.strokeStyle='rgba(255,255,255,0.10)'; ctx.lineWidth=1; for(let k=0;k<5;k++){ ctx.beginPath(); ctx.moveTo(-40+k*16,-60); ctx.quadraticCurveTo(-34+k*16,-66,-30+k*16,-58); ctx.stroke(); } }
+  ctx.restore();
+  // 근육 경계선
+  ctx.strokeStyle='rgba(0,0,0,0.16)'; ctx.lineWidth=1.6;
+  ctx.beginPath(); ctx.moveTo(-14,-84); ctx.quadraticCurveTo(-20,-70,-12,-56); ctx.stroke();       // 옆구리
+  ctx.beginPath(); ctx.moveTo(-40,-60); ctx.quadraticCurveTo(-30,-58,-22,-64); ctx.stroke();       // 대퇴
+  ctx.beginPath(); ctx.moveTo(18,-82); ctx.quadraticCurveTo(14,-68,22,-54); ctx.stroke();          // 견갑
+  // 등선 림라이트(역광) + 전체 윤곽
+  ctx.strokeStyle='rgba(255,245,215,0.35)'; ctx.lineWidth=1.8; ctx.beginPath(); ctx.moveTo(-46,-80); ctx.bezierCurveTo(-40,-92,-12,-87,6,-85); ctx.stroke();
+  ctx.strokeStyle='rgba(0,0,0,0.35)'; ctx.lineWidth=1.3; ctx.stroke(body);
+  // 마구: 흰 복대(뱃대끈) + 가슴걸이
+  ctx.strokeStyle='#e9e4d6'; ctx.lineWidth=3.5; ctx.beginPath(); ctx.moveTo(10,-84); ctx.lineTo(12,-49); ctx.stroke();
+  ctx.strokeStyle='#3b2a20'; ctx.lineWidth=2; ctx.beginPath(); ctx.moveTo(12,-78); ctx.quadraticCurveTo(34,-70,46,-64); ctx.stroke();
+  // 목과 머리 (앞다리 착지 때 고개를 숙이며 펌핑)
+  ctx.save();
+  const nb=amp*0.13*Math.sin(6.283*(u-0.28)) + amp*0.08;
+  ctx.translate(32,-74); ctx.rotate(nb); ctx.translate(-32,74);
+  const neck=new Path2D(); neck.moveTo(12,-82); neck.bezierCurveTo(26,-100,42,-112,56,-115); neck.lineTo(70,-101); neck.bezierCurveTo(60,-88,52,-72,46,-54); neck.lineTo(30,-56); neck.closePath();
+  const ng=ctx.createLinearGradient(30,-112,52,-60); ng.addColorStop(0,shade(h.coat,24)); ng.addColorStop(1,shade(h.coat,-12));
+  ctx.fillStyle=ng; ctx.fill(neck);
+  ctx.save(); ctx.clip(neck); const nrg=ctx.createRadialGradient(40,-90,1,40,-90,16); nrg.addColorStop(0,'rgba(255,250,235,0.22)'); nrg.addColorStop(1,'rgba(255,250,235,0)'); ctx.fillStyle=nrg; ctx.fillRect(20,-115,50,60);
+  ctx.strokeStyle='rgba(0,0,0,0.14)'; ctx.lineWidth=1.5; ctx.beginPath(); ctx.moveTo(30,-70); ctx.quadraticCurveTo(46,-86,60,-104); ctx.stroke(); ctx.restore();
+  ctx.strokeStyle='rgba(0,0,0,0.3)'; ctx.lineWidth=1.2; ctx.stroke(neck);
+  // 머리: 이마-콧등-주둥이-턱선
+  const head=new Path2D(); head.moveTo(51,-114); head.bezierCurveTo(58,-122,68,-118,73,-110); head.lineTo(92,-92);
+  head.bezierCurveTo(96,-86,94,-79,87,-78); head.bezierCurveTo(82,-77,78,-80,74,-82); head.bezierCurveTo(68,-84,63,-86,60,-92); head.closePath();
+  const hg=ctx.createLinearGradient(56,-118,92,-80); hg.addColorStop(0,shade(h.coat,22)); hg.addColorStop(1,shade(h.coatDark,-6));
+  ctx.fillStyle=hg; ctx.fill(head);
+  ctx.save(); ctx.clip(head); const jg=ctx.createRadialGradient(64,-98,1,64,-98,10); jg.addColorStop(0,'rgba(0,0,0,0.22)'); jg.addColorStop(1,'rgba(0,0,0,0)'); ctx.fillStyle=jg; ctx.fillRect(50,-115,30,30); ctx.restore();
+  if(h.blaze){ ctx.fillStyle='#f5f3ee'; ctx.beginPath();
+    if(h.blaze==='star'){ ctx.arc(68,-112,2.6,0,6.283); }
+    else { const w=h.blaze==='blaze'?3.2:1.6; ctx.moveTo(66-w,-114); ctx.lineTo(67+w,-114); ctx.lineTo(92+w*0.4,-89); ctx.lineTo(89-w,-86); ctx.closePath(); }
+    ctx.fill(); }
+  ctx.strokeStyle='rgba(0,0,0,0.35)'; ctx.lineWidth=1.2; ctx.stroke(head);
+  // 귀 두 개
+  ctx.fillStyle=shade(h.coatDark,-10); ctx.beginPath(); ctx.moveTo(53,-116); ctx.quadraticCurveTo(50,-127,54,-130); ctx.quadraticCurveTo(59,-122,59,-116); ctx.fill();
+  ctx.fillStyle=h.coatDark; ctx.beginPath(); ctx.moveTo(57,-117); ctx.quadraticCurveTo(56,-128,61,-130); ctx.quadraticCurveTo(64,-121,62,-115); ctx.fill();
+  // 눈(흰자 테두리+하이라이트), 콧구멍, 입
+  ctx.fillStyle='rgba(255,255,255,0.5)'; ctx.beginPath(); ctx.ellipse(68,-106,3.2,2.4,0.6,0,6.283); ctx.fill();
+  ctx.fillStyle='#0b0b0b'; ctx.beginPath(); ctx.ellipse(68,-106,2.4,2,0.6,0,6.283); ctx.fill();
+  ctx.fillStyle='rgba(255,255,255,0.8)'; ctx.beginPath(); ctx.arc(68.8,-106.8,0.7,0,6.283); ctx.fill();
+  ctx.fillStyle='rgba(0,0,0,0.6)'; ctx.beginPath(); ctx.ellipse(89,-86,2.2,1.4,0.7,0,6.283); ctx.fill();
+  ctx.strokeStyle='rgba(0,0,0,0.4)'; ctx.lineWidth=1; ctx.beginPath(); ctx.moveTo(86,-79.5); ctx.lineTo(80,-81); ctx.stroke();
+  // 굴레 + 재갈 + 차안대(블링커)
+  ctx.strokeStyle='#2a1d14'; ctx.lineWidth=1.8; ctx.beginPath(); ctx.moveTo(58,-115); ctx.lineTo(70,-90); ctx.moveTo(64,-101); ctx.lineTo(88,-91); ctx.moveTo(70,-90); ctx.lineTo(80,-82); ctx.stroke();
+  ctx.fillStyle='#c9ced6'; ctx.beginPath(); ctx.arc(80,-82,1.8,0,6.283); ctx.fill();
+  ctx.fillStyle=h.silk.base; ctx.beginPath(); ctx.ellipse(66,-107,4.5,4,0.5,Math.PI*0.6,Math.PI*1.7); ctx.fill();
+  // 갈기: 가닥가닥 바람에 날림
+  ctx.lineCap='round';
+  for(let k=0;k<14;k++){
+    const t=k/13, bx=18+t*38, byy=-83-t*31;
+    const fl=6+amp*7+Math.sin(phase*2.2+k*1.7)*amp*2.5;
+    ctx.strokeStyle=k%3===0?shade(h.mane,25):h.mane; ctx.lineWidth=2.4;
+    ctx.beginPath(); ctx.moveTo(bx,byy); ctx.quadraticCurveTo(bx-fl*0.5,byy-2-amp*2,bx-fl,byy+3+amp*1.5); ctx.stroke();
+  }
+  // 앞머리
+  ctx.strokeStyle=h.mane; ctx.lineWidth=2; ctx.beginPath(); ctx.moveTo(58,-116); ctx.quadraticCurveTo(62,-112,66,-111+amp*1); ctx.stroke();
+  ctx.restore();
+  // 안장 깔개 (마번) + 안장
+  const fr=FRAME[h.no];
+  ctx.fillStyle='rgba(0,0,0,0.25)'; rr(ctx,-17,-84,31,25,3); ctx.fill();
+  ctx.fillStyle=fr.bg; rr(ctx,-18,-87,31,25,3); ctx.fill();
+  ctx.strokeStyle=fr.bg==='#ffffff'?'#adb5bd':'rgba(255,255,255,0.75)'; ctx.lineWidth=1.2; rr(ctx,-16,-85,27,21,2); ctx.stroke();
+  ctx.fillStyle=fr.fg; ctx.font='600 15px "Noto Sans KR",sans-serif'; ctx.textAlign='center'; ctx.textBaseline='middle';
+  ctx.fillText(String(h.no),-2.5,-76.5);
+  ctx.font='600 4px sans-serif'; ctx.fillText('STAR DERBY',-2.5,-67.5);
+  const sd=ctx.createLinearGradient(0,-92,0,-84); sd.addColorStop(0,'#5a3b24'); sd.addColorStop(1,'#24160d');
+  ctx.fillStyle=sd; ctx.beginPath(); ctx.moveTo(-15,-86); ctx.quadraticCurveTo(-14,-92,-6,-90); ctx.lineTo(6,-90); ctx.quadraticCurveTo(13,-91,13,-86); ctx.closePath(); ctx.fill();
+  // 등자끈
+  ctx.strokeStyle='#2a1d14'; ctx.lineWidth=1.2; ctx.beginPath(); ctx.moveTo(0,-88); ctx.lineTo(5,-79); ctx.stroke();
+  // 기수: 말이 반동해도 상체는 수평 유지 (몽키 크라우치)
+  ctx.save(); ctx.translate(0,-by*0.75); ctx.translate(0,-88); ctx.rotate(-pitch*0.85); ctx.translate(0,88);
+  // 기수 그림자 (말 등 위)
+  ctx.fillStyle='rgba(0,0,0,0.18)'; ctx.beginPath(); ctx.ellipse(6,-88,16,3,0,0,6.283); ctx.fill();
+  ctx.lineCap='round'; ctx.lineJoin='round';
+  // 하의(흰 바지) — 허벅지·정강이, 음영
+  ctx.strokeStyle='#ebe8df'; ctx.lineWidth=9; ctx.beginPath(); ctx.moveTo(-4,-100); ctx.lineTo(14,-94); ctx.stroke();
+  ctx.strokeStyle='rgba(0,0,0,0.12)'; ctx.lineWidth=3; ctx.beginPath(); ctx.moveTo(-3,-97); ctx.lineTo(13,-91.5); ctx.stroke();
+  ctx.strokeStyle='#ebe8df'; ctx.lineWidth=6.5; ctx.beginPath(); ctx.moveTo(14,-94); ctx.lineTo(8,-84); ctx.stroke();
+  // 부츠(검정 + 갈색 테두리) + 등자
+  ctx.strokeStyle='#121212'; ctx.lineWidth=6; ctx.beginPath(); ctx.moveTo(10,-87); ctx.lineTo(5,-79); ctx.stroke();
+  ctx.strokeStyle='#8a5a2b'; ctx.lineWidth=6.5; ctx.beginPath(); ctx.moveTo(10.5,-88); ctx.lineTo(9.5,-86.5); ctx.stroke();
+  ctx.strokeStyle='#c9ced6'; ctx.lineWidth=1.5; ctx.beginPath(); ctx.moveTo(2,-78); ctx.lineTo(9,-78); ctx.stroke();
+  // 상체(복색)
+  drawSilk(ctx,h.silk,()=>{ ctx.beginPath(); ctx.moveTo(-12,-104); ctx.quadraticCurveTo(-8,-95,-2,-93); ctx.lineTo(26,-107); ctx.quadraticCurveTo(24,-115,19,-119); ctx.closePath(); });
+  ctx.strokeStyle='rgba(0,0,0,0.3)'; ctx.lineWidth=1; ctx.beginPath(); ctx.moveTo(-12,-104); ctx.quadraticCurveTo(-8,-95,-2,-93); ctx.lineTo(26,-107); ctx.stroke();
+  ctx.fillStyle='rgba(255,255,255,0.18)'; ctx.beginPath(); ctx.moveTo(-10,-104); ctx.lineTo(18,-118); ctx.lineTo(20,-115); ctx.lineTo(-6,-101); ctx.closePath(); ctx.fill();
+  // 팔: 말 목의 펌핑에 맞춰 고삐를 밀어줌 (소매 + 커프스)
+  const push=amp*5*Math.sin(6.283*(u-0.28));
+  const ex=33+push*0.6, ey=-103, hx=45+push, hy=-96;
+  ctx.strokeStyle=h.silk.base; ctx.lineWidth=6; ctx.beginPath(); ctx.moveTo(21,-114); ctx.lineTo(ex,ey); ctx.lineTo(hx,hy); ctx.stroke();
+  ctx.strokeStyle=h.silk.accent; ctx.lineWidth=6.2; ctx.beginPath(); ctx.moveTo(hx-4*(hx-ex)/14,hy-4*(hy-ey)/14); ctx.lineTo(hx-1.5*(hx-ex)/14,hy-1.5*(hy-ey)/14); ctx.stroke();
+  ctx.fillStyle='#f6f4ee'; ctx.beginPath(); ctx.arc(hx+0.5,hy,2.9,0,6.283); ctx.fill();   // 장갑
+  ctx.strokeStyle='#2b1d12'; ctx.lineWidth=1.3; ctx.beginPath(); ctx.moveTo(hx,hy); ctx.quadraticCurveTo(hx+12,hy+3,70+nb*20,-96+nb*30); ctx.stroke();
+  if(o.whip){
+    const wa=Math.sin(o.t*14)*0.9;
+    ctx.save(); ctx.translate(40+push,-98); ctx.rotate(-2.2+wa); ctx.strokeStyle='#1b1b1b'; ctx.lineWidth=2; ctx.beginPath(); ctx.moveTo(0,0); ctx.lineTo(30,0); ctx.stroke();
+    ctx.fillStyle='#1b1b1b'; ctx.fillRect(29,-1.8,5,3.6); ctx.restore();
+  }
+  // 목 + 얼굴 + 헬멧(캡 커버, 챙, 꼭지) + 고글
+  ctx.fillStyle='#e9b994'; ctx.fillRect(24,-116,5,4);
+  ctx.fillStyle='#f1c9a5'; ctx.beginPath(); ctx.ellipse(33,-118,5.2,5.6,0.2,0,6.283); ctx.fill();
+  ctx.fillStyle='rgba(0,0,0,0.12)'; ctx.beginPath(); ctx.ellipse(31,-115.5,3.4,2.2,0,0,6.283); ctx.fill();
+  const cg=ctx.createRadialGradient(28,-125,1,30,-121,8.5); cg.addColorStop(0,shade(h.cap,45)); cg.addColorStop(1,h.cap);
+  ctx.fillStyle=cg; ctx.beginPath(); ctx.arc(30,-121,7.6,Math.PI*0.95,Math.PI*2.15); ctx.closePath(); ctx.fill();
+  ctx.strokeStyle='rgba(0,0,0,0.4)'; ctx.lineWidth=0.9; ctx.stroke();
+  ctx.fillStyle=h.silk.accent; ctx.beginPath(); ctx.arc(28,-129,1.8,0,6.283); ctx.fill();                  // 꼭지(폼폼)
+  ctx.fillStyle=shade(h.cap,-55); ctx.beginPath(); ctx.moveTo(34,-122.5); ctx.lineTo(42,-121); ctx.lineTo(34,-120); ctx.closePath(); ctx.fill(); // 챙
+  ctx.fillStyle='#1d1d1f'; rr(ctx,32.5,-120,6.5,3,1.2); ctx.fill();                                              // 고글
+  ctx.fillStyle='rgba(120,200,255,0.65)'; ctx.fillRect(34.5,-119.4,3.6,1.6);
+  ctx.strokeStyle='#1d1d1f'; ctx.lineWidth=1; ctx.beginPath(); ctx.moveTo(32.5,-118.6); ctx.lineTo(25,-120); ctx.stroke();
+  ctx.restore();
+  ctx.restore();
+  // 가까운 쪽 다리 (몸통 앞에)
+  GAIT_LEGS.filter(l=>!l.far).forEach(l=>drawGallopLeg(ctx,h,l,u,amp,P,h.coatDark));
+  ctx.restore();
+}
+
+/* =========================================================
+   배경 프리렌더
+   ========================================================= */
+let BG_CACHE=null;
+function seeded(s){ return ()=>{ s=(s*16807)%2147483647; return s/2147483647; }; }
+function buildBg(){
+  if(BG_CACHE) return BG_CACHE;
+  const PAL=['#ff6b6b','#ffd43b','#69db7c','#4dabf7','#f783ac','#ffffff','#ffa94d','#9775fa','#212529','#e9ecef','#63e6be','#ff8787'];
+  const SK=['#f1c9a5','#d9a37c','#8d5a3b'];
+  const crowd=[];
+  for(let f=0;f<2;f++){
+    const c=document.createElement('canvas'); c.width=1600; c.height=180; const g=c.getContext('2d');
+    const rnd=seeded(98765);
+    g.fillStyle='#2f3644'; g.fillRect(0,26,1600,154);
+    for(let row=0;row<9;row++){
+      const y=36+row*15;
+      g.fillStyle=row%2?'#46506a':'#525d78'; g.fillRect(0,y+9,1600,6);
+      for(let x=3;x<1600;){
+        const r0=rnd(), r1=rnd(), r2=rnd(), r3=rnd(), r4=rnd();
+        x += 8+r0*4;
+        if(r1<0.1) continue;
+        const jump=(f===1&&r2<0.55)?-3:0;
+        g.fillStyle=PAL[Math.floor(r3*PAL.length)]; g.fillRect(x,y+4+jump,7,8);
+        g.fillStyle=SK[Math.floor(r4*3)]; g.beginPath(); g.arc(x+3.5,y+2+jump,3.1,0,6.283); g.fill();
+        if(f===1&&r2<0.18){ g.fillStyle=SK[0]; g.fillRect(x+6.5,y-6+jump,1.6,8); if(r2<0.05){ g.fillStyle=PAL[Math.floor(r0*PAL.length)]; g.fillRect(x+7,y-12+jump,8,6);} }
+      }
+    }
+    g.fillStyle='#dfe3ea'; g.fillRect(0,0,1600,20); g.fillStyle='#9aa3af'; g.fillRect(0,20,1600,6);
+    for(let x=0;x<1600;x+=200){ g.fillStyle='#c6ccd6'; g.fillRect(x+96,20,7,160); }
+    for(let x=0;x<1600;x+=80){ g.fillStyle=PAL[(x/80)%PAL.length]; g.beginPath(); g.moveTo(x+30,0); g.lineTo(x+44,0); g.lineTo(x+37,-0); g.fill(); }
+    g.fillStyle='#e9ecef'; g.fillRect(0,172,1600,8);
+    g.fillStyle='#1c7ed6'; for(let x=0;x<1600;x+=400){ g.fillRect(x+10,172,180,8); }
+    crowd.push(c);
+  }
+  const mt=document.createElement('canvas'); mt.width=2400; mt.height=160; const m=mt.getContext('2d');
+  const rnd=seeded(4242);
+  const layer=(col,base,amp,step)=>{ m.fillStyle=col; m.beginPath(); m.moveTo(0,160); let y=base;
+    for(let x=0;x<=2400;x+=step){ y=base-amp*(0.5+0.5*Math.sin(x/260+rnd()*0.4))-rnd()*amp*0.35; m.lineTo(x,y); }
+    m.lineTo(2400,160); m.closePath(); m.fill(); };
+  layer('#9fb7cf',90,60,40); layer('#7f9fbd',120,40,30);
+  m.fillStyle='#6f8fae'; m.beginPath(); m.moveTo(900,160); m.quadraticCurveTo(1200,10,1500,160); m.fill();
+  m.fillStyle='rgba(255,255,255,0.7)'; m.beginPath(); m.moveTo(1150,52); m.quadraticCurveTo(1200,40,1250,52); m.lineTo(1235,60); m.lineTo(1165,60); m.fill();
+  layer('#4f7a5a',150,22,24);
+  const clouds=[]; const cr=seeded(777);
+  for(let i=0;i<9;i++) clouds.push({x:cr()*2200,y:30+cr()*120,s:0.6+cr()*0.9});
+  // 주로 질감 타일 (더트 알갱이 / 잔디 잎)
+  const mkNoise=(dirt)=>{ const c=document.createElement('canvas'); c.width=512; c.height=96; const g=c.getContext('2d'); const r=seeded(dirt?31:57);
+    for(let i=0;i<(dirt?2600:2200);i++){ const x=r()*512, y=r()*96, v=r();
+      if(dirt){ g.fillStyle=v<0.5?`rgba(60,35,15,${0.18+r()*0.2})`:`rgba(255,235,200,${0.10+r()*0.15})`; g.fillRect(x,y,1+r()*2.2,1+r()*1.4); }
+      else { g.strokeStyle=v<0.5?`rgba(10,50,10,${0.18+r()*0.2})`:`rgba(200,255,170,${0.10+r()*0.14})`; g.lineWidth=1; g.beginPath(); g.moveTo(x,y); g.lineTo(x+(r()-0.5)*2,y-2-r()*3); g.stroke(); } }
+    return c; };
+  BG_CACHE={crowd,mt,clouds,noiseDirt:mkNoise(true),noiseTurf:mkNoise(false)};
+  return BG_CACHE;
+}
+
+/* =========================================================
+   레이스 엔진 (TV 중계 카메라 2.5D 원근 렌더러)
+   ========================================================= */
+const W=1280, H=720, Y_FAR=372, Y_NEAR=640, TS=2.2, HORSE_NF=14;
+const FIRE_GLOW=(()=>{ try{ const c=document.createElement('canvas'); c.width=200; c.height=120; const g=c.getContext('2d');
+  const fg=g.createRadialGradient(100,60,6,100,60,100); fg.addColorStop(0,'rgba(255,190,40,0.6)'); fg.addColorStop(0.5,'rgba(255,90,0,0.25)'); fg.addColorStop(1,'rgba(255,40,0,0)');
+  g.fillStyle=fg; g.fillRect(0,0,200,120); return c; }catch(e){ return document.createElement('canvas'); } })();
+const sZ = z => 0.62+0.38*z;
+const yZ = z => Y_FAR+(Y_NEAR-Y_FAR)*z;
+const ADS=[['링크클린','LINKCLEAN 제주 청소 전문','#0ca678','#fff'],['CREAMUS','크리머스 광안리 케이크','#f06595','#fff'],
+           ['하나토탈클린','HANA TOTAL CLEAN','#1c7ed6','#fff'],['STAR DERBY','스타더비 경마','#ffd43b','#111'],['JEJU','제주 경마공원','#e8590c','#fff']];
+
+class RaceEngine{
+  constructor(canvas,setup,cb){
+    this.cv=canvas; this.ctx=canvas.getContext('2d'); this.setup=setup; this.cb=cb||{};
+    this.D=setup.D; this.going=setup.goingMul; this.dirt=setup.surface==='dirt';
+    this.runners=setup.horses.map((h,i)=>makeRunner(h,i));
+    this.order=this.runners.slice();
+    this.parts=[]; this.ppm=W/30;
+    this.camX=-30; this.zoom=1.25; this.zoomT=1; this.fx=W/2; this.fy=H*0.6;
+    this.slow=1; this.slowT=1; this.slowLock=false;
+    this.state='intro'; this.real=0; this.simT=0; this.raceT=0; this.flash=0;
+    this.gateOpen=0; this.ff=false; this.ended=false;
+    this.said={}; this.lastMsgT=-10; this.nextPeriodic=9; this.leader=null; this.lastLeadT=0;
+    this.rankX={}; this.runners.forEach((r,i)=>this.rankX[r.h.no]=i);
+    this.banner=null; this.photo=false; this.photoCanvas=null; this.photoT=0; this.doneT=null;
+    this.hoofPh=[0,1.7]; this.crowdLv=0.15; this.closeSaid=false; this.firstFinSaid=false;
+    this.bg=buildBg(); this.wx=setup.weather; this.nextBolt=8+Math.random()*8;
+    this.drops=[]; for(let i=0;i<220;i++) this.drops.push({x:Math.random()*(W+300),y:Math.random()*H,sp:900+Math.random()*700,len:18+Math.random()*26,a:0.25+Math.random()*0.35});
+    if(this.wx==='비') Sound.rainStart();
+    this.resize();
+    this.loop=this.loop.bind(this); this.last=performance.now();
+    this.raf=requestAnimationFrame(this.loop);
+    Sound.crowdStart(); Sound.setCrowd(0.15);
+  }
+  resize(){
+    const r=this.cv.getBoundingClientRect(); const dpr=this.lowQ?1:Math.min(2,window.devicePixelRatio||1);
+    // 내부 해상도 상한(1440px): 고해상도 화면에서 픽셀 처리량 폭증 방지
+    this.cv.width=Math.max(320,Math.min(this.lowQ?960:1440,Math.round(r.width*dpr))); this.cv.height=Math.round(this.cv.width*H/W);
+    this.scale=this.cv.width/W;
+    this.RS=Math.max(0.55,Math.min(1.35,this.scale*1.2));   // 말 스프라이트 캐시 해상도
+  }
+  destroy(){ cancelAnimationFrame(this.raf); this.dead=true; Sound.rainStop(); }
+  say(text,hot){ this.recentMsg=this.recentMsg||[]; if(this.recentMsg.includes(text)) return; this.recentMsg.push(text); if(this.recentMsg.length>14) this.recentMsg.shift();
+    this.lastMsgT=this.real;
+    let I=0.2; if(this.state==='run'&&this.order[0]){ const pp=Math.min(1,this.order[0].pos/this.D); I=0.15+0.55*pp*pp+(this.D-this.order[0].pos<300?0.2:0)+(this.slowLock?0.25:0); }
+    if(this.cb.onComment) this.cb.onComment(text,!!hot,Math.min(1,I)); }
+  X(x,z){ return W/2+(x-this.camX)*this.ppm*sZ(z); }
+  P(x,z,hm){ return [this.X(x,z), yZ(z)-hm*this.ppm*sZ(z)]; }
+  loop(now){
+    if(this.dead) return;
+    const dt=Math.min(0.05,Math.max(0,(now-this.last)/1000)); this.last=now;
+    // 프레임 시간 감시 → 느린 기기는 자동으로 가벼운 모드
+    this.ft=(this.ft||0.016)*0.95+dt*0.05;
+    if(!this.lowQ && this.real>2 && this.ft>0.027){ this.slowCnt=(this.slowCnt||0)+dt; if(this.slowCnt>1.5){ this.lowQ=true; this.resize(); } } else this.slowCnt=0;
+    try{ this.update(dt); this.render(); }catch(e){ console.error(e); }
+    this.raf=requestAnimationFrame(this.loop);
+  }
+  computeOrder(){
+    this.order=this.runners.slice().sort((a,b)=>{
+      if(a.fin&&b.fin) return a.finT-b.finT;
+      if(a.fin) return -1; if(b.fin) return 1;
+      return b.pos-a.pos;
+    });
+  }
+  update(dt){
+    this.real+=dt;
+    this.flash=Math.max(0,this.flash-dt*1.6);
+    if(this.wx==='비' && this.real>this.nextBolt){ this.nextBolt=this.real+10+Math.random()*14; this.bolt={t:this.real,x:200+Math.random()*900}; this.flash=Math.max(this.flash,0.7); setTimeout(()=>Sound.thunder(),400+Math.random()*900); }
+    this.acChk=(this.acChk||0)+dt; if(this.acChk>0.7){ this.acChk=0; try{ if(Sound.ctx && Sound.ctx.state!=='running') Sound.ctx.resume(); }catch(e){} }
+    const S=this.setup;
+    if(this.state==='intro'){
+      if(!this.said.intro){ this.said.intro=1; Sound.fanfare();
+        this.say(`제${S.raceNo}경주 ${S.name}(${S.grade}) ${S.D}m ${this.dirt?'더트':'잔디'} 코스! ${this.runners.length}두 모두 게이트에 들어섰습니다.`); }
+      if(this.real>1.3 && !this.said.wxs){ this.said.wxs=1; this.say({'맑음':'오늘 경마공원은 화창한 날씨, 주로 상태 '+S.going+'입니다.','흐림':'잔뜩 흐린 하늘 아래 주로 상태 '+S.going+'. 변수가 생길 수 있습니다.','비':'굵은 빗줄기가 쏟아집니다! 주로 상태 '+S.going+', 진흙탕 승부가 예상됩니다!','노을':'붉은 노을이 경마장을 물들입니다. 오늘의 마지막 경주!','야간':'조명탑이 환하게 밝힌 나이트 경마! 관중 열기가 뜨겁습니다!'}[this.wx]||''); }
+      if(this.real>2.6 && !this.said.intro2){ this.said.intro2=1; this.say('팡파르가 울려 퍼집니다! 관중석이 들썩이고 있습니다!'); }
+      const k=Math.min(1,this.real/4.6); const e=1-Math.pow(1-k,3);
+      this.camX=-30+e*28.5; this.zoom=1.25-0.25*e;
+      this.runners.forEach(r=>{ r.phase+=dt*0.8; });
+      // 출발 전 대기 시간 동안 말 스프라이트를 미리 만들어 둠 (출발 직후 버벅임 방지)
+      for(let k=0,built=0;k<this.runners.length*HORSE_NF && built<4;k++){ const r=this.runners[k%this.runners.length], fi=Math.floor(k/this.runners.length); if(!r.h._fc||r.h._fc.RS!==this.RS||!r.h._fc.f[fi]){ this.horseFrame(r.h,fi); built++; } }
+      Sound.setCrowd(0.15+0.1*k);
+      for(const [k,tt] of [[3,4.9],[2,5.6],[1,6.3]]) if(this.real>tt && !this.said['cd'+k]){ this.said['cd'+k]=1; Sound.beep(660); this.cd={n:k,t:this.real}; }
+      if(this.real>7.0){
+        this.state='run'; this.raceT=0; Sound.bang(); Sound.gate(); this.flash=0.55;
+        this.say(`출발했습니다! ${this.runners.length}마리 일제히 게이트를 박차고 뛰쳐나갑니다!`,true);
+        const slowest=this.runners.slice().sort((a,b)=>b.react-a.react)[0];
+        if(slowest.react>0.27) this.slowStartMsg=slowest;
+      }
+      this.computeOrder();
+      return;
+    }
+    // ---- 레이스 진행 ----
+    this.gateOpen=Math.min(1,this.gateOpen+dt*5);
+    this.slow+=(this.slowT-this.slow)*Math.min(1,dt*(this.slowT<this.slow?5:2));
+    const simDt=dt*TS*this.slow*(this.ff&&!this.slowLock?2.2:1);
+    this.simT+=simDt;
+    const sub=Math.max(1,Math.ceil(simDt/0.05)), sd=simDt/sub;
+    for(let k=0;k<sub;k++){ let lp=-1e9; for(const r of this.runners) if(r.pos>lp) lp=r.pos; for(const r of this.runners) stepRunner(r,sd,this.D,this.going,lp); }
+    this.computeOrder();
+    const o=this.order, a=o[0], b=o[1], D=this.D;
+    // 레인(자리싸움) 비주얼
+    o.forEach((r,rank)=>{
+      let want=0.12+rank*0.035;
+      if(r.spurting) want=Math.max(want,0.62+r.i*0.03);
+      for(const q of this.runners){ if(q===r) continue;
+        const ahead=q.pos-r.pos;
+        if(ahead>0 && ahead<3.4 && Math.abs(q.lane-want)<0.14 && r.v>q.v-0.05) want=Math.max(want,q.lane+0.16);
+        if(Math.abs(ahead)<2.6 && Math.abs(q.lane-r.lane)<0.1){ want += (r.lane>=q.lane?0.06:-0.06); }
+      }
+      want=Math.max(0.08,Math.min(0.92,want));
+      r.lane+=(want-r.lane)*Math.min(1,simDt*0.9);
+      const pu=frac(r.phase/6.283);
+      r.phase+=r.v/7.6*6.283*simDt;
+      if(r.v>4 && !this.lowQ){ const nu=frac(r.phase/6.283);
+        for(const lg of GAIT_LEGS){ const lp=frac(pu-lg.off), ln=frac(nu-lg.off);
+          if(ln<lp){ const fx=r.pos-1.6+(lg.fore?0.96:-0.24);
+            for(let k=0;k<2;k++) this.parts.push({x:fx+(Math.random()-0.5)*0.2,z:r.lane+(lg.far?-0.012:0.012),y:0.03,vx:r.v*0.12+(Math.random()-0.5),vy:0.4+Math.random()*0.8,vz:0,life:0.35+Math.random()*0.25,max:0.6,s:0.12+Math.random()*0.12,col:this.dirt?'#b8946a':'#8aa760',fire:false,puff:true}); } } }
+    });
+    // 파티클
+    for(const r of this.runners){
+      if(r.v<2) continue;
+      const n=(this.lowQ?0.6:(this.dirt?1.6:1.1))*Math.min(1,simDt*40);
+      for(let k=0;k<n;k++){ if(Math.random()>0.8) continue;
+        const turfClod=!this.dirt&&Math.random()<0.45;
+        this.parts.push({x:r.pos-1.6-0.6-Math.random()*0.8,z:r.lane+(Math.random()-0.5)*0.04,y:0.05,
+          vx:r.v*(0.35+Math.random()*0.3),vy:1.2+Math.random()*2.4,vz:(Math.random()-0.5)*0.05,life:0.5+Math.random()*0.6,max:1,
+          s:0.05+Math.random()*(this.dirt?0.14:0.09), col:turfClod?(Math.random()<0.5?'#3f7f2a':'#5d8c34'):(this.dirt?'#8a603a':'#7a5a3a'), fire:false}); }
+      if(r.spurting && !r.fin){
+        for(let k=0;k<2;k++) this.parts.push({x:r.pos-1.6-0.4-Math.random()*0.6,z:r.lane,y:0.8+Math.random()*1.1,
+          vx:r.v*(0.55+Math.random()*0.2),vy:0.6+Math.random()*1.2,vz:0,life:0.35+Math.random()*0.25,max:0.6,s:0.12+Math.random()*0.14,
+          col:`hsl(${15+Math.random()*35},100%,${50+Math.random()*20}%)`,fire:true});
+      }
+    }
+    for(const p of this.parts){ p.life-=simDt; p.x+=p.vx*simDt; p.y+=p.vy*simDt; p.z+=p.vz*simDt; if(!p.fire){ p.vy-=9.8*simDt; if(p.y<0){p.y=0;p.vy*=-0.2;p.vx*=0.5;} } else p.vx*=0.98; }
+    this.parts=this.parts.filter(p=>p.life>0);
+    const PMAX=this.lowQ?220:480; if(this.parts.length>PMAX) this.parts.splice(0,this.parts.length-PMAX);
+
+    // 카메라 / 슬로모션
+    const remain=D-a.pos;
+    if(!this.slowLock && !b.fin && ((a.fin && a.pos-b.pos<2.4) || (!a.fin && remain<38 && a.pos-b.pos<1.9))){
+      this.slowLock=true; this.slowT=0.26; this.zoomT=1.65;
+      if(!this.closeSaid){ this.closeSaid=true; this.say(`${wagwa(lblOf(a.h))} ${lblOf(b.h)}, 나란히! 나란히! 숨막히는 박빙의 승부!`,true); }
+    }
+    if(this.slowLock && b.fin && (b.t-b.finT)>0.5){ this.slowLock=false; this.slowT=1; this.zoomT=1; }
+    let focus;
+    const mean=this.runners.reduce((s,r)=>s+r.pos,0)/this.runners.length;
+    if(this.slowLock) focus=(a.pos+b.pos)/2-1.6;
+    else focus=mean+(a.pos-mean)*0.72+0.8;
+    if(a.fin || remain<=380) this.shot=null;
+    if(!a.fin && !this.slowLock && remain<=380) focus=(a.pos*0.6+b.pos*0.4)-2.5;   // 막판엔 선두 경쟁에 집중
+    if(a.fin && !this.slowLock) focus=a.pos-1.2;   // 우승마 따라가는 위너 캠
+    if(!this.slowLock && this.shot && this.shot.r && this.real<this.shot.end) focus=this.shot.r.pos-1.4;   // 클로즈업 대상 말로 카메라 이동
+    const pcx=this.camX;
+    // 말들과 같은 속도로 함께 이동(피드포워드) + 남은 오차만 부드럽게 보정 → 빨리감기에서도 카메라가 뒤처지지 않음
+    this.camX+=mean>0?(this.runners.reduce((q,r)=>q+r.v,0)/this.runners.length)*simDt:0;
+    this.camX+=(focus-this.camX)*Math.min(1,dt*(this.slowLock?5:2.6));
+    this.camV=dt>0?(this.camX-pcx)/dt:0;
+    this.zoom+=(this.zoomT-this.zoom)*Math.min(1,dt*2.2);
+    if(this.slowLock){ const z=(a.lane+b.lane)/2; this.fx+=(this.X((a.pos+b.pos)/2-1.4,z)-this.fx)*Math.min(1,dt*6); this.fy+=(yZ(z)-55-this.fy)*Math.min(1,dt*6); }
+    else if(this.shot && this.shot.r && this.real<this.shot.end){ const r=this.shot.r; this.fx+=(this.X(r.pos-1.2,r.lane)-this.fx)*Math.min(1,dt*3); this.fy+=(yZ(r.lane)-60-this.fy)*Math.min(1,dt*3); }
+    else { this.fx+=(W/2-this.fx)*Math.min(1,dt*2); this.fy+=(H*0.6-this.fy)*Math.min(1,dt*2); }
+    if(!this.slowLock){
+      if(this.shot && this.real>=this.shot.end){ this.shot=null; this.zoomT=1; this.nextShot=this.real+3+Math.random()*2.5; }
+      if(!this.shot && this.real>(this.nextShot||8) && remain>380 && !a.fin){
+        const climber=o.find(r=>r.spurting&&!r.fin) || o[1+Math.floor(Math.random()*3)];
+        const kind=pick(['lead','chase','chase']);
+        const r=kind==='lead'?a:climber;
+        this.shot={r,end:this.real+2.6+Math.random()*1.2}; this.zoomT=kind==='lead'?1.45:1.3;
+      }
+      if(remain<=380 && !a.fin && !this.shot){ this.zoomT=1.16; this.fx+=(this.X((a.pos+b.pos)/2-1.4,(a.lane+b.lane)/2)-this.fx)*Math.min(1,dt*2); this.fy+=(yZ((a.lane+b.lane)/2)-50-this.fy)*Math.min(1,dt*2); }
+      if(a.fin && !this.slowLock){ this.zoomT=1.32; this.fx+=(this.X(a.pos-1.6,a.lane)-this.fx)*Math.min(1,dt*3); this.fy+=(yZ(a.lane)-60-this.fy)*Math.min(1,dt*3); }
+    }
+    // 줌 중심이 화면 밖으로 나가 말이 사라지는 문제 방지
+    this.fx=Math.max(W*0.25,Math.min(W*0.75,this.fx)); this.fy=Math.max(H*0.35,Math.min(H*0.78,this.fy));
+    // 막판 심장박동 드럼 + 흥분도
+    this.excite=Math.max(0,Math.min(1,(this.slowLock?1:0)+(remain<400&&!a.fin?(400-remain)/400:0)));
+    if(remain<360 && !a.fin){ const iv=0.62-0.32*(360-remain)/360; if(this.real-(this.drumT||0)>iv/(this.slow<0.6?0.6:1)){ this.drumT=this.real; Sound.drum(0.35+0.45*this.excite); } }
+    // 추월 팝업 (▲)
+    if(this.prevRank && this.simT>4){ o.forEach((r,i)=>{ const pr=this.prevRank[r.h.no]; if(pr!=null && i<pr && !(r.popCD>this.real)){ r.popCD=this.real+1.4; r.pop={txt:'▲'+(pr-i),t:this.real}; if(i===0) this.shakeBoost=1; } }); }
+    this.prevRank={}; o.forEach((r,i)=>this.prevRank[r.h.no]=i);
+    this.shakeBoost=Math.max(0,(this.shakeBoost||0)-dt*1.5);
+
+    // 말발굽 사운드 (다그닥 3박자)
+    const leadV=a.v, packV=o[3].v;
+    [[leadV,0],[packV,1]].forEach(([v,idx])=>{
+      const prev=this.hoofPh[idx]; const nxt=prev+v/7.6*simDt;
+      const beats=[0,0.11,0.22];
+      for(let s=Math.floor(prev);s<=Math.floor(nxt);s++) for(const bt of beats){ const bp=s+bt; if(bp>prev&&bp<=nxt) Sound.hoof(Math.min(0.5,v/40)*(idx?0.7:1)*(this.slowLock?1.3:1),this.dirt); }
+      this.hoofPh[idx]=nxt;
+    });
+    // 관중 함성
+    const prog=Math.max(0,Math.min(1,a.pos/D));
+    let lv=0.18+0.5*Math.pow(prog,3)+(remain<200?0.18:0);
+    if(this.slowLock) lv=1; if(a.fin && !this.slowLock) lv=Math.max(0.35,this.crowdLv-dt*0.08);
+    this.crowdLv+=(lv-this.crowdLv)*Math.min(1,dt*2); Sound.setCrowd(this.crowdLv);
+
+    // ---- 아나운서 문자 중계 ----
+    const t=this.simT, since=this.real-this.lastMsgT;
+    if(this.slowStartMsg && t>2.2){ this.say(`${lblOf(this.slowStartMsg.h)}, 출발이 조금 늦었습니다!`); this.slowStartMsg=null; }
+    if(!this.said.lead1 && t>5){ this.said.lead1=1; this.leader=a; this.lastLeadT=this.real;
+      const st=a.h.style==='도주'?pick(['역시 도주마답게 거침없이 질주합니다!','출발과 동시에 쭉쭉 뻗어나갑니다!','오늘도 앞에서 레이스를 끌고 갑니다!']):pick(['초반부터 적극적인 레이스 운영!','의외의 선두! 작전이 바뀌었을까요?','기수 '+a.h.jockey+', 과감하게 앞으로 나섭니다!']);
+      this.say(`${iga(lblOf(a.h))} 선두로 치고 나옵니다! ${st}`,true); }
+    if(this.said.lead1 && !a.fin && a!==this.leader && this.real-this.lastLeadT>2.2 && since>1.4){
+      this.say(`선두가 바뀝니다! ${iga(lblOf(a.h))} ${eul(this.leader.h.name)} 제치고 앞으로 나섭니다!`,true);
+      this.leader=a; this.lastLeadT=this.real; }
+    else if(a!==this.leader && this.said.lead1 && this.real-this.lastLeadT>2.2) { this.leader=a; }
+    for(const r of this.runners){ if(r.spurting&&!r.spurtSaid&&!r.fin){ r.spurtSaid=true;
+      const rk=o.indexOf(r)+1; this.say(rk>=3?`바깥쪽! ${r.h.no}번 ${r.h.name}! 무서운 기세로 추입해 옵니다!`:`${r.h.no}번 ${r.h.name}, 추입 엔진 점화! 선두를 맹렬히 압박합니다!`,true); } }
+    const mk=(key,cond,text,hot,ban)=>{ if(!this.said[key]&&cond){ this.said[key]=1; this.say(text,hot); if(ban) this.banner={text:ban,t:this.real}; } };
+    mk('600',remain<=600&&remain>220,`4코너 돌아 직선주로! 남은 거리 600! 선두는 ${lblOf(a.h)}!`,true,'남은 거리 600m');
+    mk('200',remain<=200&&!a.fin,`남은 200! ${a.h.name} 버티느냐! ${b.h.name} 따라잡느냐!`,true,'LAST 200m');
+    // ---- 실제 중계식 콜: 순위 변화 추적 + 구간별 전개 읽기 ----
+    if(this.real-(this.histT||0)>1){ this.histT=this.real; this.hist=this.hist||[]; this.hist.push(o.map(r=>r.h.no)); if(this.hist.length>5) this.hist.shift(); }
+    const L=r=>`${r.h.no}번 ${r.h.name}`;
+    const gapTxt=m=>{ const l=m/2.4; return l<0.3?'머리 차이':l<0.75?'반 마신':l<1.3?'한 마신':l<1.8?'한 마신 반':`${Math.round(l)}마신`; };
+    const side=r=>r.lane>0.58?'바깥쪽':r.lane<0.28?'안쪽 펜스':'가운데';
+    const p=a.pos/D;
+    const interval=remain<300?2.2:(remain<700?3.0:3.8);
+    if(this.said.lead1 && !a.fin && since>interval){
+      let msg=null, hot=false;
+      if(this.hist && this.hist.length>=4){
+        const old=this.hist[0];
+        for(const r of o){ const d=old.indexOf(r.h.no)-o.indexOf(r);
+          if(d>=2 && t>8 && !(r.calledUp>this.real-6)){ r.calledUp=this.real; const nr=o.indexOf(r); msg=nr===0?`${side(r)}에서 ${L(r)}! 단숨에 선두로 뛰쳐나갑니다!`:`${side(r)}에서 ${L(r)}! 단숨에 ${nr+1}번째까지 치고 올라옵니다!`; hot=remain<700; break; } }
+        if(!msg) for(const r of o){ const d=o.indexOf(r)-old.indexOf(r.h.no);
+          if(d>=2 && p>0.45 && !(r.calledDn>this.real-8)){ r.calledDn=this.real; msg=`${L(r)}, 힘이 떨어집니다. 뒤로 처집니다.`; break; } }
+      }
+      const PF=(key,arr)=>{ this.tpl=this.tpl||{}; const used=this.tpl[key]||[]; let idx=[...arr.keys()].filter(k=>!used.includes(k)); if(!idx.length){ used.length=0; idx=[...arr.keys()]; }
+        const k=pick(idx); used.push(k); this.tpl[key]=used; return arr[k](); };
+      const S=this.setup, gp=gapTxt(a.pos-b.pos), nm=r=>r.h.name;
+      if(!msg && remain<420 && (a.pos-b.pos)<1.4){ hot=true; msg=PF('close',[
+        ()=>`${nm(a)}! ${nm(b)}! 나란히 맞섭니다!`, ()=>`${nm(a)}냐! ${nm(b)}냐! 치열한 접전!`, ()=>`${nm(a)} 버팁니다! ${nm(b)} 따라붙습니다!`,
+        ()=>`머리 하나 차이! ${wagwa(nm(a))} ${nm(b)}!`, ()=>`안 밀립니다! ${nm(a)}! 끝까지 버텨 봅니다!`, ()=>`${nm(b)}, 목 하나만 더! 조금만 더!`,
+        ()=>`${a.h.jockey} 기수와 ${b.h.jockey} 기수, 채찍이 바쁘게 움직입니다!`]); }
+      if(!msg){
+        if(remain<460){ hot=true; msg=PF('final',[
+          ()=>`${nm(a)} 선두! ${gp} 뒤에 ${nm(b)}!`, ()=>`${nm(a)} 그대로 가느냐! ${iga(nm(b))} 추격합니다!`,
+          ()=>`${iga(nm(o[2]))} ${side(o[2])}에서 다가옵니다!`, ()=>`${nm(a)}, 기수 ${a.h.jockey} 채찍을 듭니다!`,
+          ()=>`남은 거리 ${Math.max(50,Math.round(remain/50)*50)}! ${nm(a)} 앞서 있습니다!`, ()=>`${nm(b)}! ${nm(b)}! 거리를 좁혀 옵니다!`,
+          ()=>`${eun(nm(o[3]))} 힘이 부족해 보입니다. 선두 다툼은 ${wagwa(nm(a))} ${nm(b)}!`, ()=>`관중석이 들끓습니다! ${nm(a)}! ${nm(a)}!`]); }
+        else {
+          const seg=p<0.15?'초반 자리다툼':p<0.35?'1코너에서 2코너':p<0.58?'맞은편 직선주로':'3코너에서 4코너';
+          this.callIdx=(this.callIdx||0)+1; const k=this.callIdx%3, LST=o[o.length-1], spread=Math.max(1,Math.round((a.pos-LST.pos)/2.4));
+          if(k===1) msg=PF('lead',[
+            ()=>`${seg}, 선두는 ${L(a)}, ${gp} 차이로 ${L(b)}, 이어서 ${side(o[2])}에 ${L(o[2])}.`,
+            ()=>`${seg}입니다. ${iga(L(a))} 레이스를 이끌고 ${L(b)} 2번째.`,
+            ()=>`${iga(nm(a))} 앞에서 페이스를 만들고 있습니다. ${gp} 뒤에 ${nm(b)}.`,
+            ()=>`현재 1위 ${nm(a)}, 2위 ${nm(b)}, 3위 ${nm(o[2])}.`,
+            ()=>`${nm(b)}, ${nm(a)}의 ${gp} 뒤에서 호시탐탐 기회를 노립니다.`,
+            ()=>`${seg}를 지나는 각 마, 선두는 여전히 ${nm(a)}입니다.`]);
+          else if(k===2) msg=PF('pack',[
+            ()=>`그 뒤로 ${o[3].h.no}번 ${nm(o[3])}, ${o[4].h.no}번 ${nm(o[4])}, 최후미에 ${L(LST)}.`,
+            ()=>`중단에는 ${wagwa(nm(o[3]))} ${nm(o[4])}, 맨 뒤에서 ${iga(nm(LST))} 따라갑니다.`,
+            ()=>`선두와 최후미 차이는 약 ${spread}마신. ${spread<6?'마군이 촘촘합니다!':'대열이 길게 늘어졌습니다.'}`,
+            ()=>`${L(o[3])}, 마군 속에 갇혀 진로를 찾고 있습니다.`,
+            ()=>`후미의 ${nm(LST)}, ${LST.h.style==='추입'?'추입마답게 뒤에서 기회를 엿봅니다.':'좀처럼 순위를 올리지 못합니다.'}`]);
+          else msg=PF('color',[
+            ()=>`${L(a)}, 기수 ${a.h.jockey}, 아직 손이 움직이지 않습니다. 여유가 있습니다.`,
+            ()=>`페이스는 ${(a.h.style==='도주'&&p<0.5)?'빠른 편입니다. 후반 체력이 관건입니다.':'평균적입니다. 막판 스피드 싸움이 예상됩니다.'}`,
+            ()=>`${L(b)}, ${nm(a)} 바로 뒤에서 마크하며 따라갑니다.`,
+            ()=>`${o[2].h.jockey} 기수, ${nm(o[2])}의 고삐를 당기며 때를 기다립니다.`,
+            ()=>`단승 ${S.odds.win[a.h.no].toFixed(1)}배, ${S.pop[a.h.no]}번 인기 ${nm(a)}! 예상지대로 갈까요?`,
+            ()=>`${S.pop[o[3].h.no]===1?'1번 인기 '+nm(o[3])+', 아직 중단에 있습니다. 괜찮을까요?':nm(o[3])+', 오늘 컨디션 '+COND_INFO[o[3].h.cond].t+'으로 나왔습니다.'}`,
+            ()=>({'비':`빗속에서도 ${nm(a)}의 발놀림이 가볍습니다.`,'야간':`조명 아래 ${nm(a)}의 ${a.h.coatName} 털빛이 빛납니다.`,'노을':`노을빛 속을 질주하는 ${nm(a)}!`,'흐림':`흐린 날씨에도 ${nm(a)}의 기세가 대단합니다.`,'맑음':`맑은 하늘 아래 ${nm(a)}의 발걸음이 경쾌합니다.`})[this.wx]||`${nm(a)}의 기세가 좋습니다.`,
+            ()=>`관중석에서 ${eul(nm(a))} 외치는 함성이 터집니다!`]);
+        }
+      }
+      if(msg) this.say(msg,hot);
+    }
+    // 결승 처리
+    if(a.fin && !this.firstFinSaid){
+      this.firstFinSaid=true; this.flash=this.slowLock?0.95:0.5; Sound.shutter(); this.winT=this.real;
+      const CC=['#ffd43b','#ff6b6b','#4dabf7','#69db7c','#f783ac','#ffffff','#ff922b']; this.confetti=[];
+      for(let k=0;k<(this.lowQ?70:160);k++) this.confetti.push({x:Math.random()*W,y:-Math.random()*H*0.8,vx:(Math.random()-0.5)*1.5,vy:2+Math.random()*3.5,r:Math.random()*6,vr:(Math.random()-0.5)*0.3,w:6+Math.random()*6,h:9+Math.random()*7,col:CC[k%CC.length],p:Math.random()*6});
+      if(this.slowLock) this.say(`${a.h.name}! ${b.h.name}! 거의 동시에 골인! 간발의 차이입니다!`,true);
+      else this.say(`${a.h.name}! ${a.h.name}! ${lblOf(a.h)}, 1착으로 골인합니다! 기수 ${a.h.jockey}!`,true);
+    }
+    if(b.fin && !this.said.second){
+      this.said.second=1;
+      const gapM=(b.finT-a.finT)*b.finV;
+      if(gapM<1.0){ this.photo=true; this.capturePhoto(); this.flash=1; Sound.shutter(); this.say('사진 판독(Photo Finish)에 들어갑니다! 관중석이 숨을 죽입니다!',true); }
+      else if(this.closeSaid) this.say(`${lblOf(a.h)}, 머리 하나 차이로 앞섰습니다! 1착 확실시!`,true);
+    }
+    if(this.runners.every(r=>r.fin)){
+      if(this.doneT===null){ this.doneT=this.real; try{ this.pf=this.makePhotoFinish(); }catch(e){ console.error(e); } }
+      if(this.real-this.doneT>1.4 && this.state==='run'){
+        if(this.photo){ this.state='photo'; this.photoT=this.real; }
+        else this.finish();
+      }
+    }
+    if(this.state==='photo' && this.real-this.photoT>4.6) this.finish();
+  }
+  capturePhoto(){
+    try{ const c=document.createElement('canvas'); c.width=this.cv.width; c.height=this.cv.height; c.getContext('2d').drawImage(this.cv,0,0);
+      this.photoCanvas=c; this.photoLineX=this.fx+(this.X(this.D,0.5)-this.fx)*this.zoom; }catch(e){}
+  }
+  margins(){
+    const o=this.order; const res=[];
+    for(let i=0;i<o.length;i++){
+      if(i===0){ res.push(''); continue; }
+      const m=(o[i].finT-o[i-1].finT)*o[i].finV;
+      let t;
+      if(m<0.12) t='코'; else if(m<0.35) t='머리'; else if(m<0.7) t='목'; else if(m<1.5) t='1/2마신'; else if(m<2.1) t='3/4마신';
+      else if(m>24) t='대차'; else { const L=Math.round(m/2.4*2)/2; t=`${L}마신`; }
+      res.push(t);
+    }
+    return res;
+  }
+  finish(){
+    if(this.ended) return; this.ended=true; this.state='done';
+    const o=this.order;
+    let pimg=null; try{ if(this.pf) pimg=this.pf.toDataURL('image/jpeg',0.85); }catch(e){}
+    const res={ order:o.map(r=>r.h.no), times:o.map(r=>r.finT), margins:this.margins(), photo:this.photo, photoImg:pimg };
+    this.say(`확정! 1착 ${lblOf(o[0].h)}, 2착 ${lblOf(o[1].h)}, 3착 ${lblOf(o[2].h)}!`,true);
+    if(this.cb.onDone) this.cb.onDone(res);
+  }
+  /* ---------------- 렌더링 ---------------- */
+  render(){
+    const ctx=this.ctx;
+    ctx.setTransform(this.scale,0,0,this.scale,0,0);
+    ctx.save();
+    { const sp=Math.min(1,Math.abs(this.camV||0)/40)*(this.slow>0.7?1:0.2); const a=0.6+sp*1.6+(this.excite||0)*2.2*(this.slow>0.7?1:0.3)+(this.shakeBoost||0)*4; ctx.translate(Math.sin(this.real*7.3)*a+Math.sin(this.real*17.1)*a*0.4, Math.cos(this.real*6.1)*a*0.7+Math.sin(this.real*21.7)*a*0.5); }
+    if(Math.abs(this.zoom-1)>0.001){ ctx.translate(this.fx,this.fy); ctx.scale(this.zoom,this.zoom); ctx.translate(-this.fx,-this.fy); }
+    this.drawBg(ctx); this.drawTrack(ctx); this.drawWorld(ctx); this.drawForeground(ctx);
+    ctx.restore();
+    { const cg=ctx.createLinearGradient(0,0,0,H); cg.addColorStop(0,'rgba(255,214,150,0.07)'); cg.addColorStop(0.5,'rgba(255,255,255,0)'); cg.addColorStop(1,'rgba(20,30,60,0.10)'); ctx.fillStyle=cg; ctx.fillRect(0,0,W,H);
+      const vg0=ctx.createRadialGradient(W/2,H*0.55,H*0.45,W/2,H*0.55,H*1.05); vg0.addColorStop(0,'rgba(0,0,0,0)'); vg0.addColorStop(1,'rgba(0,0,0,0.32)'); ctx.fillStyle=vg0; ctx.fillRect(0,0,W,H);
+      if(this.wx==='맑음'){ const fl=ctx.createRadialGradient(1080,70,0,1080,70,260); fl.addColorStop(0,'rgba(255,240,200,0.18)'); fl.addColorStop(1,'rgba(255,240,200,0)'); ctx.fillStyle=fl; ctx.fillRect(700,0,580,360); } }
+    this.drawWeather(ctx);
+    if(this.slow<0.8){ const a=(0.8-this.slow)*0.9; const vg=ctx.createRadialGradient(W/2,H/2,H*0.35,W/2,H/2,H*0.85); vg.addColorStop(0,'rgba(0,0,0,0)'); vg.addColorStop(1,`rgba(0,0,0,${a})`); ctx.fillStyle=vg; ctx.fillRect(0,0,W,H); }
+    if((this.excite||0)>0.05 && this.state==='run'){ const ex=this.excite; ctx.save(); ctx.globalAlpha=0.10+0.22*ex; ctx.strokeStyle='#fff';
+      ctx.lineWidth=2; ctx.beginPath();
+      for(let k=0;k<26;k++){ const yy=((k*0.6180339)%1)*H, sd=(k*7919)%1000; const len=120+ (sd%200); const xx=W-(((this.real*(1400+sd)+sd*3)%(W+len*2)));
+        if(yy>H*0.28&&yy<H*0.72) continue; ctx.moveTo(xx,yy); ctx.lineTo(xx+len,yy); } ctx.stroke(); ctx.restore(); }
+    // 관중석 카메라 플래시 (막판·결승)
+    if(this.state==='run' && ((this.excite||0)>0.3 || (this.order[0]&&this.order[0].fin))){ ctx.fillStyle='rgba(255,255,255,0.95)';
+      for(let k=0;k<(this.lowQ?3:7);k++){ if(Math.random()<0.55) continue; const x=Math.random()*W, y=170+Math.random()*150; ctx.beginPath(); ctx.arc(x,y,1.5+Math.random()*2.5,0,6.283); ctx.fill(); } }
+    // 우승 꽃가루
+    if(this.confetti){ const cf=this.confetti; ctx.save(); for(const c of cf){ c.y+=c.vy; c.x+=c.vx+Math.sin(this.real*3+c.p)*0.8; c.r+=c.vr; if(c.y>H+20) continue;
+        ctx.save(); ctx.translate(c.x,c.y); ctx.rotate(c.r); ctx.fillStyle=c.col; ctx.fillRect(-c.w/2,-c.h/2*Math.abs(Math.cos(c.r*1.7)),c.w,c.h*Math.abs(Math.cos(c.r*1.7))+0.5); ctx.restore(); } ctx.restore(); }
+    this.drawHUD(ctx);
+    // 위너 배너
+    if(this.winT && this.state!=='photo'){ const e=this.real-this.winT; if(e<4.5){ const w=this.order[0].h, a=Math.min(1,e*3)*(e>4?(4.5-e)*2:1), sx=(1-Math.min(1,e*3))*400;
+      ctx.save(); ctx.globalAlpha=a; ctx.translate(sx,0); const gg=ctx.createLinearGradient(0,0,W,0); gg.addColorStop(0,'rgba(120,80,0,0)'); gg.addColorStop(0.2,'rgba(30,20,0,0.85)'); gg.addColorStop(0.8,'rgba(30,20,0,0.85)'); gg.addColorStop(1,'rgba(120,80,0,0)');
+      ctx.fillStyle=gg; ctx.fillRect(0,H-104,W,82); ctx.fillStyle='#ffd43b'; ctx.fillRect(W*0.2,H-104,W*0.6,3); ctx.fillRect(W*0.2,H-25,W*0.6,3);
+      ctx.textAlign='center'; ctx.textBaseline='middle'; ctx.fillStyle='#ffd43b'; ctx.font='700 40px "Noto Sans KR",sans-serif'; ctx.fillText(`🏆 WINNER  ${w.no}번 ${w.name}`,W/2,H-74);
+      ctx.fillStyle='#fff'; ctx.font='500 20px "Noto Sans KR",sans-serif'; ctx.fillText(`기수 ${w.jockey} · 기록 ${Math.floor(this.order[0].finT/60)}:${(this.order[0].finT%60).toFixed(1).padStart(4,'0')} · 단승 ${this.setup.odds.win[w.no].toFixed(1)}배`,W/2,H-41); ctx.restore(); } }
+    if(this.state==='photo') this.drawPhoto(ctx);
+    if(this.flash>0){ ctx.fillStyle=`rgba(255,255,255,${Math.min(1,this.flash)})`; ctx.fillRect(0,0,W,H); }
+  }
+  drawWeather(ctx){
+    const wx=this.wx;
+    const mul={'흐림':'#c9cdd3','비':'#959fab','노을':'#ffcf9e','야간':'#56649a'}[wx];
+    if(mul){ ctx.save(); ctx.globalCompositeOperation='multiply'; ctx.fillStyle=mul; ctx.fillRect(0,0,W,H); ctx.restore(); }
+    if(wx==='야간'){ ctx.save(); ctx.globalCompositeOperation='lighter'; const lg=ctx.createRadialGradient(W/2,H*0.62,40,W/2,H*0.62,W*0.6); lg.addColorStop(0,'rgba(255,240,210,0.16)'); lg.addColorStop(1,'rgba(255,240,210,0)'); ctx.fillStyle=lg; ctx.fillRect(0,0,W,H); ctx.restore(); }
+    if(wx==='노을'){ const og=ctx.createLinearGradient(W,0,0,0); og.addColorStop(0,'rgba(255,140,60,0.22)'); og.addColorStop(1,'rgba(255,140,60,0)'); ctx.fillStyle=og; ctx.fillRect(0,0,W,H); }
+    if(wx==='비'){
+      const sl=this.slow; ctx.save(); ctx.strokeStyle='rgba(210,225,240,0.42)'; ctx.lineWidth=1.3; ctx.beginPath();
+      const nd=this.lowQ?90:this.drops.length;
+      for(let i=0;i<nd;i++){ const d=this.drops[i]; d.y+=d.sp*(1/60)*sl; d.x-=d.sp*0.18*(1/60)*sl; if(d.y>H){ d.y=-30; d.x=Math.random()*(W+300); } if(d.x<-40) d.x+=W+300;
+        ctx.moveTo(d.x,d.y); ctx.lineTo(d.x-d.len*0.18,d.y+d.len); }
+      ctx.stroke(); ctx.restore();
+      if(this.bolt && this.real-this.bolt.t<0.35){ ctx.save(); ctx.strokeStyle='rgba(235,240,255,0.95)'; ctx.lineWidth=3; ctx.shadowColor='#cfe0ff'; ctx.shadowBlur=18; ctx.beginPath(); let x=this.bolt.x,y=0; ctx.moveTo(x,y); const r=seeded(Math.floor(this.bolt.t*1000)+1); while(y<300){ x+=(r()-0.5)*60; y+=20+r()*30; ctx.lineTo(x,y);} ctx.stroke(); ctx.restore(); }
+    }
+  }
+  drawBg(ctx){
+    const ppm=this.ppm, cam=this.camX, bg=this.bg;
+    const wx=this.wx, SKY={'맑음':['#1f5fbf','#69a8ee','#cfe8ff'],'흐림':['#56626f','#86919c','#bcc4cc'],'비':['#262e38','#48525c','#6f7982'],'노을':['#26285e','#b9526a','#ffb067'],'야간':['#02040f','#0a1233','#1d2f5c']}[wx]||['#1f5fbf','#69a8ee','#cfe8ff'];
+    const sky=ctx.createLinearGradient(0,-200,0,340); sky.addColorStop(0,SKY[0]); sky.addColorStop(0.6,SKY[1]); sky.addColorStop(1,SKY[2]);
+    ctx.fillStyle=sky; ctx.fillRect(-200,-300,W+400,700);
+    if(wx==='맑음'){ ctx.fillStyle='rgba(255,250,220,0.9)'; ctx.beginPath(); ctx.arc(1080,70,34,0,6.283); ctx.fill();
+      ctx.fillStyle='rgba(255,250,220,0.18)'; ctx.beginPath(); ctx.arc(1080,70,70,0,6.283); ctx.fill(); }
+    if(wx==='노을'){ const sg=ctx.createRadialGradient(980,190,10,980,190,260); sg.addColorStop(0,'rgba(255,200,120,0.95)'); sg.addColorStop(0.15,'rgba(255,150,80,0.6)'); sg.addColorStop(1,'rgba(255,120,60,0)'); ctx.fillStyle=sg; ctx.fillRect(600,-100,800,500);
+      ctx.fillStyle='#ffd9a0'; ctx.beginPath(); ctx.arc(980,190,42,0,6.283); ctx.fill(); }
+    if(wx==='야간'){ const sr=seeded(99); ctx.fillStyle='#fff'; for(let i=0;i<90;i++){ const x=sr()*W, y=sr()*150, tw=0.4+0.6*Math.abs(Math.sin(this.real*2+i)); ctx.globalAlpha=tw*0.8; ctx.fillRect(x,y,1.6,1.6);} ctx.globalAlpha=1;
+      ctx.fillStyle='rgba(240,240,220,0.95)'; ctx.beginPath(); ctx.arc(1060,64,24,0,6.283); ctx.fill(); ctx.fillStyle=SKY[1]; ctx.beginPath(); ctx.arc(1070,58,22,0,6.283); ctx.fill(); }
+    const cloudCol={'맑음':'rgba(255,255,255,0.85)','흐림':'rgba(200,205,212,0.95)','비':'rgba(95,104,114,0.97)','노을':'rgba(255,190,170,0.75)','야간':'rgba(40,50,80,0.6)'}[wx]||'rgba(255,255,255,0.85)';
+    const cScale=(wx==='흐림'||wx==='비')?1.9:1;
+    for(const c of bg.clouds){ let x=((c.x-cam*ppm*0.03)%2400+2400)%2400-300; ctx.fillStyle=cloudCol; c.s0=c.s0||c.s; c.s=c.s0*cScale;
+      ctx.beginPath(); ctx.ellipse(x,c.y,60*c.s,18*c.s,0,0,6.283); ctx.ellipse(x+40*c.s,c.y-10*c.s,40*c.s,20*c.s,0,0,6.283); ctx.ellipse(x-38*c.s,c.y-4*c.s,34*c.s,14*c.s,0,0,6.283); ctx.fill(); }
+    const mo=-(((cam*ppm*0.08)%2400)+2400)%2400;
+    ctx.drawImage(bg.mt,mo,70); ctx.drawImage(bg.mt,mo+2400,70); ctx.drawImage(bg.mt,mo-2400,70);
+    // 조명탑 (야간·비엔 점등)
+    { const lp=-(((cam*ppm*0.3)%900)+900)%900;
+      for(let x=lp-900;x<W+900;x+=900){ const tx=x+420; ctx.fillStyle='#4a5160'; ctx.fillRect(tx-4,70,8,270); ctx.fillStyle='#2b313c'; ctx.fillRect(tx-34,56,68,22);
+        for(let i=0;i<6;i++){ ctx.fillStyle=wx==='야간'||wx==='비'?'#fffbe6':'#c9ced6'; ctx.fillRect(tx-30+i*11,59,8,7); ctx.fillRect(tx-30+i*11,68,8,7); }
+        if(wx==='야간'||wx==='비'){ ctx.save(); ctx.globalCompositeOperation='lighter'; const lg=ctx.createRadialGradient(tx,67,4,tx,67,wx==='야간'?160:90); lg.addColorStop(0,'rgba(255,250,220,0.55)'); lg.addColorStop(1,'rgba(255,250,220,0)'); ctx.fillStyle=lg; ctx.fillRect(tx-170,-100,340,340); ctx.restore(); } } }
+    // 전광판 (패럴랙스)
+    const par=0.35, sp=2600, off=-(((cam*ppm*par)%sp)+sp)%sp;
+    // 관중석
+    const fr=(this.crowdLv>0.45 && Math.floor(this.real*(4+this.crowdLv*8))%2)?1:0;
+    const go=-(((cam*ppm*par)%1600)+1600)%1600;
+    for(let k=-1;k<=1;k++) ctx.drawImage(bg.crowd[fr],go+k*1600,160);
+    const blur=Math.min(26,Math.abs(this.camV||0)*ppm*par*0.045);
+    if(blur>1.5 && !this.lowQ){ ctx.globalAlpha=0.4; for(let k=-1;k<=1;k++) ctx.drawImage(bg.crowd[fr],go+k*1600-blur*0.8,160); ctx.globalAlpha=1; }
+    { const hz=ctx.createLinearGradient(0,150,0,345); hz.addColorStop(0,'rgba(190,215,240,0.28)'); hz.addColorStop(1,'rgba(190,215,240,0.06)'); ctx.fillStyle=hz; ctx.fillRect(-300,150,W+600,195); }
+    for(let k=-1;k<=1;k++){ const x=off+k*sp+700; if(x>-400&&x<W+100){ ctx.save(); ctx.translate(x,112); ctx.scale(0.82,0.82); this.drawJumbo(ctx,0,0); ctx.restore(); } }
+    // 잔디 둔덕 + 광고판
+    const gl=ctx.createLinearGradient(0,330,0,Y_FAR); gl.addColorStop(0,'#3e7d3a'); gl.addColorStop(1,'#2e6a2e');
+    ctx.fillStyle=gl; ctx.fillRect(-200,336,W+400,yZ(-0.06)-336+2);
+  }
+  drawJumbo(ctx,x,y){
+    const w=330,h=158;
+    ctx.fillStyle='#5b6472'; ctx.fillRect(x+40,y+h,14,240); ctx.fillRect(x+w-54,y+h,14,240);
+    ctx.fillStyle='#1d222b'; rr(ctx,x-8,y-8,w+16,h+16,6); ctx.fill();
+    ctx.fillStyle='#04060c'; ctx.fillRect(x,y,w,h);
+    ctx.fillStyle='#ffd43b'; ctx.font='600 17px "Noto Sans KR",sans-serif'; ctx.textAlign='left'; ctx.textBaseline='top';
+    ctx.fillText(`${this.setup.raceNo}R ${this.setup.name}`,x+10,y+8);
+    ctx.fillStyle='#ff4d4f'; ctx.fillText('● LIVE',x+w-78,y+8);
+    const o=this.order;
+    o.forEach((r,i)=>{ const fr=FRAME[r.h.no]; const bx=x+8+i*(314/o.length), by=y+40;
+      ctx.fillStyle=fr.bg; ctx.fillRect(bx,by,44,48); ctx.fillStyle=fr.fg; ctx.font='bold 30px "Noto Sans KR",sans-serif'; ctx.textAlign='center'; ctx.fillText(String(r.h.no),bx+22,by+8);
+      ctx.fillStyle='#9fb3d1'; ctx.font='bold 12px sans-serif'; ctx.fillText(`${i+1}`,bx+22,by+52); });
+    const rem=this.state==='intro'?this.D:Math.max(0,Math.ceil(this.D-o[0].pos));
+    ctx.textAlign='left'; ctx.fillStyle='#69db7c'; ctx.font='bold 22px "Noto Sans KR",sans-serif';
+    ctx.fillText(this.state==='intro'?'출발 대기중':(rem>0?`남은 ${rem}m`:'GOAL!'),x+10,y+120);
+    ctx.fillStyle='rgba(255,255,255,0.05)'; for(let yy=y;yy<y+h;yy+=3) ctx.fillRect(x,yy,w,1);
+  }
+  drawTrack(ctx){
+    const ppm=this.ppm, cam=this.camX, zF=-0.06, zN=1.12;
+    const xmin=cam-(W/2+200)/(ppm*sZ(zF)), xmax=cam+(W/2+200)/(ppm*sZ(zF));
+    // 광고판
+    const az=-0.13;
+    for(let i=Math.floor(xmin/26)-1;i<=Math.ceil(xmax/26);i++){
+      const ad=ADS[((i%ADS.length)+ADS.length)%ADS.length]; const x0=i*26, x1=x0+21;
+      const [ax0,ay]=this.P(x0,az,0), [ax1]=this.P(x1,az,0), hgt=2.1*ppm*sZ(az);
+      ctx.fillStyle='#222'; ctx.fillRect(ax0-3,ay-hgt-3,ax1-ax0+6,hgt+3); ctx.fillStyle=ad[2]; ctx.fillRect(ax0,ay-hgt,ax1-ax0,hgt); ctx.fillStyle='rgba(255,255,255,0.18)'; ctx.fillRect(ax0,ay-hgt,ax1-ax0,hgt*0.3);
+      ctx.fillStyle='rgba(0,0,0,0.25)'; ctx.fillRect(ax0,ay-3,ax1-ax0,3);
+      ctx.fillStyle=ad[3]; ctx.textAlign='center'; ctx.textBaseline='middle';
+      ctx.font=`500 ${Math.round(hgt*0.58)}px "Noto Sans KR",sans-serif`; ctx.fillText(ad[0],(ax0+ax1)/2-(ax1-ax0)*0.2,ay-hgt/2);
+      ctx.font=`400 ${Math.round(hgt*0.3)}px "Noto Sans KR",sans-serif`; ctx.fillText(ad[1],(ax0+ax1)/2+(ax1-ax0)*0.24,ay-hgt/2);
+    }
+    // 주로 바탕
+    const yF=yZ(zF), yN=yZ(zN);
+    const tg=ctx.createLinearGradient(0,yF,0,yN);
+    if(this.dirt){ tg.addColorStop(0,'#9b7046'); tg.addColorStop(1,'#b5865a'); } else { tg.addColorStop(0,'#3d8a37'); tg.addColorStop(1,'#4fa847'); }
+    ctx.fillStyle=tg; ctx.fillRect(-300,yF,W+600,yN-yF);
+    // 잔디 깎은 줄무늬 / 더트 써레 자국 (원근 사다리꼴)
+    const SL=6;
+    ctx.fillStyle=this.dirt?'rgba(70,40,15,0.13)':'rgba(255,255,255,0.08)';
+    for(let i=Math.floor(xmin/SL)-2;i<=Math.ceil(xmax/SL)+2;i++){ if(i%2) continue;
+      const x0=i*SL,x1=x0+SL; ctx.beginPath(); ctx.moveTo(this.X(x0,zF),yF); ctx.lineTo(this.X(x1,zF),yF); ctx.lineTo(this.X(x1,zN),yN); ctx.lineTo(this.X(x0,zN),yN); ctx.closePath(); ctx.fill(); }
+    if(this.wx==='비'){ const wg=ctx.createLinearGradient(0,yF,0,yN); wg.addColorStop(0,'rgba(40,50,70,0.25)'); wg.addColorStop(0.5,'rgba(200,215,235,0.10)'); wg.addColorStop(1,'rgba(40,50,70,0.15)'); ctx.fillStyle=wg; ctx.fillRect(-300,yF,W+600,yN-yF);
+      ctx.strokeStyle='rgba(230,240,255,0.45)'; ctx.lineWidth=1; for(let i=0;i<45;i++){ const z=Math.random()*1.1, x=Math.random()*W, y=yZ(z), k=sZ(z); ctx.beginPath(); ctx.ellipse(x,y,4*k,1.3*k,0,0,6.283); ctx.stroke(); } }
+    { const nz=this.dirt?this.bg.noiseDirt:this.bg.noiseTurf;
+      if(!this.lowQ) for(let b=0;b<6;b++){ const z0=zF+(zN-zF)*b/6, z1=zF+(zN-zF)*(b+1)/6, k=sZ((z0+z1)/2), y0=yZ(z0), y1=yZ(z1)+1;
+        const tw=512*k*0.9, off=-(((cam*ppm*k)%tw)+tw)%tw;
+        for(let x=off-tw;x<W+tw;x+=tw) ctx.drawImage(nz,0,(b*8)%64,512,32,x,y0,tw,y1-y0); } }
+    if(this.dirt){ ctx.strokeStyle='rgba(60,35,15,0.18)'; ctx.lineWidth=1; for(let z=0;z<1.1;z+=0.07){ const y=yZ(z); ctx.beginPath(); ctx.moveTo(-300,y); ctx.lineTo(W+300,y); ctx.stroke(); } }
+    else { ctx.fillStyle='rgba(0,40,0,0.10)'; for(let z=0;z<1.1;z+=0.18){ const y=yZ(z); ctx.fillRect(-300,y,W+600,2); } }
+    // 발굽 자국 (트랙 사용감)
+    ctx.fillStyle=this.dirt?'rgba(60,35,15,0.25)':'rgba(30,60,20,0.25)';
+    for(let i=Math.floor(xmin/3);i<=Math.ceil(xmax/3);i++){ if(i>this.order[0].pos/3) break; const z=0.12+((i*7919)%100)/100*0.8; const x=i*3+((i*31)%10)/10; ctx.beginPath(); ctx.ellipse(this.X(x,z),yZ(z),3*sZ(z),1.2*sZ(z),0,0,6.283); ctx.fill(); }
+    // 안쪽(먼쪽) 펜스
+    const rh=0.95;
+    const [,yTop]=this.P(0,zF,rh);
+    ctx.fillStyle='#f8f9fa';
+    for(let i=Math.floor(xmin/2.5);i<=Math.ceil(xmax/2.5);i++){ const px=this.X(i*2.5,zF); ctx.fillRect(px-1.5,yTop,3,yF-yTop); }
+    ctx.fillStyle='#ffffff'; ctx.fillRect(-300,yTop-3,W+600,6); ctx.fillStyle='rgba(0,0,0,0.15)'; ctx.fillRect(-300,yTop+3,W+600,2);
+    // 거리 표지
+    for(let k=1;k*100<=this.D;k++){ const x=this.D-k*100; const px=this.X(x,zF); if(px<-100||px>W+100) continue;
+      const big=k%2===0, hh=big?2.6:1.8; const [,ty]=this.P(x,zF,hh);
+      ctx.fillStyle=big?'#e03131':'#ffffff'; ctx.fillRect(px-2.5,ty,5,yF-ty);
+      if(big){ ctx.fillStyle='#fff'; rr(ctx,px-28,ty-30,56,30,4); ctx.fill(); ctx.strokeStyle='#e03131'; ctx.lineWidth=2.5; ctx.stroke();
+        ctx.fillStyle='#e03131'; ctx.font='700 19px "Noto Sans KR",sans-serif'; ctx.textAlign='center'; ctx.textBaseline='middle'; ctx.fillText(String(k*100),px,ty-15); } }
+    // 결승선
+    { const x=this.D; const p1=this.X(x,zF), p2=this.X(x,zN), w1=0.18*ppm*sZ(zF), w2=0.18*ppm*sZ(zN);
+      if(p2>-200&&p1<W+200){
+        ctx.fillStyle='rgba(255,255,255,0.92)'; ctx.beginPath(); ctx.moveTo(p1-w1,yF); ctx.lineTo(p1+w1,yF); ctx.lineTo(p2+w2,yN); ctx.lineTo(p2-w2,yN); ctx.closePath(); ctx.fill();
+        // 심판탑
+        const [tx0,ty0]=this.P(x-2.5,-0.2,0), [tx1]=this.P(x+2.5,-0.2,0), th=6.5*ppm*sZ(-0.2);
+        ctx.fillStyle='#f1f3f5'; ctx.fillRect(tx0,ty0-th,tx1-tx0,th); ctx.fillStyle='#1971c2'; ctx.fillRect(tx0,ty0-th,tx1-tx0,th*0.22);
+        ctx.fillStyle='#74c0fc'; ctx.fillRect(tx0+6,ty0-th*0.7,tx1-tx0-12,th*0.25);
+        ctx.fillStyle='#fff'; ctx.font=`700 ${Math.round(th*0.14)}px "Noto Sans KR",sans-serif`; ctx.textAlign='center'; ctx.textBaseline='middle'; ctx.fillText('JUDGE',(tx0+tx1)/2,ty0-th*0.89);
+        const [,gy]=this.P(x,zF,4.6);
+        ctx.fillStyle='#fff'; ctx.fillRect(p1-3,gy,6,yF-gy);
+        ctx.fillStyle='#e03131'; ctx.beginPath(); ctx.arc(p1,gy,26,0,6.283); ctx.fill(); ctx.fillStyle='#fff'; ctx.beginPath(); ctx.arc(p1,gy,17,0,6.283); ctx.fill();
+        ctx.fillStyle='#e03131'; ctx.font='700 13px sans-serif'; ctx.fillText('GOAL',p1,gy+1);
+      } }
+  }
+  drawWorld(ctx){
+    const items=[];
+    for(const r of this.runners) items.push({z:r.lane,k:'h',r});
+    if(this.X(0,0)>-300 && this.X(-4,1)<W+300){
+      for(let i=0;i<=this.runners.length;i++) items.push({z:laneZ(i)-LANE_HALF,k:'gp'});
+      for(let i=0;i<this.runners.length;i++) items.push({z:laneZ(i)+0.03,k:'gd',i});
+    }
+    const ps=this.parts.slice().sort((a,b)=>a.z-b.z);
+    items.sort((a,b)=>a.z-b.z);
+    let pi=0;
+    const drawParts=(zLim)=>{ while(pi<ps.length && ps[pi].z<zLim){ this.drawPart(ctx,ps[pi]); pi++; } };
+    for(const it of items){
+      drawParts(it.z);
+      if(it.k==='h') this.drawRunner(ctx,it.r);
+      else if(it.k==='gp') this.drawGatePanel(ctx,it.z);
+      else this.drawGateDoor(ctx,it.i);
+    }
+    drawParts(99);
+    if(this.X(0,0)>-300 && this.X(-4,1)<W+300) this.drawGateTop(ctx);
+  }
+  drawPart(ctx,p){
+    const [x,y]=this.P(p.x,p.z,p.y); const s=Math.max(1,p.s*this.ppm*sZ(p.z));
+    const a=Math.max(0,Math.min(1,p.life/p.max));
+    if(p.puff){ ctx.globalAlpha=a*0.45; ctx.fillStyle=p.col; ctx.beginPath(); ctx.arc(x,y,s*(1+(1-a)*1.8),0,6.283); ctx.fill(); ctx.globalAlpha=1; return; }
+    if(p.fire){ ctx.save(); ctx.globalCompositeOperation='lighter'; ctx.globalAlpha=a; ctx.fillStyle=p.col; ctx.beginPath(); ctx.arc(x,y,s*(1.4-a*0.4),0,6.283); ctx.fill(); ctx.restore(); }
+    else { ctx.globalAlpha=a*0.9; ctx.fillStyle=p.col; ctx.fillRect(x-s/2,y-s/2,s,s); ctx.globalAlpha=1; }
+  }
+  horseFrame(h,fi){
+    const RS=this.RS, NF=HORSE_NF;
+    if(!h._fc || h._fc.RS!==RS) h._fc={RS,f:[]};
+    let c=h._fc.f[fi];
+    if(!c){ c=document.createElement('canvas'); c.width=Math.ceil(240*RS); c.height=Math.ceil(180*RS);
+      const g=c.getContext('2d'); drawHorse(g,h,125*RS,152*RS,RS,fi/NF*6.283,1,{}); h._fc.f[fi]=c; }
+    return c;
+  }
+  drawRunner(ctx,r){
+    const z=r.lane, x=this.X(r.pos-1.6,z), y=yZ(z), s=this.ppm*sZ(z)/50;
+    if(x<-200||x>W+200) return;
+    const amp=Math.min(1,r.v/9);
+    const remain=this.D-r.pos, fire=r.spurting&&!r.fin;
+    if(fire){ ctx.save(); ctx.globalCompositeOperation='lighter'; ctx.globalAlpha=0.55; ctx.drawImage(FIRE_GLOW,x-115*s,y-125*s,200*s,110*s); ctx.restore(); }
+    if(amp>0.6){
+      const img=this.horseFrame(r.h,Math.floor(frac(r.phase/6.283)*HORSE_NF)%HORSE_NF), k=s/this.RS;
+      ctx.drawImage(img,x-125*s,y-152*s,img.width*k,img.height*k);
+      if(remain<350&&!r.fin&&r.v>8){ const wa=Math.sin(this.simT*14+r.i)*0.9; ctx.save(); ctx.translate(x+40*s,y-104*s); ctx.rotate(-2.2+wa); ctx.strokeStyle='#1b1b1b'; ctx.lineWidth=Math.max(1,2*s); ctx.beginPath(); ctx.moveTo(0,0); ctx.lineTo(30*s,0); ctx.stroke(); ctx.restore(); }
+    } else drawHorse(ctx,r.h,x,y,s,r.phase,amp,{});
+    // 머리 위 마번 태그
+    const fr=FRAME[r.h.no]; const ty=y-140*s;
+    ctx.fillStyle='rgba(0,0,0,0.45)'; rr(ctx,x+14*s-14,ty-14,28,24,6); ctx.fill();
+    ctx.fillStyle=fr.bg; rr(ctx,x+14*s-12,ty-12,24,20,5); ctx.fill();
+    ctx.fillStyle=fr.fg; ctx.font='700 15px "Noto Sans KR",sans-serif'; ctx.textAlign='center'; ctx.textBaseline='middle'; ctx.fillText(String(r.h.no),x+14*s,ty-1);
+    if(r.spurting&&!r.fin){ ctx.font='bold 18px sans-serif'; ctx.fillText('🔥',x+14*s+24,ty-2); }
+    if(r.pop && this.real-r.pop.t<1.2){ const e=this.real-r.pop.t; ctx.save(); ctx.globalAlpha=1-e/1.2; ctx.fillStyle='#69ff8a'; ctx.strokeStyle='rgba(0,0,0,0.6)'; ctx.lineWidth=3; ctx.font='700 20px "Noto Sans KR",sans-serif'; ctx.strokeText(r.pop.txt,x+14*s,ty-24-e*26); ctx.fillText(r.pop.txt,x+14*s,ty-24-e*26); ctx.restore(); }
+  }
+  drawGatePanel(ctx,z){
+    const p=(x,h)=>this.P(x,z,h);
+    const [a0,a1]=p(-3.3,0), [b0,b1]=p(0.3,0), [,c1]=p(0.3,2.3), [,d1]=p(-3.3,2.3);
+    ctx.fillStyle='rgba(40,120,60,0.45)'; ctx.beginPath(); ctx.moveTo(a0,a1-0.5*this.ppm*sZ(z)); ctx.lineTo(b0,b1-0.5*this.ppm*sZ(z)); ctx.lineTo(b0,c1); ctx.lineTo(a0,d1); ctx.closePath(); ctx.fill();
+    ctx.strokeStyle='#f1f3f5'; ctx.lineWidth=3*sZ(z); ctx.stroke();
+    ctx.fillStyle='#dee2e6'; ctx.fillRect(a0-2,d1,4,a1-d1); ctx.fillRect(b0-2,c1,4,b1-c1);
+  }
+  drawGateDoor(ctx,i){
+    const z0=laneZ(i)-LANE_HALF, z1=laneZ(i)+LANE_HALF, hm=2.0, op=this.gateOpen;
+    const ang=op*1.3, half=(z1-z0)/2;
+    const door=(hz,dir)=>{ const fzx=0.3+Math.sin(ang)*0.9, fz=hz+dir*half*Math.cos(ang);
+      const A=this.P(0.3,hz,0.3), B=this.P(fzx,fz,0.3), C=this.P(fzx,fz,hm), Dd=this.P(0.3,hz,hm);
+      ctx.fillStyle=op>0?'rgba(220,230,240,0.9)':'rgba(235,240,245,0.95)'; ctx.beginPath(); ctx.moveTo(A[0],A[1]); ctx.lineTo(B[0],B[1]); ctx.lineTo(C[0],C[1]); ctx.lineTo(Dd[0],Dd[1]); ctx.closePath(); ctx.fill();
+      ctx.strokeStyle='#868e96'; ctx.lineWidth=1.5; ctx.stroke();
+      ctx.strokeStyle='#e03131'; ctx.lineWidth=2; ctx.beginPath(); ctx.moveTo((A[0]+Dd[0])/2,(A[1]+Dd[1])/2); ctx.lineTo((B[0]+C[0])/2,(B[1]+C[1])/2); ctx.stroke(); };
+    door(z0,1); door(z1,-1);
+    const [nx,ny]=this.P(0.3,laneZ(i),2.15); const fr=FRAME[i+1];
+    ctx.fillStyle=fr.bg; ctx.fillRect(nx-9,ny-9,18,16); ctx.fillStyle=fr.fg; ctx.font='bold 12px sans-serif'; ctx.textAlign='center'; ctx.textBaseline='middle'; ctx.fillText(String(i+1),nx,ny-1);
+  }
+  drawGateTop(ctx){
+    const zA=laneZ(0)-LANE_HALF, zB=laneZ(this.runners.length-1)+LANE_HALF;
+    const A=this.P(-3.3,zA,2.3), B=this.P(0.3,zA,2.3), C=this.P(0.3,zB,2.3), Dd=this.P(-3.3,zB,2.3);
+    ctx.strokeStyle='#2b8a3e'; ctx.lineWidth=5; ctx.beginPath(); ctx.moveTo(A[0],A[1]); ctx.lineTo(B[0],B[1]); ctx.moveTo(C[0],C[1]); ctx.lineTo(Dd[0],Dd[1]); ctx.moveTo(A[0],A[1]); ctx.lineTo(Dd[0],Dd[1]); ctx.stroke();
+    const E=this.P(0.3,zB,2.3), F=this.P(0.3,zB,2.9), G=this.P(0.3,zA,2.9);
+    ctx.fillStyle='#2b8a3e'; ctx.beginPath(); ctx.moveTo(B[0],B[1]); ctx.lineTo(E[0],E[1]); ctx.lineTo(F[0],F[1]); ctx.lineTo(G[0],G[1]); ctx.closePath(); ctx.fill();
+    ctx.fillStyle='#fff'; ctx.font='700 16px "Noto Sans KR",sans-serif'; ctx.textAlign='center'; ctx.textBaseline='middle'; ctx.fillText('STAR GATE',(G[0]+F[0])/2,(G[1]+F[1])/2+(E[1]-F[1])*0.0-8);
+  }
+  drawForeground(ctx){
+    const ppm=this.ppm, cam=this.camX, z=1.12;
+    const xmin=cam-(W/2+100)/(ppm*sZ(z)), xmax=cam+(W/2+100)/(ppm*sZ(z));
+    const y0=yZ(z), rh=1.0*ppm*sZ(z), yt=y0-rh;
+    const fg=ctx.createLinearGradient(0,y0,0,H+60); fg.addColorStop(0,'#2f7a2f'); fg.addColorStop(1,'#1d4f1f');
+    ctx.fillStyle=fg; ctx.fillRect(-300,y0,W+600,H-y0+300);
+    // 근경 펜스 광고판 (LED 보드)
+    for(let i=Math.floor(xmin/16)-1;i<=Math.ceil(xmax/16)+1;i++){
+      const ad=ADS[(((i+2)%ADS.length)+ADS.length)%ADS.length]; const bx0=this.X(i*16,z), bx1=this.X(i*16+15,z);
+      if(bx1<-50||bx0>W+50) continue;
+      ctx.fillStyle=ad[2]; ctx.fillRect(bx0,yt+2,bx1-bx0,rh-2);
+      ctx.fillStyle='rgba(255,255,255,0.2)'; ctx.fillRect(bx0,yt+2,bx1-bx0,rh*0.25);
+      ctx.fillStyle=ad[3]; ctx.textAlign='center'; ctx.textBaseline='middle';
+      ctx.font=`500 ${Math.round(rh*0.58)}px "Noto Sans KR",sans-serif`; ctx.fillText(ad[0],bx0+(bx1-bx0)*0.3,yt+rh/2+1);
+      ctx.font=`400 ${Math.round(rh*0.34)}px "Noto Sans KR",sans-serif`; ctx.fillText(ad[1],bx0+(bx1-bx0)*0.72,yt+rh/2+1);
+    }
+    ctx.fillStyle='#f1f3f5';
+    for(let i=Math.floor(xmin/16)-1;i<=Math.ceil(xmax/16)+1;i++){ const px=this.X(i*16-0.5,z); ctx.fillRect(px-4,yt,8,rh); }
+    ctx.fillStyle='#ffffff'; ctx.fillRect(-300,yt-5,W+600,9);
+    ctx.fillStyle='rgba(0,0,0,0.18)'; ctx.fillRect(-300,yt+4,W+600,3);
+    // 근경 꽃/잔디 (빠른 패럴랙스)
+    const zz=1.35, f2=-(((cam*ppm*sZ(zz))%60)+60)%60;
+    ctx.fillStyle='rgba(255,255,255,0.08)';
+    for(let x=f2-60;x<W+60;x+=60){ ctx.fillRect(x,H-30,30,3); }
+    if(this.state==='run' && this.order[0].v>10 && this.slow>0.7){ ctx.strokeStyle='rgba(255,255,255,0.09)'; ctx.lineWidth=2;
+      for(let k=0;k<6;k++){ const yy=y0+8+((k*37+Math.floor(this.real*60)*13)%60); const xx=((k*211-this.real*1800)%(W+300)+W+300)%(W+300)-150; ctx.beginPath(); ctx.moveTo(xx,yy); ctx.lineTo(xx+140,yy); ctx.stroke(); } }
+  }
+  drawHUD(ctx){
+    const S=this.setup, o=this.order;
+    // 좌상단 레이스 정보
+    ctx.fillStyle='rgba(6,12,30,0.78)'; rr(ctx,16,14,300,74,10); ctx.fill();
+    ctx.fillStyle='#ffd43b'; ctx.font='700 19px "Noto Sans KR",sans-serif'; ctx.textAlign='left'; ctx.textBaseline='top';
+    ctx.fillText(`${S.raceNo}R ${S.name}`,28,22);
+    ctx.fillStyle='#ffffff'; ctx.font='bold 15px "Noto Sans KR",sans-serif';
+    ctx.fillText(`${S.grade} · ${S.D}m · ${this.dirt?'더트':'잔디'} · ${S.going}`,28,46);
+    const rem=this.state==='intro'?S.D:Math.max(0,Math.ceil(S.D-o[0].pos));
+    ctx.fillStyle='#69db7c'; ctx.font='700 15px "Noto Sans KR",sans-serif'; ctx.fillText(rem>0?`남은 거리 ${rem.toLocaleString()}m`:'골인!',28,66);
+    // 우상단 LIVE + 시계
+    ctx.fillStyle='rgba(6,12,30,0.78)'; rr(ctx,W-196,14,180,44,10); ctx.fill();
+    ctx.fillStyle=Math.floor(this.real*2)%2?'#ff4d4f':'#a61e1e'; ctx.beginPath(); ctx.arc(W-176,36,7,0,6.283); ctx.fill();
+    ctx.fillStyle='#fff'; ctx.font='700 16px "Noto Sans KR",sans-serif'; ctx.textBaseline='middle'; ctx.fillText('LIVE',W-162,37);
+    const tt=Math.max(0,this.simT); ctx.font='bold 18px monospace'; ctx.textAlign='right';
+    ctx.fillText(`${Math.floor(tt/60)}:${(tt%60).toFixed(1).padStart(4,'0')}`,W-28,37);
+    if(this.slow<0.6){ ctx.fillStyle='#ffd43b'; ctx.font='700 16px "Noto Sans KR",sans-serif'; ctx.textAlign='right'; ctx.fillText('◀◀ SLOW MOTION',W-24,76); }
+    // 상단 실시간 순위 바
+    const NR=this.runners.length, bw=Math.min(62,372/NR), bx0=W/2-bw*NR/2;
+    ctx.fillStyle='rgba(6,12,30,0.82)'; rr(ctx,bx0-12,10,bw*NR+24,74,12); ctx.fill();
+    ctx.fillStyle='#8da2c9'; ctx.font='bold 11px "Noto Sans KR",sans-serif'; ctx.textAlign='center'; ctx.textBaseline='top';
+    for(let i=0;i<NR;i++) ctx.fillText(['1st','2nd','3rd','4th','5th','6th','7th','8th'][i],bx0+i*bw+bw/2,14);
+    o.forEach((r,i)=>{ const no=r.h.no; this.rankX[no]+= (i-this.rankX[no])*0.18; });
+    this.runners.slice().sort((a,b)=>this.rankX[b.h.no]-this.rankX[a.h.no]).forEach(r=>{
+      const no=r.h.no, fr=FRAME[no], x=bx0+this.rankX[no]*bw+6, y=30, isTop=o[0]===r;
+      ctx.fillStyle='rgba(0,0,0,0.5)'; rr(ctx,x+2,y+2,bw-12,46,7); ctx.fill();
+      ctx.fillStyle=fr.bg; rr(ctx,x,y,bw-12,46,7); ctx.fill();
+      if(isTop){ ctx.strokeStyle='#ffd43b'; ctx.lineWidth=3; ctx.stroke(); }
+      ctx.fillStyle=fr.fg; ctx.font='700 30px "Noto Sans KR",sans-serif'; ctx.textBaseline='middle'; ctx.fillText(String(no),x+(bw-12)/2,y+24);
+      if(r.spurting&&!r.fin){ ctx.font='14px sans-serif'; ctx.fillText('🔥',x+bw-16,y+6); }
+    });
+    // 미니맵 진행 바
+    const mx=16, my=H-44, mw=360;
+    ctx.fillStyle='rgba(6,12,30,0.78)'; rr(ctx,mx,my,mw,30,8); ctx.fill();
+    ctx.strokeStyle='#4dabf7'; ctx.lineWidth=3; ctx.beginPath(); ctx.moveTo(mx+20,my+15); ctx.lineTo(mx+mw-30,my+15); ctx.stroke();
+    ctx.fillStyle='#fff'; ctx.fillRect(mx+mw-30,my+5,3,20);
+    ctx.fillStyle='#e03131'; ctx.font='bold 10px sans-serif'; ctx.textAlign='center'; ctx.fillText('G',mx+mw-16,my+15);
+    this.runners.slice().reverse().forEach(r=>{ const p=Math.max(0,Math.min(1,r.pos/S.D)); const px=mx+20+p*(mw-50);
+      ctx.fillStyle=FRAME[r.h.no].bg; ctx.strokeStyle='#000'; ctx.lineWidth=1.5; ctx.beginPath(); ctx.arc(px,my+15,7,0,6.283); ctx.fill(); ctx.stroke();
+      ctx.fillStyle=FRAME[r.h.no].fg; ctx.font='bold 9px sans-serif'; ctx.fillText(String(r.h.no),px,my+15.5); });
+    // 배너
+    if(this.banner && this.real-this.banner.t<2.4){
+      const e=this.real-this.banner.t, a=e<0.3?e/0.3:(e>2.0?(2.4-e)/0.4:1), sx=(1-Math.min(1,e/0.3))*-300;
+      ctx.save(); ctx.globalAlpha=a; ctx.translate(sx,0);
+      const g=ctx.createLinearGradient(0,0,W,0); g.addColorStop(0,'rgba(224,49,49,0)'); g.addColorStop(0.25,'rgba(224,49,49,0.92)'); g.addColorStop(0.75,'rgba(224,49,49,0.92)'); g.addColorStop(1,'rgba(224,49,49,0)');
+      ctx.fillStyle=g; ctx.fillRect(0,250,W,80);
+      ctx.fillStyle='#fff'; ctx.font='700 52px "Noto Sans KR",sans-serif'; ctx.textAlign='center'; ctx.textBaseline='middle';
+      ctx.fillText(this.banner.text,W/2,292); ctx.restore();
+    }
+    if(this.state==='intro'){
+      ctx.fillStyle='rgba(6,12,30,0.7)'; rr(ctx,W/2-200,H/2-130,400,70,12); ctx.fill();
+      ctx.fillStyle='#ffd43b'; ctx.font='700 34px "Noto Sans KR",sans-serif'; ctx.textAlign='center'; ctx.textBaseline='middle';
+      ctx.fillText(this.real<3?'게이트 입장 완료':'출발 대기...',W/2,H/2-95);
+      if(this.cd){ const e=this.real-this.cd.t, sc=1.6-Math.min(0.6,e*2); ctx.save(); ctx.globalAlpha=Math.max(0,1-e*1.2); ctx.translate(W/2,H/2+20); ctx.scale(sc,sc);
+        ctx.fillStyle='#fff'; ctx.strokeStyle='rgba(0,0,0,0.6)'; ctx.lineWidth=8; ctx.font='700 120px "Noto Sans KR",sans-serif'; ctx.strokeText(String(this.cd.n),0,0); ctx.fillText(String(this.cd.n),0,0); ctx.restore(); }
+    }
+  }
+  /* 결승 사진(Photo Finish) — 실제 슬릿 카메라처럼 '결승선을 통과한 순간'의 각 말을 시간축으로 늘어놓은 사진 */
+  makePhotoFinish(){
+    const Wp=1000,Hp=470, c=document.createElement('canvas'); c.width=Wp; c.height=Hp; const g=c.getContext('2d');
+    const rnd=seeded(this.setup.raceNo*7+11);
+    // 배경: 슬릿 카메라 특유의 가로 줄무늬(정지한 배경이 시간에 따라 늘어남)
+    const bgG=g.createLinearGradient(0,0,0,Hp); bgG.addColorStop(0,'#b9bdc2'); bgG.addColorStop(0.22,'#8e949b'); bgG.addColorStop(0.26,'#f1f3f5'); bgG.addColorStop(0.28,'#9aa0a6'); bgG.addColorStop(0.36,this.dirt?'#8d6c4c':'#5d7f52'); bgG.addColorStop(1,this.dirt?'#a07c58':'#6e955f');
+    g.fillStyle=bgG; g.fillRect(0,0,Wp,Hp);
+    for(let y=0;y<Hp;y+=2){ g.fillStyle=`rgba(${rnd()<0.5?0:255},${rnd()<0.5?0:255},${rnd()<0.5?0:255},${0.03+rnd()*0.05})`; g.fillRect(0,y,Wp,1+(rnd()*2|0)); }
+    g.fillStyle='rgba(255,255,255,0.9)'; g.fillRect(0,118,Wp,6);                          // 안쪽 펜스(가로로 늘어난 모습)
+    const o=this.order, t1=o[0].finT, lineX=Wp*0.74, pps=Math.max(700,Math.min(2600, 420/Math.max(0.05,(o[Math.min(3,o.length-1)].finT-t1))));
+    const items=this.runners.map(r=>({r,ft:r.finT})).filter(it=>lineX-(it.ft-t1)*pps>-260).sort((a,b)=>a.r.lane-b.r.lane);
+    for(const it of items){
+      const r=it.r, x=lineX-(it.ft-t1)*pps, lz=Math.max(0,Math.min(1,(r.lane-0.08)/0.84)), y=300+lz*140, s=1.25+lz*0.45;
+      drawHorse(g,r.h,x-92*s,y,s,0.36*6.283+r.i*0.15,1,{});
+      it.x=x; it.y=y; it.s=s;
+    }
+    // 결승선 + 각 말 코끝 기준선/마번
+    g.strokeStyle='#ff1f1f'; g.lineWidth=3; g.beginPath(); g.moveTo(lineX,0); g.lineTo(lineX,Hp-34); g.stroke();
+    items.slice().sort((a,b)=>b.x-a.x).forEach((it,k)=>{ const fr=FRAME[it.r.h.no];
+      g.strokeStyle='rgba(255,255,255,0.7)'; g.lineWidth=1; g.setLineDash([4,4]); g.beginPath(); g.moveTo(it.x,40); g.lineTo(it.x,Hp-34); g.stroke(); g.setLineDash([]);
+      const ly=44+k*30; g.fillStyle=fr.bg; g.strokeStyle='#000'; g.lineWidth=1.5; rr(g,it.x-14,ly,28,24,4); g.fill(); g.stroke();
+      g.fillStyle=fr.fg; g.font='700 16px "Noto Sans KR",sans-serif'; g.textAlign='center'; g.textBaseline='middle'; g.fillText(String(it.r.h.no),it.x,ly+12.5); });
+    // 하단 시간 눈금 (1/100초)
+    g.fillStyle='rgba(0,0,0,0.85)'; g.fillRect(0,Hp-34,Wp,34);
+    g.strokeStyle='#fff'; g.fillStyle='#fff'; g.font='600 11px monospace'; g.textAlign='center'; g.textBaseline='top';
+    for(let k=0;k<200;k++){ const x=lineX-k*0.01*pps; if(x<0) break; const big=k%10===0; g.lineWidth=1; g.beginPath(); g.moveTo(x,Hp-34); g.lineTo(x,Hp-34+(big?14:k%5===0?9:5)); g.stroke(); if(big){ const tv=t1+k*0.01; g.fillText(`${Math.floor(tv/60)}:${(tv%60).toFixed(2).padStart(5,'0')}`,x,Hp-17); } }
+    g.fillStyle='rgba(0,0,0,0.8)'; g.fillRect(0,0,Wp,30); g.fillStyle='#fff'; g.font='700 15px "Noto Sans KR",sans-serif'; g.textAlign='left'; g.textBaseline='middle';
+    g.fillText(`PHOTO FINISH  ·  제${this.setup.raceNo}경주 ${this.setup.name}  ·  ${this.setup.D}m`,12,15);
+    g.textAlign='right'; g.fillText(`1착 기록 ${Math.floor(t1/60)}:${(t1%60).toFixed(2).padStart(5,'0')}`,Wp-12,15);
+    // 세피아 톤 (실제 판독 사진 느낌)
+    try{ const im=g.getImageData(0,30,Wp,Hp-64), d=im.data;
+      for(let i=0;i<d.length;i+=4){ const l=0.3*d[i]+0.59*d[i+1]+0.11*d[i+2]; const v=Math.min(255,(l-128)*1.18+128); d[i]=Math.min(255,v*1.07+8); d[i+1]=v*0.97+4; d[i+2]=v*0.82; }
+      g.putImageData(im,0,30);
+      g.strokeStyle='#ff1f1f'; g.lineWidth=3; g.beginPath(); g.moveTo(lineX,30); g.lineTo(lineX,Hp-34); g.stroke();
+      items.forEach((it,k)=>{}); }catch(e){}
+    // 마번 배지는 컬러로 다시 (세피아 위)
+    items.slice().sort((a,b)=>b.x-a.x).forEach((it,k)=>{ const fr=FRAME[it.r.h.no]; const ly=44+k*30;
+      g.fillStyle=fr.bg; g.strokeStyle='#000'; g.lineWidth=1.5; rr(g,it.x-14,ly,28,24,4); g.fill(); g.stroke();
+      g.fillStyle=fr.fg; g.font='700 16px "Noto Sans KR",sans-serif'; g.textAlign='center'; g.textBaseline='middle'; g.fillText(String(it.r.h.no),it.x,ly+12.5); });
+    return c;
+  }
+  drawPhoto(ctx){
+    const e=this.real-this.photoT;
+    ctx.fillStyle='rgba(0,0,0,0.82)'; ctx.fillRect(0,0,W,H);
+    ctx.textAlign='center'; ctx.textBaseline='middle';
+    ctx.fillStyle='#fff'; ctx.font='700 40px "Noto Sans KR",sans-serif'; ctx.fillText('📸 PHOTO FINISH',W/2,46);
+    if(this.pf){
+      const k=Math.min(1,e/0.35), pw=W*0.86*(0.9+0.1*k), ph=pw*this.pf.height/this.pf.width, px=(W-pw)/2, py=88;
+      ctx.globalAlpha=k; ctx.fillStyle='#fff'; ctx.fillRect(px-8,py-8,pw+16,ph+16); ctx.drawImage(this.pf,px,py,pw,ph); ctx.globalAlpha=1;
+      if(e<2.2){ const sx=px+((e*0.9)%1)*pw; ctx.fillStyle='rgba(255,255,120,0.25)'; ctx.fillRect(sx-3,py,6,ph); }
+    }
+    if(e<2.2){ if(Math.floor(e*3)%2===0){ ctx.fillStyle='#ffd43b'; ctx.font='700 26px "Noto Sans KR",sans-serif'; ctx.fillText('사진 판독 중...',W/2,H-36); } }
+    else {
+      const o=this.order, m=this.margins()[1];
+      ctx.save(); ctx.translate(W-250,H-74); ctx.rotate(-0.06); const sc=Math.min(1,(e-2.2)/0.25); ctx.scale(1.6-0.6*sc,1.6-0.6*sc);
+      ctx.fillStyle='rgba(255,255,255,0.92)'; rr(ctx,-210,-46,420,92,12); ctx.fill();
+      ctx.strokeStyle='#e03131'; ctx.lineWidth=5; ctx.stroke();
+      ctx.fillStyle='#e03131'; ctx.font='700 34px "Noto Sans KR",sans-serif'; ctx.fillText(`확정 1착 ${o[0].h.no}번 ${o[0].h.name}`,0,-12);
+      ctx.font='700 20px "Noto Sans KR",sans-serif'; ctx.fillText(`2착 ${o[1].h.no}번 · ${m} 차이`,0,24); ctx.restore();
+    }
+  }
+}
+
+/* PWA: 오프라인 설치 지원 (GitHub Pages) */
+if ("serviceWorker" in navigator && location.protocol === "https:") {
+  window.addEventListener("load", function () { navigator.serviceWorker.register("sw.js").then(function (r) { r.update(); }).catch(function () {}); });
+}
+</script>
+
+<script type="text/babel" data-presets="react">
+const { useState, useEffect, useRef, useMemo, useCallback } = React;
+
+const ls = {
+  get(k,d){ try{ const v=localStorage.getItem(k); return v==null?d:JSON.parse(v); }catch(e){ return d; } },
+  set(k,v){ try{ localStorage.setItem(k,JSON.stringify(v)); }catch(e){} }
+};
+const TYPE_INFO = {
+  WIN:{label:'단승식',en:'WIN',desc:'1착 말 1마리 적중',need:1,color:'from-rose-500 to-red-600'},
+  PLACE:{label:'연승식',en:'PLACE',desc:'선택한 말이 1·2착 안에 들면 적중',need:1,color:'from-sky-500 to-blue-600'},
+  QUIN:{label:'복승식',en:'QUINELLA',desc:'1·2착 2마리를 순서 상관없이 적중',need:2,color:'from-amber-400 to-orange-600'},
+};
+const fmt = n => Math.round(n).toLocaleString();
+
+function NumBadge({no,size=32}){
+  const fr=FRAME[no];
+  return <span className="inline-flex items-center justify-center rounded-md font-black shadow" style={{width:size,height:size,background:fr.bg,color:fr.fg,fontSize:size*0.55,border:'1px solid rgba(0,0,0,.35)'}}>{no}</span>;
+}
+
+function MiniHorse({h,w=150,hgt=96}){
+  const ref=useRef(null);
+  useEffect(()=>{
+    const c=ref.current; if(!c) return; const ctx=c.getContext('2d');
+    const dpr=Math.min(2,window.devicePixelRatio||1); c.width=w*dpr; c.height=hgt*dpr;
+    let raf, ph=Math.random()*6, alive=true, lastT=0;
+    const loop=(now)=>{ if(!alive) return; raf=requestAnimationFrame(loop); if(now && now-lastT<66) return; lastT=now||0; ph+=0.44;
+      ctx.setTransform(dpr,0,0,dpr,0,0); ctx.clearRect(0,0,w,hgt);
+      const g=ctx.createLinearGradient(0,hgt*0.7,0,hgt); g.addColorStop(0,'rgba(80,160,70,0)'); g.addColorStop(1,'rgba(80,160,70,0.5)');
+      ctx.fillStyle=g; ctx.fillRect(0,0,w,hgt);
+      drawHorse(ctx,h,w*0.45,hgt-6,0.62,ph,0.55,{}); };
+    loop();
+    return ()=>{ alive=false; cancelAnimationFrame(raf); };
+  },[h]);
+  return <canvas ref={ref} style={{width:w,height:hgt}} />;
+}
+
+/* ---------------- 패독 & 예상지 ---------------- */
+function HorseCard({h,setup,selected,onPick,type}){
+  const ci=COND_INFO[h.cond]; const wo=setup.odds.win[h.no], po=setup.odds.place[h.no];
+  const pop=setup.pop[h.no], mark=setup.marks[h.no];
+  const styleColor={'도주':'bg-red-500/90','선행':'bg-orange-500/90','선입':'bg-emerald-500/90','추입':'bg-violet-500/90'}[h.style];
+  return (
+    <button onClick={()=>onPick(h.no)} className={`relative text-left w-full rounded-2xl overflow-hidden glass transition active:scale-[.98] ${selected?'ring-4 ring-yellow-300 shadow-[0_0_24px_rgba(255,210,60,.45)]':'hover:ring-2 hover:ring-blue-400/50'}`}>
+      <div className="flex">
+        <div className="w-2" style={{background:FRAME[h.no].bg}}/>
+        <div className="flex-1 p-3">
+          <div className="flex items-center gap-2">
+            <NumBadge no={h.no} size={34}/>
+            <div className="min-w-0">
+              <div className="fx-title text-xl leading-none truncate">{h.name}</div>
+              <div className="text-[11px] text-blue-200/80 mt-1">{h.sex}{h.age} · {h.coatName} · 기수 {h.jockey} · {h.weightKg}kg({h.delta>=0?'+':''}{h.delta})</div>
+            </div>
+            {mark && <div className="ml-auto text-2xl font-black text-yellow-300 drop-shadow">{mark}</div>}
+          </div>
+          <div className="flex items-end gap-1 mt-1">
+            <div className="shrink-0 -ml-2 -mb-1"><MiniHorse h={h} w={128} hgt={84}/></div>
+            <div className="flex-1 grid grid-cols-2 gap-1.5 text-[12px]">
+              <div className="rounded-lg bg-black/30 px-2 py-1">
+                <div className="text-blue-200/70 text-[10px]">컨디션</div>
+                <div className="font-black text-base leading-tight" style={{color:ci.c}}>{ci.a} {ci.t}</div>
+              </div>
+              <div className="rounded-lg bg-black/30 px-2 py-1">
+                <div className="text-blue-200/70 text-[10px]">각질</div>
+                <div className={`inline-block mt-0.5 px-1.5 rounded text-white font-bold ${styleColor}`}>{h.style}</div>
+              </div>
+              <div className="rounded-lg bg-black/30 px-2 py-1">
+                <div className="text-blue-200/70 text-[10px]">단승 · {pop}인기</div>
+                <div className={`font-black text-lg leading-tight ${wo<4?'text-red-400':wo>15?'text-fuchsia-300':'text-white'}`}>{wo.toFixed(1)}<span className="text-xs">배</span></div>
+              </div>
+              <div className="rounded-lg bg-black/30 px-2 py-1">
+                <div className="text-blue-200/70 text-[10px]">연승</div>
+                <div className="font-black text-lg leading-tight text-sky-300">{po.toFixed(1)}<span className="text-xs">배</span></div>
+              </div>
+            </div>
+          </div>
+          <div className="flex items-center gap-1 mt-1 text-[11px] text-blue-200/80">
+            최근 5전
+            {h.recent.map((r,i)=><span key={i} className={`w-5 h-5 inline-flex items-center justify-center rounded font-bold ${r===1?'bg-yellow-400 text-black':r===2?'bg-slate-300 text-black':r===3?'bg-amber-700 text-white':'bg-white/10'}`}>{r}</span>)}
+          </div>
+        </div>
+      </div>
+      {selected && <div className="absolute top-2 right-2 text-[10px] font-black bg-yellow-300 text-black px-2 py-0.5 rounded-full">{TYPE_INFO[type].label} 선택</div>}
+    </button>
+  );
+}
+
+function QuinMatrix({setup,sel,onPair}){
+  return (
+    <div className="overflow-x-auto no-scrollbar">
+      <table className="text-[11px] mx-auto">
+        <thead><tr><th></th>{Array.from({length:FIELD-1},(_,k)=>k+2).map(b=><th key={b} className="p-0.5"><NumBadge no={b} size={22}/></th>)}</tr></thead>
+        <tbody>
+          {Array.from({length:FIELD-1},(_,k)=>k+1).map(a=>(
+            <tr key={a}><td className="p-0.5"><NumBadge no={a} size={22}/></td>
+              {Array.from({length:FIELD-1},(_,k)=>k+2).map(b=>{
+                if(b<=a) return <td key={b}></td>;
+                const k=quinKey(a,b), od=setup.odds.quin[k], on=sel.length===2&&quinKey(sel[0],sel[1])===k;
+                return <td key={b} className="p-0.5"><button onClick={()=>onPair(a,b)} className={`w-12 py-1 rounded font-bold ${on?'bg-yellow-300 text-black':od>=50?'bg-fuchsia-600/70 text-white':'bg-white/10 text-white hover:bg-white/20'}`}>{od>=100?Math.round(od):od.toFixed(1)}</button></td>;
+              })}
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+  );
+}
+
+function Paddock({setup,credit,bets,setBets,onStart,onQuiz,history,muted,setMuted}){
+  const [type,setType]=useState('WIN');
+  const [sel,setSel]=useState([]);
+  const [amt,setAmt]=useState(100);
+  const [msg,setMsg]=useState('');
+  const total=bets.reduce((s,b)=>s+b.amount,0);
+  const avail=credit-total;
+  const pickHorse=no=>{ Sound.init(); Sound.click();
+    if(type==='QUIN'){ setSel(s=>s.includes(no)?s.filter(x=>x!==no):(s.length<2?[...s,no]:[s[1],no])); }
+    else setSel(s=>s[0]===no?[]:[no]);
+  };
+  const changeType=t=>{ Sound.init(); Sound.click(); setType(t); setSel(s=>t==='QUIN'?s.slice(0,2):s.slice(0,1)); };
+  const curOdds = (()=>{ if(type==='WIN'&&sel.length===1) return setup.odds.win[sel[0]];
+    if(type==='PLACE'&&sel.length===1) return setup.odds.place[sel[0]];
+    if(type==='QUIN'&&sel.length===2) return setup.odds.quin[quinKey(sel[0],sel[1])]; return null; })();
+  const addBet=()=>{
+    Sound.init();
+    if(sel.length!==TYPE_INFO[type].need){ setMsg(type==='QUIN'?'복승식은 말 2마리를 골라 주세요':'말을 1마리 골라 주세요'); return; }
+    if(amt>avail||amt<=0){ setMsg('CREDIT이 부족합니다'); return; }
+    const s=type==='QUIN'?[...sel].sort((a,b)=>a-b):sel;
+    setBets(b=>[...b,{id:Date.now()+Math.random(),type,sel:s,amount:amt,odds:curOdds}]);
+    Sound.coin(); setMsg(''); setSel([]);
+  };
+  const S=setup;
+  return (
+    <div className="max-w-6xl mx-auto px-3 pb-36">
+      {/* 레이스 정보 헤더 */}
+      <div className="glass rounded-2xl p-4 mt-3 relative overflow-hidden">
+        <div className="absolute -right-10 -top-10 w-48 h-48 rounded-full bg-yellow-400/10 blur-2xl"/>
+        <div className="flex flex-wrap items-center gap-2">
+          <span className="px-2 py-0.5 rounded bg-red-600 text-white text-xs font-black">{S.raceNo}R</span>
+          <span className="px-2 py-0.5 rounded bg-yellow-400 text-black text-xs font-black">{S.grade}</span>
+          <h2 className="fx-title text-2xl sm:text-3xl gold">{S.name}</h2>
+        </div>
+        <div className="flex flex-wrap gap-2 mt-2 text-sm">
+          <span className="px-2 py-1 rounded-lg bg-white/10">📏 {S.D}m</span>
+          <span className={`px-2 py-1 rounded-lg ${S.surface==='turf'?'bg-green-600/40':'bg-amber-800/50'}`}>{S.surface==='turf'?'🌱 잔디':'🟫 더트'}</span>
+          <span className="px-2 py-1 rounded-lg bg-white/10">주로 {S.going}</span>
+          <span className="px-2 py-1 rounded-lg bg-white/10">{({'맑음':'☀️','흐림':'☁️','비':'🌧️','노을':'🌇','야간':'🌙'})[S.weather]} {S.weather==='야간'?'야간(나이트 경마)':S.weather}</span>
+          <span className="px-2 py-1 rounded-lg bg-white/10">출주 {S.horses.length}두</span>
+        </div>
+        {history.length>0 && <div className="flex items-center gap-1.5 mt-3 overflow-x-auto no-scrollbar text-xs text-blue-200/80">
+          <span className="shrink-0">최근 결과</span>
+          {history.slice(0,8).map((h,i)=><span key={i} className="shrink-0 px-1.5 py-0.5 rounded bg-black/30 font-bold">{h[0]}-{h[1]}</span>)}
+        </div>}
+      </div>
+
+      <div className="grid lg:grid-cols-[1fr_380px] gap-3 mt-3">
+        <div>
+          <div className="flex items-center justify-between mb-2 px-1">
+            <h3 className="fx-title text-xl">📋 패독 & 예상지</h3>
+            <span className="text-[11px] text-blue-200/70">◎본명 ○대항 ▲단혈 △연하</span>
+          </div>
+          <div className="grid sm:grid-cols-2 gap-2.5">
+            {S.horses.map(h=><HorseCard key={h.no} h={h} setup={S} type={type} selected={sel.includes(h.no)} onPick={pickHorse}/>)}
+          </div>
+        </div>
+
+        <div className="lg:sticky lg:top-3 self-start space-y-3">
+          <div className="glass rounded-2xl p-3">
+            <h3 className="fx-title text-xl mb-2">🎫 마권 구매</h3>
+            <div className="grid grid-cols-3 gap-1.5">
+              {Object.entries(TYPE_INFO).map(([k,v])=>(
+                <button key={k} onClick={()=>changeType(k)} className={`rounded-xl py-2 px-1 font-black text-sm transition ${type===k?`bg-gradient-to-b ${v.color} text-white shadow-lg scale-[1.03]`:'bg-white/10 text-blue-100'}`}>
+                  {v.label}<div className="text-[9px] font-bold opacity-80">{v.en}</div>
+                </button>))}
+            </div>
+            <p className="text-xs text-blue-200/80 mt-2">{TYPE_INFO[type].desc}{type==='QUIN'&&' · 최대 50배 이상 잭팟!'}</p>
+            {type==='QUIN' && <div className="mt-2 rounded-xl bg-black/25 p-2"><div className="text-[11px] text-blue-200/80 mb-1">복승 오즈표 (눌러서 선택)</div><QuinMatrix setup={S} sel={sel} onPair={(a,b)=>{Sound.init();Sound.click();setSel([a,b]);}}/></div>}
+            <div className="mt-3 flex items-center gap-2 rounded-xl bg-black/30 p-2 min-h-[52px]">
+              <span className="text-xs text-blue-200/80">선택</span>
+              {sel.length?sel.map(n=><NumBadge key={n} no={n} size={30}/>):<span className="text-sm text-blue-200/50">위에서 말을 눌러 주세요</span>}
+              {curOdds && <span className="ml-auto font-black text-2xl text-yellow-300">{curOdds.toFixed(1)}<span className="text-sm">배</span></span>}
+            </div>
+            <div className="grid grid-cols-5 gap-1.5 mt-2">
+              {[10,50,100,500].map(v=><button key={v} onClick={()=>{Sound.init();Sound.click();setAmt(v);}} className={`rounded-lg py-2 text-sm font-black ${amt===v?'bg-yellow-400 text-black':'bg-white/10'}`}>{v}</button>)}
+              <button onClick={()=>{Sound.init();Sound.click();setAmt(Math.max(0,avail));}} className={`rounded-lg py-2 text-sm font-black ${amt===avail&&avail>0?'bg-yellow-400 text-black':'bg-white/10'}`}>ALL</button>
+            </div>
+            {curOdds && <div className="text-xs text-center text-blue-200/80 mt-2">적중 시 예상 환급 <b className="text-yellow-300">{fmt(amt*curOdds)}</b> CR</div>}
+            <button onClick={addBet} className="w-full mt-2 py-3 rounded-xl font-black bg-gradient-to-b from-emerald-400 to-emerald-600 text-white shadow-lg active:scale-[.98]">＋ 마권 추가 ({fmt(amt)} CR)</button>
+            {msg && <div className="text-center text-red-300 text-sm mt-1 font-bold">{msg}</div>}
+          </div>
+
+          <div className="glass rounded-2xl p-3">
+            <div className="flex items-center justify-between"><h3 className="fx-title text-lg">🧾 내 마권</h3><span className="text-sm">합계 <b className="text-yellow-300">{fmt(total)}</b> CR</span></div>
+            {bets.length===0 ? <p className="text-sm text-blue-200/60 mt-2">아직 구매한 마권이 없습니다. (마권 없이 관람도 가능)</p> :
+              <div className="mt-2 space-y-1.5 max-h-56 overflow-y-auto no-scrollbar">
+                {bets.map(b=>(
+                  <div key={b.id} className="flex items-center gap-2 bg-black/30 rounded-lg px-2 py-1.5">
+                    <span className={`text-[10px] font-black px-1.5 py-0.5 rounded bg-gradient-to-b ${TYPE_INFO[b.type].color}`}>{TYPE_INFO[b.type].label}</span>
+                    {b.sel.map(n=><NumBadge key={n} no={n} size={22}/>)}
+                    <span className="text-xs text-yellow-200">{b.odds.toFixed(1)}배</span>
+                    <span className="ml-auto text-sm font-bold">{fmt(b.amount)}</span>
+                    <button onClick={()=>setBets(x=>x.filter(y=>y.id!==b.id))} className="text-red-300 text-lg px-1">×</button>
+                  </div>))}
+              </div>}
+          </div>
+          <button onClick={()=>{Sound.init();Sound.click();onQuiz();}} className={`w-full py-3 rounded-xl font-black bg-gradient-to-b from-fuchsia-500 to-purple-700 ${credit<100?'animate-pulse':''}`}>🧠 퀴즈 풀고 CREDIT 1,000 받기</button>
+        </div>
+      </div>
+
+      <div className="fixed bottom-0 inset-x-0 z-30 p-3 bg-gradient-to-t from-[#070d1f] via-[#070d1fee] to-transparent">
+        <div className="max-w-6xl mx-auto flex gap-2">
+          <div className="glass rounded-2xl px-4 py-2 flex flex-col justify-center">
+            <span className="text-[10px] text-blue-200/80">잔여 CREDIT</span>
+            <span className="font-black text-lg text-yellow-300 leading-none">{fmt(avail)}</span>
+          </div>
+          <button onClick={()=>{Sound.init(); onStart();}} className="flex-1 rounded-2xl py-4 fx-title text-2xl bg-gradient-to-b from-yellow-300 via-amber-400 to-orange-600 text-black shadow-[0_0_30px_rgba(255,180,0,.5)] active:scale-[.98]">
+            🏁 출주! 레이스 시작
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/* ---------------- 레이스 중계 화면 ---------------- */
+function RaceView({setup,bets,onDone}){
+  const cvRef=useRef(null), engRef=useRef(null), wrapRef=useRef(null);
+  const [comms,setComms]=useState([]);
+  const [ff,setFf]=useState(false);
+  const [vo,setVo]=useState(Voice.on);
+  const [voices,setVoices]=useState(()=>Voice.list());
+  const [vname,setVname]=useState(()=>Voice.v?Voice.v.name:'');
+  useEffect(()=>{ if(!Voice.ok) return; const f=()=>{ Voice.pickVoice(); setVoices(Voice.list()); setVname(Voice.v?Voice.v.name:''); }; f(); const t=setTimeout(f,800); return ()=>clearTimeout(t); },[]);
+  useEffect(()=>{
+    const eng=new RaceEngine(cvRef.current,setup,{
+      onComment:(text,hot,I)=>{ setComms(c=>[{id:Math.random(),text,hot},...c].slice(0,4)); Voice.say(text,hot,I); },
+      onDone:(res)=>setTimeout(()=>onDone(res),900)
+    });
+    engRef.current=eng;
+    const onR=()=>eng.resize(); window.addEventListener('resize',onR);
+    return ()=>{ window.removeEventListener('resize',onR); eng.destroy(); Voice.stop(); };
+  },[]);
+  const toggleFf=()=>{ const v=!ff; setFf(v); if(engRef.current) engRef.current.ff=v; };
+  const full=()=>{ try{ const el=wrapRef.current; if(document.fullscreenElement) document.exitFullscreen(); else if(el.requestFullscreen) el.requestFullscreen().catch(()=>{}); }catch(e){} };
+  return (
+    <div className="max-w-6xl mx-auto px-0 sm:px-3 pb-6">
+      <div ref={wrapRef} className="relative bg-black sm:rounded-2xl overflow-hidden shadow-2xl sm:mt-3">
+        <canvas ref={cvRef} className="w-full" style={{aspectRatio:'16/9'}}/>
+        <div className="absolute bottom-2 right-2 flex gap-1.5">
+          {Voice.ok && voices.length>1 && <select value={vname} onChange={e=>{ setVname(e.target.value); Voice.setVoice(e.target.value); }} className="max-w-[130px] px-1 py-1 rounded-lg text-xs bg-black/70 text-white border border-white/20">
+            {voices.map(v=><option key={v.name} value={v.name}>{MALE_RE.test(v.name)?'🙋‍♂️ ':''}{v.name.replace(/Microsoft |Google |\(.*\)/g,'').slice(0,18)}</option>)}
+          </select>}
+          {Voice.ok && <button onClick={()=>{ const v=!vo; setVo(v); Voice.on=v; if(!v) Voice.stop(); else Voice.unlock(); }} className={`px-2.5 py-1 rounded-lg text-xs font-black ${vo?'bg-red-600 text-white':'bg-black/60 text-white'}`}>🎙️ 음성중계 {vo?'ON':'OFF'}</button>}
+          <button onClick={toggleFf} className={`px-2.5 py-1 rounded-lg text-xs font-black ${ff?'bg-yellow-400 text-black':'bg-black/60 text-white'}`}>▶▶ 빨리감기</button>
+          <button onClick={full} className="px-2.5 py-1 rounded-lg text-xs font-black bg-black/60 text-white">⛶</button>
+        </div>
+      </div>
+      {/* 아나운서 문자 중계 */}
+      <div className="mx-3 sm:mx-0 mt-3 rounded-2xl overflow-hidden glass">
+        <div className="flex items-center gap-2 px-3 py-2 bg-gradient-to-r from-red-700 to-red-600">
+          <span className="w-2.5 h-2.5 rounded-full bg-white live-dot"/>
+          <span className="fx-title text-white tracking-wider">실시간 문자 중계</span>
+          <span className="ml-auto text-[11px] text-red-100">캐스터 · 링크 아나운서</span>
+        </div>
+        <div className="p-3 min-h-[118px]">
+          {comms.length===0 && <div className="text-blue-200/60">중계 준비 중...</div>}
+          {comms.map((c,i)=>(
+            <div key={c.id} className={`${i===0?'tick-in text-lg sm:text-xl font-black':'text-sm opacity-60'} ${i===0&&c.hot?'text-yellow-300':''} leading-snug mb-1.5`}>
+              {i===0?'🎙️ ':'· '}{c.text}
+            </div>))}
+        </div>
+      </div>
+      <div className="mx-3 sm:mx-0 mt-3 glass rounded-2xl p-3">
+        <div className="text-sm font-bold mb-2">🎫 나의 마권</div>
+        {bets.length===0?<div className="text-sm text-blue-200/60">관람 모드 (구매 마권 없음)</div>:
+        <div className="flex flex-wrap gap-1.5">{bets.map(b=>(
+          <div key={b.id} className="flex items-center gap-1 bg-black/30 rounded-lg px-2 py-1 text-xs">
+            <b>{TYPE_INFO[b.type].label}</b>{b.sel.map(n=><NumBadge key={n} no={n} size={20}/>)}<span className="text-yellow-200">{fmt(b.amount)}</span>
+          </div>))}</div>}
+      </div>
+    </div>
+  );
+}
+
+/* ---------------- 코인 레인 ---------------- */
+function CoinRain({big}){
+  const ref=useRef(null);
+  useEffect(()=>{
+    const c=ref.current; const ctx=c.getContext('2d'); let raf, alive=true;
+    const resize=()=>{ c.width=window.innerWidth; c.height=window.innerHeight; }; resize();
+    const N=big?160:70; const coins=[];
+    for(let i=0;i<N;i++) coins.push({x:Math.random()*c.width,y:-Math.random()*c.height*1.2,v:3+Math.random()*5,r:8+Math.random()*10,a:Math.random()*6,va:0.1+Math.random()*0.2});
+    const loop=()=>{ if(!alive) return; ctx.clearRect(0,0,c.width,c.height);
+      for(const k of coins){ k.y+=k.v; k.a+=k.va; if(k.y>c.height+30){ k.y=-30; k.x=Math.random()*c.width; }
+        const sx=Math.abs(Math.cos(k.a));
+        ctx.save(); ctx.translate(k.x,k.y); ctx.scale(Math.max(0.15,sx),1);
+        const g=ctx.createRadialGradient(-k.r*0.3,-k.r*0.3,1,0,0,k.r); g.addColorStop(0,'#fff6c8'); g.addColorStop(0.5,'#ffd43b'); g.addColorStop(1,'#d08700');
+        ctx.fillStyle=g; ctx.beginPath(); ctx.arc(0,0,k.r,0,6.283); ctx.fill();
+        ctx.strokeStyle='#a86b00'; ctx.lineWidth=2; ctx.stroke();
+        ctx.fillStyle='#a86b00'; ctx.font=`700 ${k.r}px sans-serif`; ctx.textAlign='center'; ctx.textBaseline='middle'; ctx.fillText('C',0,1);
+        ctx.restore(); }
+      raf=requestAnimationFrame(loop); };
+    loop(); window.addEventListener('resize',resize);
+    return ()=>{ alive=false; cancelAnimationFrame(raf); window.removeEventListener('resize',resize); };
+  },[]);
+  return <canvas ref={ref} className="fixed inset-0 pointer-events-none z-50"/>;
+}
+
+/* ---------------- 결과 화면 ---------------- */
+function ResultModal({setup,result,bets,payouts,onNext}){
+  const totalBet=bets.reduce((s,b)=>s+b.amount,0);
+  const totalWin=payouts.reduce((s,p)=>s+p,0);
+  const maxMul=bets.reduce((m,b,i)=>payouts[i]>0?Math.max(m,b.odds):m,0);
+  const big=maxMul>=10;
+  const o=result.order; const hz=no=>setup.horses.find(h=>h.no===no);
+  const fmtT=t=>`${Math.floor(t/60)}:${(t%60).toFixed(1).padStart(4,'0')}`;
+  return (
+    <div className="fixed inset-0 z-40 bg-black/70 backdrop-blur-sm overflow-y-auto">
+      {totalWin>0 && <CoinRain big={big}/>}
+      <div className="max-w-xl mx-auto p-3 pt-6 pb-10">
+        <div className="glass rounded-3xl p-4 pop">
+          <div className="text-center">
+            {totalWin>0 ? <div className={`fx-title ${big?'text-5xl':'text-4xl'} shine`}>{big?'🎰 JACKPOT! 🎰':'🎉 적중! 🎉'}</div>
+              : bets.length?<div className="fx-title text-3xl text-blue-200">아쉽게 빗나갔습니다</div>:<div className="fx-title text-3xl gold">레이스 결과</div>}
+            {result.photo && <div className="inline-block mt-2 px-3 py-1 rounded-full bg-red-600 text-white text-xs font-black">📸 사진 판독 결과</div>}
+          </div>
+          {result.photoImg && <div className="mt-3 rounded-2xl overflow-hidden ring-2 ring-white/20 bg-black">
+            <img src={result.photoImg} alt="결승 사진" className="w-full block"/>
+            <div className="text-[11px] text-blue-200/80 px-2 py-1">📷 결승 사진 — 빨간 선이 결승선, 점선이 각 말의 코끝입니다</div>
+          </div>}
+          <div>
+          </div>
+          <div className="mt-4 rounded-2xl bg-black/30 overflow-hidden">
+            <table className="w-full text-sm">
+              <thead className="bg-white/10 text-blue-200 text-xs"><tr><th className="py-1.5">착순</th><th>마번</th><th className="text-left">마명</th><th>기록</th><th>착차</th></tr></thead>
+              <tbody>
+                {o.map((no,i)=>(
+                  <tr key={no} className={`border-t border-white/5 ${i===0?'bg-yellow-400/10':''}`}>
+                    <td className="py-1.5 text-center font-black">{i===0?'🥇':i===1?'🥈':i===2?'🥉':i+1}</td>
+                    <td className="text-center"><NumBadge no={no} size={24}/></td>
+                    <td className="font-bold">{hz(no).name} <span className="text-[10px] text-blue-200/70">{hz(no).style}</span></td>
+                    <td className="text-center font-mono text-xs">{fmtT(result.times[i])}</td>
+                    <td className="text-center text-xs">{result.margins[i]||'-'}</td>
+                  </tr>))}
+              </tbody>
+            </table>
+          </div>
+          <div className="mt-3 grid grid-cols-3 gap-2 text-center">
+            <div className="rounded-xl bg-gradient-to-b from-rose-500/30 to-red-700/30 p-2"><div className="text-[11px] text-rose-200">단승</div><div className="flex justify-center gap-1 my-1"><NumBadge no={o[0]} size={24}/></div><div className="font-black text-yellow-300">{setup.odds.win[o[0]].toFixed(1)}배</div></div>
+            <div className="rounded-xl bg-gradient-to-b from-sky-500/30 to-blue-700/30 p-2"><div className="text-[11px] text-sky-200">연승</div><div className="flex justify-center gap-1 my-1"><NumBadge no={o[0]} size={24}/><NumBadge no={o[1]} size={24}/></div><div className="font-black text-yellow-300 text-xs leading-5">{setup.odds.place[o[0]].toFixed(1)} / {setup.odds.place[o[1]].toFixed(1)}배</div></div>
+            <div className="rounded-xl bg-gradient-to-b from-amber-400/30 to-orange-700/30 p-2"><div className="text-[11px] text-amber-200">복승</div><div className="flex justify-center gap-1 my-1"><NumBadge no={Math.min(o[0],o[1])} size={24}/><NumBadge no={Math.max(o[0],o[1])} size={24}/></div><div className="font-black text-yellow-300">{setup.odds.quin[quinKey(o[0],o[1])].toFixed(1)}배</div></div>
+          </div>
+          {bets.length>0 && <div className="mt-3 rounded-2xl bg-black/30 p-3">
+            <div className="text-sm font-bold mb-2">🎫 나의 마권 정산</div>
+            <div className="space-y-1.5">
+              {bets.map((b,i)=>(
+                <div key={b.id} className={`flex items-center gap-1.5 rounded-lg px-2 py-1.5 ${payouts[i]>0?'bg-yellow-400/20 ring-1 ring-yellow-300':'bg-white/5 opacity-70'}`}>
+                  <span className="text-[11px] font-black w-12">{TYPE_INFO[b.type].label}</span>
+                  {b.sel.map(n=><NumBadge key={n} no={n} size={22}/>)}
+                  <span className="text-xs text-blue-200 ml-1">{fmt(b.amount)} × {b.odds.toFixed(1)}</span>
+                  <span className={`ml-auto font-black ${payouts[i]>0?'text-yellow-300':'text-blue-300/60'}`}>{payouts[i]>0?`+${fmt(payouts[i])}`:'미적중'}</span>
+                </div>))}
+            </div>
+            <div className="flex justify-between mt-3 pt-2 border-t border-white/10">
+              <span>구매 {fmt(totalBet)} CR</span>
+              <span className="font-black">환급 <b className={totalWin>0?'text-yellow-300 text-xl':''}>{fmt(totalWin)}</b> CR</span>
+            </div>
+          </div>}
+          <button onClick={onNext} className="w-full mt-4 py-4 rounded-2xl fx-title text-2xl bg-gradient-to-b from-yellow-300 to-orange-500 text-black active:scale-[.98]">다음 경주 ▶</button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/* ---------------- 퀴즈로 CREDIT 받기 ---------------- */
+const QUIZ_REWARD = 1000;
+const QUIZ_BANK = [
+  ['1착으로 들어올 말 1마리를 맞히는 마권은?','단승식',['연승식','복승식','쌍승식'],'단승식(WIN)은 1착 말 1마리만 맞히면 됩니다.'],
+  ['1·2착 말 2마리를 순서와 상관없이 맞히는 마권은?','복승식',['단승식','연승식','삼복승식'],'복승식(QUINELLA)은 순서 무관 1·2착 조합입니다.'],
+  ['선택한 말이 1착 또는 2착 안에 들면 적중하는 마권은? (이 게임 기준)','연승식',['단승식','복승식','쌍승식'],'연승식(PLACE)은 상위권에만 들면 적중하는 안정형 마권입니다.'],
+  ['초반엔 뒤에 있다가 결승 직전 폭발적으로 치고 올라오는 각질은?','추입',['도주','선행','선입'],'추입마는 마지막 직선에서 뒷심을 폭발시킵니다.'],
+  ['출발부터 맨 앞에서 레이스를 끌고 가는 각질은?','도주',['추입','선입','선행'],'도주마는 처음부터 선두를 지키며 달립니다.'],
+  ['경마에서 말과 말 사이 간격을 나타내는 단위 "1마신"은 약 몇 m일까?','약 2.4m',['약 0.5m','약 1m','약 5m'],'말 한 마리의 몸길이, 약 2.4m 정도를 1마신이라고 합니다.'],
+  ['말이 가장 빠르게 달리는 보법(걸음걸이)은?','습보(갤럽)',['평보','속보','구보'],'습보(갤럽)는 네 다리가 모두 공중에 뜨는 순간이 있는 가장 빠른 보법입니다.'],
+  ['경주 전 출전마를 관객에게 보여주며 컨디션을 확인하는 곳은?','패독',['게이트','펄롱','홈스트레치'],'패독(Paddock)에서 말의 상태를 보고 예상을 세웁니다.'],
+  ['말 발굽을 보호하기 위해 박는 U자 모양 쇠붙이는?','편자',['재갈','등자','안장'],'편자는 발굽 마모를 막아 줍니다.'],
+  ['대표적인 경주마 품종은?','서러브레드',['페르슈롱','셔틀랜드 포니','클라이즈데일'],'서러브레드(Thoroughbred)는 경주용으로 개량된 품종입니다.'],
+  ['제주의 천연기념물로 지정된 토종 말은?','제주마',['아라비안','서러브레드','페르슈롱'],'제주마(조랑말)는 천연기념물로 보호받고 있습니다.'],
+  ['말은 서서도 잠을 잘 수 있다. O일까 X일까?','O',['X'],'말은 다리 관절을 고정하는 구조 덕분에 서서 졸 수 있습니다.'],
+  ['한라산의 높이는?','1,947m',['1,708m','1,915m','2,744m'],'한라산은 1,947m로 남한에서 가장 높은 산입니다.'],
+  ['제주도의 "삼다(三多)"에 들어가지 않는 것은?','나무',['돌','바람','여자'],'제주 삼다는 돌·바람·여자입니다.'],
+  ['광안대교가 있는 도시는?','부산',['인천','여수','제주'],'광안대교는 부산 수영구와 해운대구를 잇습니다.'],
+  ['부산광역시를 상징하는 꽃(시화)은?','동백꽃',['벚꽃','무궁화','장미'],'부산의 시화는 동백꽃입니다.'],
+  ['한글(훈민정음)을 창제한 왕은?','세종대왕',['태조','정조','광개토대왕'],'세종대왕이 1443년 훈민정음을 창제했습니다.'],
+  ['대한민국의 나라꽃은?','무궁화',['진달래','개나리','벚꽃'],'무궁화는 대한민국의 국화입니다.'],
+  ['독도가 속한 행정구역은?','경상북도 울릉군',['강원도 강릉시','경상남도 통영시','울산광역시'],'독도는 경상북도 울릉군 울릉읍 독도리입니다.'],
+  ['태양계에서 가장 큰 행성은?','목성',['토성','지구','해왕성'],'목성은 태양계에서 가장 큰 행성입니다.'],
+  ['1기압에서 물이 끓는 온도는?','100℃',['80℃','90℃','120℃'],'1기압에서 물의 끓는점은 100℃입니다.'],
+  ['지구에서 가장 넓은 바다는?','태평양',['대서양','인도양','북극해'],'태평양이 가장 넓습니다.'],
+  ['빛의 3원색이 아닌 것은?','노랑',['빨강','초록','파랑'],'빛의 3원색은 빨강·초록·파랑(RGB)입니다.'],
+  ['소금(염화나트륨)의 화학식은?','NaCl',['H2O','CO2','KCl'],'소금은 나트륨(Na)과 염소(Cl)로 이루어져 있습니다.'],
+  ['일반적인 피아노 건반은 모두 몇 개일까?','88개',['66개','76개','100개'],'표준 피아노는 흰 건반 52개, 검은 건반 36개로 88건반입니다.'],
+  ['축구 경기에서 한 팀이 경기장에 내보내는 선수는 몇 명?','11명',['9명','10명','12명'],'골키퍼 포함 11명입니다.'],
+  ['올림픽 오륜기의 고리는 몇 개?','5개',['4개','6개','7개'],'다섯 대륙을 뜻하는 5개의 고리입니다.'],
+  ['성인의 뼈는 대략 몇 개일까?','206개',['106개','306개','156개'],'성인의 뼈는 약 206개입니다.'],
+  ['세계에서 가장 높은 산은?','에베레스트',['K2','킬리만자로','몽블랑'],'에베레스트는 해발 약 8,849m입니다.'],
+  ['삼각형 세 내각의 합은?','180°',['90°','270°','360°'],'삼각형 내각의 합은 항상 180°입니다.'],
+  ['원주율(π)의 값과 가장 가까운 것은?','3.14',['2.71','1.41','3.41'],'π ≈ 3.14159…'],
+  ['욕실 타일의 하얀 물때(석회)는 어떤 성질의 세제로 잘 지워질까?','산성',['알칼리성','중성','기름성'],'물때(탄산칼슘)는 구연산·식초 같은 산성에 잘 녹습니다.'],
+  ['주방 기름때 제거에 가장 효과적인 세제 성질은?','알칼리성',['산성','중성','염분'],'기름때는 베이킹소다·과탄산 같은 알칼리성이 잘 분해합니다.'],
+  ['락스(염소계 표백제)와 절대 섞으면 안 되는 것은?','산성 세제(식초 등)',['찬물','따뜻한 물','마른 걸레'],'염소계와 산성이 만나면 유독한 염소가스가 발생합니다.'],
+  ['유리창을 닦을 때 줄무늬가 덜 남는 방법은?','스퀴지로 한 방향으로 닦기',['신문지에 기름 묻혀 닦기','뜨거운 햇볕 아래에서 닦기','세제를 진하게 많이 쓰기'],'스퀴지로 한 방향으로 물기를 걷어내면 얼룩이 덜 남습니다.'],
+  ['생크림을 휘핑하기 가장 좋은 상태는?','차갑게 냉장된 상태',['실온 상태','살짝 데운 상태','꽁꽁 언 상태'],'생크림은 차가울 때 거품이 안정적으로 올라옵니다.'],
+  ['마카롱 꼬끄의 주재료 가루는?','아몬드 가루',['쌀가루','옥수수 전분','콩가루'],'마카롱은 아몬드 가루와 머랭으로 만듭니다.'],
+  ['티라미수가 처음 만들어진 나라는?','이탈리아',['프랑스','스페인','독일'],'티라미수는 이탈리아 디저트입니다.'],
+  ['카스텔라가 일본을 거쳐 전해진 원조 나라는?','포르투갈',['영국','네덜란드','미국'],'포르투갈 선교사·상인을 통해 일본에 전해졌습니다.'],
+  ['사람 몸에서 가장 큰 기관(장기)은?','피부',['간','폐','심장'],'피부는 면적과 무게 모두 가장 큰 기관입니다.'],
+  ['지구에서 달까지의 평균 거리는 약?','38만 km',['3만 8천 km','380만 km','3,800만 km'],'평균 약 384,400km입니다.'],
+  ['무지개는 보통 몇 가지 색으로 표현할까?','7가지',['5가지','6가지','8가지'],'빨주노초파남보 7가지입니다.'],
+  ['1년은 약 몇 주일까?','52주',['48주','50주','56주'],'365일 ÷ 7 ≈ 52주입니다.'],
+  ['김장 김치의 대표 재료가 되는 채소는?','배추',['양배추','상추','시금치'],'통배추로 김장을 담급니다.'],
+  ['체스에서 가장 강력한 기물은?','퀸',['킹','룩','나이트'],'퀸은 가로·세로·대각선으로 자유롭게 움직입니다.'],
+  ['바둑판의 가로·세로 줄 수는?','19줄',['15줄','17줄','21줄'],'바둑판은 19×19입니다.'],
+  ['윷놀이에서 "모"는 몇 칸을 갈까?','5칸',['3칸','4칸','6칸'],'도1 개2 걸3 윷4 모5입니다.'],
+  ['오렌지 주스에 많이 들어 있는 비타민은?','비타민 C',['비타민 A','비타민 D','비타민 K'],'감귤류는 비타민 C가 풍부합니다.'],
+  ['제주 감귤이 가장 많이 수확되는 계절은?','겨울',['봄','여름','초가을'],'노지 감귤은 보통 11월~1월에 수확합니다.'],
+  ['해가 뜨는 방향은?','동쪽',['서쪽','남쪽','북쪽'],'해는 동쪽에서 떠서 서쪽으로 집니다.'],
+];
+const rint=(a,b)=>a+Math.floor(Math.random()*(b-a+1));
+function mkOpts(ans,wrongs){ const set=[String(ans)]; for(const w of wrongs){ const s=String(w); if(!set.includes(s)) set.push(s); if(set.length>=4) break; } return shuffle(set); }
+function numWrongs(ans,spread){ const out=[]; let g=0; while(out.length<6&&g<50){ g++; const d=rint(1,spread)*(Math.random()<0.5?-1:1); const v=ans+d; if(v!==ans&&v>=0&&!out.includes(v)) out.push(v);} return out; }
+function genQuestion(setup){
+  const t=pickW(['arith','pay','seq','pct','time','race','race2'],[3,2,2,1.5,1,1.5,1.5]);
+  if(t==='arith'){ const a=rint(12,49),b=rint(3,9),c=rint(10,99); const ans=a*b+c;
+    return {q:`${a} × ${b} + ${c} = ?`,a:String(ans),o:mkOpts(ans,numWrongs(ans,12)),ex:`${a}×${b}=${a*b}, 여기에 ${c}을 더하면 ${ans}`}; }
+  if(t==='pay'){ const amt=pick([100,200,300,500]), od=rint(12,95)/10; const ans=Math.round(amt*od);
+    return {q:`단승 배당 ${od.toFixed(1)}배인 말에 ${amt} CREDIT을 걸어 적중! 받는 금액은?`,a:fmtN(ans),o:mkOpts(fmtN(ans),numWrongs(ans,Math.max(20,Math.round(ans*0.3))).map(v=>fmtN(Math.round(v/10)*10||v))),ex:`${amt} × ${od.toFixed(1)} = ${fmtN(ans)}`}; }
+  if(t==='seq'){ if(Math.random()<0.5){ const s=rint(2,20),d=rint(3,13); const arr=[0,1,2,3].map(i=>s+d*i); const ans=s+d*4;
+      return {q:`규칙을 찾아 빈칸을 채우세요: ${arr.join(', ')}, ?`,a:String(ans),o:mkOpts(ans,numWrongs(ans,d)),ex:`${d}씩 커지므로 ${arr[3]}+${d}=${ans}`}; }
+    const s=rint(1,5),r=pick([2,3]); const arr=[0,1,2,3].map(i=>s*Math.pow(r,i)); const ans=s*Math.pow(r,4);
+    return {q:`규칙을 찾아 빈칸을 채우세요: ${arr.join(', ')}, ?`,a:String(ans),o:mkOpts(ans,[ans-arr[3],ans+arr[3],arr[3]*2+r,ans+r]),ex:`${r}배씩 커지므로 ${arr[3]}×${r}=${ans}`}; }
+  if(t==='pct'){ const base=pick([200,400,600,800,1200,1500,2000,3000]), p=pick([10,15,20,25,30,40,50]); const ans=base*p/100;
+    return {q:`${fmtN(base)}의 ${p}%는?`,a:fmtN(ans),o:mkOpts(fmtN(ans),[base*(p+10)/100,base*(p-5)/100,ans*2,ans+50].map(fmtN)),ex:`${fmtN(base)} × ${p/100} = ${fmtN(ans)}`}; }
+  if(t==='time'){ const m=rint(1,3),s=rint(5,55); const ans=m*60+s;
+    return {q:`경주 기록 ${m}분 ${s}초는 모두 몇 초일까?`,a:`${ans}초`,o:mkOpts(`${ans}초`,[`${m*100+s}초`,`${ans+10}초`,`${ans-10}초`,`${(m+1)*60+s}초`]),ex:`${m}분=${m*60}초, ${m*60}+${s}=${ans}초`}; }
+  const hs=setup?setup.horses:null;
+  if(hs && t==='race'){ const fav=hs.slice().sort((a,b)=>setup.odds.win[a.no]-setup.odds.win[b.no])[0];
+    return {q:`이번 경주 예상지에서 단승 배당이 가장 낮은 1인기 말은?`,a:fav.name,o:mkOpts(fav.name,shuffle(hs.filter(h=>h!==fav).map(h=>h.name))),ex:`${fav.no}번 ${fav.name} — 단승 ${setup.odds.win[fav.no].toFixed(1)}배`}; }
+  if(hs){ const h=pick(hs);
+    if(Math.random()<0.5) return {q:`이번 경주 ${h.no}번 ${h.name}의 각질은?`,a:h.style,o:mkOpts(h.style,shuffle(['도주','선행','선입','추입'].filter(x=>x!==h.style))),ex:`예상지에 ${h.name}은(는) '${h.style}'으로 표시돼 있어요.`};
+    return {q:`이번 경주 ${h.name}에 기승하는 기수는?`,a:h.jockey,o:mkOpts(h.jockey,shuffle(hs.filter(x=>x!==h).map(x=>x.jockey))),ex:`${h.no}번 ${h.name} — 기수 ${h.jockey}`}; }
+  return genQuestion(null);
+}
+function fmtN(n){ return Math.round(n).toLocaleString(); }
+function nextQuestion(setup){
+  if(Math.random()<0.5){
+    let used=ls.get('sd_quiz_used',[]); if(used.length>=QUIZ_BANK.length) used=[];
+    const free=QUIZ_BANK.map((_,i)=>i).filter(i=>!used.includes(i)); const i=pick(free);
+    used.push(i); ls.set('sd_quiz_used',used);
+    const [q,a,w,ex]=QUIZ_BANK[i]; return {q,a,o:shuffle([a,...w]),ex,cat:'상식'};
+  }
+  return {...genQuestion(setup),cat:'두뇌'};
+}
+
+function QuizModal({setup,onClose,onReward}){
+  const [q,setQ]=useState(()=>nextQuestion(setup));
+  const [picked,setPicked]=useState(null);
+  const [earned,setEarned]=useState(0);
+  const [streak,setStreak]=useState(0);
+  const [time,setTime]=useState(20);
+  useEffect(()=>{ if(picked!==null) return; if(time<=0){ setPicked('__timeout'); setStreak(0); Sound.miss(); return; }
+    const t=setTimeout(()=>setTime(x=>x-1),1000); return ()=>clearTimeout(t); },[time,picked]);
+  const choose=o=>{ if(picked!==null) return; Sound.init(); setPicked(o);
+    if(o===q.a){ onReward(QUIZ_REWARD); setEarned(e=>e+QUIZ_REWARD); setStreak(s=>s+1); Sound.jackpot(false); }
+    else { setStreak(0); Sound.miss(); } };
+  const next=()=>{ Sound.click(); setQ(nextQuestion(setup)); setPicked(null); setTime(20); };
+  const ok=picked===q.a;
+  return (
+    <div className="fixed inset-0 z-50 bg-black/75 backdrop-blur-sm flex items-start sm:items-center justify-center p-3 overflow-y-auto">
+      <div className="glass rounded-3xl p-4 w-full max-w-md pop mt-6 sm:mt-0">
+        <div className="flex items-center gap-2">
+          <div className="fx-title text-2xl gold">🧠 CREDIT 퀴즈</div>
+          <span className="text-[11px] px-2 py-0.5 rounded-full bg-white/10">{q.cat}</span>
+          <button onClick={onClose} className="ml-auto w-9 h-9 rounded-full bg-white/10 text-xl">×</button>
+        </div>
+        <div className="flex justify-between text-xs text-blue-200/80 mt-1">
+          <span>정답 1개당 <b className="text-yellow-300">+{fmtN(QUIZ_REWARD)} CR</b></span>
+          <span>연속 정답 {streak} · 이번에 받은 {fmtN(earned)} CR</span>
+        </div>
+        <div className="h-1.5 rounded bg-white/10 mt-2 overflow-hidden"><div className={`h-full transition-all duration-1000 ${time<=5?'bg-red-500':'bg-emerald-400'}`} style={{width:`${(picked!==null?0:time)/20*100}%`}}/></div>
+        <div className="mt-4 text-lg font-black leading-snug min-h-[56px]">{q.q}</div>
+        <div className="grid gap-2 mt-3">
+          {q.o.map(o=>{
+            let cls='bg-white/10 hover:bg-white/20';
+            if(picked!==null){ if(o===q.a) cls='bg-emerald-500 text-white ring-2 ring-emerald-200'; else if(o===picked) cls='bg-red-600/80 text-white'; else cls='bg-white/5 opacity-60'; }
+            return <button key={o} onClick={()=>choose(o)} className={`text-left rounded-xl px-4 py-3 font-bold transition ${cls}`}>{o}</button>;
+          })}
+        </div>
+        {picked!==null && <div className="mt-3 rounded-xl bg-black/30 p-3 pop">
+          <div className={`font-black text-lg ${ok?'text-yellow-300':'text-red-300'}`}>{ok?`정답! +${fmtN(QUIZ_REWARD)} CREDIT`:picked==='__timeout'?'시간 초과!':'오답!'}</div>
+          <div className="text-sm text-blue-100/90 mt-1">{q.ex}</div>
+          <div className="grid grid-cols-2 gap-2 mt-3">
+            <button onClick={onClose} className="py-3 rounded-xl font-black bg-white/10">경마하러 가기</button>
+            <button onClick={next} className="py-3 rounded-xl font-black bg-gradient-to-b from-yellow-300 to-orange-500 text-black">다음 문제 ▶</button>
+          </div>
+        </div>}
+      </div>
+    </div>
+  );
+}
+
+/* ---------------- 앱 ---------------- */
+function App(){
+  const [credit,setCredit]=useState(()=>ls.get('sd_credit',1000));
+  const [raceNo,setRaceNo]=useState(()=>ls.get('sd_race',1));
+  const [history,setHistory]=useState(()=>ls.get('sd_hist',[]));
+  const [setup,setSetup]=useState(null);
+  const [phase,setPhase]=useState('paddock');
+  const [bets,setBets]=useState([]);
+  const [result,setResult]=useState(null);
+  const [payouts,setPayouts]=useState([]);
+  const [muted,setMuted]=useState(false);
+  const [quiz,setQuiz]=useState(false);
+  useEffect(()=>{ setSetup(null); const t=setTimeout(()=>setSetup(makeRaceSetup(raceNo)),30); return ()=>clearTimeout(t); },[raceNo]);
+  useEffect(()=>ls.set('sd_credit',credit),[credit]);
+  useEffect(()=>ls.set('sd_race',raceNo),[raceNo]);
+  useEffect(()=>ls.set('sd_hist',history),[history]);
+  useEffect(()=>{ Sound.setMuted(muted); if(muted) Voice.stop(); },[muted]);
+
+  const total=bets.reduce((s,b)=>s+b.amount,0);
+  const start=()=>{ Sound.init(); Voice.unlock(); Sound.setMuted(muted); setCredit(c=>c-total); setPhase('race'); window.scrollTo(0,0); };
+  const done=res=>{
+    const o=res.order;
+    const pays=bets.map(b=>{
+      let hit=false;
+      if(b.type==='WIN') hit=b.sel[0]===o[0];
+      else if(b.type==='PLACE') hit=b.sel[0]===o[0]||b.sel[0]===o[1];
+      else hit=quinKey(b.sel[0],b.sel[1])===quinKey(o[0],o[1]);
+      return hit?Math.round(b.amount*b.odds):0;
+    });
+    const win=pays.reduce((s,p)=>s+p,0);
+    setPayouts(pays); setResult(res); setCredit(c=>c+win);
+    setHistory(h=>[[o[0],o[1]],...h].slice(0,20));
+    setPhase('result');
+    if(win>0){ const big=bets.some((b,i)=>pays[i]>0&&b.odds>=10); Sound.jackpot(big); }
+    else if(bets.length) Sound.miss();
+  };
+  const next=()=>{ Sound.click(); setBets([]); setResult(null); setPayouts([]); setPhase('paddock'); setRaceNo(n=>n+1); window.scrollTo(0,0); };
+
+  return (
+    <div className="min-h-screen" style={{background:'radial-gradient(1200px 600px at 50% -200px,#1b2f6e 0%,#070d1f 60%)'}}>
+      <header className="sticky top-0 z-20 backdrop-blur bg-[#070d1f]/80 border-b border-white/5">
+        <div className="max-w-6xl mx-auto flex items-center gap-3 px-3 py-2">
+          <div className="fx-title text-2xl leading-none"><span className="gold">★ STAR</span> <span className="text-white">DERBY</span></div>
+          <span className="hidden sm:inline text-xs text-blue-200/70">아케이드 경마 중계 & 마권</span>
+          <div className="ml-auto flex items-center gap-2">
+            {phase==='paddock' && <button onClick={()=>{Sound.init();Sound.click();setQuiz(true);}} className="h-9 px-3 rounded-full bg-gradient-to-b from-fuchsia-500 to-purple-700 text-sm font-black">🧠 퀴즈</button>}
+            <button onClick={()=>{Sound.init(); setMuted(m=>!m);}} className="w-9 h-9 rounded-full bg-white/10 text-lg">{muted?'🔇':'🔊'}</button>
+            <div className="rounded-full bg-gradient-to-b from-yellow-300 to-amber-500 text-black px-3 py-1.5 font-black text-sm shadow">CREDIT {fmt(phase==='paddock'?credit:credit)}</div>
+          </div>
+        </div>
+      </header>
+      {!setup ? <div className="text-center py-24"><div className="fx-title text-3xl gold animate-pulse">예상지 집계 중...</div><div className="text-blue-200/70 mt-2 text-sm">배당률 계산 중입니다</div></div> :
+        phase==='paddock' ? <Paddock setup={setup} credit={credit} bets={bets} setBets={setBets} onStart={start} onQuiz={()=>setQuiz(true)} history={history} muted={muted} setMuted={setMuted}/> :
+        <RaceView key={setup.raceNo} setup={setup} bets={bets} onDone={done}/>}
+      {quiz && setup && <QuizModal setup={setup} onClose={()=>setQuiz(false)} onReward={n=>setCredit(c=>c+n)}/>}
+      {phase==='result' && result && <ResultModal setup={setup} result={result} bets={bets} payouts={payouts} onNext={next}/>}
+    </div>
+  );
+}
+
+ReactDOM.createRoot(document.getElementById('root')).render(<App/>);
+</script>
+</body>
+</html>
