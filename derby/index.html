@@ -1957,13 +1957,13 @@ function Paddock({setup,credit,bets,setBets,onStart,onQuiz,onRps,onEvent,evLabel
         <button onClick={()=>{Sound.init();Sound.click();onQuiz();}} className={`w-full py-3 rounded-xl font-black bg-gradient-to-b from-fuchsia-500 to-purple-700 ${credit<100?'animate-pulse':''}`}>🧠 퀴즈 풀고 CREDIT 1,000 받기</button>
       </div>}
 
-      <div className="fixed bottom-0 inset-x-0 z-30 px-3 pt-3 pb-2 bg-gradient-to-t from-[#070d1f] via-[#070d1fee] to-transparent" style={{paddingBottom:'max(8px, env(safe-area-inset-bottom))'}}>
-        <div className="max-w-md mx-auto flex gap-2 items-center">
-          <div className="glass rounded-xl px-2.5 py-1 flex flex-col justify-center">
-            <span className="text-[9px] text-blue-200/80">잔여 CREDIT</span>
-            <span className="font-black text-[14px] text-yellow-300 leading-none">{fmt(avail)}</span>
+      <div className="fixed bottom-0 inset-x-0 z-30 px-3 pt-6 pb-3 bg-gradient-to-t from-[#070d1f] via-[#070d1fee] to-transparent" style={{paddingBottom:'max(12px, env(safe-area-inset-bottom))'}}>
+        <div className="max-w-md mx-auto flex gap-2">
+          <div className="glass rounded-2xl px-3 py-2 flex flex-col justify-center">
+            <span className="text-[10px] text-blue-200/80">잔여 CREDIT</span>
+            <span className="font-black text-lg text-yellow-300 leading-none">{fmt(avail)}</span>
           </div>
-          <button onClick={tryStart} className="flex-1 rounded-xl py-2 fx-title text-[15px] bg-gradient-to-b from-yellow-300 via-amber-400 to-orange-600 text-black shadow-[0_0_30px_rgba(255,180,0,.5)] active:scale-[.98]">
+          <button onClick={tryStart} className="flex-1 rounded-2xl py-3.5 fx-title text-xl bg-gradient-to-b from-yellow-300 via-amber-400 to-orange-600 text-black shadow-[0_0_30px_rgba(255,180,0,.5)] active:scale-[.98]">
             🏁 출주! 레이스 시작
           </button>
         </div>
@@ -2526,8 +2526,12 @@ function RpsModal({onClose,onReward}){
   const [active,setActive]=useState(false);       // 도전 진행 중
   const [phase,setPhase]=useState('idle');          // idle | roll | show
   const [res,setRes]=useState(null);                // {me,cpu,r:'win'|'lose'|'draw'}
-  const [msg,setMsg]=useState('버튼을 눌러 도전 시작!');
+  const [msg,setMsg]=useState('▶ START를 누르면 도전이 시작돼요!');
   const [pop,setPop]=useState(null);
+  const [nudge,setNudge]=useState(0);
+  const startRun=()=>{ if(active||phase==='roll') return; Sound.init();
+    if(left<=0){ setMsg('오늘 도전 횟수를 다 썼어요. 내일 또 만나요!'); Sound.miss(); return; }
+    setActive(true); setStreak(0); setRes(null); st.current.res=null; setPhase('idle'); setDay(d=>({...d,runs:d.runs+1})); Sound.coin(); setMsg('가위·바위·보 중 하나를 고르세요!'); };
   const top=useRef(null), disp=useRef(null), st=useRef({cpu:1,rolling:false,res:null,t:0});
   useEffect(()=>ls.set('sd_rps',day),[day]);
   const left=RPS_DAILY-day.runs;
@@ -2551,10 +2555,9 @@ function RpsModal({onClose,onReward}){
   useEffect(()=>{ if(phase!=='idle') return; const t=setInterval(()=>{ st.current.cpu=(st.current.cpu+1)%3; },1400); return ()=>clearInterval(t); },[phase]);
   const play=i=>{
     if(phase==='roll') return;
-    Sound.init(); const base=active?streak:0;
-    if(!active){ if(left<=0){ setMsg('오늘 도전 횟수를 다 썼어요. 내일 또 만나요!'); Sound.miss(); return; }
-      setActive(true); setStreak(0); setDay(d=>({...d,runs:d.runs+1})); }
-    setPhase('roll'); setRes(null); st.current.res=null; st.current.rolling=true; setMsg(`${RPS_HANDS[i].k}! 과연...`); const leftNow=active?left:left-1;
+    Sound.init(); const base=streak;
+    if(!active){ setMsg(left>0?'먼저 ▶ START 버튼을 눌러 주세요!':'오늘 도전 횟수를 다 썼어요. 내일 또 만나요!'); setNudge(x=>x+1); Sound.beep(300); return; }
+    setPhase('roll'); setRes(null); st.current.res=null; st.current.rolling=true; setMsg(`${RPS_HANDS[i].k}! 과연...`); const leftNow=left;
     let n=0; st.current.speed=7; const tick=setInterval(()=>{ Sound.beep(520+(n%3)*160); n++; },180);
     setTimeout(()=>{ st.current.speed=13; },1300);
     setTimeout(()=>{ clearInterval(tick); const cpu=Math.floor(Math.random()*3); st.current.rolling=false; st.current.cpu=cpu;
@@ -2583,6 +2586,11 @@ function RpsModal({onClose,onReward}){
             <canvas ref={disp} width={420} height={420} className="absolute inset-0 w-full h-full rounded-full"/>
             {pop && <div className="absolute inset-0 flex flex-col items-center justify-center pop"><div className="fx-title text-yellow-300" style={{fontSize:44,textShadow:'0 0 16px #000,0 0 6px #000'}}>{pop.n}연승!</div><div className="fx-title" style={{fontSize:30,color:'#7CFC00',textShadow:'0 0 10px #000'}}>+{pop.p} CR</div></div>}
           </div>
+          <div className="flex justify-center mt-3">
+            <button key={nudge} onClick={startRun} disabled={active} className={`px-4 py-1.5 rounded-full text-[13px] font-black tracking-wider ${nudge?'pop':''}`}
+              style={active?{background:'#2b2b2b',color:'#777',boxShadow:'inset 0 2px 4px #000'}:{background:'linear-gradient(180deg,#34d399,#059669)',color:'#fff',boxShadow:'0 4px 0 #065f46, 0 0 12px rgba(52,211,153,.6)'}}>
+              {active?`도전 중 · ${streak}연승`:left>0?`▶ START (남은 ${left}회)`:'오늘 끝! 내일 또'}</button>
+          </div>
           {/* 연승 램프 */}
           <div className="flex justify-center gap-1.5 mt-3">{Array.from({length:8},(_,k)=>{ const lit=k<streak, ms=RPS_PRIZE[k+1];
             return <div key={k} className="flex flex-col items-center"><div className="rounded-full" style={{width:24,height:24,background:lit?(ms?'#ffd43b':'#ff5a2a'):'#2b2b2b',boxShadow:lit?`0 0 10px ${ms?'#ffd43b':'#ff5a2a'}`:'inset 0 2px 4px #000',border:ms?'2px solid #ffd43b88':'2px solid #000'}}/><div className="text-[9.5px] mt-0.5 font-bold" style={{color:ms?'#ffd43b':'#666'}}>{ms?`+${ms}`:k+1}</div></div>; })}</div>
@@ -2595,8 +2603,8 @@ function RpsModal({onClose,onReward}){
               <span className={`rounded-full flex flex-col items-center justify-center active:translate-y-1 transition-transform`} style={{width:86,height:86,background:h.c,boxShadow:`0 8px 0 ${h.ring}, 0 12px 18px rgba(0,0,0,.6), inset 0 6px 10px rgba(255,255,255,.35)`}}>
                 <span style={{fontSize:30,lineHeight:1}}>{h.e}</span><span className="text-[14px] font-black text-white" style={{textShadow:'0 2px 0 rgba(0,0,0,.4)'}}>{h.k}</span></span>
             </button>)}</div>
-          <div className="flex justify-between text-[11px] text-blue-200/70 mt-4 px-1"><span>오늘 남은 도전 <b className="text-white">{Math.max(0,left-(active?0:0))}</b> / {RPS_DAILY}</span><span>오늘 최고 {day.best}연승</span></div>
-          <div className="text-[10.5px] text-blue-200/50 mt-1 px-1">한 번 도전 = 질 때까지(또는 8연승까지). 비기면 다시 냅니다.</div>
+          <div className="flex justify-between text-[11px] text-blue-200/70 mt-4 px-1"><span>오늘 남은 도전 <b className="text-white">{Math.max(0,left)}</b> / {RPS_DAILY}</span><span>오늘 최고 {day.best}연승</span></div>
+          <div className="text-[10.5px] text-blue-200/50 mt-1 px-1">START 1번 = 도전 1회. 질 때까지(또는 8연승까지) 계속, 비기면 다시 냅니다.</div>
         </div>
       </div>
     </div>);
