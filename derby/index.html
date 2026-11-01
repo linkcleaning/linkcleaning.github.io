@@ -7,8 +7,8 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<meta name="apple-mobile-web-app-title" content="스타더비">
-<title>STAR DERBY 스타더비 - 아케이드 경마</title>
+<meta name="apple-mobile-web-app-title" content="링크더비">
+<title>LINK DERBY 링크 더비 - 아케이드 경마</title>
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
 <link rel="icon" type="image/png" href="icon-192.png">
@@ -42,7 +42,7 @@
 
 <script>
 /* =========================================================
-   STAR DERBY — 엔진 (시뮬레이션 / 렌더링 / 사운드)
+   LINK DERBY — 엔진 (시뮬레이션 / 렌더링 / 사운드)
    ========================================================= */
 /*SIM_START*/
 const FRAME = {1:{bg:'#ffffff',fg:'#111111'},2:{bg:'#141414',fg:'#ffffff'},3:{bg:'#e03131',fg:'#ffffff'},
@@ -384,7 +384,7 @@ const Voice={ on:true, ok:typeof window!=='undefined'&&'speechSynthesis' in wind
     this.v = ko.find(v=>MALE_RE.test(v.name)) || ko[0] || null;
     this.male = !!(this.v && MALE_RE.test(this.v.name));
   }catch(e){} },
-  setVoice(name){ try{ localStorage.setItem('sd_voice',name); }catch(e){} this.pickVoice(); this.say('안녕하세요, 스타더비 중계를 맡은 아나운서입니다!',true); },
+  setVoice(name){ try{ localStorage.setItem('sd_voice',name); }catch(e){} this.pickVoice(); this.say('안녕하세요, 링크 더비 중계를 맡은 아나운서입니다!',true); },
   unlock(){ if(!this.ok) return; try{ this.pickVoice(); const u=new SpeechSynthesisUtterance(' '); u.volume=0; u.lang='ko-KR'; speechSynthesis.speak(u); }catch(e){} },
   // 자체 대기열 + 감시 타이머: iOS/크롬에서 onend가 안 오거나 cancel 직후 speak가 씹혀서 소리가 끊기는 문제 방지
   q:[], busy:false, cur:null, wd:null,
@@ -625,7 +625,7 @@ function drawHorse(ctx,h,x,y,s,phase,amp,o){
   ctx.strokeStyle=fr.bg==='#ffffff'?'#adb5bd':'rgba(255,255,255,0.75)'; ctx.lineWidth=1.2; rr(ctx,-16,-85,27,21,2); ctx.stroke();
   ctx.fillStyle=fr.fg; ctx.font='600 15px "Noto Sans KR",sans-serif'; ctx.textAlign='center'; ctx.textBaseline='middle';
   ctx.fillText(String(h.no),-2.5,-76.5);
-  ctx.font='600 4px sans-serif'; ctx.fillText('STAR DERBY',-2.5,-67.5);
+  ctx.font='600 4px sans-serif'; ctx.fillText('LINK DERBY',-2.5,-67.5);
   const sd=ctx.createLinearGradient(0,-92,0,-84); sd.addColorStop(0,'#5a3b24'); sd.addColorStop(1,'#24160d');
   ctx.fillStyle=sd; ctx.beginPath(); ctx.moveTo(-15,-86); ctx.quadraticCurveTo(-14,-92,-6,-90); ctx.lineTo(6,-90); ctx.quadraticCurveTo(13,-91,13,-86); ctx.closePath(); ctx.fill();
   // 등자끈
@@ -744,7 +744,7 @@ const FIRE_GLOW=(()=>{ try{ const c=document.createElement('canvas'); c.width=20
 const sZ = z => 0.62+0.38*z;
 const yZ = z => Y_FAR+(Y_NEAR-Y_FAR)*z;
 const ADS=[['링크클린','LINKCLEAN 제주 청소 전문','#0ca678','#fff'],['CREAMUS','크리머스 광안리 케이크','#f06595','#fff'],
-           ['하나토탈클린','HANA TOTAL CLEAN','#1c7ed6','#fff'],['STAR DERBY','스타더비 경마','#ffd43b','#111'],['JEJU','제주 경마공원','#e8590c','#fff']];
+           ['하나토탈클린','HANA TOTAL CLEAN','#1c7ed6','#fff'],['LINK DERBY','링크 더비 경마','#ffd43b','#111'],['JEJU','제주 경마공원','#e8590c','#fff']];
 
 class RaceEngine{
   constructor(canvas,setup,cb){
@@ -1316,7 +1316,7 @@ class RaceEngine{
     ctx.strokeStyle='#2b8a3e'; ctx.lineWidth=5; ctx.beginPath(); ctx.moveTo(A[0],A[1]); ctx.lineTo(B[0],B[1]); ctx.moveTo(C[0],C[1]); ctx.lineTo(Dd[0],Dd[1]); ctx.moveTo(A[0],A[1]); ctx.lineTo(Dd[0],Dd[1]); ctx.stroke();
     const E=this.P(0.3,zB,2.3), F=this.P(0.3,zB,2.9), G=this.P(0.3,zA,2.9);
     ctx.fillStyle='#2b8a3e'; ctx.beginPath(); ctx.moveTo(B[0],B[1]); ctx.lineTo(E[0],E[1]); ctx.lineTo(F[0],F[1]); ctx.lineTo(G[0],G[1]); ctx.closePath(); ctx.fill();
-    ctx.fillStyle='#fff'; ctx.font='700 16px "Noto Sans KR",sans-serif'; ctx.textAlign='center'; ctx.textBaseline='middle'; ctx.fillText('STAR GATE',(G[0]+F[0])/2,(G[1]+F[1])/2+(E[1]-F[1])*0.0-8);
+    ctx.fillStyle='#fff'; ctx.font='700 16px "Noto Sans KR",sans-serif'; ctx.textAlign='center'; ctx.textBaseline='middle'; ctx.fillText('LINK GATE',(G[0]+F[0])/2,(G[1]+F[1])/2+(E[1]-F[1])*0.0-8);
   }
   drawForeground(ctx){
     const ppm=this.ppm, cam=this.camX, z=1.12;
@@ -2072,7 +2072,7 @@ const EVENT_TIERS=[{cr:30000,cups:1,label:'스타벅스 원하는 커피 1잔'},
 function hashStr(str){ let h1=0xdeadbeef^str.length, h2=0x41c6ce57^str.length; for(let i=0;i<str.length;i++){ const c=str.charCodeAt(i); h1=Math.imul(h1^c,2654435761); h2=Math.imul(h2^c,1597334677); }
   h1=Math.imul(h1^(h1>>>16),2246822507)^Math.imul(h2^(h2>>>13),3266489909); h2=Math.imul(h2^(h2>>>16),2246822507)^Math.imul(h1^(h1>>>13),3266489909);
   return (4294967296*(2097151&h2)+(h1>>>0)).toString(36).toUpperCase().padStart(10,'0'); }
-function claimCode(nick,cups,ts){ const hs=hashStr(`${nick}|${cups}|${ts}|STARDERBY-LINKCLEAN`); return `SD-${hs.slice(0,4)}-${hs.slice(4,8)}-${cups}`; }
+function claimCode(nick,cups,ts){ const hs=hashStr(`${nick}|${cups}|${ts}|STARDERBY-LINKCLEAN`); return `LD-${hs.slice(0,4)}-${hs.slice(4,8)}-${cups}`; }
 function EventModal({credit,onClose,onClaim,claims}){
   const [nick,setNick]=useState(()=>ls.get('sd_nick',''));
   const [confirm,setConfirm]=useState(null);
@@ -2132,7 +2132,7 @@ function Certificate({c,onClose}){
     <div className="fixed inset-0 z-[60] bg-[#06120d] flex flex-col items-center justify-center p-5" onClick={onClose}>
       <div className="w-full max-w-sm rounded-3xl overflow-hidden shadow-2xl pop" style={{background:'linear-gradient(160deg,#00704A,#004d33)'}} onClick={e=>e.stopPropagation()}>
         <div className="px-5 pt-5 text-white">
-          <div className="text-[12px] tracking-widest opacity-80">STAR DERBY EVENT</div>
+          <div className="text-[12px] tracking-widest opacity-80">LINK DERBY EVENT</div>
           <div className="fx-title text-[28px] mt-1">커피 교환권</div>
           <div className="text-5xl mt-3">{'☕'.repeat(c.cups)}</div>
           <div className="mt-2 text-lg font-black">스타벅스 원하는 커피 {c.cups}잔</div>
@@ -2267,7 +2267,7 @@ function App(){
     <div className="min-h-screen" style={{background:'radial-gradient(1200px 600px at 50% -200px,#1b2f6e 0%,#070d1f 60%)'}}>
       <header className="sticky top-0 z-20 backdrop-blur bg-[#070d1f]/80 border-b border-white/5">
         <div className="max-w-md mx-auto flex items-center gap-2 px-3 py-2 h-[52px]">
-          <div className="fx-title text-[19px] leading-none whitespace-nowrap"><span className="gold">★ STAR</span> <span className="text-white">DERBY</span></div>
+          <div className="fx-title text-[19px] leading-none whitespace-nowrap"><span className="gold">★ LINK</span> <span className="text-white">DERBY</span></div>
           
           <div className="ml-auto flex items-center gap-2">
             <button onClick={()=>{Sound.init(); setMuted(m=>!m);}} className="w-8 h-8 shrink-0 rounded-full bg-white/10 text-base">{muted?'🔇':'🔊'}</button>
