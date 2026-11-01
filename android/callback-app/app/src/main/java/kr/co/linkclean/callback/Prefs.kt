@@ -94,7 +94,7 @@ https://www.instagram.com/linkcleaning
     const val DEFAULT_SUBJECT = ""  // 제목 없음
     const val MAX_IMAGES = 3
     private const val KEY_SEED_VER = "seed_ver"
-    private const val SEED_VER = 13
+    private const val SEED_VER = 14
 
     const val KEY_ENABLED = "enabled"
     const val KEY_MESSAGE = "message"
@@ -283,6 +283,11 @@ https://www.instagram.com/linkcleaning
         // v13: 예금주를 링크클린으로
         if (sp.getInt(KEY_SEED_VER, 0) < 13 && sp.getString(Templates.KEY, null) != null) {
             Templates.save(c, Templates.load(c).map { it.copy(body = Templates.fixDepositor(it.body)) })
+        }
+        // v14: '계좌 안내' 문자 추가
+        if (sp.getInt(KEY_SEED_VER, 0) < 14 && sp.getString(Templates.KEY, null) != null) {
+            val list = Templates.load(c).toMutableList()
+            if (list.none { it.id == "t_account" }) Templates.defaults().firstOrNull { it.id == "t_account" }?.let { list.add(it); Templates.save(c, list) }
         }
         sp.edit().putInt(KEY_SEED_VER, SEED_VER).commit()
     }

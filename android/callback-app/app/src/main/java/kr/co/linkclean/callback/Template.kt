@@ -216,6 +216,13 @@ $CARD_URL
 정확한 주소를 남겨주세요.
 """.trim()
 
+    /** 계좌번호만 보내는 짧은 문자 */
+    val ACCOUNT = """
+[링크클린] 입금 계좌 안내
+토스뱅크 1000-1626-3066
+예금주 링크클린
+""".trim()
+
     const val OLD_OUT = "안녕하세요, 제주 청소 전문 기업 링크클린입니다. 통화 감사드립니다. 아래 링크에서 작업 사례와 상세 안내를 확인하실 수 있습니다."
 
     const val OLD_MISS = "안녕하세요, 링크클린입니다. 현재 현장 작업 중이라 전화를 받지 못했습니다. 문의주신 내용을 문자로 남겨주시면 작업 종료 후 가장 먼저 연락드리겠습니다. 감사합니다!"
@@ -226,6 +233,7 @@ $CARD_URL
         Tpl("t_out", "📤", "발신 인사", "발신", "", CARD_OUT, false, true),
         Tpl("t_miss", "⏳", "부재중 안내", "부재중", "", CARD_MISS, false, true),
         Tpl("t_contract", "🤝", "예약 문자", "기타", "", CONTRACT, false, false),
+        Tpl("t_account", "🏦", "계좌 안내", "기타", "", ACCOUNT, false, false),
     )
 
     fun load(c: Context): MutableList<Tpl> {
