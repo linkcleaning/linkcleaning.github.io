@@ -1,0 +1,615 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>간이영수증</title>
+<meta name="theme-color" content="#1f3fbf">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="간이영수증">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="icon-192.png">
+<link rel="icon" href="icon-192.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700;900&display=swap" rel="stylesheet">
+<style>
+:root{--ink:#1f3fbf;--bg:#f3f5fb;--card:#fff;--line:#dfe3ef;--txt:#1b2133;--sub:#6b7390;--red:#d0213c}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;background:var(--bg);color:var(--txt);font-family:"Noto Sans KR","Apple SD Gothic Neo","Malgun Gothic",sans-serif;font-size:15px}
+header{position:sticky;top:0;z-index:5;background:var(--ink);color:#fff;padding:calc(env(safe-area-inset-top) + 10px) 16px 10px;display:flex;align-items:center;gap:10px}
+header h1{font-size:18px;margin:0;font-weight:900;letter-spacing:-.3px;flex:1}
+header select{background:rgba(255,255,255,.15);color:#fff;border:1px solid rgba(255,255,255,.35);border-radius:8px;padding:6px 8px;font:inherit;font-size:13px;max-width:45%}
+header select option{color:#000}
+main{max-width:720px;margin:0 auto;padding:12px 12px 110px}
+.card{background:var(--card);border-radius:14px;padding:14px;margin-bottom:12px;box-shadow:0 1px 3px rgba(20,30,70,.06)}
+.card h2{font-size:14px;margin:0 0 10px;color:var(--ink);font-weight:700}
+label{display:block;font-size:12px;color:var(--sub);margin:0 0 4px}
+input,select,textarea{width:100%;font:inherit;font-size:16px;padding:10px 11px;border:1px solid var(--line);border-radius:10px;background:#fff;color:var(--txt)}
+input:focus,select:focus,textarea:focus{outline:2px solid var(--ink);outline-offset:-1px;border-color:transparent}
+.row{display:flex;gap:8px}.row>*{flex:1;min-width:0}
+.mb{margin-bottom:10px}
+.seg{display:flex;background:#eef1f8;border-radius:10px;padding:3px}
+.seg button{flex:1;border:0;background:transparent;padding:9px 0;border-radius:8px;font:inherit;font-size:14px;color:var(--sub)}
+.seg button.on{background:#fff;color:var(--ink);font-weight:700;box-shadow:0 1px 2px rgba(0,0,0,.08)}
+.item{border:1px solid var(--line);border-radius:12px;padding:10px;margin-bottom:8px;position:relative}
+.item .num{position:absolute;top:-9px;left:10px;background:var(--ink);color:#fff;font-size:11px;padding:1px 7px;border-radius:9px}
+.item .del{position:absolute;top:6px;right:6px;border:0;background:#fff0f2;color:var(--red);width:28px;height:28px;border-radius:8px;font-size:16px}
+.item .amt{font-size:13px;color:var(--sub);text-align:right;margin-top:6px}
+.item .amt b{color:var(--txt);font-size:15px}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;border:0;border-radius:12px;padding:12px 14px;font:inherit;font-weight:700;font-size:15px;background:#eef1f8;color:var(--ink);width:100%}
+.btn.pri{background:var(--ink);color:#fff}
+.btn.red{background:#fff0f2;color:var(--red)}
+.total{display:flex;justify-content:space-between;align-items:baseline;padding:4px 2px}
+.total b{font-size:22px;color:var(--ink)}
+.kor{font-size:12px;color:var(--sub);text-align:right}
+#preview{width:100%;height:auto;display:block;border-radius:6px;box-shadow:0 2px 10px rgba(20,30,70,.12);background:#fff}
+.bar{position:fixed;left:0;right:0;bottom:0;z-index:6;background:rgba(255,255,255,.96);backdrop-filter:blur(8px);border-top:1px solid var(--line);padding:10px 12px calc(env(safe-area-inset-bottom) + 10px);display:flex;gap:8px;max-width:720px;margin:0 auto}
+.bar .btn{padding:13px 6px;font-size:14px;width:auto;flex:1;white-space:nowrap}
+.bar .btn.pri{flex:1.6}
+nav.tabs{display:flex;gap:6px;margin-bottom:12px}
+nav.tabs button{flex:1;border:0;border-radius:10px;padding:10px 0;font:inherit;font-weight:700;background:#fff;color:var(--sub)}
+nav.tabs button.on{background:var(--ink);color:#fff}
+.hist{display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid var(--line)}
+.hist:last-child{border:0}
+.hist .t{flex:1;min-width:0}
+.hist .t b{display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.hist .t span{font-size:12px;color:var(--sub)}
+.hist .m{font-weight:700;color:var(--ink);white-space:nowrap}
+.hist button{border:0;background:#eef1f8;color:var(--ink);border-radius:8px;padding:7px 9px;font:inherit;font-size:12px;font-weight:700}
+.stampbox{display:flex;align-items:center;gap:12px}
+.stampbox .pv{width:84px;height:84px;border:1px dashed var(--line);border-radius:10px;display:flex;align-items:center;justify-content:center;background:#fff;flex:none}
+.stampbox .pv img{max-width:76px;max-height:76px}
+.hint{font-size:12px;color:var(--sub);line-height:1.5;margin:6px 0 0}
+.chk{display:flex;align-items:center;gap:8px;font-size:14px;color:var(--txt);margin:8px 0 0}
+.chk input{width:20px;height:20px}
+.toast{position:fixed;left:50%;bottom:90px;transform:translateX(-50%);background:#1b2133;color:#fff;padding:10px 16px;border-radius:20px;font-size:14px;opacity:0;transition:.25s;pointer-events:none;z-index:9;white-space:nowrap}
+.toast.on{opacity:1}
+.hidden{display:none!important}
+@media print{body *{visibility:hidden}#printImg,#printImg *{visibility:visible}#printImg{position:fixed;left:0;top:0;width:100%}}
+#printImg{display:none}
+@media print{#printImg{display:block}}
+</style>
+</head>
+<body>
+<header>
+  <h1>🧾 간이영수증</h1>
+  <select id="profileSel" aria-label="공급자 선택"></select>
+</header>
+
+<main>
+  <nav class="tabs">
+    <button data-tab="write" class="on">작성</button>
+    <button data-tab="hist">기록</button>
+    <button data-tab="settings">설정</button>
+  </nav>
+
+  <!-- 작성 -->
+  <section id="tab-write">
+    <div class="card">
+      <h2>기본 정보</h2>
+      <div class="mb"><label>받는 분 (귀하)</label><input id="customer" placeholder="예) 서귀포보건소 / 홍길동" autocomplete="off"></div>
+      <div class="row mb">
+        <div><label>작성일</label><input id="date" type="date"></div>
+        <div><label>NO.</label><input id="no" placeholder="자동" inputmode="numeric"></div>
+      </div>
+      <div class="row mb">
+        <div><label>용도</label>
+          <div class="seg" id="kindSeg"><button data-v="buyer" class="on">공급받는자용</button><button data-v="seller">공급자용</button></div>
+        </div>
+      </div>
+      <div class="row mb">
+        <div><label>문구</label>
+          <div class="seg" id="modeSeg"><button data-v="영수" class="on">영수함</button><button data-v="청구">청구함</button></div>
+        </div>
+      </div>
+      <div><label>비고</label><input id="memo" placeholder="(선택)"></div>
+    </div>
+
+    <div class="card">
+      <h2>품목</h2>
+      <div id="items"></div>
+      <button class="btn" id="addItem">＋ 품목 추가</button>
+      <div style="height:12px"></div>
+      <div class="total"><span>합계</span><b id="sumTxt">₩0</b></div>
+      <div class="kor" id="sumKor"></div>
+    </div>
+
+    <div class="card">
+      <h2>미리보기</h2>
+      <canvas id="preview"></canvas>
+    </div>
+  </section>
+
+  <!-- 기록 -->
+  <section id="tab-hist" class="hidden">
+    <div class="card">
+      <h2>발행 기록 <span style="font-weight:400;color:var(--sub);font-size:12px">(이 기기에 저장)</span></h2>
+      <div id="histList"></div>
+    </div>
+  </section>
+
+  <!-- 설정 -->
+  <section id="tab-settings" class="hidden">
+    <div class="card">
+      <h2>공급자 정보</h2>
+      <div class="mb"><label>사업자등록번호</label><input id="p_bizno" inputmode="numeric" placeholder="000-00-00000"></div>
+      <div class="row mb">
+        <div><label>상호</label><input id="p_name"></div>
+        <div><label>성명(대표)</label><input id="p_owner"></div>
+      </div>
+      <div class="mb"><label>사업장 소재지</label><input id="p_addr"></div>
+      <div class="row mb">
+        <div><label>업태</label><input id="p_type"></div>
+        <div><label>종목</label><input id="p_item"></div>
+      </div>
+      <div class="mb"><label>전화번호 (영수증 하단 표기, 선택)</label><input id="p_tel" inputmode="tel"></div>
+      <div class="row">
+        <button class="btn" id="newProfile">＋ 새 공급자</button>
+        <button class="btn red" id="delProfile">이 공급자 삭제</button>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>도장</h2>
+      <div class="stampbox">
+        <div class="pv" id="stampPv"><span style="font-size:12px;color:var(--sub)">없음</span></div>
+        <div style="flex:1">
+          <button class="btn pri" id="stampBtn">도장 이미지 불러오기</button>
+          <input type="file" id="stampFile" accept="image/*" class="hidden">
+          <button class="btn red" id="stampDel" style="margin-top:6px">도장 지우기</button>
+        </div>
+      </div>
+      <label class="chk"><input type="checkbox" id="autoClean" checked> 흰 배경 자동 제거 + 인주색 보정</label>
+      <p class="hint">함께 드린 <b>도장.png</b>를 카톡으로 받아 여기서 한 번만 불러오면 이 기기에 저장됩니다. 종이에 찍은 도장을 사진으로 찍어 올려도 배경을 지우고 도장 부분만 잘라 냅니다.</p>
+    </div>
+
+    <div class="card">
+      <h2>인쇄 색상</h2>
+      <div class="seg" id="colorSeg">
+        <button data-v="#1f3fbf" class="on">청색</button>
+        <button data-v="#c8102e">적색</button>
+        <button data-v="#222222">흑색</button>
+      </div>
+      <p class="hint">간이영수증 양식 선 색상입니다. 기본은 문구점 영수증과 같은 청색입니다.</p>
+    </div>
+
+    <div class="card">
+      <h2>자주 쓰는 품목</h2>
+      <textarea id="presets" rows="4" placeholder="쉼표로 구분"></textarea>
+      <p class="hint">품목 입력할 때 자동완성으로 나옵니다.</p>
+    </div>
+  </section>
+</main>
+
+<div class="bar" id="bar">
+  <button class="btn" id="resetBtn">새로</button>
+  <button class="btn" id="saveBtn">저장</button>
+  <button class="btn" id="printBtn">인쇄</button>
+  <button class="btn pri" id="shareBtn">보내기</button>
+</div>
+
+<datalist id="presetList"></datalist>
+<div id="printImg"></div>
+<div class="toast" id="toast"></div>
+
+<script>
+/* ===================== 저장소 ===================== */
+const LS = {
+  get(k, d){ try{ const v = localStorage.getItem(k); return v ? JSON.parse(v) : d; }catch(e){ return d; } },
+  set(k, v){ try{ localStorage.setItem(k, JSON.stringify(v)); }catch(e){ toast('저장 공간이 부족합니다'); } }
+};
+const DEFAULT_PROFILES = [{
+  id:'linkclean', bizno:'687-54-00154', name:'링크클린', owner:'한승우',
+  addr:'제주특별자치도 서귀포시 서호남로 91', type:'서비스', item:'청소대행', tel:'064-763-4545', stamp:''
+}];
+let profiles = LS.get('rc_profiles', DEFAULT_PROFILES);
+let curPid = LS.get('rc_cur', profiles[0].id);
+let color = LS.get('rc_color', '#1f3fbf');
+let presets = LS.get('rc_presets', '입주청소, 이사청소, 거주청소, 사무실청소, 계단청소, 건물관리, 외벽청소, 유리창청소, 준공청소, 에어컨청소, 소독방역, 폐기물처리, 식대, 유류대');
+let hist = LS.get('rc_history', []);
+const prof = () => profiles.find(p => p.id === curPid) || profiles[0];
+
+/* ===================== 상태 ===================== */
+const today = () => { const d = new Date(); d.setMinutes(d.getMinutes() - d.getTimezoneOffset()); return d.toISOString().slice(0,10); };
+function blankDoc(){ return { id:null, no:'', customer:'', date:today(), kind:'buyer', mode:'영수', memo:'', items:[{md:'', name:'', qty:'1', price:''}] }; }
+let doc = LS.get('rc_draft', null) || blankDoc();
+
+const $ = s => document.querySelector(s);
+const num = v => { const n = parseInt(String(v).replace(/[^\d-]/g,''), 10); return isNaN(n) ? 0 : n; };
+const won = n => n.toLocaleString('ko-KR');
+const lineAmt = it => num(it.qty || 0) * num(it.price || 0);
+const total = () => doc.items.reduce((s, it) => s + lineAmt(it), 0);
+
+function korWon(n){
+  if(!n) return '';
+  const d = ['','일','이','삼','사','오','육','칠','팔','구'], u = ['','십','백','천'], big = ['','만','억','조'];
+  let s = '', g = 0;
+  while(n > 0){
+    const part = n % 10000; n = Math.floor(n / 10000);
+    if(part){ let p = '', x = part;
+      for(let i = 0; i < 4 && x; i++){ const k = x % 10; if(k) p = d[k] + u[i] + p; x = Math.floor(x/10); }
+      s = p + big[g] + s; }
+    g++;
+  }
+  return '금 ' + s + '원정';
+}
+
+/* ===================== 작성 UI ===================== */
+function renderItems(){
+  const box = $('#items'); box.innerHTML = '';
+  doc.items.forEach((it, i) => {
+    const el = document.createElement('div'); el.className = 'item';
+    el.innerHTML = `<span class="num">${i+1}</span>
+      ${doc.items.length > 1 ? '<button class="del" aria-label="삭제">×</button>' : ''}
+      <div class="row mb" style="margin-top:6px">
+        <div style="flex:2.2"><label>품목</label><input data-k="name" list="presetList" value="${esc(it.name)}" placeholder="예) 입주청소"></div>
+        <div style="flex:1"><label>월일</label><input data-k="md" value="${esc(it.md)}" placeholder="${mdOf(doc.date)}" inputmode="numeric"></div>
+      </div>
+      <div class="row">
+        <div style="flex:1"><label>수량</label><input data-k="qty" value="${esc(it.qty)}" inputmode="numeric"></div>
+        <div style="flex:2"><label>단가</label><input data-k="price" value="${it.price ? won(num(it.price)) : ''}" inputmode="numeric" placeholder="0"></div>
+      </div>
+      <div class="amt">금액 <b>${won(lineAmt(it))}</b>원</div>`;
+    el.querySelectorAll('input').forEach(inp => {
+      inp.addEventListener('input', () => {
+        const k = inp.dataset.k;
+        if(k === 'price'){ const raw = num(inp.value); inp.value = raw ? won(raw) : ''; it.price = raw ? String(raw) : ''; }
+        else if(k === 'qty'){ it.qty = inp.value.replace(/[^\d]/g,''); inp.value = it.qty; }
+        else it[k] = inp.value;
+        el.querySelector('.amt b').textContent = won(lineAmt(it));
+        changed();
+      });
+    });
+    const del = el.querySelector('.del');
+    if(del) del.onclick = () => { doc.items.splice(i,1); renderItems(); changed(); };
+    box.appendChild(el);
+  });
+}
+const esc = s => String(s ?? '').replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const mdOf = d => { if(!d) return ''; const [,m,dd] = d.split('-'); return `${+m}/${+dd}`; };
+
+function bindForm(){
+  $('#customer').value = doc.customer; $('#date').value = doc.date; $('#no').value = doc.no; $('#memo').value = doc.memo;
+  setSeg('#kindSeg', doc.kind); setSeg('#modeSeg', doc.mode);
+  renderItems(); changed(false);
+}
+['customer','date','no','memo'].forEach(k => $('#'+k).addEventListener('input', e => { doc[k] = e.target.value; if(k==='date') renderItems(); changed(); }));
+function setSeg(sel, v){ document.querySelectorAll(sel+' button').forEach(b => b.classList.toggle('on', b.dataset.v === v)); }
+function segBind(sel, fn){ document.querySelectorAll(sel+' button').forEach(b => b.onclick = () => { setSeg(sel, b.dataset.v); fn(b.dataset.v); }); }
+segBind('#kindSeg', v => { doc.kind = v; changed(); });
+segBind('#modeSeg', v => { doc.mode = v; changed(); });
+$('#addItem').onclick = () => { doc.items.push({md:'', name:'', qty:'1', price:''}); renderItems(); changed(); const ins = document.querySelectorAll('#items input[data-k=name]'); ins[ins.length-1].focus(); };
+
+let drawTimer;
+function changed(save = true){
+  const t = total();
+  $('#sumTxt').textContent = '₩' + won(t);
+  $('#sumKor').textContent = korWon(t);
+  if(save) LS.set('rc_draft', doc);
+  clearTimeout(drawTimer); drawTimer = setTimeout(draw, 60);
+}
+
+/* ===================== 영수증 그리기 (인쇄 양식) ===================== */
+const W = 1000;               // 출력 해상도 기준 폭(px)
+const FONT = '"Noto Sans KR","Apple SD Gothic Neo","Malgun Gothic",sans-serif';
+let stampImg = null;
+
+function loadStamp(){
+  return new Promise(res => {
+    const s = prof().stamp; if(!s){ stampImg = null; return res(); }
+    const im = new Image(); im.onload = () => { stampImg = im; res(); }; im.onerror = () => { stampImg = null; res(); }; im.src = s;
+  });
+}
+
+function buildCanvas(scale = 2){
+  const p = prof();
+  const MIN_ROWS = 12;
+  const rows = Math.max(MIN_ROWS, doc.items.length);
+  const L = 40, R = W - 40;
+  const titleH = 120, noH = 46, supRow = 66, hdrH = 50, valH = 54, msgH = 50, itemHdrH = 50, itemH = 50, sumH = 58, footH = p.tel ? 54 : 30;
+  const H = 40 + titleH + noH + supRow*4 + hdrH + valH + msgH + itemHdrH + itemH*rows + sumH + footH + 30;
+
+  const cv = document.createElement('canvas'); cv.width = W*scale; cv.height = H*scale;
+  const c = cv.getContext('2d'); c.scale(scale, scale);
+  c.fillStyle = '#fff'; c.fillRect(0,0,W,H);
+  c.strokeStyle = color; c.fillStyle = color; c.textBaseline = 'middle'; c.lineJoin = 'miter';
+
+  const line = (x1,y1,x2,y2,w=1.4) => { c.lineWidth = w; c.beginPath(); c.moveTo(x1,y1); c.lineTo(x2,y2); c.stroke(); };
+  const rect = (x,y,w,h,lw=1.4) => { c.lineWidth = lw; c.strokeRect(x,y,w,h); };
+  // 칸 너비에 맞게 자동 축소되는 글자
+  const text = (s, x, y, {size=22, weight=400, align='center', maxW=9999, fill=color, spacing=0} = {}) => {
+    s = String(s ?? ''); if(!s) return;
+    let fs = size;
+    c.font = `${weight} ${fs}px ${FONT}`;
+    const meas = () => c.measureText(s).width + spacing*(s.length-1);
+    while(meas() > maxW && fs > 10){ fs -= 1; c.font = `${weight} ${fs}px ${FONT}`; }
+    c.fillStyle = fill;
+    if(!spacing){ c.textAlign = align; c.fillText(s, x, y); return; }
+    const w = meas(); let sx = align === 'center' ? x - w/2 : align === 'right' ? x - w : x;
+    c.textAlign = 'left';
+    for(const ch of s){ c.fillText(ch, sx, y); sx += c.measureText(ch).width + spacing; }
+  };
+  const vtext = (s, x, yTop, h, size=22) => { // 세로쓰기 (공급자, 성명, 종목)
+    const chars = [...s]; const step = Math.min(h / chars.length, size*1.35);
+    const start = yTop + h/2 - step*(chars.length-1)/2;
+    chars.forEach((ch,i) => text(ch, x, start + step*i, {size, weight:500}));
+  };
+
+  let y = 40;
+  const top = y;
+  // ── 제목
+  const kindTxt = doc.kind === 'seller' ? '(공급자용)' : '(공급받는자용)';
+  text('영 수 증', W/2 + 40, y + titleH/2 + 4, {size:62, weight:900, spacing:6, align:'right'});
+  text(kindTxt, W/2 + 56, y + titleH/2 + 14, {size:26, weight:700, align:'left'});
+  y += titleH;
+  // ── NO / 귀하
+  text('NO.' + (doc.no ? ' ' + doc.no : ''), L + 8, y + noH/2, {size:22, weight:500, align:'left', maxW:300});
+  const cust = (doc.customer || '').trim();
+  text((cust ? cust + '  ' : '') + '귀 하', R - 10, y + noH/2, {size: cust ? 26 : 22, weight: cust ? 700 : 500, align:'right', maxW:560, fill: color});
+  y += noH;
+
+  // ── 공급자 블록
+  const supTop = y, c0 = L, c1 = L + 62, c2 = L + 232, cS = L + 600, cS2 = L + 646;
+  rect(L, supTop, R-L, supRow*4, 3);
+  line(c1, supTop, c1, supTop + supRow*4, 1.4);
+  vtext('공급자', (c0+c1)/2, supTop, supRow*4, 26);
+  for(let i = 1; i < 4; i++) line(c1, supTop + supRow*i, R, supTop + supRow*i);
+  line(c2, supTop, c2, supTop + supRow*4);
+  const labels = [['사업자','등록번호'], ['상호'], ['사업장','소재지'], ['업태']];
+  labels.forEach((lb, i) => {
+    const cy = supTop + supRow*i + supRow/2;
+    if(lb.length === 2){ text(lb[0], (c1+c2)/2, cy - 13, {size:22, weight:500}); text(lb[1], (c1+c2)/2, cy + 14, {size:22, weight:500}); }
+    else text(lb[0], (c1+c2)/2, cy, {size:22, weight:500, spacing:10});
+  });
+  // 상호/성명, 업태/종목 칸 나누기
+  [1,3].forEach(i => { line(cS, supTop + supRow*i, cS, supTop + supRow*(i+1)); line(cS2, supTop + supRow*i, cS2, supTop + supRow*(i+1)); });
+  vtext('성명', (cS+cS2)/2, supTop + supRow, supRow, 21);
+  vtext('종목', (cS+cS2)/2, supTop + supRow*3, supRow, 21);
+  // 값
+  const vy = i => supTop + supRow*i + supRow/2;
+  text(p.bizno, (c2+R)/2, vy(0), {size:28, weight:500, maxW:R-c2-30, spacing:1});
+  text(p.name, (c2+cS)/2, vy(1), {size:27, weight:700, maxW:cS-c2-24});
+  text(p.owner, (cS2+R)/2 - 20, vy(1), {size:26, weight:500, maxW:R-cS2-60, spacing:p.owner.length<=3?8:0});
+  text(p.addr, (c2+R)/2, vy(2), {size:23, weight:400, maxW:R-c2-30});
+  text(p.type, (c2+cS)/2, vy(3), {size:24, weight:400, maxW:cS-c2-24});
+  text(p.item, (cS2+R)/2, vy(3), {size:24, weight:400, maxW:R-cS2-24});
+  const stampPos = {x: R - 78, y: vy(1)};  // 성명 끝에 걸치게
+  y = supTop + supRow*4;
+
+  // ── 작성년월일 / 공급대가 총액 / 비고
+  const k1 = L + 232, k2 = R - 170;
+  rect(L, y, R-L, hdrH + valH, 3);
+  line(L, y + hdrH, R, y + hdrH); line(k1, y, k1, y + hdrH + valH); line(k2, y, k2, y + hdrH + valH);
+  text('작성년월일', (L+k1)/2, y + hdrH/2, {size:23, weight:500});
+  text('공급대가 총액', (k1+k2)/2, y + hdrH/2, {size:23, weight:500, spacing:2});
+  text('비 고', (k2+R)/2, y + hdrH/2, {size:23, weight:500, spacing:4});
+  const dt = doc.date ? doc.date.replace(/-/g, '.') : '';
+  text(dt, (L+k1)/2, y + hdrH + valH/2, {size:25, weight:500, fill:'#111'});
+  text('₩', k1 + 16, y + hdrH + valH/2, {size:25, weight:700, align:'left', fill:'#111'});
+  text(won(total()), k2 - 16, y + hdrH + valH/2, {size:30, weight:700, align:'right', fill:'#111'});
+  text(doc.memo, (k2+R)/2, y + hdrH + valH/2, {size:20, maxW:R-k2-14, fill:'#111'});
+  y += hdrH + valH;
+
+  // ── 위 금액을 영수(청구)함.
+  rect(L, y, R-L, msgH, 3);
+  const isRecv = doc.mode !== '청구';
+  text(`위 금액을 ${isRecv ? '영수' : '청구'}함.`, W/2, y + msgH/2, {size:24, weight:700, spacing:3});
+  y += msgH;
+
+  // ── 품목 표
+  const cols = [L, L+120, L+400, L+500, L+700, R];
+  const tableTop = y;
+  rect(L, tableTop, R-L, itemHdrH + itemH*rows + sumH, 3);
+  line(L, y + itemHdrH, R, y + itemHdrH, 2);
+  ['월일','품 목','수량','단 가','금 액'].forEach((h, i) => text(h, (cols[i]+cols[i+1])/2, y + itemHdrH/2, {size:23, weight:700, spacing:2}));
+  y += itemHdrH;
+  for(let r = 0; r < rows; r++){
+    if(r) line(L, y, R, y, 1);
+    const it = doc.items[r];
+    if(it && (it.name || num(it.price))){
+      const cy = y + itemH/2, ink = '#111';
+      text(it.md || mdOf(doc.date), (cols[0]+cols[1])/2, cy, {size:22, maxW:cols[1]-cols[0]-12, fill:ink});
+      text(it.name, (cols[1]+cols[2])/2, cy, {size:23, maxW:cols[2]-cols[1]-16, fill:ink});
+      text(it.qty, (cols[2]+cols[3])/2, cy, {size:23, maxW:cols[3]-cols[2]-12, fill:ink});
+      text(it.price ? won(num(it.price)) : '', cols[4]-14, cy, {size:23, align:'right', maxW:cols[4]-cols[3]-24, fill:ink});
+      text(won(lineAmt(it)), cols[5]-14, cy, {size:23, align:'right', maxW:cols[5]-cols[4]-24, fill:ink});
+    }
+    y += itemH;
+  }
+  // 세로 칸선
+  for(let i = 1; i < 5; i++) line(cols[i], tableTop, cols[i], y, 1.2);
+  // 합계
+  line(L, y, R, y, 2.6);
+  line(cols[3], y, cols[3], y + sumH, 1.2); // 단가 칸 기준으로 ₩
+  text('합', (cols[0]+cols[1])/2 + 40, y + sumH/2, {size:25, weight:700});
+  text('계', (cols[2]+cols[3])/2 - 30, y + sumH/2, {size:25, weight:700});
+  text('₩', cols[3] + 16, y + sumH/2, {size:26, weight:700, align:'left', fill:'#111'});
+  text(won(total()), R - 14, y + sumH/2, {size:30, weight:900, align:'right', fill:'#111'});
+  y += sumH;
+  // 바깥 테두리 덧씌우기 (진하게)
+  rect(L, supTop, R-L, y - supTop, 3.4);
+
+  // ── 하단
+  if(p.tel){ text(`문의 ${p.tel}`, R, y + 28, {size:19, align:'right', fill:'#666'}); }
+  text(korWon(total()), L, y + 28, {size:19, align:'left', fill:'#666'});
+
+  // ── 도장 (인주 느낌: multiply)
+  if(stampImg){
+    const sz = 108;
+    c.save(); c.globalCompositeOperation = 'multiply'; c.globalAlpha = .92;
+    c.translate(stampPos.x, stampPos.y); c.rotate(-4 * Math.PI/180);
+    c.drawImage(stampImg, -sz/2, -sz/2, sz, sz); c.restore();
+  }
+  return cv;
+}
+
+async function draw(){
+  await fontsReady;
+  const cv = buildCanvas(1.4);
+  const pv = $('#preview'); pv.width = cv.width; pv.height = cv.height;
+  pv.getContext('2d').drawImage(cv, 0, 0);
+}
+
+/* ===================== 내보내기 ===================== */
+function fileName(){
+  const c = (doc.customer || '영수증').replace(/[\\/:*?"<>|\s]+/g, '_');
+  return `영수증_${(doc.date||'').replace(/-/g,'')}_${c}.png`;
+}
+function validate(){
+  if(!doc.items.some(it => it.name && num(it.price))){ toast('품목과 단가를 입력해 주세요'); return false; }
+  return true;
+}
+async function makeBlob(){ await fontsReady; const cv = buildCanvas(2); return new Promise(r => cv.toBlob(r, 'image/png')); }
+
+$('#shareBtn').onclick = async () => {
+  if(!validate()) return;
+  const blob = await makeBlob(); saveHistory(true);
+  const file = new File([blob], fileName(), {type:'image/png'});
+  if(navigator.canShare && navigator.canShare({files:[file]})){
+    try{ await navigator.share({files:[file], title:'영수증', text:`${prof().name} 영수증 (₩${won(total())})`}); }
+    catch(e){ if(e.name !== 'AbortError') download(blob); }
+  } else { download(blob); toast('이미지를 저장했습니다. 카톡에서 사진으로 보내 주세요'); }
+};
+$('#saveBtn').onclick = async () => { if(!validate()) return; const b = await makeBlob(); saveHistory(true); download(b); };
+$('#printBtn').onclick = async () => {
+  if(!validate()) return;
+  const b = await makeBlob(); saveHistory(true);
+  const url = URL.createObjectURL(b);
+  $('#printImg').innerHTML = `<img src="${url}" style="width:100%">`;
+  setTimeout(() => window.print(), 300);
+};
+function download(blob){
+  const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = fileName();
+  document.body.appendChild(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(a.href), 5000);
+}
+$('#resetBtn').onclick = () => { if(!confirm('새 영수증을 작성할까요?')) return; doc = blankDoc(); LS.set('rc_draft', doc); bindForm(); window.scrollTo(0,0); };
+
+/* ===================== 기록 ===================== */
+function nextNo(){
+  const y = (doc.date || today()).slice(0,4);
+  const n = hist.filter(h => (h.no||'').startsWith(y + '-')).map(h => num(h.no.split('-')[1])).reduce((a,b) => Math.max(a,b), 0);
+  return `${y}-${String(n+1).padStart(4,'0')}`;
+}
+function saveHistory(silent){
+  if(!doc.no){ doc.no = nextNo(); $('#no').value = doc.no; draw(); }
+  const rec = JSON.parse(JSON.stringify(doc)); rec.pid = curPid; rec.total = total(); rec.ts = Date.now();
+  if(!rec.id) rec.id = doc.id = 'r' + Date.now();
+  hist = [rec, ...hist.filter(h => h.id !== rec.id)].slice(0, 300);
+  LS.set('rc_history', hist); LS.set('rc_draft', doc);
+  if(!silent) toast('저장했습니다');
+  renderHistory();
+}
+function renderHistory(){
+  const box = $('#histList');
+  if(!hist.length){ box.innerHTML = '<p class="hint">아직 발행한 영수증이 없습니다.</p>'; return; }
+  box.innerHTML = hist.map(h => {
+    const p = profiles.find(x => x.id === h.pid);
+    return `<div class="hist" data-id="${h.id}">
+      <div class="t"><b>${esc(h.customer || '(받는 분 없음)')}</b>
+      <span>${esc(h.date)} · ${esc(h.items.map(i=>i.name).filter(Boolean).join(', '))}${p ? ' · ' + esc(p.name) : ''}</span></div>
+      <div class="m">₩${won(h.total)}</div>
+      <button data-act="open">열기</button><button data-act="copy">복사</button></div>`;
+  }).join('');
+  box.querySelectorAll('.hist button').forEach(b => b.onclick = async () => {
+    const h = hist.find(x => x.id === b.closest('.hist').dataset.id);
+    doc = JSON.parse(JSON.stringify(h)); delete doc.pid; delete doc.total; delete doc.ts;
+    if(b.dataset.act === 'copy'){ doc.id = null; doc.no = ''; doc.date = today(); doc.items.forEach(i => i.md = ''); }
+    if(h.pid && profiles.some(p => p.id === h.pid)){ curPid = h.pid; LS.set('rc_cur', curPid); fillProfileSel(); await loadStamp(); }
+    LS.set('rc_draft', doc); bindForm(); showTab('write');
+    toast(b.dataset.act === 'copy' ? '같은 내용으로 새 영수증을 만들었습니다' : '불러왔습니다');
+  });
+}
+
+/* ===================== 설정 ===================== */
+function fillProfileSel(){
+  $('#profileSel').innerHTML = profiles.map(p => `<option value="${p.id}" ${p.id===curPid?'selected':''}>${esc(p.name || '(이름 없음)')}</option>`).join('');
+}
+$('#profileSel').onchange = async e => { curPid = e.target.value; LS.set('rc_cur', curPid); fillSettings(); await loadStamp(); draw(); };
+const PF = ['bizno','name','owner','addr','type','item','tel'];
+function fillSettings(){
+  const p = prof(); PF.forEach(k => $('#p_'+k).value = p[k] || '');
+  $('#stampPv').innerHTML = p.stamp ? `<img src="${p.stamp}">` : '<span style="font-size:12px;color:var(--sub)">없음</span>';
+  setSeg('#colorSeg', color); $('#presets').value = presets;
+}
+PF.forEach(k => $('#p_'+k).addEventListener('input', e => {
+  let v = e.target.value;
+  if(k === 'bizno'){ const d = v.replace(/\D/g,'').slice(0,10); v = d.length > 5 ? `${d.slice(0,3)}-${d.slice(3,5)}-${d.slice(5)}` : d.length > 3 ? `${d.slice(0,3)}-${d.slice(3)}` : d; e.target.value = v; }
+  prof()[k] = v; LS.set('rc_profiles', profiles); if(k === 'name') fillProfileSel(); draw();
+}));
+$('#newProfile').onclick = () => {
+  const p = {id:'p'+Date.now(), bizno:'', name:'새 공급자', owner:'', addr:'', type:'', item:'', tel:'', stamp:''};
+  profiles.push(p); curPid = p.id; LS.set('rc_profiles', profiles); LS.set('rc_cur', curPid);
+  fillProfileSel(); fillSettings(); loadStamp().then(draw); $('#p_name').select();
+};
+$('#delProfile').onclick = () => {
+  if(profiles.length < 2) return toast('공급자는 최소 1개가 있어야 합니다');
+  if(!confirm(`'${prof().name}' 공급자를 삭제할까요?`)) return;
+  profiles = profiles.filter(p => p.id !== curPid); curPid = profiles[0].id;
+  LS.set('rc_profiles', profiles); LS.set('rc_cur', curPid); fillProfileSel(); fillSettings(); loadStamp().then(draw);
+};
+segBind('#colorSeg', v => { color = v; LS.set('rc_color', v); draw(); });
+$('#presets').addEventListener('input', e => { presets = e.target.value; LS.set('rc_presets', presets); fillPresets(); });
+function fillPresets(){ $('#presetList').innerHTML = presets.split(',').map(s => s.trim()).filter(Boolean).map(s => `<option value="${esc(s)}">`).join(''); }
+
+// 도장 불러오기: 흰 배경 제거 → 인주색 보정 → 도장 부분만 자르기
+$('#stampBtn').onclick = () => $('#stampFile').click();
+$('#stampDel').onclick = () => { prof().stamp = ''; LS.set('rc_profiles', profiles); fillSettings(); loadStamp().then(draw); };
+$('#stampFile').onchange = e => {
+  const f = e.target.files[0]; if(!f) return;
+  const im = new Image();
+  im.onload = () => {
+    const max = 500, s = Math.min(1, max / Math.max(im.width, im.height));
+    const w = Math.round(im.width*s), h = Math.round(im.height*s);
+    const cv = document.createElement('canvas'); cv.width = w; cv.height = h;
+    const c = cv.getContext('2d'); c.drawImage(im, 0, 0, w, h);
+    if($('#autoClean').checked){
+      const d = c.getImageData(0,0,w,h), a = d.data;
+      let minX=w, minY=h, maxX=0, maxY=0;
+      for(let i = 0; i < a.length; i += 4){
+        const r=a[i], g=a[i+1], b=a[i+2];
+        const red = Math.max(0, r - (g+b)/2);          // 붉은 정도
+        const dark = 255 - (r+g+b)/3;                    // 어두운 정도(검정 도장 대비)
+        let ink = Math.min(1, Math.max(red*2.2, dark*1.6) / 255);
+        if(ink < .12) ink = 0;
+        const alpha = Math.round(ink * (a[i+3]));
+        a[i]=205; a[i+1]=30; a[i+2]=60; a[i+3]=alpha;
+        if(alpha > 40){ const p=i/4, x=p%w, y=(p-x)/w; if(x<minX)minX=x; if(x>maxX)maxX=x; if(y<minY)minY=y; if(y>maxY)maxY=y; }
+      }
+      c.putImageData(d,0,0);
+      if(maxX > minX && maxY > minY){
+        const sz = Math.max(maxX-minX, maxY-minY) + 8;
+        const cx = (minX+maxX)/2, cy = (minY+maxY)/2;
+        const out = document.createElement('canvas'); out.width = out.height = 300;
+        out.getContext('2d').drawImage(cv, cx - sz/2, cy - sz/2, sz, sz, 0, 0, 300, 300);
+        prof().stamp = out.toDataURL('image/png');
+      } else prof().stamp = cv.toDataURL('image/png');
+    } else prof().stamp = cv.toDataURL('image/png');
+    LS.set('rc_profiles', profiles); fillSettings(); loadStamp().then(draw); toast('도장을 등록했습니다');
+    e.target.value = '';
+  };
+  im.src = URL.createObjectURL(f);
+};
+
+/* ===================== 탭 / 기타 ===================== */
+function showTab(t){
+  document.querySelectorAll('nav.tabs button').forEach(b => b.classList.toggle('on', b.dataset.tab === t));
+  ['write','hist','settings'].forEach(x => $('#tab-'+x).classList.toggle('hidden', x !== t));
+  $('#bar').classList.toggle('hidden', t !== 'write');
+  if(t === 'hist') renderHistory();
+  if(t === 'settings') fillSettings();
+  window.scrollTo(0,0);
+}
+document.querySelectorAll('nav.tabs button').forEach(b => b.onclick = () => showTab(b.dataset.tab));
+let tt; function toast(m){ const t = $('#toast'); t.textContent = m; t.classList.add('on'); clearTimeout(tt); tt = setTimeout(() => t.classList.remove('on'), 2200); }
+
+const fontsReady = (async () => {
+  try{ await Promise.race([Promise.all([400,500,700,900].map(w => document.fonts.load(`${w} 20px "Noto Sans KR"`, '영수증가'))), new Promise(r => setTimeout(r, 2500))]); }catch(e){}
+})();
+
+fillProfileSel(); fillPresets(); bindForm();
+loadStamp().then(draw);
+if('serviceWorker' in navigator) window.addEventListener('load', () => navigator.serviceWorker.register('sw.js').catch(()=>{}));
+</script>
+</body>
+</html>
