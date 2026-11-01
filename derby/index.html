@@ -872,6 +872,8 @@ class RaceEngine{
     if(a.fin && !this.slowLock) focus=a.pos-1.2;   // 우승마 따라가는 위너 캠
     if(!this.slowLock && this.shot && this.shot.r && this.real<this.shot.end) focus=this.shot.r.pos-1.4;   // 클로즈업 대상 말로 카메라 이동
     const pcx=this.camX;
+    // 1등(선두마)은 항상 화면 안에: 선두 코끝이 화면 오른쪽 가장자리 안쪽에 오도록 초점 보정
+    { const half=(W*0.40)/(this.ppm*sZ(a.lane)*Math.max(1,this.zoomT)); if(!a.fin) focus=Math.max(focus,a.pos-half+1.0); }
     // 말들과 같은 속도로 함께 이동(피드포워드) + 남은 오차만 부드럽게 보정 → 빨리감기에서도 카메라가 뒤처지지 않음
     this.camX+=mean>0?(this.runners.reduce((q,r)=>q+r.v,0)/this.runners.length)*simDt:0;
     this.camX+=(focus-this.camX)*Math.min(1,dt*(this.slowLock?5:2.6));
