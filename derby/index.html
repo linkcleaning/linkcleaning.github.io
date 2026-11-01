@@ -2524,15 +2524,14 @@ function RpsModal({onClose,onReward}){
   const [day,setDay]=useState(ld);
   const [streak,setStreak]=useState(0);
   const [active,setActive]=useState(false);       // 도전 진행 중
-  const [phase,setPhase]=useState('idle');          // idle | roll | show
+  const [phase,setPhase]=useState('idle');          // idle(대기) | spin(돌아가는 중, 버튼 누르기) | stop(멈추는 중) | show(결과)
   const [res,setRes]=useState(null);                // {me,cpu,r:'win'|'lose'|'draw'}
   const [msg,setMsg]=useState('▶ START를 누르면 도전이 시작돼요!');
   const [pop,setPop]=useState(null);
   const [nudge,setNudge]=useState(0);
-  const startRun=()=>{ if(active||phase==='roll') return; Sound.init();
-    if(left<=0){ setMsg('오늘 도전 횟수를 다 썼어요. 내일 또 만나요!'); Sound.miss(); return; }
-    setActive(true); setStreak(0); setRes(null); st.current.res=null; setPhase('idle'); setDay(d=>({...d,runs:d.runs+1})); Sound.coin(); setMsg('가위·바위·보 중 하나를 고르세요!'); };
-  const top=useRef(null), disp=useRef(null), st=useRef({cpu:1,rolling:false,res:null,t:0});
+  const startRun=()=>{ if(active) return; Sound.init();
+    setActive(true); setStreak(0); setRes(null); st.current.res=null; setDay(d=>({...d,runs:d.runs+1})); Sound.coin(); setPhase('spin'); setMsg('돌아가는 동안 가위·바위·보를 누르세요!'); };
+  const top=useRef(null), disp=useRef(null), st=useRef({idx:1,res:null,t:0});
   useEffect(()=>ls.set('sd_rps',day),[day]);
   const left=RPS_DAILY-day.runs;
   // 그리기 루프
@@ -2540,7 +2539,7 @@ function RpsModal({onClose,onReward}){
       const c=disp.current, tc=top.current; if(!c||!tc) return;
       const x=c.getContext('2d'), W=c.width, N=23, cell=W/ (N+2);
       x.fillStyle='#111'; x.fillRect(0,0,W,W);
-      const idx=S.rolling?Math.floor(S.t/(S.speed||7))%3:S.cpu, m=handMask(idx,N), col=S.res==='lose'?'#ff3b30':S.res==='win'?'#ffd43b':'#ff5a2a';
+      const idx=S.idx, m=handMask(idx,N), col=S.res==='lose'?'#ff3b30':S.res==='win'?'#ffd43b':'#ff5a2a';
       const cx=W/2, R2=(W/2-cell*0.6);
       for(let yy=0;yy<N;yy++) for(let xx=0;xx<N;xx++){ const px=cell*(xx+1.5), py=cell*(yy+1.5); if((px-cx)**2+(py-cx)**2>R2*R2) continue;
         const v=m[yy][xx], on=v===2||(v===1&&false); x.fillStyle=on?col:'#2b2b2b'; x.beginPath(); x.arc(px,py,cell*0.34,0,7); x.fill();
@@ -2551,28 +2550,33 @@ function RpsModal({onClose,onReward}){
       drawLedText(t,'WIN',TW*0.04,dot*0.6,dot,(S.res==='win'||S.res==='draw')&&blink,S.res==='draw'?'#7cf':'#ffd43b');
       drawLedText(t,'LOSE',TW*0.96-dot*24,dot*0.6,dot,(S.res==='lose'||S.res==='draw')&&blink,S.res==='draw'?'#7cf':'#ff3b30');
     }; loop(); return ()=>cancelAnimationFrame(raf); },[]);
-  // 대기 중엔 천천히 손 모양이 바뀜
-  useEffect(()=>{ if(phase!=='idle') return; const t=setInterval(()=>{ st.current.cpu=(st.current.cpu+1)%3; },1400); return ()=>clearInterval(t); },[phase]);
+  // 대기 중엔 천천히, 도전 중엔 빙글빙글 돌아감
+  useEffect(()=>{ if(phase==='idle'){ const t=setInterval(()=>{ st.current.idx=(st.current.idx+1)%3; },1400); return ()=>clearInterval(t); }
+    if(phase==='spin'){ let n=0; const t=setInterval(()=>{ st.current.idx=(st.current.idx+1)%3; Sound.beep(520+(n++%3)*160); },170); return ()=>clearInterval(t); } },[phase]);
+  // 결과를 보여준 뒤 이어서 다음 판 돌리기
+  useEffect(()=>{ if(phase!=='show'||!active) return; const t=setTimeout(()=>{ setRes(null); st.current.res=null; setPhase('spin'); setMsg(m=>m); },1600); return ()=>clearTimeout(t); },[phase,active]);
   const play=i=>{
-    if(phase==='roll') return;
     Sound.init(); const base=streak;
-    if(!active){ setMsg(left>0?'먼저 ▶ START 버튼을 눌러 주세요!':'오늘 도전 횟수를 다 썼어요. 내일 또 만나요!'); setNudge(x=>x+1); Sound.beep(300); return; }
-    setPhase('roll'); setRes(null); st.current.res=null; st.current.rolling=true; setMsg(`${RPS_HANDS[i].k}! 과연...`); const leftNow=left;
-    let n=0; st.current.speed=7; const tick=setInterval(()=>{ Sound.beep(520+(n%3)*160); n++; },180);
-    setTimeout(()=>{ st.current.speed=13; },1300);
-    setTimeout(()=>{ clearInterval(tick); const cpu=Math.floor(Math.random()*3); st.current.rolling=false; st.current.cpu=cpu;
+    if(!active){ setMsg('먼저 ▶ START 버튼을 눌러 주세요!'); setNudge(x=>x+1); Sound.beep(300); return; }
+    if(phase!=='spin') return;
+    setPhase('stop'); setMsg(`${RPS_HANDS[i].k}! 과연...`);
+    const cpu=Math.floor(Math.random()*3);
+    // 천천히 멈추면서 기계의 손에 딱 정지
+    const delays=[230,300,380,480]; let acc=0;
+    delays.forEach((d,k)=>{ acc+=d; setTimeout(()=>{ st.current.idx=k===delays.length-1?cpu:(st.current.idx+1)%3; Sound.beep(k===delays.length-1?880:520+k*90); },acc); });
+    setTimeout(()=>{
       const r=cpu===i?'draw':((i+1)%3===cpu? 'lose':'win');   // 가위(0)<바위(1)<보(2)<가위
       // 가위0 vs 바위1: 짐, 바위1 vs 보2: 짐, 보2 vs 가위0: 짐
       st.current.res=r; setRes({me:i,cpu,r}); setPhase('show');
-      if(r==='draw'){ Sound.beep(400); setMsg('비겼어요! 한 번 더!'); return; }
-      if(r==='lose'){ Sound.miss(); setActive(false); setMsg(`아쉽다! ${base}연승에서 멈췄어요.`); setDay(d=>({...d,best:Math.max(d.best,base)})); return; }
+      if(r==='draw'){ Sound.beep(400); setMsg('비겼어요! 다시 돌아갑니다!'); return; }
+      if(r==='lose'){ Sound.miss(); setActive(false); setTimeout(()=>setPhase(ph=>ph==='show'?'idle':ph),2500); setMsg(`아쉽다! ${base}연승에서 멈췄어요.`); setDay(d=>({...d,best:Math.max(d.best,base)})); return; }
       const ns=base+1; setStreak(ns); setDay(d=>({...d,best:Math.max(d.best,ns)}));
       const prize=RPS_PRIZE[ns];
       if(prize){ onReward(prize); Sound.jackpot(ns>=8); setPop({n:ns,p:prize}); setTimeout(()=>setPop(null),1800); }
       else Sound.coin();
-      if(ns>=8){ setActive(false); setMsg('🎉 8연승 완주! 전설의 가위바위보 왕!'); }
+      if(ns>=8){ setActive(false); setTimeout(()=>setPhase(ph=>ph==='show'?'idle':ph),3000); setMsg('🎉 8연승 완주! 전설의 가위바위보 왕!'); }
       else { const nx=[3,5,8].find(k=>k>ns); setMsg(`${ns}연승! 다음 보상까지 ${nx-ns}승 (+${RPS_PRIZE[nx]} CR)`); }
-    },2100);
+    },acc+250);
   };
   return (
     <div className="fixed inset-0 overflow-y-auto" style={{zIndex:60,background:'rgba(0,0,0,0.9)'}} onClick={onClose}>
@@ -2598,13 +2602,13 @@ function RpsModal({onClose,onReward}){
           {res && <div className="text-center text-[12px] text-blue-200/80">나: {RPS_HANDS[res.me].e} {RPS_HANDS[res.me].k} &nbsp;vs&nbsp; 기계: {RPS_HANDS[res.cpu].e} {RPS_HANDS[res.cpu].k}</div>}
           {/* 버튼 */}
           <div className="grid grid-cols-3 gap-3 mt-3 px-1">{RPS_HANDS.map((h,i)=>
-            <button key={i} disabled={phase==='roll'} onPointerDown={e=>{ e.preventDefault(); play(i); }} className="flex flex-col items-center select-none">
+            <button key={i} onPointerDown={e=>{ e.preventDefault(); play(i); }} className="flex flex-col items-center select-none">
               <span className="px-2 py-0.5 rounded-md text-[10px] font-black mb-1" style={{background:h.ring,color:'#fff'}}>CLICK!</span>
               <span className={`rounded-full flex flex-col items-center justify-center active:translate-y-1 transition-transform`} style={{width:86,height:86,background:h.c,boxShadow:`0 8px 0 ${h.ring}, 0 12px 18px rgba(0,0,0,.6), inset 0 6px 10px rgba(255,255,255,.35)`}}>
                 <span style={{fontSize:30,lineHeight:1}}>{h.e}</span><span className="text-[14px] font-black text-white" style={{textShadow:'0 2px 0 rgba(0,0,0,.4)'}}>{h.k}</span></span>
             </button>)}</div>
           <div className="flex justify-between text-[11px] text-blue-200/70 mt-4 px-1"><span>오늘 도전 <b className="text-white">{day.runs}</b>회</span><span>오늘 최고 {day.best}연승</span></div>
-          <div className="text-[10.5px] text-blue-200/50 mt-1 px-1">START를 누르면 도전 시작! 질 때까지(또는 8연승까지) 계속, 비기면 다시 냅니다.</div>
+          <div className="text-[10.5px] text-blue-200/50 mt-1 px-1">START → 전광판이 돌아가요 → 가위·바위·보를 누르면 멈춰요! 질 때까지(최대 8연승) 계속돼요.</div>
         </div>
       </div>
     </div>);
