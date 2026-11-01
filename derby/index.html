@@ -1636,7 +1636,8 @@ function Paddock({setup,credit,bets,setBets,onStart,onQuiz,onEvent,onOwner,stabl
   const addBet=()=>{
     Sound.init();
     if(sel.length!==TYPE_INFO[type].need){ setMsg(type==='QUIN'?'복승식은 말 2마리를 골라 주세요':'말을 1마리 골라 주세요'); return; }
-    if(amt>avail||amt<=0){ setMsg('CREDIT이 부족합니다'); return; }
+    if(amt<MIN_BET){ setMsg(`마권은 1장에 최소 ${MIN_BET} CR이에요`); return; }
+    if(amt>avail){ setMsg('CREDIT이 부족합니다'); return; }
     const s=type==='QUIN'?[...sel].sort((a,b)=>a-b):sel;
     setBets(b=>[...b,{id:Date.now()+Math.random(),type,sel:s,amount:amt,odds:curOdds}]);
     Sound.coin(); setMsg(''); setSel([]);
@@ -1644,11 +1645,11 @@ function Paddock({setup,credit,bets,setBets,onStart,onQuiz,onEvent,onOwner,stabl
   const S=setup;
   const [quick,setQuick]=useState(false);
   const tryStart=()=>{ Sound.init(); if(bets.length) onStart(); else { Sound.click(); setQuick(true); } };
-  const unit=Math.max(0,Math.min(100,Math.floor(avail/10)*10));
+  const unit=Math.max(0,Math.min(100,Math.floor(avail/10)*10)); // 빠른 마권 1장 금액 (최소 MIN_BET)
   const nos=S.horses.map(h=>h.no), bestNo=Object.keys(S.marks).map(Number).find(n=>S.marks[n]==='◎')||nos[0], secNo=Object.keys(S.marks).map(Number).find(n=>S.marks[n]==='○')||nos[1];
   const mk=(type,sel,amount)=>{ const ss=type==='QUIN'?[...sel].sort((a,b)=>a-b):sel; const od=type==='WIN'?S.odds.win[ss[0]]:type==='PLACE'?S.odds.place[ss[0]]:S.odds.quin[quinKey(ss[0],ss[1])]; return {id:Date.now()+Math.random(),type,sel:ss,amount,odds:od}; };
   const quickPick=kind=>{
-    if(unit<10) return;
+    if(unit<MIN_BET) return;
     let L=[];
     if(kind==='pro'){ L.push(mk('WIN',[bestNo],unit)); if(avail>=unit*2) L.push(mk('QUIN',[bestNo,secNo],unit)); }
     else if(kind==='safe'){ L.push(mk('PLACE',[bestNo],unit)); }
@@ -1662,7 +1663,7 @@ function Paddock({setup,credit,bets,setBets,onStart,onQuiz,onEvent,onOwner,stabl
         <div className="glass w-full max-w-md rounded-t-3xl p-4 pop" onClick={e=>e.stopPropagation()} style={{paddingBottom:'max(16px, env(safe-area-inset-bottom))'}}>
           <div className="fx-title text-xl gold text-center">🎫 마권을 사야 출주할 수 있어요!</div>
           <p className="text-center text-[13px] text-blue-200/80 mt-1">한 번 터치로 바로 사고 출발합니다 ({unit} CR씩)</p>
-          {unit<10 ? <button onClick={()=>{setQuick(false);onQuiz();}} className="w-full mt-3 py-3 rounded-xl font-black bg-gradient-to-b from-fuchsia-500 to-purple-700">🧠 CREDIT이 부족해요 — 퀴즈로 1,000 받기</button> :
+          {unit<MIN_BET ? <button onClick={()=>{setQuick(false);onQuiz();}} className="w-full mt-3 py-3 rounded-xl font-black bg-gradient-to-b from-fuchsia-500 to-purple-700">🧠 CREDIT이 부족해요 — 퀴즈로 받기 (하루 최대 5,000)</button> :
           <div className="grid grid-cols-2 gap-2 mt-3">
             <button onClick={()=>quickPick('pro')} className="rounded-2xl p-3 text-left bg-gradient-to-b from-sky-500/40 to-blue-800/40 ring-1 ring-sky-300/40"><div className="font-black">⭐ 예상지 추천</div><div className="text-[11px] text-blue-100/80 mt-0.5">◎ {S.horses.find(h=>h.no===bestNo).name} 단승 + ◎○ 복승</div></button>
             <button onClick={()=>quickPick('safe')} className="rounded-2xl p-3 text-left bg-gradient-to-b from-emerald-500/40 to-emerald-800/40 ring-1 ring-emerald-300/40"><div className="font-black">🛡️ 안전빵</div><div className="text-[11px] text-blue-100/80 mt-0.5">◎ 말 연승 (2착 안에만 들면 적중)</div></button>
@@ -1701,7 +1702,7 @@ function Paddock({setup,credit,bets,setBets,onStart,onQuiz,onEvent,onOwner,stabl
       <div className="grid grid-cols-3 gap-1.5 mt-2">
         <button onClick={()=>{Sound.init();Sound.click();onEvent();}} className="rounded-xl py-2 bg-gradient-to-b from-emerald-600 to-teal-800 text-[12.5px] font-black leading-tight">☕ 커피 이벤트<div className="text-[9.5px] font-bold opacity-80">3만·5만 CR 교환</div></button>
         <button onClick={()=>{Sound.init();Sound.click();onOwner();}} className="rounded-xl py-2 bg-gradient-to-b from-amber-500 to-orange-700 text-[12.5px] font-black leading-tight">🏇 내 구단<div className="text-[9.5px] font-bold opacity-80">{stable?`👑 ${stable.name}`:'구단주 되기'}</div></button>
-        <button onClick={()=>{Sound.init();Sound.click();onQuiz();}} className="rounded-xl py-2 bg-gradient-to-b from-fuchsia-500 to-purple-700 text-[12.5px] font-black leading-tight">🧠 퀴즈<div className="text-[9.5px] font-bold opacity-80">정답 +1,000</div></button>
+        <button onClick={()=>{Sound.init();Sound.click();onQuiz();}} className="rounded-xl py-2 bg-gradient-to-b from-fuchsia-500 to-purple-700 text-[12.5px] font-black leading-tight">🧠 퀴즈<div className="text-[9.5px] font-bold opacity-80">오늘 {fmtN(quizToday())}/5,000</div></button>
       </div>
       {/* 탭: 출전표 / 마권 구매 */}
       <div className="sticky top-[52px] z-20 mt-2 -mx-3 px-3 py-1.5 bg-[#070d1f]/90 backdrop-blur">
@@ -1744,7 +1745,7 @@ function Paddock({setup,credit,bets,setBets,onStart,onQuiz,onEvent,onOwner,stabl
             {curOdds && <span className="ml-auto font-black text-xl text-yellow-300">{curOdds.toFixed(1)}<span className="text-xs">배</span></span>}
           </div>
           <div className="grid grid-cols-5 gap-1.5 mt-2">
-            {[10,50,100,500].map(v=><button key={v} onClick={()=>{Sound.init();Sound.click();setAmt(v);}} className={`rounded-lg py-2 text-sm font-black ${amt===v?'bg-yellow-400 text-black':'bg-white/10'}`}>{v}</button>)}
+            {[MIN_BET,50,100,500].map(v=><button key={v} onClick={()=>{Sound.init();Sound.click();setAmt(v);}} className={`rounded-lg py-2 text-sm font-black ${amt===v?'bg-yellow-400 text-black':'bg-white/10'}`}>{v}</button>)}
             <button onClick={()=>{Sound.init();Sound.click();setAmt(Math.max(0,avail));}} className={`rounded-lg py-2 text-sm font-black ${amt===avail&&avail>0?'bg-yellow-400 text-black':'bg-white/10'}`}>ALL</button>
           </div>
           {curOdds && <div className="text-xs text-center text-blue-200/80 mt-1.5">적중 시 예상 환급 <b className="text-yellow-300">{fmt(amt*curOdds)}</b> CR</div>}
@@ -1753,7 +1754,7 @@ function Paddock({setup,credit,bets,setBets,onStart,onQuiz,onEvent,onOwner,stabl
         </div>
         <div className="glass rounded-2xl p-3">
           <div className="flex items-center justify-between"><h3 className="fx-title text-base">🧾 내 마권</h3><span className="text-sm">합계 <b className="text-yellow-300">{fmt(total)}</b> CR</span></div>
-          {bets.length===0 ? <p className="text-[13px] text-blue-200/60 mt-1">마권을 1장 이상 사야 출주할 수 있어요.</p> :
+          {bets.length===0 ? <p className="text-[13px] text-blue-200/60 mt-1">마권을 1장 이상 사야 출주할 수 있어요. (1장 최소 {MIN_BET} CR)</p> :
             <div className="mt-2 space-y-1.5">
               {bets.map(b=>(
                 <div key={b.id} className="flex items-center gap-1.5 bg-black/30 rounded-lg px-2 py-1.5">
@@ -1908,7 +1909,11 @@ function ResultModal({setup,result,bets,payouts,bonus,streak,ownerPrize,onNext})
 }
 
 /* ---------------- 퀴즈로 CREDIT 받기 ---------------- */
-const QUIZ_REWARD = 1000;
+const MIN_BET = 20;   // 마권 1장 최소 금액
+const QUIZ_REWARD = 1000, QUIZ_DAILY_MAX = 5000;   // 퀴즈 보상은 하루 최대 5,000 CR
+const todayKey=()=>{ const d=new Date(); return `${d.getFullYear()}-${d.getMonth()+1}-${d.getDate()}`; };
+const quizToday=()=>{ const q=ls.get('sd_quiz_day',{d:'',e:0}); return q.d===todayKey()?q.e:0; };
+const quizAdd=n=>{ const e=quizToday()+n; ls.set('sd_quiz_day',{d:todayKey(),e}); return e; };
 const QUIZ_BANK = [
   ['1착으로 들어올 말 1마리를 맞히는 마권은?','단승식',['연승식','복승식','쌍승식'],'단승식(WIN)은 1착 말 1마리만 맞히면 됩니다.'],
   ['1·2착 말 2마리를 순서와 상관없이 맞히는 마권은?','복승식',['단승식','연승식','삼복승식'],'복승식(QUINELLA)은 순서 무관 1·2착 조합입니다.'],
@@ -2003,12 +2008,14 @@ function QuizModal({setup,onClose,onReward}){
   const [earned,setEarned]=useState(0);
   const [streak,setStreak]=useState(0);
   const [time,setTime]=useState(20);
-  useEffect(()=>{ if(picked!==null) return; if(time<=0){ setPicked('__timeout'); setStreak(0); Sound.miss(); return; }
+  const [today,setToday]=useState(()=>quizToday());
+  const done=today>=QUIZ_DAILY_MAX;
+  useEffect(()=>{ if(picked!==null||done) return; if(time<=0){ setPicked('__timeout'); setStreak(0); Sound.miss(); return; }
     const t=setTimeout(()=>setTime(x=>x-1),1000); return ()=>clearTimeout(t); },[time,picked]);
   const choose=o=>{ if(picked!==null) return; Sound.init(); setPicked(o);
-    if(o===q.a){ onReward(QUIZ_REWARD); setEarned(e=>e+QUIZ_REWARD); setStreak(s=>s+1); Sound.jackpot(false); }
+    if(o===q.a){ const give=Math.min(QUIZ_REWARD,QUIZ_DAILY_MAX-quizToday()); if(give>0){ onReward(give); setToday(quizAdd(give)); setEarned(e=>e+give); } setStreak(s=>s+1); Sound.jackpot(false); }
     else { setStreak(0); Sound.miss(); } };
-  const next=()=>{ Sound.click(); setQ(nextQuestion(setup)); setPicked(null); setTime(20); };
+  const next=()=>{ Sound.click(); if(quizToday()>=QUIZ_DAILY_MAX){ onClose(); return; } setQ(nextQuestion(setup)); setPicked(null); setTime(20); };
   const ok=picked===q.a;
   return (
     <div className="fixed inset-0 z-50 bg-black/75 backdrop-blur-sm flex items-start sm:items-center justify-center p-3 overflow-y-auto">
@@ -2020,8 +2027,14 @@ function QuizModal({setup,onClose,onReward}){
         </div>
         <div className="flex justify-between text-xs text-blue-200/80 mt-1">
           <span>정답 1개당 <b className="text-yellow-300">+{fmtN(QUIZ_REWARD)} CR</b></span>
-          <span>연속 정답 {streak} · 이번에 받은 {fmtN(earned)} CR</span>
+          <span>오늘 받은 퀴즈 CREDIT <b className={done?'text-red-300':'text-yellow-300'}>{fmtN(today)}</b> / {fmtN(QUIZ_DAILY_MAX)}</span>
         </div>
+        {done && picked===null ? <div className="mt-4 rounded-2xl bg-black/30 p-4 text-center pop">
+          <div className="text-4xl">🌙</div>
+          <div className="fx-title text-xl mt-1">오늘 퀴즈 보상을 모두 받았어요!</div>
+          <p className="text-[13px] text-blue-200/80 mt-1">하루 최대 {fmtN(QUIZ_DAILY_MAX)} CR까지 받을 수 있어요.<br/>내일 다시 도전하세요!</p>
+          <button onClick={onClose} className="w-full mt-3 py-3 rounded-xl font-black bg-gradient-to-b from-yellow-300 to-orange-500 text-black">경마하러 가기</button>
+        </div> : <>
         <div className="h-1.5 rounded bg-white/10 mt-2 overflow-hidden"><div className={`h-full transition-all duration-1000 ${time<=5?'bg-red-500':'bg-emerald-400'}`} style={{width:`${(picked!==null?0:time)/20*100}%`}}/></div>
         <div className="mt-4 text-lg font-black leading-snug min-h-[56px]">{q.q}</div>
         <div className="grid gap-2 mt-3">
@@ -2036,9 +2049,10 @@ function QuizModal({setup,onClose,onReward}){
           <div className="text-sm text-blue-100/90 mt-1">{q.ex}</div>
           <div className="grid grid-cols-2 gap-2 mt-3">
             <button onClick={onClose} className="py-3 rounded-xl font-black bg-white/10">경마하러 가기</button>
-            <button onClick={next} className="py-3 rounded-xl font-black bg-gradient-to-b from-yellow-300 to-orange-500 text-black">다음 문제 ▶</button>
+            <button onClick={next} className="py-3 rounded-xl font-black bg-gradient-to-b from-yellow-300 to-orange-500 text-black">{done?'끝내기':'다음 문제 ▶'}</button>
           </div>
         </div>}
+        </>}
       </div>
     </div>
   );
