@@ -443,7 +443,10 @@ const Voice={ on:true, ok:typeof window!=='undefined'&&'speechSynthesis' in wind
     this.male = !!(this.v && MALE_RE.test(this.v.name));
   }catch(e){} },
   setVoice(name){ try{ localStorage.setItem('sd_voice',name); }catch(e){} this.pickVoice(); this.say('안녕하세요, 링크 더비 중계를 맡은 아나운서입니다!',true); },
-  unlock(){ if(!this.ok) return; try{ this.pickVoice(); const u=new SpeechSynthesisUtterance(' '); u.volume=0; u.lang='ko-KR'; speechSynthesis.speak(u); }catch(e){} },
+  // 터치(사용자 동작) 안에서 엔진을 깨움. 멈춰 있던 엔진은 cancel로 풀어 줌
+  unlock(){ if(!this.ok) return; try{ this.pickVoice(); if(!this.cur){ speechSynthesis.cancel(); } speechSynthesis.resume();
+    const u=new SpeechSynthesisUtterance('.'); u.volume=0.01; u.rate=2; u.lang='ko-KR'; speechSynthesis.speak(u); this.unlockedAt=Date.now(); }catch(e){} },
+  noVoice:false, started:0, fails:0, unlockedAt:0,
   // 자체 대기열 + 감시 타이머: iOS/크롬에서 onend가 안 오거나 cancel 직후 speak가 씹혀서 소리가 끊기는 문제 방지
   q:[], busy:false, cur:null, wd:null,
   // 겹침 방지: 절대 끊지(cancel) 않고, 기기가 아직 말하는 중이면 끝날 때까지 기다렸다가 다음 문장을 말함
@@ -461,7 +464,10 @@ const Voice={ on:true, ok:typeof window!=='undefined'&&'speechSynthesis' in wind
     let speaking=false; try{ speaking=speechSynthesis.speaking||speechSynthesis.pending; }catch(e){}
     if(speaking){
       if(!this.waitStart) this.waitStart=Date.now();
-      if(Date.now()-this.waitStart<12000){ this.busy=true; this.wd=setTimeout(()=>this.next(),200); return; }
+      // 우리 문장이 재생 중일 때만 기다림. 우리 것이 없는데 '말하는 중'으로 굳어 있으면 엔진이 멈춘 것 → 풀어 줌
+      const limit=this.cur?12000:1500;
+      if(Date.now()-this.waitStart<limit){ this.busy=true; this.wd=setTimeout(()=>this.next(),200); return; }
+      try{ speechSynthesis.cancel(); }catch(e){}
     }
     this.waitStart=0;
     let it=this.q.shift();
@@ -471,14 +477,19 @@ const Voice={ on:true, ok:typeof window!=='undefined'&&'speechSynthesis' in wind
     try{
       if(speechSynthesis.paused) speechSynthesis.resume();
       const u=new SpeechSynthesisUtterance(it.t);
-      u.lang='ko-KR'; if(this.v) u.voice=this.v;
+      u.lang='ko-KR'; if(this.v && !this.noVoice) u.voice=this.v;
       u.rate=Math.min(1.3,1.0+0.22*it.I+(it.hot?0.05:0));   // 또렷하게 들리도록 속도 완화
       u.pitch=this.male?(1.0+0.12*it.I):(0.88+0.1*it.I);     // 음높이를 과하게 낮추면 뭉개져서 자연스럽게
       u.volume=1;
       this.cur=u;
       let done=false; const fin=()=>{ if(done||myTok!==this.tok) return; done=true; this.cur=null; this.wd=setTimeout(()=>this.next(),120); };
-      u.onend=fin; u.onerror=fin;
+      let st=false; u.onstart=()=>{ st=true; this.started=Date.now(); this.fails=0; };
+      u.onend=fin;
+      u.onerror=e=>{ if(!st && this.v && !this.noVoice){ this.noVoice=true; this.q.unshift(it); } fin(); };   // 고른 목소리가 안 되면 기본 목소리로 다시
       speechSynthesis.speak(u);
+      // 2.5초 안에 말이 시작 안 되면: 목소리 바꿔서 재시도, 그래도 안 되면 엔진 재시작
+      setTimeout(()=>{ if(st||done||myTok!==this.tok) return; let sp=false; try{ sp=speechSynthesis.speaking&&!speechSynthesis.pending; }catch(e){} if(sp){ st=true; this.started=Date.now(); return; } this.fails++; if(this.v&&!this.noVoice) this.noVoice=true; else { try{ speechSynthesis.cancel(); }catch(e){} }
+        if(this.fails<=2){ it.at=Date.now(); this.q.unshift(it); } fin(); },2500);
       // onend가 끝내 오지 않는 기기 대비 (끊지 않고 다음으로만 진행; next()가 발화 종료를 다시 확인함)
       this.wd=setTimeout(fin, 3000+it.t.length*260);
     }catch(e){ this.busy=false; }
@@ -491,6 +502,7 @@ document.addEventListener('visibilitychange',()=>{ try{
   if(document.hidden){ if(Sound.ctx) Sound.ctx.suspend(); Voice.stop(); }
   else if(Sound.ctx) Sound.ctx.resume();
 }catch(e){} });
+document.addEventListener('pointerdown',()=>{ if(Voice.ok&&Voice.on&&!Sound.muted&&Date.now()-Voice.started>8000&&Date.now()-Voice.unlockedAt>3000&&!Voice.cur) Voice.unlock(); },{passive:true});
 window.addEventListener('pagehide',()=>{ try{ if(Sound.ctx) Sound.ctx.suspend(); Voice.stop(); }catch(e){} });
 /* =========================================================
    그리기 유틸
