@@ -439,14 +439,16 @@ const Voice={ on:true, ok:typeof window!=='undefined'&&'speechSynthesis' in wind
   list(){ try{ return speechSynthesis.getVoices().filter(v=>/^ko/i.test(v.lang)); }catch(e){ return []; } },
   pickVoice(){ try{
     const ko=this.list();
-    this.v = ko.find(v=>MALE_RE.test(v.name)) || ko[0] || null;
+    let saved=''; try{ saved=localStorage.getItem('sd_voice')||''; }catch(e){}
+    this.v = (saved&&ko.find(v=>v.name===saved)) || ko.find(v=>MALE_RE.test(v.name)) || ko[0] || null;
     this.male = !!(this.v && MALE_RE.test(this.v.name));
   }catch(e){} },
   setVoice(name){ try{ localStorage.setItem('sd_voice',name); }catch(e){} this.pickVoice(); this.say('안녕하세요, 링크 더비 중계를 맡은 아나운서입니다!',true); },
   // 터치(사용자 동작) 안에서 엔진을 깨움. 멈춰 있던 엔진은 cancel로 풀어 줌
   unlock(){ if(!this.ok) return; try{ this.pickVoice(); speechSynthesis.resume();
     const u=new SpeechSynthesisUtterance('.'); u.volume=0.01; u.rate=2; u.lang='ko-KR'; speechSynthesis.speak(u); this.unlockedAt=Date.now(); }catch(e){} },
-  noVoice:false, started:0, fails:0, unlockedAt:0,
+  noVoice:(()=>{ try{ return localStorage.getItem('sd_vnov')==='1'; }catch(e){ return false; } })(), started:0, fails:0, unlockedAt:0,
+  log:[], L(m){ const t=new Date(); this.log.push(`${t.getMinutes()}:${String(t.getSeconds()).padStart(2,'0')} ${m}`); if(this.log.length>40) this.log.shift(); },
   kick(text){ if(!this.ok||!this.on||Sound.muted) return; try{ this.pickVoice(); speechSynthesis.resume(); }catch(e){}
     this.q=[{t:text,hot:true,I:0.4,at:Date.now()}]; this.waitStart=0; this.next(true); this.unlockedAt=Date.now(); },
   // 자체 대기열 + 감시 타이머: iOS/크롬에서 onend가 안 오거나 cancel 직후 speak가 씹혀서 소리가 끊기는 문제 방지
@@ -469,7 +471,7 @@ const Voice={ on:true, ok:typeof window!=='undefined'&&'speechSynthesis' in wind
       // 우리 문장이 재생 중일 때만 기다림. 우리 것이 없는데 '말하는 중'으로 굳어 있으면 엔진이 멈춘 것 → 풀어 줌
       const limit=this.cur?12000:1500;
       if(Date.now()-this.waitStart<limit){ this.busy=true; this.wd=setTimeout(()=>this.next(),200); return; }
-      try{ speechSynthesis.cancel(); }catch(e){}
+      this.L('⚠ 엔진 멈춤 감지 → 초기화'); try{ speechSynthesis.cancel(); }catch(e){}
     }
     this.waitStart=0;
     let it=this.q.shift();
@@ -485,12 +487,13 @@ const Voice={ on:true, ok:typeof window!=='undefined'&&'speechSynthesis' in wind
       u.volume=1;
       this.cur=u;
       let done=false; const fin=()=>{ if(done||myTok!==this.tok) return; done=true; this.cur=null; this.wd=setTimeout(()=>this.next(),120); };
-      let st=false; u.onstart=()=>{ st=true; this.started=Date.now(); this.fails=0; };
+      this.L(`말하기 시도 [${u.voice?u.voice.name:'기본'}] ${it.t.slice(0,14)}`);
+      let st=false; u.onstart=()=>{ st=true; this.started=Date.now(); this.fails=0; this.L('▶ 소리 시작'); };
       u.onend=fin;
-      u.onerror=e=>{ if(!st && this.v && !this.noVoice){ this.noVoice=true; this.q.unshift(it); } fin(); };   // 고른 목소리가 안 되면 기본 목소리로 다시
+      u.onerror=e=>{ this.L('✖ 오류: '+(e&&e.error||'?')); if(!st && this.v && !this.noVoice){ this.noVoice=true; this.q.unshift(it); } fin(); };   // 고른 목소리가 안 되면 기본 목소리로 다시
       speechSynthesis.speak(u);
       // 2.5초 안에 말이 시작 안 되면: 목소리 바꿔서 재시도, 그래도 안 되면 엔진 재시작
-      setTimeout(()=>{ if(st||done||myTok!==this.tok) return; let sp=false; try{ sp=speechSynthesis.speaking&&!speechSynthesis.pending; }catch(e){} if(sp){ st=true; this.started=Date.now(); return; } this.fails++; if(this.v&&!this.noVoice) this.noVoice=true; else { try{ speechSynthesis.cancel(); }catch(e){} }
+      setTimeout(()=>{ if(st||done||myTok!==this.tok) return; let sp=false; try{ sp=speechSynthesis.speaking&&!speechSynthesis.pending; }catch(e){} if(sp){ st=true; this.started=Date.now(); this.L('▶ 재생 중 확인'); return; } this.fails++; this.L('⚠ 2.5초간 무소식 → 재시도'); if(this.v&&!this.noVoice) this.noVoice=true; else { try{ speechSynthesis.cancel(); }catch(e){} }
         if(this.fails<=2){ it.at=Date.now(); this.q.unshift(it); } fin(); },2500);
       // onend가 끝내 오지 않는 기기 대비 (끊지 않고 다음으로만 진행; next()가 발화 종료를 다시 확인함)
       this.wd=setTimeout(fin, 3000+it.t.length*260);
@@ -2426,6 +2429,41 @@ function BadgeCert({b,onClose}){
     </div>);
 }
 
+function VoiceTest({onClose}){
+  const [,force]=useState(0);
+  useEffect(()=>{ const t=setInterval(()=>force(x=>x+1),400); return ()=>clearInterval(t); },[]);
+  const ko=Voice.list();
+  const tryVoice=v=>{ Sound.init(); Sound.muted=false; Voice.on=true;
+    try{ const u=new SpeechSynthesisUtterance(v?`${v.name} 목소리로 말합니다. 들리시나요?`:'기본 목소리로 말합니다. 들리시나요?'); u.lang='ko-KR'; if(v) u.voice=v;
+      u.onstart=()=>Voice.L('[테스트] ▶ 소리 시작'); u.onend=()=>Voice.L('[테스트] ■ 끝'); u.onerror=e=>Voice.L('[테스트] ✖ '+(e&&e.error||'오류'));
+      Voice.L('[테스트] 말하기: '+(v?v.name:'기본')); speechSynthesis.speak(u); }catch(e){ Voice.L('[테스트] 예외 '+e.message); } };
+  const use=v=>{ if(v){ Voice.noVoice=false; try{ localStorage.removeItem('sd_vnov'); localStorage.setItem('sd_voice',v.name); }catch(e){} Voice.v=v; Voice.male=MALE_RE.test(v.name); }
+    else { Voice.noVoice=true; try{ localStorage.setItem('sd_vnov','1'); }catch(e){} } Sound.coin(); };
+  let flags=''; try{ flags=`speaking=${speechSynthesis.speaking} pending=${speechSynthesis.pending} paused=${speechSynthesis.paused}`; }catch(e){ flags='speechSynthesis 없음'; }
+  return (
+    <div className="fixed inset-0 overflow-y-auto" style={{zIndex:80,background:"rgba(0,0,0,0.92)"}} onClick={onClose}>
+      <div className="max-w-md mx-auto p-3 pt-6" onClick={e=>e.stopPropagation()}>
+        <div className="glass rounded-3xl p-4">
+          <div className="flex items-center"><div className="fx-title text-xl gold">🎙️ 아나운서 소리 점검</div><button onClick={onClose} className="ml-auto w-9 h-9 rounded-full bg-white/10 text-xl">×</button></div>
+          <p className="text-[12px] text-blue-100/85 mt-1">아래 버튼을 하나씩 눌러 보고, <b>들리는 목소리의 [이걸로 사용]</b>을 눌러 주세요.</p>
+          <div className="mt-2 space-y-1.5">
+            <div className="flex gap-1.5 items-center rounded-xl bg-white/5 p-2"><span className="flex-1 text-[13px] font-bold">기본 목소리 (자동)</span>
+              <button onClick={()=>tryVoice(null)} className="px-2.5 py-1.5 rounded-lg bg-sky-500 text-[12px] font-black">▶ 듣기</button>
+              <button onClick={()=>use(null)} className={`px-2.5 py-1.5 rounded-lg text-[12px] font-black ${Voice.noVoice?'bg-yellow-300 text-black':'bg-white/10'}`}>{Voice.noVoice?'✓ 사용 중':'이걸로 사용'}</button></div>
+            {ko.map(v=><div key={v.name+v.voiceURI} className="flex gap-1.5 items-center rounded-xl bg-white/5 p-2"><span className="flex-1 text-[12.5px] font-bold truncate">{v.name}{MALE_RE.test(v.name)?' (남)':''}{v.localService===false?' ☁️':''}</span>
+              <button onClick={()=>tryVoice(v)} className="px-2.5 py-1.5 rounded-lg bg-sky-500 text-[12px] font-black">▶ 듣기</button>
+              <button onClick={()=>use(v)} className={`px-2.5 py-1.5 rounded-lg text-[12px] font-black ${!Voice.noVoice&&Voice.v&&Voice.v.name===v.name?'bg-yellow-300 text-black':'bg-white/10'}`}>{!Voice.noVoice&&Voice.v&&Voice.v.name===v.name?'✓ 사용 중':'이걸로 사용'}</button></div>)}
+            {!ko.length && <div className="text-[12px] text-red-300">한국어 목소리를 찾지 못했어요. (설정 → 손쉬운 사용 → 읽기 및 말하기 → 음성 → 한국어)</div>}
+          </div>
+          <button onClick={()=>{ try{ speechSynthesis.cancel(); }catch(e){} Voice.stop(); Voice.L('엔진 초기화'); }} className="w-full mt-2 py-2 rounded-xl bg-white/10 text-[12px] font-bold">🔄 음성 엔진 초기화</button>
+          <div className="mt-3 text-[11px] text-blue-200/80">상태: {flags} · 한국어 목소리 {ko.length}개 · 전체 {(()=>{ try{ return speechSynthesis.getVoices().length; }catch(e){ return 0; } })()}개</div>
+          <div className="mt-1 rounded-xl bg-black/50 p-2 font-mono text-[10.5px] leading-snug max-h-56 overflow-y-auto">{Voice.log.slice().reverse().map((l,i)=><div key={i}>{l}</div>)}{!Voice.log.length&&'기록 없음'}</div>
+          <p className="mt-2 text-[11px] text-blue-200/70">안 되면 이 화면을 캡처해서 보내 주세요.</p>
+        </div>
+      </div>
+    </div>);
+}
+
 /* ---------------- 🏇 내 구단 (구단주 모드) ---------------- */
 const FOUND_COST=1000, CARE_COST=200, PRIZE=[500,250,120];
 const trainCost=lv=>300+200*lv;
@@ -2589,6 +2627,7 @@ function App(){
   const [quiz,setQuiz]=useState(false);
   const [stable,setStable]=useState(()=>ls.get('sd_stable',null));
   const [claims,setClaims]=useState(()=>ls.get('sd_claims',[]));
+  const [vtest,setVtest]=useState(false);
   const [ev,setEv]=useState(()=>loadEv());
   const [barn,setBarn]=useState(()=>loadBarn());
   const [wpBonus,setWpBonus]=useState(0);
@@ -2659,7 +2698,7 @@ function App(){
           <div className="fx-title text-[19px] leading-none whitespace-nowrap"><span className="gold">★ LINK</span> <span className="text-white">DERBY</span></div>
           
           <div className="ml-auto flex items-center gap-2">
-            {Voice.ok && <button onClick={()=>{ Sound.init(); if(muted) setMuted(false); Sound.muted=false; Voice.on=true; Voice.kick('안녕하세요! 링크 더비 아나운서입니다. 소리 잘 들리시죠?'); }} className="h-8 px-2 shrink-0 rounded-full bg-white/10 text-[11px] font-black whitespace-nowrap">🎙️ 테스트</button>}
+            {Voice.ok && <button onClick={()=>{ Sound.init(); if(muted) setMuted(false); Sound.muted=false; Voice.on=true; Voice.kick('안녕하세요! 링크 더비 아나운서입니다. 소리 잘 들리시죠?'); setVtest(true); }} className="h-8 px-2 shrink-0 rounded-full bg-white/10 text-[11px] font-black whitespace-nowrap">🎙️ 테스트</button>}
             <button onClick={()=>{Sound.init(); setMuted(m=>!m);}} className="w-8 h-8 shrink-0 rounded-full bg-white/10 text-base">{muted?'🔇':'🔊'}</button>
             <div className="rounded-full bg-gradient-to-b from-yellow-300 to-amber-500 text-black px-2.5 py-1 font-black text-[13px] shadow whitespace-nowrap">💰 {fmt(credit)}</div>
           </div>
@@ -2679,6 +2718,7 @@ function App(){
           <button onClick={()=>{Sound.init();Sound.coin();setAttendMsg(null);}} className="w-full mt-3 py-3 rounded-xl font-black bg-gradient-to-b from-yellow-300 to-orange-500 text-black">받기</button>
         </div>
       </div>}
+      {vtest && <VoiceTest onClose={()=>setVtest(false)}/>}
       {quiz && setup && <QuizModal setup={setup} onClose={()=>setQuiz(false)} onReward={n=>setCredit(c=>c+n)}/>}
       {phase==='result' && result && <ResultModal setup={setup} result={result} bets={bets} payouts={payouts} bonus={bonus} streak={stats.streak} ownerPrize={ownerPrize} wpBonus={wpBonus} onNext={next}/>}
       {modal==='event' && <EventModal credit={credit} claims={claims} ev={ev} onClose={()=>setModal(null)} onClaim={c=>{ setCredit(x=>x-c.cr); setClaims(L=>[c,...L]); if(cupsOf(claims)+c.cups>=COFFEE_MAX) setEv(e=>({...e,prog:newProg()})); }} onSeasonClear={b=>{ setCredit(x=>x+b.rw); setEv(e=>({s:e.s+1,prog:newProg(),badges:[...e.badges,b]})); }}/>}
