@@ -1957,13 +1957,13 @@ function Paddock({setup,credit,bets,setBets,onStart,onQuiz,onRps,onEvent,evLabel
         <button onClick={()=>{Sound.init();Sound.click();onQuiz();}} className={`w-full py-3 rounded-xl font-black bg-gradient-to-b from-fuchsia-500 to-purple-700 ${credit<100?'animate-pulse':''}`}>🧠 퀴즈 풀고 CREDIT 1,000 받기</button>
       </div>}
 
-      <div className="fixed bottom-0 inset-x-0 z-30 px-3 pt-6 pb-3 bg-gradient-to-t from-[#070d1f] via-[#070d1fee] to-transparent" style={{paddingBottom:'max(12px, env(safe-area-inset-bottom))'}}>
-        <div className="max-w-md mx-auto flex gap-2">
-          <div className="glass rounded-2xl px-3 py-2 flex flex-col justify-center">
-            <span className="text-[10px] text-blue-200/80">잔여 CREDIT</span>
-            <span className="font-black text-lg text-yellow-300 leading-none">{fmt(avail)}</span>
+      <div className="fixed bottom-0 inset-x-0 z-30 px-3 pt-3 pb-2 bg-gradient-to-t from-[#070d1f] via-[#070d1fee] to-transparent" style={{paddingBottom:'max(8px, env(safe-area-inset-bottom))'}}>
+        <div className="max-w-md mx-auto flex gap-2 items-center">
+          <div className="glass rounded-xl px-2.5 py-1 flex flex-col justify-center">
+            <span className="text-[9px] text-blue-200/80">잔여 CREDIT</span>
+            <span className="font-black text-[14px] text-yellow-300 leading-none">{fmt(avail)}</span>
           </div>
-          <button onClick={tryStart} className="flex-1 rounded-2xl py-3.5 fx-title text-xl bg-gradient-to-b from-yellow-300 via-amber-400 to-orange-600 text-black shadow-[0_0_30px_rgba(255,180,0,.5)] active:scale-[.98]">
+          <button onClick={tryStart} className="flex-1 rounded-xl py-2 fx-title text-[15px] bg-gradient-to-b from-yellow-300 via-amber-400 to-orange-600 text-black shadow-[0_0_30px_rgba(255,180,0,.5)] active:scale-[.98]">
             🏁 출주! 레이스 시작
           </button>
         </div>
@@ -2536,7 +2536,7 @@ function RpsModal({onClose,onReward}){
       const c=disp.current, tc=top.current; if(!c||!tc) return;
       const x=c.getContext('2d'), W=c.width, N=23, cell=W/ (N+2);
       x.fillStyle='#111'; x.fillRect(0,0,W,W);
-      const idx=S.rolling?Math.floor(S.t/4)%3:S.cpu, m=handMask(idx,N), col=S.res==='lose'?'#ff3b30':S.res==='win'?'#ffd43b':'#ff5a2a';
+      const idx=S.rolling?Math.floor(S.t/(S.speed||7))%3:S.cpu, m=handMask(idx,N), col=S.res==='lose'?'#ff3b30':S.res==='win'?'#ffd43b':'#ff5a2a';
       const cx=W/2, R2=(W/2-cell*0.6);
       for(let yy=0;yy<N;yy++) for(let xx=0;xx<N;xx++){ const px=cell*(xx+1.5), py=cell*(yy+1.5); if((px-cx)**2+(py-cx)**2>R2*R2) continue;
         const v=m[yy][xx], on=v===2||(v===1&&false); x.fillStyle=on?col:'#2b2b2b'; x.beginPath(); x.arc(px,py,cell*0.34,0,7); x.fill();
@@ -2548,14 +2548,15 @@ function RpsModal({onClose,onReward}){
       drawLedText(t,'LOSE',TW*0.96-dot*24,dot*0.6,dot,(S.res==='lose'||S.res==='draw')&&blink,S.res==='draw'?'#7cf':'#ff3b30');
     }; loop(); return ()=>cancelAnimationFrame(raf); },[]);
   // 대기 중엔 천천히 손 모양이 바뀜
-  useEffect(()=>{ if(phase!=='idle') return; const t=setInterval(()=>{ st.current.cpu=(st.current.cpu+1)%3; },900); return ()=>clearInterval(t); },[phase]);
+  useEffect(()=>{ if(phase!=='idle') return; const t=setInterval(()=>{ st.current.cpu=(st.current.cpu+1)%3; },1400); return ()=>clearInterval(t); },[phase]);
   const play=i=>{
     if(phase==='roll') return;
     Sound.init(); const base=active?streak:0;
     if(!active){ if(left<=0){ setMsg('오늘 도전 횟수를 다 썼어요. 내일 또 만나요!'); Sound.miss(); return; }
       setActive(true); setStreak(0); setDay(d=>({...d,runs:d.runs+1})); }
     setPhase('roll'); setRes(null); st.current.res=null; st.current.rolling=true; setMsg(`${RPS_HANDS[i].k}! 과연...`); const leftNow=active?left:left-1;
-    let n=0; const tick=setInterval(()=>{ Sound.beep(520+(n%3)*160); n++; },90);
+    let n=0; st.current.speed=7; const tick=setInterval(()=>{ Sound.beep(520+(n%3)*160); n++; },180);
+    setTimeout(()=>{ st.current.speed=13; },1300);
     setTimeout(()=>{ clearInterval(tick); const cpu=Math.floor(Math.random()*3); st.current.rolling=false; st.current.cpu=cpu;
       const r=cpu===i?'draw':((i+1)%3===cpu? 'lose':'win');   // 가위(0)<바위(1)<보(2)<가위
       // 가위0 vs 바위1: 짐, 바위1 vs 보2: 짐, 보2 vs 가위0: 짐
@@ -2568,7 +2569,7 @@ function RpsModal({onClose,onReward}){
       else Sound.coin();
       if(ns>=8){ setActive(false); setMsg('🎉 8연승 완주! 전설의 가위바위보 왕!'); }
       else { const nx=[3,5,8].find(k=>k>ns); setMsg(`${ns}연승! 다음 보상까지 ${nx-ns}승 (+${RPS_PRIZE[nx]} CR)`); }
-    },1100);
+    },2100);
   };
   return (
     <div className="fixed inset-0 overflow-y-auto" style={{zIndex:60,background:'rgba(0,0,0,0.9)'}} onClick={onClose}>
