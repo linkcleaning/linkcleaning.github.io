@@ -1900,7 +1900,7 @@ function Paddock({setup,credit,bets,setBets,onStart,onQuiz,onRps,onEvent,evLabel
         <button onClick={()=>{Sound.init();Sound.click();onQuiz();}} className="rounded-xl py-2 bg-gradient-to-b from-fuchsia-500 to-purple-700 text-[12.5px] font-black leading-tight">🧠 퀴즈<div className="text-[9.5px] font-bold opacity-80">오늘 {fmtN(quizToday())}/5,000</div></button>
       </div>
       <button onClick={()=>{Sound.init();Sound.click();onRps&&onRps();}} className="w-full mt-1.5 rounded-xl py-2 flex items-center justify-center gap-2 text-[13px] font-black" style={{background:'linear-gradient(90deg,#111,#1e293b,#111)',border:'2px solid #2563eb',boxShadow:'0 0 10px rgba(37,99,235,.5)'}}>
-        <span>✌️✊✋</span><span className="text-yellow-300">짱켐보이</span><span className="text-[10.5px] text-blue-200/80 font-bold">🎈 풍선 입장 · 3연승 500</span></button>
+        <span>✌️✊✋</span><span className="text-yellow-300">짱켐보이</span><span className="text-[10.5px] text-blue-200/80 font-bold">🎈 풍선 입장 · 도전 or 스톱</span></button>
       {/* 탭: 출전표 / 마권 구매 */}
       <div className="sticky top-[52px] z-20 mt-2 -mx-3 px-3 py-1.5 bg-[#070d1f]/90 backdrop-blur">
         <div className="grid grid-cols-2 gap-1 p-1 rounded-2xl bg-white/5">
@@ -2563,8 +2563,8 @@ function BalloonGate({onPass,onClose}){
 }
 
 /* ---------------- ✊ 레트로 가위바위보 ---------------- */
-const RPS_PRIZE={3:500};                     // 3연승 해야 500 CR
-const RPS_MAX=3;
+const RPS_PRIZE={1:100,2:300,3:500,4:1000};  // 이길 때마다 상금 상승 → 도전 or 스톱 (4연승이 최종)
+const RPS_MAX=4;
 const RPS_DAILY=Infinity;                     // 하루 도전 횟수 (제한 없음)
 const RPS_HANDS=[{k:'가위',e:'✌️',c:'linear-gradient(180deg,#ff5a5f,#c81e1e)',ring:'#7a0f12'},{k:'바위',e:'✊',c:'linear-gradient(180deg,#4f8dff,#1d4ed8)',ring:'#0b2a6b'},{k:'보',e:'✋',c:'linear-gradient(180deg,#ffc53d,#d97706)',ring:'#7a4b00'}];
 const LED_FONT={W:['10001','10001','10001','10101','10101','10101','01010'],I:['01110','00100','00100','00100','00100','00100','01110'],N:['10001','11001','11001','10101','10011','10011','10001'],
@@ -2627,10 +2627,15 @@ function RpsModal({onClose,onReward}){
   useEffect(()=>{ if(phase==='idle'){ const t=setInterval(()=>{ st.current.idx=(st.current.idx+1)%3; },1400); return ()=>clearInterval(t); }
     if(phase==='spin'){ let n=0; const t=setInterval(()=>{ st.current.idx=(st.current.idx+1)%3; Sound.beep(520+(n++%3)*160); },170); return ()=>clearInterval(t); } },[phase]);
   // 결과를 보여준 뒤 이어서 다음 판 돌리기
-  useEffect(()=>{ if(phase!=='show'||!active) return; const t=setTimeout(()=>{ setRes(null); st.current.res=null; setPhase('spin'); setMsg(m=>m); },1900); return ()=>clearTimeout(t); },[phase,active]);
+  useEffect(()=>{ if(phase!=='show'||!active||!res||res.r!=='draw') return; const t=setTimeout(()=>{ setRes(null); st.current.res=null; setPhase('spin'); setMsg(m=>m); },1900); return ()=>clearTimeout(t); },[phase,active,res]);
+  const goOn=()=>{ if(phase!=='choice') return; Sound.init(); Sound.beep(700); setRes(null); st.current.res=null; setPhase('spin');
+    setMsg(`도전! 이기면 ${fmt(RPS_PRIZE[streak+1])} CR, 지면 0 CR!`); };
+  const stop=()=>{ if(phase!=='choice') return; const prize=RPS_PRIZE[streak]; onReward(prize); Sound.jackpot(streak>=3); setActive(false); setPhase('idle'); setRes(null); st.current.res=null;
+    setMsg(`스톱! 상금 +${fmt(prize)} CR 획득! 🎉`); };
   const play=i=>{
     Sound.init(); const base=streak;
     if(!active){ setMsg('먼저 ▶ START 버튼을 눌러 주세요!'); setNudge(x=>x+1); Sound.beep(300); return; }
+    if(phase==='choice'){ setMsg('도전 또는 스톱을 먼저 골라 주세요!'); Sound.beep(300); return; }
     if(phase!=='spin') return;
     setPhase('stop'); setMsg(`${RPS_HANDS[i].k}! 과연...`);
     const cpu=Math.floor(Math.random()*3);
@@ -2642,13 +2647,12 @@ function RpsModal({onClose,onReward}){
       // 가위0 vs 바위1: 짐, 바위1 vs 보2: 짐, 보2 vs 가위0: 짐
       st.current.res=r; setRes({me:i,cpu,r}); setPhase('show');
       if(r==='draw'){ Sound.beep(400); setMsg('비겼어요! 다시 돌아갑니다!'); return; }
-      if(r==='lose'){ Sound.miss(); setActive(false); setTimeout(()=>setPhase(ph=>ph==='show'?'idle':ph),2500); setMsg(`아쉽다! ${base}연승에서 멈췄어요.`); setDay(d=>({...d,best:Math.max(d.best,base)})); return; }
+      if(r==='lose'){ Sound.miss(); setActive(false); setTimeout(()=>setPhase(ph=>ph==='show'?'idle':ph),2500); setMsg(base?`아쉽다! 상금 ${fmt(RPS_PRIZE[base])} CR이 날아갔어요 😭`:'아쉽다! 다시 도전해 보세요!'); setDay(d=>({...d,best:Math.max(d.best,base)})); return; }
       const ns=base+1; setStreak(ns); setDay(d=>({...d,best:Math.max(d.best,ns)}));
       const prize=RPS_PRIZE[ns];
-      if(prize){ onReward(prize); Sound.jackpot(ns>=RPS_MAX); setPop({n:ns,p:prize}); setTimeout(()=>setPop(null),1800); }
-      else Sound.coin();
-      if(ns>=RPS_MAX){ setActive(false); setTimeout(()=>setPhase(ph=>ph==='show'?'idle':ph),3000); setMsg(`🎉 ${RPS_MAX}연승 성공! 짱켐보이 왕! +500 CR`); }
-      else { setMsg(`${ns}연승! ${RPS_MAX-ns}번만 더 이기면 +500 CR!`); }
+      setPop({n:ns,p:prize}); setTimeout(()=>setPop(null),1500);
+      if(ns>=RPS_MAX){ onReward(prize); Sound.jackpot(true); setActive(false); setTimeout(()=>setPhase(ph=>ph==='show'?'idle':ph),3000); setMsg(`🎉 ${RPS_MAX}연승 완주! 최고 상금 +${fmt(prize)} CR 획득!`); }
+      else { Sound.coin(); setPhase('choice'); setMsg(`${ns}연승! 상금 ${fmt(prize)} CR — 도전? 스톱?`); }
     },acc+250);
   };
   return (
@@ -2656,21 +2660,25 @@ function RpsModal({onClose,onReward}){
       <div className="max-w-md mx-auto p-3 pt-5" onClick={e=>e.stopPropagation()}>
         <div className="rounded-[28px] p-3 pb-4 relative" style={{background:'linear-gradient(180deg,#1a1a1a,#0a0a0a)',border:'6px solid #1d4ed8',boxShadow:'0 0 24px rgba(37,99,235,.55), inset 0 0 30px rgba(0,0,0,.8)'}}>
           <div className="flex items-center"><div className="fx-title text-[20px] gold">✊ 짱켐보이</div><button onClick={onClose} className="ml-auto w-9 h-9 rounded-full bg-white/10 text-xl">×</button></div>
-          <div className="text-[11.5px] text-blue-200/80 mt-0.5"><b className="text-yellow-300">3번 연속</b> 이기면 <b className="text-yellow-300">+500 CR</b>! 한 번이라도 지면 처음부터</div>
+          <div className="text-[11.5px] text-blue-200/80 mt-0.5">이길 때마다 <b className="text-yellow-300">도전</b> 또는 <b className="text-yellow-300">스톱</b>! 1승 100 · 2승 300 · 3승 500 · 4승 1,000 CR (지면 0)</div>
           <canvas ref={top} width={660} height={84} className="w-full mt-2 rounded-lg" style={{aspectRatio:'660/84'}}/>
           <div className="relative mx-auto mt-3" style={{width:'74%',aspectRatio:'1'}}>
             <div className="absolute inset-0 rounded-full" style={{boxShadow:'0 0 0 7px #1d4ed8, 0 0 22px 8px rgba(37,99,235,.6)'}}/>
             <canvas ref={disp} width={420} height={420} className="absolute inset-0 w-full h-full rounded-full"/>
-            {pop && <div className="absolute inset-0 flex flex-col items-center justify-center pop"><div className="fx-title text-yellow-300" style={{fontSize:44,textShadow:'0 0 16px #000,0 0 6px #000'}}>{pop.n}연승!</div><div className="fx-title" style={{fontSize:30,color:'#7CFC00',textShadow:'0 0 10px #000'}}>+{pop.p} CR</div></div>}
+            {pop && <div className="absolute inset-0 flex flex-col items-center justify-center pop"><div className="fx-title text-yellow-300" style={{fontSize:44,textShadow:'0 0 16px #000,0 0 6px #000'}}>{pop.n}연승!</div><div className="fx-title" style={{fontSize:28,color:'#7CFC00',textShadow:'0 0 10px #000'}}>상금 {fmt(pop.p)} CR</div></div>}
           </div>
+          {phase==='choice' ? <div className="flex justify-center gap-3 mt-3">
+            <button onClick={goOn} className="pop px-5 py-2 rounded-2xl font-black text-[16px] text-white" style={{background:'linear-gradient(180deg,#ff6b6b,#c92a2a)',boxShadow:'0 5px 0 #7a1414, 0 0 14px rgba(255,80,80,.6)'}}>🔥 도전<div className="text-[10.5px] font-bold opacity-90">이기면 {fmt(RPS_PRIZE[streak+1])} CR</div></button>
+            <button onClick={stop} className="pop px-5 py-2 rounded-2xl font-black text-[16px] text-black" style={{background:'linear-gradient(180deg,#ffe066,#f59f00)',boxShadow:'0 5px 0 #8a5a00, 0 0 14px rgba(255,200,0,.6)'}}>✋ 스톱<div className="text-[10.5px] font-bold opacity-80">{fmt(RPS_PRIZE[streak])} CR 받기</div></button>
+          </div> :
           <div className="flex justify-center mt-3">
             <button key={nudge} onClick={startRun} disabled={active} className={`px-4 py-1.5 rounded-full text-[13px] font-black tracking-wider ${nudge?'pop':''}`}
               style={active?{background:'#2b2b2b',color:'#777',boxShadow:'inset 0 2px 4px #000'}:{background:'linear-gradient(180deg,#34d399,#059669)',color:'#fff',boxShadow:'0 4px 0 #065f46, 0 0 12px rgba(52,211,153,.6)'}}>
               {active?`도전 중 · ${streak}연승`:'▶ START'}</button>
-          </div>
+          </div>}
           {/* 연승 램프 */}
-          <div className="flex justify-center mt-3" style={{gap:22}}>{Array.from({length:RPS_MAX},(_,k)=>{ const lit=k<streak, ms=RPS_PRIZE[k+1];
-            return <div key={k} className="flex flex-col items-center"><div className="rounded-full" style={{width:24,height:24,background:lit?(ms?'#ffd43b':'#ff5a2a'):'#2b2b2b',boxShadow:lit?`0 0 10px ${ms?'#ffd43b':'#ff5a2a'}`:'inset 0 2px 4px #000',border:ms?'2px solid #ffd43b88':'2px solid #000'}}/><div className="text-[9.5px] mt-0.5 font-bold" style={{color:ms?'#ffd43b':'#666'}}>{ms?`+${ms}`:k+1}</div></div>; })}</div>
+          <div className="flex justify-center mt-3" style={{gap:22}}>{Array.from({length:RPS_MAX},(_,k)=>{ const lit=k<streak, ms=RPS_PRIZE[k+1], top=k===RPS_MAX-1;
+            return <div key={k} className="flex flex-col items-center"><div className="rounded-full" style={{width:24,height:24,background:lit?(top?'#ffd43b':'#ff5a2a'):'#2b2b2b',boxShadow:lit?`0 0 10px ${top?'#ffd43b':'#ff5a2a'}`:'inset 0 2px 4px #000',border:top?'2px solid #ffd43b88':'2px solid #000'}}/><div className="text-[10px] mt-0.5 font-bold" style={{color:lit?'#ffd43b':'#888'}}>{fmt(ms)}</div></div>; })}</div>
           <div className="text-center mt-2 min-h-[40px] text-[14px] font-black text-white">{msg}</div>
           {res && <div className="text-center text-[12px] text-blue-200/80">나: {RPS_HANDS[res.me].e} {RPS_HANDS[res.me].k} &nbsp;vs&nbsp; 기계: {RPS_HANDS[res.cpu].e} {RPS_HANDS[res.cpu].k}</div>}
           {/* 버튼 */}
@@ -2681,7 +2689,7 @@ function RpsModal({onClose,onReward}){
                 <span style={{fontSize:30,lineHeight:1}}>{h.e}</span><span className="text-[14px] font-black text-white" style={{textShadow:'0 2px 0 rgba(0,0,0,.4)'}}>{h.k}</span></span>
             </button>)}</div>
           <div className="flex justify-between text-[11px] text-blue-200/70 mt-4 px-1"><span>오늘 도전 <b className="text-white">{day.runs}</b>회</span><span>오늘 최고 {day.best}연승</span></div>
-          <div className="text-[10.5px] text-blue-200/50 mt-1 px-1">START → 전광판이 돌아가요 → 가위·바위·보를 누르면 멈춰요! 3번 연속 이기면 500 CR!</div>
+          <div className="text-[10.5px] text-blue-200/50 mt-1 px-1">START → 전광판이 돌아가요 → 가위·바위·보를 누르면 멈춰요! 이기면 도전(상금 UP) 또는 스톱(상금 받기). 도전하다 지면 상금은 0!</div>
         </div>
       </div>
     </div>);
