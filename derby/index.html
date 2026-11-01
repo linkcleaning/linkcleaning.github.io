@@ -752,7 +752,7 @@ class RaceEngine{
     this.D=setup.D; this.going=setup.goingMul; this.dirt=setup.surface==='dirt';
     this.runners=setup.horses.map((h,i)=>makeRunner(h,i));
     this.order=this.runners.slice();
-    this.parts=[]; this.ppm=52;
+    this.parts=[]; this.ppm=52; this.ppmBase=52; this.ppmBg=52; this.wide=false;
     this.camX=-30; this.zoom=1.25; this.zoomT=1; this.fx=W/2; this.fy=(Y_FAR+Y_NEAR)/2;
     this.slow=1; this.slowT=1; this.slowLock=false;
     this.state='intro'; this.real=0; this.simT=0; this.raceT=0; this.flash=0;
@@ -888,6 +888,13 @@ class RaceEngine{
     if(!a.fin && !this.slowLock && remain<=380) focus=(a.pos*0.6+b.pos*0.4)-2.5;   // 막판엔 선두 경쟁에 집중
     if(a.fin && !this.slowLock) focus=a.pos-1.2;   // 우승마 따라가는 위너 캠
     if(!this.slowLock && this.shot && this.shot.r && this.real<this.shot.end) focus=this.shot.r.pos-1.4;   // 클로즈업 대상 말로 카메라 이동
+    // 단독 선두(2위와 3m 이상 차이)면 카메라를 뒤로 빼서 선두~최후미를 한 화면에 (와이드 샷)
+    { const lastR=o[o.length-1], solo=!this.slowLock && !a.fin && this.state==='run' && (a.pos-b.pos)>3.0 && this.simT>6;
+      let tgt=this.ppmBase;
+      if(solo){ const need=(a.pos-lastR.pos)+7; tgt=Math.max(15,Math.min(this.ppmBase,W*0.88/(need*sZ(0.5)))); focus=(a.pos+lastR.pos)/2-0.5; this.shot=null; this.zoomT=1;
+        if(!this.wide){ this.wide=true; if(this.real-(this.wideSaidT||-99)>12){ this.wideSaidT=this.real; this.say(`${iga(lblOf(a.h))} 단독 선두! 후미 ${lblOf(lastR.h)}까지 약 ${Math.max(1,Math.round((a.pos-lastR.pos)/2.4))}마신 차이입니다!`); } } }
+      else this.wide=false;
+      this.ppm+=(tgt-this.ppm)*Math.min(1,dt*2.6); }
     const pcx=this.camX;
     // 1등(선두마)은 항상 화면 안에: 선두 코끝이 화면 오른쪽 가장자리 안쪽에 오도록 초점 보정
     { const half=(W*0.40)/(this.ppm*sZ(a.lane)*Math.max(1,this.zoomT)); if(!a.fin) focus=Math.max(focus,a.pos-half+1.0); }
@@ -1109,7 +1116,7 @@ class RaceEngine{
     }
   }
   drawBg(ctx){
-    const ppm=this.ppm, cam=this.camX, bg=this.bg;
+    const ppm=this.ppmBg, cam=this.camX, bg=this.bg;   // 배경(관중석·산)은 줌과 무관하게 고정 비율
     const wx=this.wx, SKY={'맑음':['#1f5fbf','#69a8ee','#cfe8ff'],'흐림':['#56626f','#86919c','#bcc4cc'],'비':['#262e38','#48525c','#6f7982'],'노을':['#26285e','#b9526a','#ffb067'],'야간':['#02040f','#0a1233','#1d2f5c']}[wx]||['#1f5fbf','#69a8ee','#cfe8ff'];
     const sky=ctx.createLinearGradient(0,-200,0,340+BY); sky.addColorStop(0,SKY[0]); sky.addColorStop(0.6,SKY[1]); sky.addColorStop(1,SKY[2]);
     ctx.fillStyle=sky; ctx.fillRect(-200,-300,W+400,700+BY);
@@ -1357,7 +1364,7 @@ class RaceEngine{
     if(this.slow<0.6){ ctx.fillStyle='#ffd43b'; ctx.font='700 16px "Noto Sans KR",sans-serif'; ctx.textAlign='right'; ctx.fillText('◀◀ SLOW MOTION',W-24,74); }
     // 상단 실시간 순위 바
     const NR=this.runners.length, bw=Math.min(84,(W-44)/NR), bx0=W/2-bw*NR/2, RY=96;
-    ctx.fillStyle='rgba(6,12,30,0.82)'; rr(ctx,bx0-12,RY,bw*NR+24,76,12); ctx.fill();
+    ctx.fillStyle='rgba(6,12,30,0.82)'; rr(ctx,bx0-12,RY,bw*NR+24,92,12); ctx.fill();
     ctx.fillStyle='#8da2c9'; ctx.font='bold 12px "Noto Sans KR",sans-serif'; ctx.textAlign='center'; ctx.textBaseline='top';
     for(let i=0;i<NR;i++) ctx.fillText(['1st','2nd','3rd','4th','5th','6th','7th','8th'][i],bx0+i*bw+bw/2,RY+4);
     o.forEach((r,i)=>{ const no=r.h.no; this.rankX[no]+= (i-this.rankX[no])*0.18; });
@@ -1369,9 +1376,11 @@ class RaceEngine{
       if(this.myNos.has(no)){ ctx.fillStyle='#ffd43b'; ctx.beginPath(); ctx.arc(x+8,y+40,8,0,6.283); ctx.fill(); ctx.fillStyle='#111'; ctx.font='700 11px sans-serif'; ctx.textBaseline='middle'; ctx.fillText('★',x+8,y+40.5); }
       ctx.fillStyle=fr.fg; ctx.font='700 30px "Noto Sans KR",sans-serif'; ctx.textBaseline='middle'; ctx.fillText(String(no),x+(bw-12)/2,y+24);
       if(r.spurting&&!r.fin){ ctx.font='14px sans-serif'; ctx.fillText('🔥',x+bw-16,y+6); }
+      ctx.fillStyle=this.myNos.has(no)?'#ffd43b':(r.h.owned?'#ffc078':'#dbe4ff'); ctx.font='600 12px "Noto Sans KR",sans-serif'; ctx.textBaseline='middle';
+      const nm=r.h.name.length>5?r.h.name.slice(0,5):r.h.name; ctx.fillText(nm,x+(bw-12)/2,y+60);
     });
     // 미니맵 진행 바
-    const mx=16, my=RY+84, mw=W-32;
+    const mx=16, my=RY+100, mw=W-32;
     ctx.fillStyle='rgba(6,12,30,0.78)'; rr(ctx,mx,my,mw,30,8); ctx.fill();
     ctx.strokeStyle='#4dabf7'; ctx.lineWidth=3; ctx.beginPath(); ctx.moveTo(mx+20,my+15); ctx.lineTo(mx+mw-30,my+15); ctx.stroke();
     ctx.fillStyle='#fff'; ctx.fillRect(mx+mw-30,my+5,3,20);
