@@ -924,7 +924,12 @@ class RaceEngine{
     for(let k=0;k<3;k++) (this.emo=this.emo||[]).push({e:pick(E),x:W*0.15+Math.random()*W*0.7,y:H-140,vy:-(3+Math.random()*3),vx:(Math.random()-0.5)*2,life:1.4,s:28+Math.random()*18});
     if(this.emo.length>80) this.emo.splice(0,this.emo.length-80);
     Sound.cheerBurst();
-    const n=this.cheerN; if([15,40,80].includes(n)) this.say(n===15?'관중석 응원 열기가 뜨거워지고 있습니다!':n===40?'와! 응원 소리가 경기장을 뒤흔듭니다!':'역대급 응원! 말들도 귀를 쫑긋 세웁니다!',true);
+    const n=this.cheerN;
+    if(n===CHEER_GOAL){ // 100번 돌파: 꽃가루 축포 + 응원 보너스 확정
+      const C=['#ff6b6b','#ffd43b','#69db7c','#4dabf7','#da77f2','#fff','#ff922b'];
+      for(let k=0;k<160;k++) (this.conf=this.conf||[]).push({x:Math.random()*W,y:-20-Math.random()*H*0.5,vx:(Math.random()-0.5)*3,vy:2+Math.random()*4,r:Math.random()*6.28,vr:(Math.random()-0.5)*0.3,c:pick(C),w:8+Math.random()*8,h:5+Math.random()*6,life:5});
+      Sound.jackpot(true); this.say(`응원 ${CHEER_GOAL}번 돌파! 꽃가루가 쏟아집니다! 응원 보너스 확정!`,true); return; }
+    if([15,40,80].includes(n)) this.say(n===15?'관중석 응원 열기가 뜨거워지고 있습니다!':n===40?'와! 응원 소리가 경기장을 뒤흔듭니다!':'역대급 응원! 말들도 귀를 쫑긋 세웁니다!',true);
   }
   happen(o){
     // 경주 중 한 번, 확률적으로 재미있는 돌발 해프닝 (결과에는 영향 없음)
@@ -962,7 +967,8 @@ class RaceEngine{
     if(this.emo&&this.emo.length){ ctx.textAlign='center'; ctx.textBaseline='middle';
       for(const m of this.emo){ m.life-=1/60; m.y+=m.vy; m.x+=m.vx; ctx.globalAlpha=Math.max(0,Math.min(1,m.life)); ctx.font=`${m.s}px sans-serif`; ctx.fillText(m.e,m.x,m.y); }
       ctx.globalAlpha=1; this.emo=this.emo.filter(m=>m.life>0); }
-    if(this.cheerN){ const b=this.cheerBoost||0; if(b>0.02){ ctx.fillStyle=`rgba(255,212,59,${0.25+0.6*b})`; ctx.font='700 22px "Noto Sans KR",sans-serif'; ctx.textAlign='left'; ctx.fillText(`📣 응원 x${this.cheerN}`,18,H-170); } }
+    if(this.conf&&this.conf.length){ for(const f of this.conf){ f.life-=1/60; f.x+=f.vx+Math.sin(f.r)*0.8; f.y+=f.vy; f.r+=f.vr; ctx.save(); ctx.translate(f.x,f.y); ctx.rotate(f.r); ctx.globalAlpha=Math.max(0,Math.min(1,f.life)); ctx.fillStyle=f.c; ctx.fillRect(-f.w/2,-f.h/2,f.w,f.h*Math.abs(Math.cos(f.r*2))+1); ctx.restore(); }
+      this.conf=this.conf.filter(f=>f.life>0&&f.y<H+30); }
   }
   update(dt){
     this.real+=dt;
@@ -1229,7 +1235,7 @@ class RaceEngine{
     if(this.ended) return; this.ended=true; this.state='done';
     const o=this.order;
     let pimg=null; try{ if(this.pf) pimg=this.pf.toDataURL('image/jpeg',0.85); }catch(e){}
-    const res={ order:o.map(r=>r.h.no), times:o.map(r=>r.finT), margins:this.margins(), photo:this.photo, photoImg:pimg };
+    const res={ cheer:this.cheerN||0, order:o.map(r=>r.h.no), times:o.map(r=>r.finT), margins:this.margins(), photo:this.photo, photoImg:pimg };
     this.say(`확정! 1착 ${lblOf(o[0].h)}, 2착 ${lblOf(o[1].h)}, 3착 ${lblOf(o[2].h)}!`,true);
     if(this.cb.onDone) this.cb.onDone(res);
   }
@@ -1978,6 +1984,7 @@ function RaceView({setup,bets,onDone,onCheer}){
   const [comm,setComm]=useState(null);
   const [ff,setFf]=useState(false);
   const [vo,setVo]=useState(Voice.on);
+  const [cheerN,setCheerN]=useState(0);
   useEffect(()=>{
     Voice.pickVoice();
     const eng=new RaceEngine(cvRef.current,setup,{ bets,
@@ -1998,7 +2005,10 @@ function RaceView({setup,bets,onDone,onCheer}){
         {comm && <div key={comm.id} className="tick-in absolute left-2 right-2 bottom-12 rounded-xl bg-black/65 backdrop-blur-sm px-3 py-2 border border-white/10">
           <div className={`text-[15px] font-bold leading-snug ${comm.hot?'text-yellow-300':'text-white'}`}><span className="text-red-400 mr-1">🎙️</span>{comm.text}</div>
         </div>}
-        <button onPointerDown={e=>{ e.preventDefault(); Sound.init(); if(engRef.current&&engRef.current.state==='run'){ engRef.current.cheer(); onCheer&&onCheer(); } }} className="absolute right-3 rounded-full w-[68px] h-[68px] bg-gradient-to-b from-pink-500 to-red-600 text-white font-black text-[13px] shadow-[0_0_20px_rgba(255,80,80,.6)] active:scale-90 select-none" style={{bottom:'150px',touchAction:'manipulation'}}>📣<div className="text-[11px] leading-none">응원!</div></button>
+        {cheerN>0 && <div className="absolute right-3 text-center pointer-events-none" style={{bottom:'224px',width:68}}>
+          <div key={cheerN} className={`inline-block px-2 py-0.5 rounded-full font-black text-[13px] ${cheerN>=CHEER_GOAL?'bg-yellow-300 text-black':'bg-black/70 text-yellow-200'}`} style={{animation:'pop .18s ease-out'}}>{cheerN>=CHEER_GOAL?'🎉':''}{cheerN}</div>
+          <div className="text-[9.5px] font-bold text-white/85 mt-0.5" style={{textShadow:'0 1px 2px #000'}}>{cheerN>=CHEER_GOAL?`보너스 +${CHEER_BONUS}`:`${CHEER_GOAL}번 보너스!`}</div></div>}
+        <button onPointerDown={e=>{ e.preventDefault(); Sound.init(); if(engRef.current&&engRef.current.state==='run'){ engRef.current.cheer(); setCheerN(engRef.current.cheerN); onCheer&&onCheer(); } }} className="absolute right-3 rounded-full w-[68px] h-[68px] bg-gradient-to-b from-pink-500 to-red-600 text-white font-black text-[13px] shadow-[0_0_20px_rgba(255,80,80,.6)] active:scale-90 select-none" style={{bottom:'150px',touchAction:'manipulation'}}>📣<div className="text-[11px] leading-none">응원!</div></button>
         <div className="absolute bottom-2 right-2 left-2 flex justify-end gap-1.5">
           {bets.length>0 && <div className="mr-auto px-2 py-1 rounded-lg text-[11px] font-bold bg-black/60 text-yellow-200">🎫 마권 {bets.length}장 · {fmt(bets.reduce((s,b)=>s+b.amount,0))} CR</div>}
           {Voice.ok && <button onClick={()=>{ const v=!vo; setVo(v); Voice.on=v; if(!v) Voice.stop(); else Voice.kick('아나운서 중계 다시 시작합니다!'); }} className={`px-2.5 py-1 rounded-lg text-xs font-black ${vo?'bg-red-600 text-white':'bg-black/60 text-white'}`}>🎙️ {vo?'ON':'OFF'}</button>}
@@ -2035,7 +2045,7 @@ function CoinRain({big}){
 }
 
 /* ---------------- 결과 화면 ---------------- */
-function ResultModal({setup,result,bets,payouts,bonus,streak,ownerPrize,wpBonus,onNext}){
+function ResultModal({setup,result,bets,payouts,bonus,streak,ownerPrize,wpBonus,cheerBonus,onNext}){
   const totalBet=bets.reduce((s,b)=>s+b.amount,0);
   const totalWin=payouts.reduce((s,p)=>s+p,0);
   const maxMul=bets.reduce((m,b,i)=>payouts[i]>0?Math.max(m,b.odds):m,0);
@@ -2090,6 +2100,7 @@ function ResultModal({setup,result,bets,payouts,bonus,streak,ownerPrize,wpBonus,
           </div>
           {bonus>0 && <div className="mt-1 text-center text-[12.5px] font-black text-orange-200 bg-red-600/30 rounded-md py-0.5">🔥 {streak}연속 적중 보너스 +{fmt(bonus)} CR</div>}
         </div>}
+        {cheerBonus>0 && <div className="shrink-0 text-center text-[12.5px] font-black text-pink-100 bg-pink-600/50 rounded-xl py-1">📣 응원 {CHEER_GOAL}번 돌파! 응원 보너스 +{fmt(cheerBonus)} CR</div>}
         {wpBonus>0 && <div className="shrink-0 text-center text-[12.5px] font-black text-sky-100 bg-sky-700/50 rounded-xl py-1">🌍 구단 보너스 (승리 포인트·내 말 응원 배당) +{fmt(wpBonus)} CR</div>}
         {ownerPrize>0 && <div className="shrink-0 text-center text-[13px] font-black text-yellow-100 bg-gradient-to-r from-amber-600/60 to-orange-700/60 rounded-xl py-1.5">👑 구단주 상금·출전 수당 +{fmt(ownerPrize)} CR</div>}
         <button onClick={onNext} className="shrink-0 w-full py-3 rounded-2xl fx-title text-xl bg-gradient-to-b from-yellow-300 to-orange-500 text-black active:scale-[.98]">다음 경주 ▶</button>
@@ -2099,6 +2110,7 @@ function ResultModal({setup,result,bets,payouts,bonus,streak,ownerPrize,wpBonus,
 }
 
 /* ---------------- 퀴즈로 CREDIT 받기 ---------------- */
+const CHEER_GOAL=100, CHEER_BONUS=100;   // 응원 100번 넘기면 경기 후 보너스
 const MIN_BET = 20;   // 마권 1장 최소 금액
 const QUIZ_REWARD = 1000, QUIZ_DAILY_MAX = 5000;   // 퀴즈 보상은 하루 최대 5,000 CR
 const todayKey=()=>{ const d=new Date(); return `${d.getFullYear()}-${d.getMonth()+1}-${d.getDate()}`; };
@@ -2831,6 +2843,7 @@ function App(){
   const [ev,setEv]=useState(()=>loadEv());
   const [barn,setBarn]=useState(()=>loadBarn());
   const [wpBonus,setWpBonus]=useState(0);
+  const [cheerBonus,setCheerBonus]=useState(0);
   useEffect(()=>ls.set('sd_barn',barn),[barn]);
   useEffect(()=>ls.set('sd_ev',ev),[ev]);
   const [modal,setModal]=useState(null);
@@ -2878,7 +2891,8 @@ function App(){
     if(own && stable && stable.name===own.name){ const rk=o.indexOf(own.no); op=rk<3?PRIZE[rk]:0;
       setStable(st=>st?({...st,care:false,races:st.races+1,prize:st.prize+op,w:st.w.map((v,i)=>i===rk?v+1:v)}):st); }
     op+=wpz; setOwnerPrize(op);
-    setPayouts(pays); setResult(res); setCredit(c=>c+win+bn+op+wpb);
+    const cb=(res.cheer||0)>=CHEER_GOAL?CHEER_BONUS:0; setCheerBonus(cb);
+    setPayouts(pays); setResult(res); setCredit(c=>c+win+bn+op+wpb+cb);
     setHistory(h=>[[o[0],o[1]],...h].slice(0,20));
     if(cupsOf(claims)>=COFFEE_MAX){ const spent=bets.reduce((s,b)=>s+b.amount,0), net=win+bn+op+wpb-spent;
       const isQ=bets.some((b,i)=>b.type==='QUIN'&&pays[i]>0), big=bets.some((b,i)=>pays[i]>0&&b.odds>=10), ownWin=!!((own&&stable&&stable.name===own.name&&o[0]===own.no)||(wh&&o[0]===wh.no)), vid=setup.venue&&setup.venue.id;
@@ -2923,7 +2937,7 @@ function App(){
       {rps==='gate' && <BalloonGate onPass={()=>setRps('game')} onClose={()=>setRps(false)}/>}
       {rps==='game' && <RpsModal onClose={()=>setRps(false)} onReward={n=>setCredit(c=>c+n)}/>}
       {quiz && setup && <QuizModal setup={setup} onClose={()=>setQuiz(false)} onReward={n=>setCredit(c=>c+n)}/>}
-      {phase==='result' && result && <ResultModal setup={setup} result={result} bets={bets} payouts={payouts} bonus={bonus} streak={stats.streak} ownerPrize={ownerPrize} wpBonus={wpBonus} onNext={next}/>}
+      {phase==='result' && result && <ResultModal setup={setup} result={result} bets={bets} payouts={payouts} bonus={bonus} streak={stats.streak} ownerPrize={ownerPrize} wpBonus={wpBonus} cheerBonus={cheerBonus} onNext={next}/>}
       {modal==='event' && <EventModal credit={credit} claims={claims} ev={ev} onClose={()=>setModal(null)} onClaim={c=>{ setCredit(x=>x-c.cr); setClaims(L=>[c,...L]); if(cupsOf(claims)+c.cups>=COFFEE_MAX) setEv(e=>({...e,prog:newProg()})); }} onSeasonClear={b=>{ setCredit(x=>x+b.rw); setEv(e=>({s:e.s+1,prog:newProg(),badges:[...e.badges,b]})); }}/>}
       {modal==='owner' && <OwnerModal credit={credit} stable={stable} setStable={setStable} spend={n=>setCredit(x=>x-n)} onClose={()=>setModal(null)} barn={barn} setBarn={b=>{ setBarn(b); if(b.entry!==barn.entry) reroll(b); }}/>}
     </div>
