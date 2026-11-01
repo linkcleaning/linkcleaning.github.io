@@ -296,11 +296,11 @@ const Sound = {
         for(let i=0;i<len;i++) d[i]=Math.random()*2-1;
         this.noiseBuf = b;
       }
-      if(this.ctx.state==='suspended') this.ctx.resume();
+      if(this.ctx.state!=='running') this.ctx.resume();
     }catch(e){}
   },
   setMuted(m){ this.muted=m; if(this.master) this.master.gain.setTargetAtTime(m?0:0.9,this.ctx.currentTime,0.05); },
-  ok(){ return !!(this.ctx && this.master); },
+  ok(){ if(this.ctx && this.ctx.state!=='running'){ try{ this.ctx.resume(); }catch(e){} } return !!(this.ctx && this.master); },
   env(g,t,a,peak,d){
     g.gain.setValueAtTime(0.0001,t);
     g.gain.exponentialRampToValueAtTime(Math.max(0.0002,peak),t+a);
@@ -494,7 +494,7 @@ const Voice={ on:true, ok:typeof window!=='undefined'&&'speechSynthesis' in wind
       let done=false; const fin=()=>{ if(done||myTok!==this.tok) return; done=true; this.cur=null; this.wd=setTimeout(()=>this.next(),120); };
       this.L(`말하기 시도 [${u.voice?u.voice.name:'기본'}] ${it.t.slice(0,14)}`);
       let st=false; u.onstart=()=>{ st=true; this.started=Date.now(); this.fails=0; this.L('▶ 소리 시작'); };
-      u.onend=fin;
+      u.onend=()=>{ try{ if(Sound.ctx&&Sound.ctx.state!=='running') Sound.ctx.resume(); }catch(e){} fin(); };
       u.onerror=e=>{ this.L('✖ 오류: '+(e&&e.error||'?')); if(!st && this.v && !this.noVoice){ this.noVoice=true; this.q.unshift(it); } fin(); };   // 고른 목소리가 안 되면 기본 목소리로 다시
       speechSynthesis.speak(u);
       // 2.5초 안에 말이 시작 안 되면: 목소리 바꿔서 재시도, 그래도 안 되면 엔진 재시작
@@ -1902,7 +1902,7 @@ function Paddock({setup,credit,bets,setBets,onStart,onQuiz,onRps,onEvent,evLabel
         <button onClick={()=>{Sound.init();Sound.click();onQuiz();}} className="rounded-xl py-2 bg-gradient-to-b from-fuchsia-500 to-purple-700 text-[12.5px] font-black leading-tight">🧠 퀴즈<div className="text-[9.5px] font-bold opacity-80">오늘 {fmtN(quizToday())}/5,000</div></button>
       </div>
       <button onClick={()=>{Sound.init();Sound.click();onRps&&onRps();}} className="w-full mt-1.5 rounded-xl py-2 flex items-center justify-center gap-2 text-[13px] font-black" style={{background:'linear-gradient(90deg,#111,#1e293b,#111)',border:'2px solid #2563eb',boxShadow:'0 0 10px rgba(37,99,235,.5)'}}>
-        <span>✌️✊✋</span><span className="text-yellow-300">짱켐보이</span><span className="text-[10.5px] text-blue-200/80 font-bold">🪙 코인 넣고 입장 · 도전 or 스톱</span></button>
+        <span>✌️✊✋</span><span className="text-yellow-300">짱켐보이</span><span className="text-[10.5px] text-blue-200/80 font-bold">🪙 동전 30 CR · 도전 or 스톱</span></button>
       {/* 탭: 출전표 / 마권 구매 */}
       <div className="sticky top-[52px] z-20 mt-2 -mx-3 px-3 py-1.5 bg-[#070d1f]/90 backdrop-blur">
         <div className="grid grid-cols-2 gap-1 p-1 rounded-2xl bg-white/5">
@@ -2537,21 +2537,24 @@ function handMask(i,N){ const key=i+'_'+N; if(handMaskCache[key]) return handMas
 function drawLedText(ctx,txt,x0,y0,dot,lit,col){ let x=x0; for(const ch of txt){ const g=LED_FONT[ch]||LED_FONT[' '];
     for(let r=0;r<7;r++) for(let cc=0;cc<5;cc++){ const on=g[r][cc]==='1'; ctx.fillStyle=on?(lit?col:'#3a3a3a'):'#1c1c1c'; ctx.beginPath(); ctx.arc(x+cc*dot+dot/2,y0+r*dot+dot/2,dot*0.36,0,7); ctx.fill(); if(on&&lit){ ctx.save(); ctx.globalAlpha=0.35; ctx.beginPath(); ctx.arc(x+cc*dot+dot/2,y0+r*dot+dot/2,dot*0.62,0,7); ctx.fill(); ctx.restore(); } }
     x+=dot*6; } }
-function RpsModal({onClose,onReward}){
+const RPS_COIN=30;   // 동전 1개 = 도전 1회
+function RpsModal({onClose,onReward,credit}){
   const ld=()=>{ const d=ls.get('sd_rps',null); return d&&d.d===todayKey()?d:{d:todayKey(),runs:0,best:(d&&d.best)||0}; };
   const [day,setDay]=useState(ld);
   const [streak,setStreak]=useState(0);
   const [active,setActive]=useState(false);       // 도전 진행 중
   const [phase,setPhase]=useState('idle');          // idle(대기) | spin(돌아가는 중, 버튼 누르기) | stop(멈추는 중) | show(결과)
   const [res,setRes]=useState(null);                // {me,cpu,r:'win'|'lose'|'draw'}
-  const [msg,setMsg]=useState('🪙 동전을 투입구에 넣으면 게임이 켜져요!');
+  const [msg,setMsg]=useState(`🪙 동전(${RPS_COIN} CR)을 넣으면 게임이 켜져요!`);
   const [pop,setPop]=useState(null);
   const [nudge,setNudge]=useState(0);
   const [powered,setPowered]=useState(false);       // 코인 넣으면 기계 켜짐
   const [coin,setCoin]=useState(null);              // 드래그 중 위치 {x,y}
   const [coinAnim,setCoinAnim]=useState(false);
   const slotRef=useRef(null), coinBox=useRef(null);
-  const insertDone=()=>{ Sound.init(); Sound.coinIn(); setCoinAnim(true); setTimeout(()=>{ setPowered(true); st.current.powered=true; Sound.jjangkem(); setMsg('▶ START를 눌러 도전하세요!'); },520); };
+  const insertDone=()=>{ Sound.init(); if(credit<RPS_COIN){ Sound.miss(); setMsg(`CREDIT이 부족해요 (동전 1개 = ${RPS_COIN} CR)`); return; }
+    onReward(-RPS_COIN); Sound.coinIn(); setCoinAnim(true); setTimeout(()=>{ setPowered(true); st.current.powered=true; setCoinAnim(false); Sound.jjangkem(); setMsg('▶ START를 눌러 도전하세요!'); },520); };
+  const powerOff=()=>{ setPowered(false); st.current.powered=false; };   // 한 판 끝나면 다시 동전 필요
   const coinDown=e=>{ if(powered||coinAnim) return; e.preventDefault(); e.currentTarget.setPointerCapture&&e.currentTarget.setPointerCapture(e.pointerId); setCoin({x:e.clientX,y:e.clientY,sx:e.clientX,sy:e.clientY}); };
   const coinMove=e=>{ if(!coin) return; setCoin(c=>({...c,x:e.clientX,y:e.clientY})); };
   const coinUp=e=>{ if(!coin) return; const sr=slotRef.current&&slotRef.current.getBoundingClientRect(); const moved=Math.hypot(e.clientX-coin.sx,e.clientY-coin.sy);
@@ -2586,7 +2589,7 @@ function RpsModal({onClose,onReward}){
   useEffect(()=>{ if(phase!=='show'||!active||!res||res.r!=='draw') return; const t=setTimeout(()=>{ setRes(null); st.current.res=null; setPhase('spin'); setMsg(m=>m); },1900); return ()=>clearTimeout(t); },[phase,active,res]);
   const goOn=()=>{ if(phase!=='choice') return; Sound.init(); Sound.beep(700); setRes(null); st.current.res=null; setPhase('spin');
     setMsg(`도전! 이기면 ${fmt(RPS_PRIZE[streak+1])} CR, 지면 0 CR!`); };
-  const stop=()=>{ if(phase!=='choice') return; const prize=RPS_PRIZE[streak]; onReward(prize); Sound.jackpot(streak>=3); setActive(false); setPhase('idle'); setRes(null); st.current.res=null;
+  const stop=()=>{ if(phase!=='choice') return; const prize=RPS_PRIZE[streak]; onReward(prize); Sound.jackpot(streak>=3); setActive(false); setPhase('idle'); setRes(null); st.current.res=null; setTimeout(powerOff,1800);
     setMsg(`스톱! 상금 +${fmt(prize)} CR 획득! 🎉`); };
   const play=i=>{
     Sound.init(); const base=streak;
@@ -2604,11 +2607,11 @@ function RpsModal({onClose,onReward}){
       // 가위0 vs 바위1: 짐, 바위1 vs 보2: 짐, 보2 vs 가위0: 짐
       st.current.res=r; setRes({me:i,cpu,r}); setPhase('show');
       if(r==='draw'){ Sound.beep(400); setMsg('비겼어요! 다시 돌아갑니다!'); return; }
-      if(r==='lose'){ Sound.miss(); setActive(false); setTimeout(()=>setPhase(ph=>ph==='show'?'idle':ph),2500); setMsg(base?`아쉽다! 상금 ${fmt(RPS_PRIZE[base])} CR이 날아갔어요 😭`:'아쉽다! 다시 도전해 보세요!'); setDay(d=>({...d,best:Math.max(d.best,base)})); return; }
+      if(r==='lose'){ Sound.miss(); setActive(false); setTimeout(()=>{ setPhase(ph=>ph==='show'?'idle':ph); powerOff(); },2500); setMsg(base?`아쉽다! 상금 ${fmt(RPS_PRIZE[base])} CR이 날아갔어요 😭`:'아쉽다! 다시 도전해 보세요!'); setDay(d=>({...d,best:Math.max(d.best,base)})); return; }
       const ns=base+1; setStreak(ns); setDay(d=>({...d,best:Math.max(d.best,ns)}));
       const prize=RPS_PRIZE[ns];
       setPop({n:ns,p:prize}); setTimeout(()=>setPop(null),1500);
-      if(ns>=RPS_MAX){ onReward(prize); Sound.jackpot(true); setActive(false); setTimeout(()=>setPhase(ph=>ph==='show'?'idle':ph),3000); setMsg(`🎉 ${RPS_MAX}연승 완주! 최고 상금 +${fmt(prize)} CR 획득!`); }
+      if(ns>=RPS_MAX){ onReward(prize); Sound.jackpot(true); setActive(false); setTimeout(()=>{ setPhase(ph=>ph==='show'?'idle':ph); powerOff(); },3000); setMsg(`🎉 ${RPS_MAX}연승 완주! 최고 상금 +${fmt(prize)} CR 획득!`); }
       else { Sound.coin(); setPhase('choice'); setMsg(`${ns}연승! 상금 ${fmt(prize)} CR — 도전? 스톱?`); }
     },acc+250);
   };
@@ -2625,7 +2628,7 @@ function RpsModal({onClose,onReward}){
             {pop && <div className="absolute inset-0 flex flex-col items-center justify-center pop"><div className="fx-title text-yellow-300" style={{fontSize:44,textShadow:'0 0 16px #000,0 0 6px #000'}}>{pop.n}연승!</div><div className="fx-title" style={{fontSize:28,color:'#7CFC00',textShadow:'0 0 10px #000'}}>상금 {fmt(pop.p)} CR</div></div>}
           </div>
           {!powered ? <div className="mt-3 select-none" style={{touchAction:'none'}}>
-            <div className="text-[11.5px] font-black text-yellow-200 text-center animate-pulse">👉 동전을 투입구로 밀어 넣으세요 (탭해도 OK)</div>
+            <div className="text-[11.5px] font-black text-yellow-200 text-center animate-pulse">👉 동전을 투입구로 밀어 넣으세요 · 1회 {RPS_COIN} CR (탭해도 OK)</div>
             <div className="flex items-center justify-center" style={{gap:64,height:74}}>
             <div ref={coinBox} onPointerDown={coinDown} onPointerMove={coinMove} onPointerUp={coinUp} onPointerCancel={()=>setCoin(null)}
               className="rounded-full flex items-center justify-center font-black text-[13px]"
@@ -2656,7 +2659,7 @@ function RpsModal({onClose,onReward}){
                 <span style={{fontSize:30,lineHeight:1}}>{h.e}</span><span className="text-[14px] font-black text-white" style={{textShadow:'0 2px 0 rgba(0,0,0,.4)'}}>{h.k}</span></span>
             </button>)}</div>
           <div className="flex justify-between text-[11px] text-blue-200/70 mt-4 px-1"><span>오늘 도전 <b className="text-white">{day.runs}</b>회</span><span>오늘 최고 {day.best}연승</span></div>
-          <div className="text-[10.5px] text-blue-200/50 mt-1 px-1">코인 넣기 → START → 전광판이 돌아가요 → 가위·바위·보를 누르면 멈춰요! 이기면 도전(상금 UP) 또는 스톱(상금 받기). 도전하다 지면 상금은 0!</div>
+          <div className="text-[10.5px] text-blue-200/50 mt-1 px-1">동전 넣기(30 CR) → START → 전광판이 돌아가요 → 가위·바위·보를 누르면 멈춰요! 이기면 도전(상금 UP) 또는 스톱(상금 받기). 도전하다 지면 상금은 0!</div>
         </div>
       </div>
     </div>);
@@ -2921,7 +2924,7 @@ function App(){
           <button onClick={()=>{Sound.init();Sound.coin();setAttendMsg(null);}} className="w-full mt-3 py-3 rounded-xl font-black bg-gradient-to-b from-yellow-300 to-orange-500 text-black">받기</button>
         </div>
       </div>}
-      {rps==='game' && <RpsModal onClose={()=>setRps(false)} onReward={n=>setCredit(c=>c+n)}/>}
+      {rps==='game' && <RpsModal credit={credit} onClose={()=>setRps(false)} onReward={n=>setCredit(c=>c+n)}/>}
       {quiz && setup && <QuizModal setup={setup} onClose={()=>setQuiz(false)} onReward={n=>setCredit(c=>c+n)}/>}
       {phase==='result' && result && <ResultModal setup={setup} result={result} bets={bets} payouts={payouts} bonus={bonus} streak={stats.streak} ownerPrize={ownerPrize} wpBonus={wpBonus} cheerBonus={cheerBonus} onNext={next}/>}
       {modal==='event' && <EventModal credit={credit} claims={claims} ev={ev} onClose={()=>setModal(null)} onClaim={c=>{ setCredit(x=>x-c.cr); setClaims(L=>[c,...L]); if(cupsOf(claims)+c.cups>=COFFEE_MAX) setEv(e=>({...e,prog:newProg()})); }} onSeasonClear={b=>{ setCredit(x=>x+b.rw); setEv(e=>({s:e.s+1,prog:newProg(),badges:[...e.badges,b]})); }}/>}
