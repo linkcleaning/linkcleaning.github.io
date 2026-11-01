@@ -132,10 +132,11 @@ const barnDaily=barn=>Math.round((barn&&barn.horses||[]).reduce((s,x)=>s+((WORLD
 const barnWP=barn=>Math.min(WP_MAX,(barn&&barn.horses||[]).reduce((s,x)=>s+((WORLD_HORSES.find(w=>w.id===x.id)||{}).wp||0),0));
 function loadBarn(){ return ls.get('sd_barn',{horses:[],entry:null}); }
 
+const ROSTER={'안영삼':'하나토탈이','한승우':'링크돌이','김기훈':'기훈짱','이은경':'링크순이','한정민':'핑크공주','맹길이':'까스돌이','박시은':'크림어스','한정호':'리턴팩토리'};
 function generateField(){
   const used=new Set();
   const jockeys=shuffle(['안영삼','한승우','김기훈','한정민','한정호','이은경','맹길이','박시은']);
-  const FIXED={'안영삼':'하나토탈이','한승우':'링크돌이','김기훈':'기훈짱','이은경':'링크순이','한정민':'핑크공주','맹길이':'까스돌이','박시은':'크림어스','한정호':'리턴팩토리'};
+  const FIXED=ROSTER;
   Object.values(FIXED).forEach(n=>used.add(n));
   const styles=shuffle(['도주','추입',...shuffle(['도주','선행','선행','선입','선입','추입','추입','도주']).slice(0,FIELD-2)]);
   return styles.map((style,i)=>{
@@ -2674,6 +2675,17 @@ const trainCost=lv=>300+200*lv;
 const STAT_INFO={spd:{n:'스피드',e:'⚡',d:'기본 속도가 올라가요'},sta:{n:'지구력',e:'💪',d:'후반에 덜 지쳐요'},kick:{n:'순발력',e:'🔥',d:'막판 스퍼트가 강해져요'}};
 function resizeLogo(file,cb){ const rd=new FileReader(); rd.onload=()=>{ const im=new Image(); im.onload=()=>{ const S=160, c=document.createElement('canvas'); c.width=c.height=S; const x=c.getContext('2d');
     const k=Math.max(S/im.width,S/im.height), w=im.width*k, h=im.height*k; x.fillStyle='#fff'; x.fillRect(0,0,S,S); x.drawImage(im,(S-w)/2,(S-h)/2,w,h); cb(c.toDataURL('image/jpeg',0.85)); }; im.src=rd.result; }; rd.readAsDataURL(file); }
+function WhoModal({me,onPick,onClose}){
+  return (<div className="fixed inset-0 flex items-center justify-center p-4" style={{zIndex:70,background:'rgba(0,0,0,.85)'}} onClick={onClose}>
+    <div className="glass rounded-3xl p-4 w-full max-w-sm pop" onClick={e=>e.stopPropagation()}>
+      <div className="fx-title text-[22px] gold text-center">🙋 나는 누구?</div>
+      <p className="text-[12.5px] text-blue-100/85 text-center mt-1">내 이름을 고르면 <b className="text-yellow-200">내 이름의 말이 내 말</b>이 돼요!<br/>구단주 창단비 없이 바로 시작해요.</p>
+      <div className="grid grid-cols-2 gap-2 mt-3">{Object.entries(ROSTER).map(([j,h])=>
+        <button key={j} onClick={()=>onPick(j)} className={`rounded-2xl p-2.5 text-left ${me===j?'bg-yellow-300 text-black':'bg-white/10'}`}>
+          <div className="font-black text-[15px]">{j}</div><div className={`text-[11.5px] font-bold ${me===j?'text-black/70':'text-yellow-200'}`}>🐎 {h}</div></button>)}</div>
+      {me && <button onClick={onClose} className="w-full mt-3 py-2.5 rounded-xl bg-white/10 font-black text-[13px]">닫기</button>}
+    </div></div>);
+}
 function ClubCard(){
   const [c,setC]=useState(()=>Club.get()); const [edit,setEdit]=useState(false); const [nm,setNm]=useState(c.name); const fileRef=useRef(null);
   const save=v=>{ Club.set(v); setC(v); };
@@ -2851,6 +2863,12 @@ function App(){
   const [stable,setStable]=useState(()=>ls.get('sd_stable',null));
   const [claims,setClaims]=useState(()=>ls.get('sd_claims',[]));
   const [vtest,setVtest]=useState(false);
+  const [me,setMe]=useState(()=>ls.get('sd_me',''));
+  const [who,setWho]=useState(()=>!ls.get('sd_me',''));
+  const pickMe=j=>{ Sound.init(); Sound.coin(); setMe(j); ls.set('sd_me',j); setWho(false);
+    const horse=ROSTER[j];
+    setStable(st=>{ const base=st||{spd:0,sta:0,kick:0,care:false,invested:0,prize:0,w:[0,0,0],races:0}; const ns={...base,name:horse}; ls.set('sd_stable',ns); return ns; });
+    if(phase==='paddock'){ setBets([]); setSetup(makeRaceSetup(raceNo,ls.get('sd_stable',null),ls.get('sd_barn',null))); } };
   const [ev,setEv]=useState(()=>loadEv());
   const [barn,setBarn]=useState(()=>loadBarn());
   const [wpBonus,setWpBonus]=useState(0);
@@ -2924,6 +2942,7 @@ function App(){
           <div className="fx-title text-[19px] leading-none whitespace-nowrap"><span className="gold">★ LINK</span> <span className="text-white">DERBY</span></div>
           
           <div className="ml-auto flex items-center gap-2">
+            <button onClick={()=>setWho(true)} className="h-8 px-2 shrink-0 rounded-full bg-white/10 text-[11.5px] font-black whitespace-nowrap">👤 {me||'나는?'}</button>
             
             <button onClick={()=>{Sound.init(); setMuted(m=>!m);}} className="w-8 h-8 shrink-0 rounded-full bg-white/10 text-base">{muted?'🔇':'🔊'}</button>
             <div className="rounded-full bg-gradient-to-b from-yellow-300 to-amber-500 text-black px-2.5 py-1 font-black text-[13px] shadow whitespace-nowrap">💰 {fmt(credit)}</div>
@@ -2945,6 +2964,7 @@ function App(){
           <button onClick={()=>{Sound.init();Sound.coin();setAttendMsg(null);}} className="w-full mt-3 py-3 rounded-xl font-black bg-gradient-to-b from-yellow-300 to-orange-500 text-black">받기</button>
         </div>
       </div>}
+      {who && <WhoModal me={me} onPick={pickMe} onClose={()=>me&&setWho(false)}/>}
       {rps==='game' && <RpsModal credit={credit} onClose={()=>setRps(false)} onReward={n=>setCredit(c=>c+n)}/>}
       {quiz && setup && <QuizModal setup={setup} onClose={()=>setQuiz(false)} onReward={n=>setCredit(c=>c+n)}/>}
       {phase==='result' && result && <ResultModal setup={setup} result={result} bets={bets} payouts={payouts} bonus={bonus} streak={stats.streak} ownerPrize={ownerPrize} wpBonus={wpBonus} cheerBonus={cheerBonus} onNext={next}/>}
