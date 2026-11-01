@@ -234,6 +234,13 @@ function computeOdds(horses,D,going,N){
   }
   return odds;
 }
+/* 🛒 구단 매점 아이템 (다음 1경주에만 효과, 이기면 보너스) */
+const ITEMS=[
+  {id:'nutri',e:'💊',n:'말 종합 영양제',d:'컨디션 2단계 UP',price:250,win:200},
+  {id:'sack', e:'🎒',n:'마훈 자루 특훈',d:'모래주머니 훈련 · 막판 스퍼트 UP',price:350,win:300},
+  {id:'diet', e:'🥗',n:'날씬 다이어트제',d:'체중 -8kg · 몸이 가벼워져 스피드 UP',price:400,win:300},
+  {id:'spa',  e:'🛁',n:'스파 마사지',d:'근육 풀기 · 지구력 UP',price:300,win:250}];
+const FULLSET_BONUS=1000;   // 4개 다 쓰고 1착이면 추가
 function makeRaceSetup(raceNo,stable,barn){
   const venue = venueOf(raceNo), nm = pick(venue.races);
   const D = pick([1200,1400,1600,1800]);
@@ -252,13 +259,21 @@ function makeRaceSetup(raceNo,stable,barn){
     const owned = !!(stable && stable.name===h.name);
     if(owned){ // 구단주 투자 효과: 스피드·지구력·순발력 레벨, 컨디션 관리
       abil += 0.0002*(stable.spd||0); stam += 0.006*(stable.sta||0); h.kickB=0.0012*(stable.kick||0);
-      if(stable.care) cond=5; }
+      if(stable.care) cond=5;
+      const it=stable.items||{}; h.items=ITEMS.filter(x=>it[x.id]).map(x=>x.id);
+      if(it.nutri) cond=Math.min(5,cond+2);
+      if(it.sack) h.kickB=(h.kickB||0)+0.0012;
+      if(it.diet){ abil+=0.0005; h.diet=true; }
+      if(it.spa) stam+=0.025;
+      const n=h.items.length; if(n) h.hidden=(h.hidden||0)+0.00025*n;   // 아이템 효과 일부는 배당표에 안 잡힘 (숨은 힘) }
+    }
     if(h.world){ h.hidden=0.00018*h.world.grade+(h.world.home?0.0004:0); abil += 0.00018*h.world.grade + (h.world.home?0.0004:0); stam += 0.01*h.world.grade; cond=Math.max(cond,3); }
     const q = (abil-0.996)/0.008;
     const recent = [];
     for(let k=0;k<5;k++){ const rr=Math.min(6,Math.max(1,Math.round(1+Math.random()*5*(1.15-q*0.8)))); recent.push(rr); }
+    const wk=440+Math.floor(Math.random()*70);
     return { ...h, owned:owned||!!h.world, cond, abil, stam, recent,
-      weightKg: 440+Math.floor(Math.random()*70), delta: (Math.floor(Math.random()*9)-4)*2 };
+      weightKg: h.diet?wk-8:wk, delta: h.diet?-8:(Math.floor(Math.random()*9)-4)*2 };
   });
   const odds = computeOdds(horses,D,GOING_MUL[going],380);
   horses.forEach(h=>{ if(h.hidden) h.abil+=h.hidden; });   // 숨은 실력: 배당표엔 안 잡힌 구단주 관리 효과
@@ -1750,6 +1765,7 @@ function HorseCard({h,setup,selected,onPick,type}){
               <div className="text-[11px] text-blue-200/80 mt-1">{h.sex}{h.age} · {h.coatName} · 기수 {h.jockey} · {h.weightKg}kg({h.delta>=0?'+':''}{h.delta})</div>
             </div>
             {h.owned && <span className="ml-1 px-1.5 py-0.5 rounded bg-yellow-300 text-black text-[10px] font-black whitespace-nowrap inline-flex items-center gap-1 align-middle">{Club.get().logo?<img src={Club.get().logo} alt="" style={{width:14,height:14,borderRadius:7,objectFit:'cover'}}/>:'👑'}{Club.get().name||'내 말'}</span>}
+              {h.items && h.items.length>0 && <span className="ml-1 text-[13px] align-middle" title="사용한 아이템">{ITEMS.filter(x=>h.items.includes(x.id)).map(x=>x.e).join('')}</span>}
               {h.world && <span className="ml-1 px-1.5 py-0.5 rounded bg-sky-400 text-black text-[10px] font-black whitespace-nowrap">{h.world.flag} {'★'.repeat(h.world.grade)}{h.world.home?' 홈':''}</span>}
             {mark && <div className="ml-auto text-2xl font-black text-yellow-300 drop-shadow">{mark}</div>}
           </div>
@@ -2058,7 +2074,7 @@ function CoinRain({big}){
 }
 
 /* ---------------- 결과 화면 ---------------- */
-function ResultModal({setup,result,bets,payouts,bonus,streak,ownerPrize,wpBonus,cheerBonus,onNext}){
+function ResultModal({setup,result,bets,payouts,bonus,streak,ownerPrize,wpBonus,cheerBonus,itemBonus,onNext}){
   const totalBet=bets.reduce((s,b)=>s+b.amount,0);
   const totalWin=payouts.reduce((s,p)=>s+p,0);
   const maxMul=bets.reduce((m,b,i)=>payouts[i]>0?Math.max(m,b.odds):m,0);
@@ -2113,6 +2129,7 @@ function ResultModal({setup,result,bets,payouts,bonus,streak,ownerPrize,wpBonus,
           </div>
           {bonus>0 && <div className="mt-1 text-center text-[12.5px] font-black text-orange-200 bg-red-600/30 rounded-md py-0.5">🔥 {streak}연속 적중 보너스 +{fmt(bonus)} CR</div>}
         </div>}
+        {itemBonus>0 && <div className="shrink-0 text-center text-[12.5px] font-black text-emerald-100 bg-emerald-600/50 rounded-xl py-1">🛒 아이템 효과로 우승! 승리 보너스 +{fmt(itemBonus)} CR (구단주 상금에 포함)</div>}
         {cheerBonus>0 && <div className="shrink-0 text-center text-[12.5px] font-black text-pink-100 bg-pink-600/50 rounded-xl py-1">📣 응원 {CHEER_GOAL}번 돌파! 응원 보너스 +{fmt(cheerBonus)} CR</div>}
         {wpBonus>0 && <div className="shrink-0 text-center text-[12.5px] font-black text-sky-100 bg-sky-700/50 rounded-xl py-1">🌍 구단 보너스 (승리 포인트·내 말 응원 배당) +{fmt(wpBonus)} CR</div>}
         {ownerPrize>0 && <div className="shrink-0 text-center text-[13px] font-black text-yellow-100 bg-gradient-to-r from-amber-600/60 to-orange-700/60 rounded-xl py-1.5">👑 구단주 상금·출전 수당 +{fmt(ownerPrize)} CR</div>}
@@ -2816,6 +2833,16 @@ function StableModal({credit,stable,setStable,spend,onClose,tabs}){
               <span className="text-xl">🥕</span><div className="flex-1"><div className="font-black text-[14px]">특별 컨디션 관리</div><div className="text-[11px] text-blue-200/70">다음 1경주 컨디션 '최상' 보장</div></div>
               <button disabled={st.care||credit<CARE_COST} onClick={()=>{ spend(CARE_COST); Sound.coin(); setStable({...st,care:true,invested:st.invested+CARE_COST}); }} className={`px-3 py-2 rounded-xl text-[12px] font-black ${!st.care&&credit>=CARE_COST?'bg-gradient-to-b from-orange-400 to-orange-600 text-white':'bg-white/10 text-white/40'}`}>{st.care?'예약됨':`관리 ${CARE_COST}`}</button>
             </div>
+            <div className="rounded-2xl p-2.5" style={{background:'linear-gradient(135deg,rgba(16,185,129,.18),rgba(59,130,246,.12))',border:'1px solid rgba(52,211,153,.35)'}}>
+              <div className="flex items-center"><span className="font-black text-[15px]">🛒 구단 매점</span><span className="ml-auto text-[10.5px] text-emerald-200">다음 1경주에만 효과</span></div>
+              <div className="text-[11px] text-blue-100/80 mt-0.5">먹이고 뛰어서 <b className="text-yellow-200">1착</b>하면 아이템마다 승리 보너스! 4개 풀세트 우승은 <b className="text-yellow-200">+{fmt(FULLSET_BONUS)}</b> 추가</div>
+              <div className="grid grid-cols-2 gap-1.5 mt-2">{ITEMS.map(it=>{ const has=!!(st.items&&st.items[it.id]), ok=!has&&credit>=it.price; return (
+                <div key={it.id} className={`rounded-xl p-2 ${has?'bg-emerald-500/25 ring-1 ring-emerald-300':'bg-black/25'}`}>
+                  <div className="flex items-center gap-1.5"><span className="text-[22px]">{it.e}</span><div className="min-w-0"><div className="font-black text-[12.5px] leading-tight">{it.n}</div><div className="text-[10px] text-blue-200/75 leading-tight">{it.d}</div></div></div>
+                  <div className="flex items-center mt-1.5"><span className="text-[10px] text-yellow-200 font-bold">1착 +{it.win}</span>
+                    <button disabled={!ok} onClick={()=>{ spend(it.price); Sound.coin(); setStable({...st,items:{...(st.items||{}),[it.id]:true},invested:st.invested+it.price}); }} className={`ml-auto px-2 py-1 rounded-lg text-[11px] font-black ${has?'bg-emerald-400 text-black':ok?'bg-yellow-300 text-black':'bg-white/10 text-white/40'}`}>{has?'✓ 준비됨':`${it.price} CR`}</button></div>
+                </div>); })}</div>
+            </div>
           </div>
           <div className="mt-3 text-[11.5px] text-blue-200/75">🏆 구단 상금: 1착 {PRIZE[0]} · 2착 {PRIZE[1]} · 3착 {PRIZE[2]} CR (마권과 별도로 지급)</div>
           <button onClick={()=>{ if(window.__sellAsk){ setStable(null); spend(-Math.round(st.invested*0.3)); window.__sellAsk=false; } else { window.__sellAsk=true; setTimeout(()=>window.__sellAsk=false,3000); Sound.click(); } }} className="w-full mt-3 py-2.5 rounded-xl text-[12px] font-bold bg-white/5 text-red-200/80">구단 매각 (투자액의 30% 환급 · 한 번 더 누르면 확정)</button>
@@ -2873,6 +2900,7 @@ function App(){
   const [barn,setBarn]=useState(()=>loadBarn());
   const [wpBonus,setWpBonus]=useState(0);
   const [cheerBonus,setCheerBonus]=useState(0);
+  const [itemBonus,setItemBonus]=useState(0);
   useEffect(()=>ls.set('sd_barn',barn),[barn]);
   useEffect(()=>ls.set('sd_ev',ev),[ev]);
   const [modal,setModal]=useState(null);
@@ -2890,6 +2918,10 @@ function App(){
   useEffect(()=>ls.set('sd_stats',stats),[stats]);
   useEffect(()=>{ setSetup(null); const t=setTimeout(()=>setSetup(makeRaceSetup(raceNo,ls.get('sd_stable',null),ls.get('sd_barn',null))),30); return ()=>clearTimeout(t); },[raceNo]);
   const reroll=b=>{ if(phase!=='paddock') return; setBets([]); setSetup(makeRaceSetup(raceNo,ls.get('sd_stable',null),b)); };
+  // 매점 아이템을 사면 지금 출전표에 바로 반영 (경주 전일 때만)
+  const itemsKey=JSON.stringify((stable&&stable.items)||{}); const firstItems=useRef(true);
+  useEffect(()=>{ if(firstItems.current){ firstItems.current=false; return; } if(phase!=='paddock'||!stable) return;
+    const t=setTimeout(()=>{ setBets([]); setSetup(makeRaceSetup(raceNo,ls.get('sd_stable',null),ls.get('sd_barn',null))); },50); return ()=>clearTimeout(t); },[itemsKey]);
   useEffect(()=>ls.set('sd_credit',credit),[credit]);
   useEffect(()=>ls.set('sd_race',raceNo),[raceNo]);
   useEffect(()=>ls.set('sd_hist',history),[history]);
@@ -2917,8 +2949,11 @@ function App(){
     if(wh){ const rk=o.indexOf(wh.no); wpz=worldPrize(rk,wh.world.grade)+appearFee(wh.world.grade);
       setBarn(B=>({...B,horses:B.horses.map(x=>x.id===wh.world.id?{...x,races:(x.races||0)+1,prize:(x.prize||0)+wpz,w:(x.w||[0,0,0]).map((v,i)=>i===rk?v+1:v)}:x)})); }
     const own=setup.horses.find(h=>h.owned&&!h.world); let op=0;
+    let ib=0;
     if(own && stable && stable.name===own.name){ const rk=o.indexOf(own.no); op=rk<3?PRIZE[rk]:0;
-      setStable(st=>st?({...st,care:false,races:st.races+1,prize:st.prize+op,w:st.w.map((v,i)=>i===rk?v+1:v)}):st); }
+      const used=own.items||[]; if(rk===0&&used.length){ ib=ITEMS.filter(x=>used.includes(x.id)).reduce((a,x)=>a+x.win,0)+(used.length===ITEMS.length?FULLSET_BONUS:0); }
+      setStable(st=>st?({...st,care:false,items:{},races:st.races+1,prize:st.prize+op+ib,w:st.w.map((v,i)=>i===rk?v+1:v)}):st); }
+    setItemBonus(ib); op+=ib;
     op+=wpz; setOwnerPrize(op);
     const cb=(res.cheer||0)>=CHEER_GOAL?CHEER_BONUS:0; setCheerBonus(cb);
     setPayouts(pays); setResult(res); setCredit(c=>c+win+bn+op+wpb+cb);
@@ -2967,7 +3002,7 @@ function App(){
       {who && <WhoModal me={me} onPick={pickMe} onClose={()=>me&&setWho(false)}/>}
       {rps==='game' && <RpsModal credit={credit} onClose={()=>setRps(false)} onReward={n=>setCredit(c=>c+n)}/>}
       {quiz && setup && <QuizModal setup={setup} onClose={()=>setQuiz(false)} onReward={n=>setCredit(c=>c+n)}/>}
-      {phase==='result' && result && <ResultModal setup={setup} result={result} bets={bets} payouts={payouts} bonus={bonus} streak={stats.streak} ownerPrize={ownerPrize} wpBonus={wpBonus} cheerBonus={cheerBonus} onNext={next}/>}
+      {phase==='result' && result && <ResultModal setup={setup} result={result} bets={bets} payouts={payouts} bonus={bonus} streak={stats.streak} ownerPrize={ownerPrize} wpBonus={wpBonus} cheerBonus={cheerBonus} itemBonus={itemBonus} onNext={next}/>}
       {modal==='event' && <EventModal credit={credit} claims={claims} ev={ev} onClose={()=>setModal(null)} onClaim={c=>{ setCredit(x=>x-c.cr); setClaims(L=>[c,...L]); if(cupsOf(claims)+c.cups>=COFFEE_MAX) setEv(e=>({...e,prog:newProg()})); }} onSeasonClear={b=>{ setCredit(x=>x+b.rw); setEv(e=>({s:e.s+1,prog:newProg(),badges:[...e.badges,b]})); }}/>}
       {modal==='owner' && <OwnerModal credit={credit} stable={stable} setStable={setStable} spend={n=>setCredit(x=>x-n)} onClose={()=>setModal(null)} barn={barn} setBarn={b=>{ setBarn(b); if(b.entry!==barn.entry) reroll(b); }}/>}
     </div>
