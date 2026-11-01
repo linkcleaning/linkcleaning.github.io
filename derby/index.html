@@ -135,7 +135,7 @@ function stepRunner(r,dt,D,going,leadPos){
     const p=r.pos/D;
     // 중반까지는 뒤쪽 말이 바람막이 효과로 따라붙어 마군이 촘촘하게 유지됨 → 막판 대혼전
     if(leadPos!=null && p>0.05 && p<0.78){ const gap=leadPos-r.pos; if(gap>1.5) tgt*=1+Math.min(0.012,(gap-1.5)*0.0012); }
-    if(p>0.72) tgt*=r.kick;   // 막판 컨디션 변수 → 역전 드라마
+    if(p>0.72) tgt*=r.kick*(1+(r.h.kickB||0));   // 막판 컨디션 변수 → 역전 드라마
   }
   const rate = r.v<tgt ? (r.h.style==='도주'?0.95:(r.h.style==='추입'?0.7:0.82)) : 0.5;
   r.v += (tgt-r.v)*Math.min(1,rate*dt);
@@ -183,21 +183,25 @@ function computeOdds(horses,D,going,N){
   }
   return odds;
 }
-function makeRaceSetup(raceNo){
+function makeRaceSetup(raceNo,stable){
   const nm = RACE_NAMES[(raceNo-1)%RACE_NAMES.length];
   const D = pick([1200,1400,1600,1800]);
   const surface = Math.random()<0.6 ? 'turf' : 'dirt';
   const weather = pickW(['맑음','흐림','비','노을','야간'],[4,2,1.8,1.5,1.7]);
   const going = weather==='비' ? pickW(['다습','불량'],[1,1.2]) : weather==='흐림' ? pickW(['양호','다습'],[3,1]) : pickW(['양호','다습'],[7,1]);
   const horses = generateField().map(h=>{
-    const cond = pickW([1,2,3,4,5],[1,2,4,3,1.5]);
+    let cond = pickW([1,2,3,4,5],[1,2,4,3,1.5]);
     let abil = 0.997+Math.random()*0.006;
     if(surface==='dirt') abil *= 1+(h.dirtFit-1)*0.14;
-    const stam = 0.95+Math.random()*0.1;
+    let stam = 0.95+Math.random()*0.1;
+    const owned = !!(stable && stable.name===h.name);
+    if(owned){ // 구단주 투자 효과: 스피드·지구력·순발력 레벨, 컨디션 관리
+      abil += 0.0002*(stable.spd||0); stam += 0.006*(stable.sta||0); h.kickB=0.0012*(stable.kick||0);
+      if(stable.care) cond=5; }
     const q = (abil-0.996)/0.008;
     const recent = [];
     for(let k=0;k<5;k++){ const rr=Math.min(6,Math.max(1,Math.round(1+Math.random()*5*(1.15-q*0.8)))); recent.push(rr); }
-    return { ...h, cond, abil, stam, recent,
+    return { ...h, owned, cond, abil, stam, recent,
       weightKg: 440+Math.floor(Math.random()*70), delta: (Math.floor(Math.random()*9)-4)*2 };
   });
   const odds = computeOdds(horses,D,GOING_MUL[going],380);
@@ -1002,6 +1006,7 @@ class RaceEngine{
             ()=>`${S.pop[o[3].h.no]===1?'1번 인기 '+nm(o[3])+', 아직 중단에 있습니다. 괜찮을까요?':nm(o[3])+', 오늘 컨디션 '+COND_INFO[o[3].h.cond].t+'으로 나왔습니다.'}`,
             ()=>({'비':`빗속에서도 ${nm(a)}의 발놀림이 가볍습니다.`,'야간':`조명 아래 ${nm(a)}의 ${a.h.coatName} 털빛이 빛납니다.`,'노을':`노을빛 속을 질주하는 ${nm(a)}!`,'흐림':`흐린 날씨에도 ${nm(a)}의 기세가 대단합니다.`,'맑음':`맑은 하늘 아래 ${nm(a)}의 발걸음이 경쾌합니다.`})[this.wx]||`${nm(a)}의 기세가 좋습니다.`,
             ()=>`관중석에서 ${eul(nm(a))} 외치는 함성이 터집니다!`,
+            ...(this.runners.some(r=>r.h.owned)?[()=>{ const r=this.runners.find(x=>x.h.owned); return `구단주님의 ${L(r)}, 현재 ${o.indexOf(r)+1}번째! 투자한 보람을 보여줄까요?`; }]:[]),
             ...(this.myNos.size?[()=>{ const mn=pick([...this.myNos]); const r=o.find(x=>x.h.no===mn); return `마권 사신 ${L(r)}, 현재 ${o.indexOf(r)+1}번째로 달리고 있습니다! 힘내라!`; }]:[])]);
         }
       }
@@ -1260,7 +1265,7 @@ class RaceEngine{
     if(x<-200||x>W+200) return;
     const amp=Math.min(1,r.v/9);
     const remain=this.D-r.pos, fire=r.spurting&&!r.fin;
-    const mine=this.myNos.has(r.h.no);
+    const mine=this.myNos.has(r.h.no), owned=!!r.h.owned;
     if(mine){ ctx.save(); const pr=0.55+0.25*Math.sin(this.real*6); ctx.strokeStyle=`rgba(255,212,59,${pr})`; ctx.lineWidth=3; ctx.beginPath(); ctx.ellipse(x-10*s,y+2,62*s,9*s,0,0,6.283); ctx.stroke(); ctx.fillStyle='rgba(255,212,59,0.16)'; ctx.fill(); ctx.restore(); }
     if(fire){ ctx.save(); ctx.globalCompositeOperation='lighter'; ctx.globalAlpha=0.55; ctx.drawImage(FIRE_GLOW,x-115*s,y-125*s,200*s,110*s); ctx.restore(); }
     if(amp>0.6){
@@ -1276,6 +1281,7 @@ class RaceEngine{
     if(mine){ ctx.strokeStyle='#ffd43b'; ctx.lineWidth=3; rr(ctx,x+14*s-14,ty-14,28,24,6); ctx.stroke();
       ctx.fillStyle='#ffd43b'; rr(ctx,x+14*s-36,ty-11,20,18,4); ctx.fill(); ctx.fillStyle='#111'; ctx.font='700 12px sans-serif'; ctx.fillText('★',x+14*s-26,ty-2); }
     if(r.spurting&&!r.fin){ ctx.font='bold 18px sans-serif'; ctx.fillText('🔥',x+14*s+24,ty-2); }
+    if(owned){ ctx.font='bold 20px sans-serif'; ctx.textAlign='center'; ctx.fillText('👑',x+14*s,ty-26); }
     if(r.pop && this.real-r.pop.t<1.2){ const e=this.real-r.pop.t; ctx.save(); ctx.globalAlpha=1-e/1.2; ctx.fillStyle='#69ff8a'; ctx.strokeStyle='rgba(0,0,0,0.6)'; ctx.lineWidth=3; ctx.font='700 20px "Noto Sans KR",sans-serif'; ctx.strokeText(r.pop.txt,x+14*s,ty-24-e*26); ctx.fillText(r.pop.txt,x+14*s,ty-24-e*26); ctx.restore(); }
   }
   drawGatePanel(ctx,z){
@@ -1547,6 +1553,7 @@ function HorseCard({h,setup,selected,onPick,type}){
               <div className="fx-title text-xl leading-none truncate">{h.name}</div>
               <div className="text-[11px] text-blue-200/80 mt-1">{h.sex}{h.age} · {h.coatName} · 기수 {h.jockey} · {h.weightKg}kg({h.delta>=0?'+':''}{h.delta})</div>
             </div>
+            {h.owned && <span className="ml-1 px-1.5 py-0.5 rounded bg-yellow-300 text-black text-[10px] font-black whitespace-nowrap">👑 내 말</span>}
             {mark && <div className="ml-auto text-2xl font-black text-yellow-300 drop-shadow">{mark}</div>}
           </div>
           <div className="flex items-end gap-1 mt-1">
@@ -1609,7 +1616,7 @@ function QuinMatrix({setup,sel,onPair}){
   );
 }
 
-function Paddock({setup,credit,bets,setBets,onStart,onQuiz,history,stats}){
+function Paddock({setup,credit,bets,setBets,onStart,onQuiz,onEvent,onOwner,stable,history,stats}){
   const [tab,setTab]=useState('card');
   const [type,setType]=useState('WIN');
   const [sel,setSel]=useState([]);
@@ -1690,6 +1697,12 @@ function Paddock({setup,credit,bets,setBets,onStart,onQuiz,history,stats}){
         </div>}
       </div>
 
+      {/* 메뉴: 커피 이벤트 / 내 구단 / 퀴즈 */}
+      <div className="grid grid-cols-3 gap-1.5 mt-2">
+        <button onClick={()=>{Sound.init();Sound.click();onEvent();}} className="rounded-xl py-2 bg-gradient-to-b from-emerald-600 to-teal-800 text-[12.5px] font-black leading-tight">☕ 커피 이벤트<div className="text-[9.5px] font-bold opacity-80">3만·5만 CR 교환</div></button>
+        <button onClick={()=>{Sound.init();Sound.click();onOwner();}} className="rounded-xl py-2 bg-gradient-to-b from-amber-500 to-orange-700 text-[12.5px] font-black leading-tight">🏇 내 구단<div className="text-[9.5px] font-bold opacity-80">{stable?`👑 ${stable.name}`:'구단주 되기'}</div></button>
+        <button onClick={()=>{Sound.init();Sound.click();onQuiz();}} className="rounded-xl py-2 bg-gradient-to-b from-fuchsia-500 to-purple-700 text-[12.5px] font-black leading-tight">🧠 퀴즈<div className="text-[9.5px] font-bold opacity-80">정답 +1,000</div></button>
+      </div>
       {/* 탭: 출전표 / 마권 구매 */}
       <div className="sticky top-[52px] z-20 mt-2 -mx-3 px-3 py-1.5 bg-[#070d1f]/90 backdrop-blur">
         <div className="grid grid-cols-2 gap-1 p-1 rounded-2xl bg-white/5">
@@ -1832,7 +1845,7 @@ function CoinRain({big}){
 }
 
 /* ---------------- 결과 화면 ---------------- */
-function ResultModal({setup,result,bets,payouts,bonus,streak,onNext}){
+function ResultModal({setup,result,bets,payouts,bonus,streak,ownerPrize,onNext}){
   const totalBet=bets.reduce((s,b)=>s+b.amount,0);
   const totalWin=payouts.reduce((s,p)=>s+p,0);
   const maxMul=bets.reduce((m,b,i)=>payouts[i]>0?Math.max(m,b.odds):m,0);
@@ -1887,6 +1900,7 @@ function ResultModal({setup,result,bets,payouts,bonus,streak,onNext}){
           </div>
           {bonus>0 && <div className="mt-1 text-center text-[12.5px] font-black text-orange-200 bg-red-600/30 rounded-md py-0.5">🔥 {streak}연속 적중 보너스 +{fmt(bonus)} CR</div>}
         </div>}
+        {ownerPrize>0 && <div className="shrink-0 text-center text-[13px] font-black text-yellow-100 bg-gradient-to-r from-amber-600/60 to-orange-700/60 rounded-xl py-1.5">👑 구단주 상금 +{fmt(ownerPrize)} CR</div>}
         <button onClick={onNext} className="shrink-0 w-full py-3 rounded-2xl fx-title text-xl bg-gradient-to-b from-yellow-300 to-orange-500 text-black active:scale-[.98]">다음 경주 ▶</button>
       </div>
     </div>
@@ -2030,6 +2044,148 @@ function QuizModal({setup,onClose,onReward}){
   );
 }
 
+/* ---------------- ☕ 스타벅스 커피 이벤트 ---------------- */
+const EVENT_TIERS=[{cr:30000,cups:1,label:'스타벅스 원하는 커피 1잔'},{cr:50000,cups:2,label:'스타벅스 원하는 커피 2잔'}];
+function hashStr(str){ let h1=0xdeadbeef^str.length, h2=0x41c6ce57^str.length; for(let i=0;i<str.length;i++){ const c=str.charCodeAt(i); h1=Math.imul(h1^c,2654435761); h2=Math.imul(h2^c,1597334677); }
+  h1=Math.imul(h1^(h1>>>16),2246822507)^Math.imul(h2^(h2>>>13),3266489909); h2=Math.imul(h2^(h2>>>16),2246822507)^Math.imul(h1^(h1>>>13),3266489909);
+  return (4294967296*(2097151&h2)+(h1>>>0)).toString(36).toUpperCase().padStart(10,'0'); }
+function claimCode(nick,cups,ts){ const hs=hashStr(`${nick}|${cups}|${ts}|STARDERBY-LINKCLEAN`); return `SD-${hs.slice(0,4)}-${hs.slice(4,8)}-${cups}`; }
+function EventModal({credit,onClose,onClaim,claims}){
+  const [nick,setNick]=useState(()=>ls.get('sd_nick',''));
+  const [confirm,setConfirm]=useState(null);
+  const [show,setShow]=useState(null);
+  const next=EVENT_TIERS.find(t=>credit<t.cr)||EVENT_TIERS[EVENT_TIERS.length-1];
+  const pct=Math.min(100,credit/EVENT_TIERS[EVENT_TIERS.length-1].cr*100);
+  if(show) return <Certificate c={show} onClose={()=>setShow(null)}/>;
+  return (
+    <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm overflow-y-auto" onClick={onClose}>
+      <div className="max-w-md mx-auto p-3 pt-6" onClick={e=>e.stopPropagation()}>
+        <div className="glass rounded-3xl p-4 pop">
+          <div className="flex items-center"><div className="fx-title text-2xl gold">☕ 커피 교환 이벤트</div><button onClick={onClose} className="ml-auto w-9 h-9 rounded-full bg-white/10 text-xl">×</button></div>
+          <p className="text-[13px] text-blue-100/85 mt-1 leading-relaxed">경마로 모은 CREDIT을 스타벅스 커피로 바꿔 드려요! 교환 후 나오는 <b className="text-yellow-200">교환권 화면을 캡처(사진)</b>해서 이벤트 담당자에게 보내 주시면 확인 후 지급됩니다.</p>
+          <div className="grid gap-2 mt-3">
+            {EVENT_TIERS.map(t=>{ const ok=credit>=t.cr; return (
+              <div key={t.cr} className={`rounded-2xl p-3 flex items-center gap-3 ${ok?'bg-gradient-to-r from-emerald-600/50 to-teal-700/50 ring-2 ring-emerald-300':'bg-white/5'}`}>
+                <div className="text-3xl">{'☕'.repeat(t.cups)}</div>
+                <div className="flex-1"><div className="font-black">{t.label}</div><div className="text-[12px] text-blue-200/80">{fmt(t.cr)} CREDIT</div></div>
+                <button disabled={!ok} onClick={()=>{ Sound.click(); setConfirm(t); }} className={`px-3 py-2 rounded-xl font-black text-sm ${ok?'bg-yellow-300 text-black':'bg-white/10 text-white/40'}`}>{ok?'교환':'부족'}</button>
+              </div>); })}
+          </div>
+          <div className="mt-3">
+            <div className="flex justify-between text-[12px] text-blue-200/80"><span>내 CREDIT {fmt(credit)}</span><span>{credit<next.cr?`${next.label.replace('스타벅스 원하는 ','')}까지 ${fmt(next.cr-credit)}`:'커피 2잔 달성!'}</span></div>
+            <div className="h-3 rounded-full bg-white/10 mt-1 overflow-hidden relative"><div className="h-full bg-gradient-to-r from-emerald-400 to-yellow-300" style={{width:pct+'%'}}/><div className="absolute top-0 bottom-0 w-0.5 bg-white/70" style={{left:'60%'}}/></div>
+            <div className="flex justify-between text-[10px] text-blue-200/60 mt-0.5"><span>0</span><span style={{marginLeft:'45%'}}>3만 ☕</span><span>5만 ☕☕</span></div>
+          </div>
+          <ul className="mt-3 text-[11.5px] text-blue-200/75 list-disc pl-4 space-y-0.5">
+            <li>교환하면 해당 CREDIT이 차감됩니다.</li>
+            <li>교환권의 교환 코드·닉네임·시간이 확인용으로 쓰입니다.</li>
+            <li>지급 방식과 기간은 이벤트 담당자 안내를 따릅니다.</li>
+          </ul>
+          {claims.length>0 && <div className="mt-3 rounded-xl bg-black/30 p-2">
+            <div className="text-[12px] font-bold mb-1">🎟️ 내 교환권</div>
+            {claims.map(c=><button key={c.code} onClick={()=>setShow(c)} className="w-full flex items-center gap-2 text-left text-[12px] px-2 py-1.5 rounded-lg bg-white/5 mb-1">{'☕'.repeat(c.cups)}<span className="font-mono">{c.code}</span><span className="ml-auto text-blue-200/70">{new Date(c.ts).toLocaleDateString('ko-KR')}</span></button>)}
+          </div>}
+        </div>
+      </div>
+      {confirm && <div className="fixed inset-0 z-50 bg-black/70 flex items-center justify-center p-4" onClick={e=>{e.stopPropagation();setConfirm(null);}}>
+        <div className="glass rounded-3xl p-4 w-full max-w-sm pop" onClick={e=>e.stopPropagation()}>
+          <div className="fx-title text-xl text-center">{'☕'.repeat(confirm.cups)} 교환할까요?</div>
+          <p className="text-center text-[13px] text-blue-200/85 mt-1">{fmt(confirm.cr)} CREDIT이 차감됩니다.</p>
+          <label className="block text-[12px] text-blue-200/80 mt-3">닉네임 (교환권에 표시돼요)</label>
+          <input value={nick} maxLength={12} onChange={e=>setNick(e.target.value)} placeholder="예: 링크도우" className="w-full mt-1 px-3 py-2.5 rounded-xl bg-black/40 border border-white/15 outline-none text-white"/>
+          <div className="grid grid-cols-2 gap-2 mt-3">
+            <button onClick={()=>setConfirm(null)} className="py-3 rounded-xl font-black bg-white/10">취소</button>
+            <button disabled={!nick.trim()} onClick={()=>{ const ts=Date.now(); const c={nick:nick.trim(),cups:confirm.cups,cr:confirm.cr,ts,code:claimCode(nick.trim(),confirm.cups,ts)}; ls.set('sd_nick',nick.trim()); onClaim(c); Sound.jackpot(true); setConfirm(null); setShow(c); }}
+              className={`py-3 rounded-xl font-black ${nick.trim()?'bg-gradient-to-b from-yellow-300 to-orange-500 text-black':'bg-white/10 text-white/40'}`}>교환하기</button>
+          </div>
+        </div>
+      </div>}
+    </div>
+  );
+}
+function Certificate({c,onClose}){
+  const d=new Date(c.ts);
+  return (
+    <div className="fixed inset-0 z-[60] bg-[#06120d] flex flex-col items-center justify-center p-5" onClick={onClose}>
+      <div className="w-full max-w-sm rounded-3xl overflow-hidden shadow-2xl pop" style={{background:'linear-gradient(160deg,#00704A,#004d33)'}} onClick={e=>e.stopPropagation()}>
+        <div className="px-5 pt-5 text-white">
+          <div className="text-[12px] tracking-widest opacity-80">STAR DERBY EVENT</div>
+          <div className="fx-title text-[28px] mt-1">커피 교환권</div>
+          <div className="text-5xl mt-3">{'☕'.repeat(c.cups)}</div>
+          <div className="mt-2 text-lg font-black">스타벅스 원하는 커피 {c.cups}잔</div>
+        </div>
+        <div className="mx-5 my-4 rounded-2xl bg-white text-[#004d33] p-4">
+          <div className="text-[11px] text-gray-500">교환 코드</div>
+          <div className="font-mono text-[22px] font-black tracking-wider">{c.code}</div>
+          <div className="grid grid-cols-2 gap-2 mt-3 text-[13px]">
+            <div><div className="text-[11px] text-gray-500">닉네임</div><b>{c.nick}</b></div>
+            <div><div className="text-[11px] text-gray-500">차감 CREDIT</div><b>{fmt(c.cr)}</b></div>
+            <div className="col-span-2"><div className="text-[11px] text-gray-500">교환 일시</div><b>{d.toLocaleString('ko-KR')}</b></div>
+          </div>
+        </div>
+        <div className="px-5 pb-5 text-center text-white text-[13px] leading-relaxed">📸 <b>이 화면을 캡처</b>해서<br/>이벤트 담당자에게 보내 주세요!</div>
+      </div>
+      <button onClick={onClose} className="mt-5 px-6 py-3 rounded-2xl bg-white/10 text-white font-black">닫기</button>
+    </div>
+  );
+}
+
+/* ---------------- 🏇 내 구단 (구단주 모드) ---------------- */
+const FOUND_COST=1000, CARE_COST=200, PRIZE=[500,250,120];
+const trainCost=lv=>300+200*lv;
+const STAT_INFO={spd:{n:'스피드',e:'⚡',d:'기본 속도가 올라가요'},sta:{n:'지구력',e:'💪',d:'후반에 덜 지쳐요'},kick:{n:'순발력',e:'🔥',d:'막판 스퍼트가 강해져요'}};
+function OwnerModal({credit,stable,setStable,spend,onClose}){
+  const [pickName,setPickName]=useState(null);
+  const names=Object.keys(PROFILES);
+  if(!stable) return (
+    <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm overflow-y-auto" onClick={onClose}>
+      <div className="max-w-md mx-auto p-3 pt-6" onClick={e=>e.stopPropagation()}>
+        <div className="glass rounded-3xl p-4 pop">
+          <div className="flex items-center"><div className="fx-title text-2xl gold">🏇 구단주 되기</div><button onClick={onClose} className="ml-auto w-9 h-9 rounded-full bg-white/10 text-xl">×</button></div>
+          <p className="text-[13px] text-blue-100/85 mt-1">내 말을 골라 구단을 창단하세요. 훈련에 투자해 말을 키우고, 3착 안에 들 때마다 <b className="text-yellow-200">상금</b>을 받아요! (창단 비용 {fmt(FOUND_COST)} CR)</p>
+          <div className="grid grid-cols-2 gap-2 mt-3">
+            {names.map(n=>(<button key={n} onClick={()=>{Sound.click();setPickName(n);}} className={`rounded-2xl p-2.5 text-left ${pickName===n?'bg-yellow-300 text-black':'bg-white/10'}`}>
+              <div className="font-black">{n}</div><div className={`text-[11px] ${pickName===n?'text-black/70':'text-yellow-200'}`}>{PROFILES[n].tag}</div></button>))}
+          </div>
+          {pickName && <p className="mt-2 text-[12px] text-blue-100/85">🐎 {PROFILES[pickName].horse}</p>}
+          <button disabled={!pickName||credit<FOUND_COST} onClick={()=>{ spend(FOUND_COST); setStable({name:pickName,spd:0,sta:0,kick:0,care:false,invested:FOUND_COST,prize:0,w:[0,0,0],races:0}); Sound.jackpot(false); }}
+            className={`w-full mt-3 py-3 rounded-xl font-black ${pickName&&credit>=FOUND_COST?'bg-gradient-to-b from-yellow-300 to-orange-500 text-black':'bg-white/10 text-white/40'}`}>{credit<FOUND_COST?'CREDIT 부족':`👑 ${pickName||'말'}의 구단주 되기 (${fmt(FOUND_COST)} CR)`}</button>
+        </div>
+      </div>
+    </div>);
+  const st=stable, roi=st.invested?Math.round((st.prize/st.invested)*100):0;
+  const train=k=>{ const lv=st[k]; if(lv>=10) return; const c=trainCost(lv); if(credit<c) return; spend(c); Sound.coin(); setStable({...st,[k]:lv+1,invested:st.invested+c}); };
+  return (
+    <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm overflow-y-auto" onClick={onClose}>
+      <div className="max-w-md mx-auto p-3 pt-6" onClick={e=>e.stopPropagation()}>
+        <div className="glass rounded-3xl p-4 pop">
+          <div className="flex items-center"><div className="fx-title text-2xl gold">👑 {st.name} 구단</div><button onClick={onClose} className="ml-auto w-9 h-9 rounded-full bg-white/10 text-xl">×</button></div>
+          <div className="text-[12px] text-yellow-200 mt-0.5">{PROFILES[st.name]?.tag} · 훈련 효과는 다음 경주부터 반영돼요</div>
+          <div className="grid grid-cols-4 gap-1.5 mt-3 text-center">
+            <div className="rounded-xl bg-black/30 p-2"><div className="text-[10px] text-blue-200/70">출전</div><b>{st.races}</b></div>
+            <div className="rounded-xl bg-black/30 p-2"><div className="text-[10px] text-blue-200/70">1·2·3착</div><b className="text-[13px]">{st.w[0]}·{st.w[1]}·{st.w[2]}</b></div>
+            <div className="rounded-xl bg-black/30 p-2"><div className="text-[10px] text-blue-200/70">상금</div><b className="text-yellow-300">{fmt(st.prize)}</b></div>
+            <div className="rounded-xl bg-black/30 p-2"><div className="text-[10px] text-blue-200/70">회수율</div><b>{roi}%</b></div>
+          </div>
+          <div className="mt-3 space-y-2">
+            {Object.entries(STAT_INFO).map(([k,v])=>{ const lv=st[k], c=trainCost(lv), max=lv>=10; return (
+              <div key={k} className="rounded-2xl bg-white/5 p-2.5">
+                <div className="flex items-center gap-2"><span className="text-xl">{v.e}</span><div className="flex-1"><div className="font-black text-[14px]">{v.n} <span className="text-yellow-300">Lv.{lv}</span></div><div className="text-[11px] text-blue-200/70">{v.d}</div></div>
+                  <button disabled={max||credit<c} onClick={()=>train(k)} className={`px-3 py-2 rounded-xl text-[12px] font-black ${!max&&credit>=c?'bg-gradient-to-b from-emerald-400 to-emerald-600 text-white':'bg-white/10 text-white/40'}`}>{max?'MAX':`훈련 ${fmt(c)}`}</button></div>
+                <div className="flex gap-0.5 mt-1.5">{Array.from({length:10},(_,i)=><div key={i} className={`h-2 flex-1 rounded-sm ${i<lv?'bg-yellow-300':'bg-white/10'}`}/>)}</div>
+              </div>); })}
+            <div className="rounded-2xl bg-white/5 p-2.5 flex items-center gap-2">
+              <span className="text-xl">🥕</span><div className="flex-1"><div className="font-black text-[14px]">특별 컨디션 관리</div><div className="text-[11px] text-blue-200/70">다음 1경주 컨디션 '최상' 보장</div></div>
+              <button disabled={st.care||credit<CARE_COST} onClick={()=>{ spend(CARE_COST); Sound.coin(); setStable({...st,care:true,invested:st.invested+CARE_COST}); }} className={`px-3 py-2 rounded-xl text-[12px] font-black ${!st.care&&credit>=CARE_COST?'bg-gradient-to-b from-orange-400 to-orange-600 text-white':'bg-white/10 text-white/40'}`}>{st.care?'예약됨':`관리 ${CARE_COST}`}</button>
+            </div>
+          </div>
+          <div className="mt-3 text-[11.5px] text-blue-200/75">🏆 구단 상금: 1착 {PRIZE[0]} · 2착 {PRIZE[1]} · 3착 {PRIZE[2]} CR (마권과 별도로 지급)</div>
+          <button onClick={()=>{ if(window.__sellAsk){ setStable(null); spend(-Math.round(st.invested*0.3)); window.__sellAsk=false; } else { window.__sellAsk=true; setTimeout(()=>window.__sellAsk=false,3000); Sound.click(); } }} className="w-full mt-3 py-2.5 rounded-xl text-[12px] font-bold bg-white/5 text-red-200/80">구단 매각 (투자액의 30% 환급 · 한 번 더 누르면 확정)</button>
+        </div>
+      </div>
+    </div>);
+}
+
 /* ---------------- 앱 ---------------- */
 function App(){
   const [credit,setCredit]=useState(()=>ls.get('sd_credit',1000));
@@ -2042,10 +2198,16 @@ function App(){
   const [payouts,setPayouts]=useState([]);
   const [muted,setMuted]=useState(false);
   const [quiz,setQuiz]=useState(false);
+  const [stable,setStable]=useState(()=>ls.get('sd_stable',null));
+  const [claims,setClaims]=useState(()=>ls.get('sd_claims',[]));
+  const [modal,setModal]=useState(null);
+  const [ownerPrize,setOwnerPrize]=useState(0);
+  useEffect(()=>ls.set('sd_stable',stable),[stable]);
+  useEffect(()=>ls.set('sd_claims',claims),[claims]);
   const [stats,setStats]=useState(()=>ls.get('sd_stats',{streak:0,best:0,earned:0,hits:0,races:0}));
   const [bonus,setBonus]=useState(0);
   useEffect(()=>ls.set('sd_stats',stats),[stats]);
-  useEffect(()=>{ setSetup(null); const t=setTimeout(()=>setSetup(makeRaceSetup(raceNo)),30); return ()=>clearTimeout(t); },[raceNo]);
+  useEffect(()=>{ setSetup(null); const t=setTimeout(()=>setSetup(makeRaceSetup(raceNo,ls.get('sd_stable',null))),30); return ()=>clearTimeout(t); },[raceNo]);
   useEffect(()=>ls.set('sd_credit',credit),[credit]);
   useEffect(()=>ls.set('sd_race',raceNo),[raceNo]);
   useEffect(()=>ls.set('sd_hist',history),[history]);
@@ -2066,7 +2228,11 @@ function App(){
     const bn=win>0&&streak>=2?Math.round(win*Math.min(0.5,0.1*(streak-1))):0;   // 연속 적중 보너스 (2연속 10% ~ 최대 50%)
     setStats(st=>({streak, best:Math.max(st.best,streak), earned:st.earned+win+bn, hits:st.hits+(win>0?1:0), races:st.races+1}));
     setBonus(bn);
-    setPayouts(pays); setResult(res); setCredit(c=>c+win+bn);
+    const own=setup.horses.find(h=>h.owned); let op=0;
+    if(own && stable && stable.name===own.name){ const rk=o.indexOf(own.no); op=rk<3?PRIZE[rk]:0;
+      setStable(st=>st?({...st,care:false,races:st.races+1,prize:st.prize+op,w:st.w.map((v,i)=>i===rk?v+1:v)}):st); }
+    setOwnerPrize(op);
+    setPayouts(pays); setResult(res); setCredit(c=>c+win+bn+op);
     setHistory(h=>[[o[0],o[1]],...h].slice(0,20));
     setPhase('result');
     if(win>0){ const big=bets.some((b,i)=>pays[i]>0&&b.odds>=10); Sound.jackpot(big); }
@@ -2081,17 +2247,18 @@ function App(){
           <div className="fx-title text-[19px] leading-none whitespace-nowrap"><span className="gold">★ STAR</span> <span className="text-white">DERBY</span></div>
           
           <div className="ml-auto flex items-center gap-2">
-            {phase==='paddock' && <button onClick={()=>{Sound.init();Sound.click();setQuiz(true);}} className="h-8 px-2.5 rounded-full bg-gradient-to-b from-fuchsia-500 to-purple-700 text-[13px] font-black whitespace-nowrap">🧠 퀴즈</button>}
             <button onClick={()=>{Sound.init(); setMuted(m=>!m);}} className="w-8 h-8 shrink-0 rounded-full bg-white/10 text-base">{muted?'🔇':'🔊'}</button>
             <div className="rounded-full bg-gradient-to-b from-yellow-300 to-amber-500 text-black px-2.5 py-1 font-black text-[13px] shadow whitespace-nowrap">💰 {fmt(credit)}</div>
           </div>
         </div>
       </header>
       {!setup ? <div className="text-center py-24"><div className="fx-title text-3xl gold animate-pulse">예상지 집계 중...</div><div className="text-blue-200/70 mt-2 text-sm">배당률 계산 중입니다</div></div> :
-        phase==='paddock' ? <Paddock setup={setup} credit={credit} bets={bets} setBets={setBets} onStart={start} onQuiz={()=>setQuiz(true)} history={history} stats={stats}/> :
+        phase==='paddock' ? <Paddock setup={setup} credit={credit} bets={bets} setBets={setBets} onStart={start} onQuiz={()=>setQuiz(true)} onEvent={()=>setModal('event')} onOwner={()=>setModal('owner')} stable={stable} history={history} stats={stats}/> :
         <RaceView key={setup.raceNo} setup={setup} bets={bets} onDone={done}/>}
       {quiz && setup && <QuizModal setup={setup} onClose={()=>setQuiz(false)} onReward={n=>setCredit(c=>c+n)}/>}
-      {phase==='result' && result && <ResultModal setup={setup} result={result} bets={bets} payouts={payouts} bonus={bonus} streak={stats.streak} onNext={next}/>}
+      {phase==='result' && result && <ResultModal setup={setup} result={result} bets={bets} payouts={payouts} bonus={bonus} streak={stats.streak} ownerPrize={ownerPrize} onNext={next}/>}
+      {modal==='event' && <EventModal credit={credit} claims={claims} onClose={()=>setModal(null)} onClaim={c=>{ setCredit(x=>x-c.cr); setClaims(L=>[c,...L]); }}/>}
+      {modal==='owner' && <OwnerModal credit={credit} stable={stable} setStable={setStable} spend={n=>setCredit(x=>x-n)} onClose={()=>setModal(null)}/>}
     </div>
   );
 }
