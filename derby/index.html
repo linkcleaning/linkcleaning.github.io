@@ -237,8 +237,8 @@ function computeOdds(horses,D,going,N){
 /* 🛒 구단 매점 아이템 (다음 1경주에만 효과, 이기면 보너스) */
 const ITEMS=[
   {id:'nutri',e:'💊',n:'말 종합 영양제',d:'컨디션 2단계 UP',price:250,win:200},
-  {id:'sack', e:'🎒',n:'마훈 자루 특훈',d:'모래주머니 훈련 · 막판 스퍼트 UP',price:350,win:300},
-  {id:'diet', e:'🥗',n:'날씬 다이어트제',d:'체중 -8kg · 몸이 가벼워져 스피드 UP',price:400,win:300},
+  {id:'sack', e:'🎒',n:'모래주머니 특훈',d:'막판 스퍼트 UP',price:350,win:300},
+  {id:'diet', e:'💚',n:'마훈자루',d:'다이어트약 · 체중 -8kg · 스피드 UP',price:400,win:300},
   {id:'spa',  e:'🛁',n:'스파 마사지',d:'근육 풀기 · 지구력 UP',price:300,win:250}];
 const FULLSET_BONUS=1000;   // 4개 다 쓰고 1착이면 추가
 function makeRaceSetup(raceNo,stable,barn){
