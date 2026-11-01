@@ -370,8 +370,8 @@ const MALE_RE=/injoon|in-joon|minsu|min-su|jian|hyunsu|bongjin|gookmin|seoyeon_m
 const Voice={ on:true, ok:typeof window!=='undefined'&&'speechSynthesis' in window, v:null, curHot:false, male:false,
   list(){ try{ return speechSynthesis.getVoices().filter(v=>/^ko/i.test(v.lang)); }catch(e){ return []; } },
   pickVoice(){ try{
-    const ko=this.list(); let saved=null; try{ saved=localStorage.getItem('sd_voice'); }catch(e){}
-    this.v = (saved&&ko.find(v=>v.name===saved)) || ko.find(v=>MALE_RE.test(v.name)) || ko[0] || null;
+    const ko=this.list();
+    this.v = ko.find(v=>MALE_RE.test(v.name)) || ko[0] || null;
     this.male = !!(this.v && MALE_RE.test(this.v.name));
   }catch(e){} },
   setVoice(name){ try{ localStorage.setItem('sd_voice',name); }catch(e){} this.pickVoice(); this.say('안녕하세요, 스타더비 중계를 맡은 아나운서입니다!',true); },
@@ -720,7 +720,8 @@ function buildBg(){
 /* =========================================================
    레이스 엔진 (TV 중계 카메라 2.5D 원근 렌더러)
    ========================================================= */
-const W=1280, H=720, Y_FAR=372, Y_NEAR=640, TS=2.2, HORSE_NF=14;
+// 스마트폰 세로 화면(9:16) 기준 — 주로 깊이를 넓혀 말들이 겹치지 않고 넓게 보임
+const W=720, H=1280, Y_FAR=560, Y_NEAR=1030, BY=Y_FAR-372, TS=2.2, HORSE_NF=14;
 const FIRE_GLOW=(()=>{ try{ const c=document.createElement('canvas'); c.width=200; c.height=120; const g=c.getContext('2d');
   const fg=g.createRadialGradient(100,60,6,100,60,100); fg.addColorStop(0,'rgba(255,190,40,0.6)'); fg.addColorStop(0.5,'rgba(255,90,0,0.25)'); fg.addColorStop(1,'rgba(255,40,0,0)');
   g.fillStyle=fg; g.fillRect(0,0,200,120); return c; }catch(e){ return document.createElement('canvas'); } })();
@@ -735,8 +736,8 @@ class RaceEngine{
     this.D=setup.D; this.going=setup.goingMul; this.dirt=setup.surface==='dirt';
     this.runners=setup.horses.map((h,i)=>makeRunner(h,i));
     this.order=this.runners.slice();
-    this.parts=[]; this.ppm=W/30;
-    this.camX=-30; this.zoom=1.25; this.zoomT=1; this.fx=W/2; this.fy=H*0.6;
+    this.parts=[]; this.ppm=52;
+    this.camX=-30; this.zoom=1.25; this.zoomT=1; this.fx=W/2; this.fy=(Y_FAR+Y_NEAR)/2;
     this.slow=1; this.slowT=1; this.slowLock=false;
     this.state='intro'; this.real=0; this.simT=0; this.raceT=0; this.flash=0;
     this.gateOpen=0; this.ff=false; this.ended=false;
@@ -820,7 +821,7 @@ class RaceEngine{
     const o=this.order, a=o[0], b=o[1], D=this.D;
     // 레인(자리싸움) 비주얼
     o.forEach((r,rank)=>{
-      let want=0.12+rank*0.035;
+      let want=0.5*laneZ(r.i)+0.5*(0.12+rank*0.09);   // 세로 화면: 주로 폭 전체에 고르게 퍼져 달림
       if(r.spurting) want=Math.max(want,0.62+r.i*0.03);
       for(const q of this.runners){ if(q===r) continue;
         const ahead=q.pos-r.pos;
@@ -865,7 +866,7 @@ class RaceEngine{
     let focus;
     const mean=this.runners.reduce((s,r)=>s+r.pos,0)/this.runners.length;
     if(this.slowLock) focus=(a.pos+b.pos)/2-1.6;
-    else focus=mean+(a.pos-mean)*0.72+0.8;
+    else focus=mean+(a.pos-mean)*0.45+0.5;
     if(a.fin || remain<=380) this.shot=null;
     if(!a.fin && !this.slowLock && remain<=380) focus=(a.pos*0.6+b.pos*0.4)-2.5;   // 막판엔 선두 경쟁에 집중
     if(a.fin && !this.slowLock) focus=a.pos-1.2;   // 우승마 따라가는 위너 캠
@@ -878,20 +879,20 @@ class RaceEngine{
     this.zoom+=(this.zoomT-this.zoom)*Math.min(1,dt*2.2);
     if(this.slowLock){ const z=(a.lane+b.lane)/2; this.fx+=(this.X((a.pos+b.pos)/2-1.4,z)-this.fx)*Math.min(1,dt*6); this.fy+=(yZ(z)-55-this.fy)*Math.min(1,dt*6); }
     else if(this.shot && this.shot.r && this.real<this.shot.end){ const r=this.shot.r; this.fx+=(this.X(r.pos-1.2,r.lane)-this.fx)*Math.min(1,dt*3); this.fy+=(yZ(r.lane)-60-this.fy)*Math.min(1,dt*3); }
-    else { this.fx+=(W/2-this.fx)*Math.min(1,dt*2); this.fy+=(H*0.6-this.fy)*Math.min(1,dt*2); }
+    else { this.fx+=(W/2-this.fx)*Math.min(1,dt*2); this.fy+=((Y_FAR+Y_NEAR)/2-this.fy)*Math.min(1,dt*2); }
     if(!this.slowLock){
       if(this.shot && this.real>=this.shot.end){ this.shot=null; this.zoomT=1; this.nextShot=this.real+3+Math.random()*2.5; }
       if(!this.shot && this.real>(this.nextShot||8) && remain>380 && !a.fin){
         const climber=o.find(r=>r.spurting&&!r.fin) || o[1+Math.floor(Math.random()*3)];
         const kind=pick(['lead','chase','chase']);
         const r=kind==='lead'?a:climber;
-        this.shot={r,end:this.real+2.6+Math.random()*1.2}; this.zoomT=kind==='lead'?1.45:1.3;
+        this.shot={r,end:this.real+2.6+Math.random()*1.2}; this.zoomT=kind==='lead'?1.22:1.15;
       }
       if(remain<=380 && !a.fin && !this.shot){ this.zoomT=1.16; this.fx+=(this.X((a.pos+b.pos)/2-1.4,(a.lane+b.lane)/2)-this.fx)*Math.min(1,dt*2); this.fy+=(yZ((a.lane+b.lane)/2)-50-this.fy)*Math.min(1,dt*2); }
       if(a.fin && !this.slowLock){ this.zoomT=1.32; this.fx+=(this.X(a.pos-1.6,a.lane)-this.fx)*Math.min(1,dt*3); this.fy+=(yZ(a.lane)-60-this.fy)*Math.min(1,dt*3); }
     }
     // 줌 중심이 화면 밖으로 나가 말이 사라지는 문제 방지
-    this.fx=Math.max(W*0.25,Math.min(W*0.75,this.fx)); this.fy=Math.max(H*0.35,Math.min(H*0.78,this.fy));
+    this.fx=Math.max(W*0.25,Math.min(W*0.75,this.fx)); this.fy=Math.max(Y_FAR-40,Math.min(Y_NEAR,this.fy));
     // 막판 심장박동 드럼 + 흥분도
     this.excite=Math.max(0,Math.min(1,(this.slowLock?1:0)+(remain<400&&!a.fin?(400-remain)/400:0)));
     if(remain<360 && !a.fin){ const iv=0.62-0.32*(360-remain)/360; if(this.real-(this.drumT||0)>iv/(this.slow<0.6?0.6:1)){ this.drumT=this.real; Sound.drum(0.35+0.45*this.excite); } }
@@ -1045,16 +1046,16 @@ class RaceEngine{
     ctx.restore();
     { const cg=ctx.createLinearGradient(0,0,0,H); cg.addColorStop(0,'rgba(255,214,150,0.07)'); cg.addColorStop(0.5,'rgba(255,255,255,0)'); cg.addColorStop(1,'rgba(20,30,60,0.10)'); ctx.fillStyle=cg; ctx.fillRect(0,0,W,H);
       const vg0=ctx.createRadialGradient(W/2,H*0.55,H*0.45,W/2,H*0.55,H*1.05); vg0.addColorStop(0,'rgba(0,0,0,0)'); vg0.addColorStop(1,'rgba(0,0,0,0.32)'); ctx.fillStyle=vg0; ctx.fillRect(0,0,W,H);
-      if(this.wx==='맑음'){ const fl=ctx.createRadialGradient(1080,70,0,1080,70,260); fl.addColorStop(0,'rgba(255,240,200,0.18)'); fl.addColorStop(1,'rgba(255,240,200,0)'); ctx.fillStyle=fl; ctx.fillRect(700,0,580,360); } }
+      if(this.wx==='맑음'){ const fl=ctx.createRadialGradient(W-170,BY-40,0,W-170,BY-40,260); fl.addColorStop(0,'rgba(255,240,200,0.18)'); fl.addColorStop(1,'rgba(255,240,200,0)'); ctx.fillStyle=fl; ctx.fillRect(W-450,0,450,BY+240); } }
     this.drawWeather(ctx);
     if(this.slow<0.8){ const a=(0.8-this.slow)*0.9; const vg=ctx.createRadialGradient(W/2,H/2,H*0.35,W/2,H/2,H*0.85); vg.addColorStop(0,'rgba(0,0,0,0)'); vg.addColorStop(1,`rgba(0,0,0,${a})`); ctx.fillStyle=vg; ctx.fillRect(0,0,W,H); }
     if((this.excite||0)>0.05 && this.state==='run'){ const ex=this.excite; ctx.save(); ctx.globalAlpha=0.10+0.22*ex; ctx.strokeStyle='#fff';
       ctx.lineWidth=2; ctx.beginPath();
       for(let k=0;k<26;k++){ const yy=((k*0.6180339)%1)*H, sd=(k*7919)%1000; const len=120+ (sd%200); const xx=W-(((this.real*(1400+sd)+sd*3)%(W+len*2)));
-        if(yy>H*0.28&&yy<H*0.72) continue; ctx.moveTo(xx,yy); ctx.lineTo(xx+len,yy); } ctx.stroke(); ctx.restore(); }
+        if(yy>Y_FAR-20&&yy<Y_NEAR+20) continue; ctx.moveTo(xx,yy); ctx.lineTo(xx+len,yy); } ctx.stroke(); ctx.restore(); }
     // 관중석 카메라 플래시 (막판·결승)
     if(this.state==='run' && ((this.excite||0)>0.3 || (this.order[0]&&this.order[0].fin))){ ctx.fillStyle='rgba(255,255,255,0.95)';
-      for(let k=0;k<(this.lowQ?3:7);k++){ if(Math.random()<0.55) continue; const x=Math.random()*W, y=170+Math.random()*150; ctx.beginPath(); ctx.arc(x,y,1.5+Math.random()*2.5,0,6.283); ctx.fill(); } }
+      for(let k=0;k<(this.lowQ?3:7);k++){ if(Math.random()<0.55) continue; const x=Math.random()*W, y=BY+170+Math.random()*150; ctx.beginPath(); ctx.arc(x,y,1.5+Math.random()*2.5,0,6.283); ctx.fill(); } }
     // 우승 꽃가루
     if(this.confetti){ const cf=this.confetti; ctx.save(); for(const c of cf){ c.y+=c.vy; c.x+=c.vx+Math.sin(this.real*3+c.p)*0.8; c.r+=c.vr; if(c.y>H+20) continue;
         ctx.save(); ctx.translate(c.x,c.y); ctx.rotate(c.r); ctx.fillStyle=c.col; ctx.fillRect(-c.w/2,-c.h/2*Math.abs(Math.cos(c.r*1.7)),c.w,c.h*Math.abs(Math.cos(c.r*1.7))+0.5); ctx.restore(); } ctx.restore(); }
@@ -1062,9 +1063,9 @@ class RaceEngine{
     // 위너 배너
     if(this.winT && this.state!=='photo'){ const e=this.real-this.winT; if(e<4.5){ const w=this.order[0].h, a=Math.min(1,e*3)*(e>4?(4.5-e)*2:1), sx=(1-Math.min(1,e*3))*400;
       ctx.save(); ctx.globalAlpha=a; ctx.translate(sx,0); const gg=ctx.createLinearGradient(0,0,W,0); gg.addColorStop(0,'rgba(120,80,0,0)'); gg.addColorStop(0.2,'rgba(30,20,0,0.85)'); gg.addColorStop(0.8,'rgba(30,20,0,0.85)'); gg.addColorStop(1,'rgba(120,80,0,0)');
-      ctx.fillStyle=gg; ctx.fillRect(0,H-104,W,82); ctx.fillStyle='#ffd43b'; ctx.fillRect(W*0.2,H-104,W*0.6,3); ctx.fillRect(W*0.2,H-25,W*0.6,3);
-      ctx.textAlign='center'; ctx.textBaseline='middle'; ctx.fillStyle='#ffd43b'; ctx.font='700 40px "Noto Sans KR",sans-serif'; ctx.fillText(`🏆 WINNER  ${w.no}번 ${w.name}`,W/2,H-74);
-      ctx.fillStyle='#fff'; ctx.font='500 20px "Noto Sans KR",sans-serif'; ctx.fillText(`기수 ${w.jockey} · 기록 ${Math.floor(this.order[0].finT/60)}:${(this.order[0].finT%60).toFixed(1).padStart(4,'0')} · 단승 ${this.setup.odds.win[w.no].toFixed(1)}배`,W/2,H-41); ctx.restore(); } }
+      ctx.fillStyle=gg; ctx.fillRect(0,Y_FAR-200,W,92); ctx.fillStyle='#ffd43b'; ctx.fillRect(W*0.1,Y_FAR-200,W*0.8,3); ctx.fillRect(W*0.1,Y_FAR-111,W*0.8,3);
+      ctx.textAlign='center'; ctx.textBaseline='middle'; ctx.fillStyle='#ffd43b'; ctx.font='700 36px "Noto Sans KR",sans-serif'; ctx.fillText(`🏆 WINNER  ${w.no}번 ${w.name}`,W/2,Y_FAR-168);
+      ctx.fillStyle='#fff'; ctx.font='500 19px "Noto Sans KR",sans-serif'; ctx.fillText(`기수 ${w.jockey} · 기록 ${Math.floor(this.order[0].finT/60)}:${(this.order[0].finT%60).toFixed(1).padStart(4,'0')} · 단승 ${this.setup.odds.win[w.no].toFixed(1)}배`,W/2,Y_FAR-132); ctx.restore(); } }
     if(this.state==='photo') this.drawPhoto(ctx);
     if(this.flash>0){ ctx.fillStyle=`rgba(255,255,255,${Math.min(1,this.flash)})`; ctx.fillRect(0,0,W,H); }
   }
@@ -1086,14 +1087,15 @@ class RaceEngine{
   drawBg(ctx){
     const ppm=this.ppm, cam=this.camX, bg=this.bg;
     const wx=this.wx, SKY={'맑음':['#1f5fbf','#69a8ee','#cfe8ff'],'흐림':['#56626f','#86919c','#bcc4cc'],'비':['#262e38','#48525c','#6f7982'],'노을':['#26285e','#b9526a','#ffb067'],'야간':['#02040f','#0a1233','#1d2f5c']}[wx]||['#1f5fbf','#69a8ee','#cfe8ff'];
-    const sky=ctx.createLinearGradient(0,-200,0,340); sky.addColorStop(0,SKY[0]); sky.addColorStop(0.6,SKY[1]); sky.addColorStop(1,SKY[2]);
-    ctx.fillStyle=sky; ctx.fillRect(-200,-300,W+400,700);
-    if(wx==='맑음'){ ctx.fillStyle='rgba(255,250,220,0.9)'; ctx.beginPath(); ctx.arc(1080,70,34,0,6.283); ctx.fill();
-      ctx.fillStyle='rgba(255,250,220,0.18)'; ctx.beginPath(); ctx.arc(1080,70,70,0,6.283); ctx.fill(); }
-    if(wx==='노을'){ const sg=ctx.createRadialGradient(980,190,10,980,190,260); sg.addColorStop(0,'rgba(255,200,120,0.95)'); sg.addColorStop(0.15,'rgba(255,150,80,0.6)'); sg.addColorStop(1,'rgba(255,120,60,0)'); ctx.fillStyle=sg; ctx.fillRect(600,-100,800,500);
-      ctx.fillStyle='#ffd9a0'; ctx.beginPath(); ctx.arc(980,190,42,0,6.283); ctx.fill(); }
-    if(wx==='야간'){ const sr=seeded(99); ctx.fillStyle='#fff'; for(let i=0;i<90;i++){ const x=sr()*W, y=sr()*150, tw=0.4+0.6*Math.abs(Math.sin(this.real*2+i)); ctx.globalAlpha=tw*0.8; ctx.fillRect(x,y,1.6,1.6);} ctx.globalAlpha=1;
-      ctx.fillStyle='rgba(240,240,220,0.95)'; ctx.beginPath(); ctx.arc(1060,64,24,0,6.283); ctx.fill(); ctx.fillStyle=SKY[1]; ctx.beginPath(); ctx.arc(1070,58,22,0,6.283); ctx.fill(); }
+    const sky=ctx.createLinearGradient(0,-200,0,340+BY); sky.addColorStop(0,SKY[0]); sky.addColorStop(0.6,SKY[1]); sky.addColorStop(1,SKY[2]);
+    ctx.fillStyle=sky; ctx.fillRect(-200,-300,W+400,700+BY);
+    ctx.save(); ctx.translate(0,BY);
+    if(wx==='맑음'){ ctx.fillStyle='rgba(255,250,220,0.9)'; ctx.beginPath(); ctx.arc(W-170,-40,34,0,6.283); ctx.fill();
+      ctx.fillStyle='rgba(255,250,220,0.18)'; ctx.beginPath(); ctx.arc(W-170,-40,70,0,6.283); ctx.fill(); }
+    if(wx==='노을'){ const sg=ctx.createRadialGradient(W-240,150,10,W-240,150,260); sg.addColorStop(0,'rgba(255,200,120,0.95)'); sg.addColorStop(0.15,'rgba(255,150,80,0.6)'); sg.addColorStop(1,'rgba(255,120,60,0)'); ctx.fillStyle=sg; ctx.fillRect(W-600,-200,700,600);
+      ctx.fillStyle='#ffd9a0'; ctx.beginPath(); ctx.arc(W-240,150,42,0,6.283); ctx.fill(); }
+    if(wx==='야간'){ const sr=seeded(99); ctx.fillStyle='#fff'; for(let i=0;i<90;i++){ const x=sr()*W, y=-BY+sr()*(150+BY), tw=0.4+0.6*Math.abs(Math.sin(this.real*2+i)); ctx.globalAlpha=tw*0.8; ctx.fillRect(x,y,1.6,1.6);} ctx.globalAlpha=1;
+      ctx.fillStyle='rgba(240,240,220,0.95)'; ctx.beginPath(); ctx.arc(W-180,-60,24,0,6.283); ctx.fill(); ctx.fillStyle=SKY[1]; ctx.beginPath(); ctx.arc(W-170,-66,22,0,6.283); ctx.fill(); }
     const cloudCol={'맑음':'rgba(255,255,255,0.85)','흐림':'rgba(200,205,212,0.95)','비':'rgba(95,104,114,0.97)','노을':'rgba(255,190,170,0.75)','야간':'rgba(40,50,80,0.6)'}[wx]||'rgba(255,255,255,0.85)';
     const cScale=(wx==='흐림'||wx==='비')?1.9:1;
     for(const c of bg.clouds){ let x=((c.x-cam*ppm*0.03)%2400+2400)%2400-300; ctx.fillStyle=cloudCol; c.s0=c.s0||c.s; c.s=c.s0*cScale;
@@ -1117,7 +1119,8 @@ class RaceEngine{
     for(let k=-1;k<=1;k++){ const x=off+k*sp+700; if(x>-400&&x<W+100){ ctx.save(); ctx.translate(x,112); ctx.scale(0.82,0.82); this.drawJumbo(ctx,0,0); ctx.restore(); } }
     // 잔디 둔덕 + 광고판
     const gl=ctx.createLinearGradient(0,330,0,Y_FAR); gl.addColorStop(0,'#3e7d3a'); gl.addColorStop(1,'#2e6a2e');
-    ctx.fillStyle=gl; ctx.fillRect(-200,336,W+400,yZ(-0.06)-336+2);
+    ctx.fillStyle=gl; ctx.fillRect(-200,336,W+400,yZ(-0.06)-BY-336+2);
+    ctx.restore();
   }
   drawJumbo(ctx,x,y){
     const w=330,h=158;
@@ -1322,15 +1325,15 @@ class RaceEngine{
     ctx.fillStyle='#fff'; ctx.font='700 16px "Noto Sans KR",sans-serif'; ctx.textBaseline='middle'; ctx.fillText('LIVE',W-162,37);
     const tt=Math.max(0,this.simT); ctx.font='bold 18px monospace'; ctx.textAlign='right';
     ctx.fillText(`${Math.floor(tt/60)}:${(tt%60).toFixed(1).padStart(4,'0')}`,W-28,37);
-    if(this.slow<0.6){ ctx.fillStyle='#ffd43b'; ctx.font='700 16px "Noto Sans KR",sans-serif'; ctx.textAlign='right'; ctx.fillText('◀◀ SLOW MOTION',W-24,76); }
+    if(this.slow<0.6){ ctx.fillStyle='#ffd43b'; ctx.font='700 16px "Noto Sans KR",sans-serif'; ctx.textAlign='right'; ctx.fillText('◀◀ SLOW MOTION',W-24,74); }
     // 상단 실시간 순위 바
-    const NR=this.runners.length, bw=Math.min(62,372/NR), bx0=W/2-bw*NR/2;
-    ctx.fillStyle='rgba(6,12,30,0.82)'; rr(ctx,bx0-12,10,bw*NR+24,74,12); ctx.fill();
-    ctx.fillStyle='#8da2c9'; ctx.font='bold 11px "Noto Sans KR",sans-serif'; ctx.textAlign='center'; ctx.textBaseline='top';
-    for(let i=0;i<NR;i++) ctx.fillText(['1st','2nd','3rd','4th','5th','6th','7th','8th'][i],bx0+i*bw+bw/2,14);
+    const NR=this.runners.length, bw=Math.min(84,(W-44)/NR), bx0=W/2-bw*NR/2, RY=96;
+    ctx.fillStyle='rgba(6,12,30,0.82)'; rr(ctx,bx0-12,RY,bw*NR+24,76,12); ctx.fill();
+    ctx.fillStyle='#8da2c9'; ctx.font='bold 12px "Noto Sans KR",sans-serif'; ctx.textAlign='center'; ctx.textBaseline='top';
+    for(let i=0;i<NR;i++) ctx.fillText(['1st','2nd','3rd','4th','5th','6th','7th','8th'][i],bx0+i*bw+bw/2,RY+4);
     o.forEach((r,i)=>{ const no=r.h.no; this.rankX[no]+= (i-this.rankX[no])*0.18; });
     this.runners.slice().sort((a,b)=>this.rankX[b.h.no]-this.rankX[a.h.no]).forEach(r=>{
-      const no=r.h.no, fr=FRAME[no], x=bx0+this.rankX[no]*bw+6, y=30, isTop=o[0]===r;
+      const no=r.h.no, fr=FRAME[no], x=bx0+this.rankX[no]*bw+6, y=RY+21, isTop=o[0]===r;
       ctx.fillStyle='rgba(0,0,0,0.5)'; rr(ctx,x+2,y+2,bw-12,46,7); ctx.fill();
       ctx.fillStyle=fr.bg; rr(ctx,x,y,bw-12,46,7); ctx.fill();
       if(isTop){ ctx.strokeStyle='#ffd43b'; ctx.lineWidth=3; ctx.stroke(); }
@@ -1338,7 +1341,7 @@ class RaceEngine{
       if(r.spurting&&!r.fin){ ctx.font='14px sans-serif'; ctx.fillText('🔥',x+bw-16,y+6); }
     });
     // 미니맵 진행 바
-    const mx=16, my=H-44, mw=360;
+    const mx=16, my=RY+84, mw=W-32;
     ctx.fillStyle='rgba(6,12,30,0.78)'; rr(ctx,mx,my,mw,30,8); ctx.fill();
     ctx.strokeStyle='#4dabf7'; ctx.lineWidth=3; ctx.beginPath(); ctx.moveTo(mx+20,my+15); ctx.lineTo(mx+mw-30,my+15); ctx.stroke();
     ctx.fillStyle='#fff'; ctx.fillRect(mx+mw-30,my+5,3,20);
@@ -1351,9 +1354,9 @@ class RaceEngine{
       const e=this.real-this.banner.t, a=e<0.3?e/0.3:(e>2.0?(2.4-e)/0.4:1), sx=(1-Math.min(1,e/0.3))*-300;
       ctx.save(); ctx.globalAlpha=a; ctx.translate(sx,0);
       const g=ctx.createLinearGradient(0,0,W,0); g.addColorStop(0,'rgba(224,49,49,0)'); g.addColorStop(0.25,'rgba(224,49,49,0.92)'); g.addColorStop(0.75,'rgba(224,49,49,0.92)'); g.addColorStop(1,'rgba(224,49,49,0)');
-      ctx.fillStyle=g; ctx.fillRect(0,250,W,80);
+      ctx.fillStyle=g; ctx.fillRect(0,Y_FAR-170,W,80);
       ctx.fillStyle='#fff'; ctx.font='700 52px "Noto Sans KR",sans-serif'; ctx.textAlign='center'; ctx.textBaseline='middle';
-      ctx.fillText(this.banner.text,W/2,292); ctx.restore();
+      ctx.fillText(this.banner.text,W/2,Y_FAR-128); ctx.restore();
     }
     if(this.state==='intro'){
       ctx.fillStyle='rgba(6,12,30,0.7)'; rr(ctx,W/2-200,H/2-130,400,70,12); ctx.fill();
@@ -1408,16 +1411,16 @@ class RaceEngine{
     const e=this.real-this.photoT;
     ctx.fillStyle='rgba(0,0,0,0.82)'; ctx.fillRect(0,0,W,H);
     ctx.textAlign='center'; ctx.textBaseline='middle';
-    ctx.fillStyle='#fff'; ctx.font='700 40px "Noto Sans KR",sans-serif'; ctx.fillText('📸 PHOTO FINISH',W/2,46);
+    ctx.fillStyle='#fff'; ctx.font='700 44px "Noto Sans KR",sans-serif'; ctx.fillText('📸 PHOTO FINISH',W/2,H*0.3-60);
     if(this.pf){
-      const k=Math.min(1,e/0.35), pw=W*0.86*(0.9+0.1*k), ph=pw*this.pf.height/this.pf.width, px=(W-pw)/2, py=88;
+      const k=Math.min(1,e/0.35), pw=W*0.94*(0.9+0.1*k), ph=pw*this.pf.height/this.pf.width, px=(W-pw)/2, py=H*0.3;
       ctx.globalAlpha=k; ctx.fillStyle='#fff'; ctx.fillRect(px-8,py-8,pw+16,ph+16); ctx.drawImage(this.pf,px,py,pw,ph); ctx.globalAlpha=1;
       if(e<2.2){ const sx=px+((e*0.9)%1)*pw; ctx.fillStyle='rgba(255,255,120,0.25)'; ctx.fillRect(sx-3,py,6,ph); }
     }
-    if(e<2.2){ if(Math.floor(e*3)%2===0){ ctx.fillStyle='#ffd43b'; ctx.font='700 26px "Noto Sans KR",sans-serif'; ctx.fillText('사진 판독 중...',W/2,H-36); } }
+    if(e<2.2){ if(Math.floor(e*3)%2===0){ ctx.fillStyle='#ffd43b'; ctx.font='700 26px "Noto Sans KR",sans-serif'; ctx.fillText('사진 판독 중...',W/2,H*0.62); } }
     else {
       const o=this.order, m=this.margins()[1];
-      ctx.save(); ctx.translate(W-250,H-74); ctx.rotate(-0.06); const sc=Math.min(1,(e-2.2)/0.25); ctx.scale(1.6-0.6*sc,1.6-0.6*sc);
+      ctx.save(); ctx.translate(W/2,H*0.66); ctx.rotate(-0.06); const sc=Math.min(1,(e-2.2)/0.25); ctx.scale(1.6-0.6*sc,1.6-0.6*sc);
       ctx.fillStyle='rgba(255,255,255,0.92)'; rr(ctx,-210,-46,420,92,12); ctx.fill();
       ctx.strokeStyle='#e03131'; ctx.lineWidth=5; ctx.stroke();
       ctx.fillStyle='#e03131'; ctx.font='700 34px "Noto Sans KR",sans-serif'; ctx.fillText(`확정 1착 ${o[0].h.no}번 ${o[0].h.name}`,0,-12);
@@ -1519,17 +1522,18 @@ function HorseCard({h,setup,selected,onPick,type}){
 }
 
 function QuinMatrix({setup,sel,onPair}){
+  const cols=Array.from({length:FIELD-1},(_,k)=>k+2), rows=Array.from({length:FIELD-1},(_,k)=>k+1);
   return (
     <div className="overflow-x-auto no-scrollbar">
-      <table className="text-[11px] mx-auto">
-        <thead><tr><th></th>{Array.from({length:FIELD-1},(_,k)=>k+2).map(b=><th key={b} className="p-0.5"><NumBadge no={b} size={22}/></th>)}</tr></thead>
+      <table className="text-[10px] mx-auto">
+        <thead><tr><th></th>{cols.map(b=><th key={b} className="p-[2px]"><NumBadge no={b} size={20}/></th>)}</tr></thead>
         <tbody>
-          {Array.from({length:FIELD-1},(_,k)=>k+1).map(a=>(
-            <tr key={a}><td className="p-0.5"><NumBadge no={a} size={22}/></td>
-              {Array.from({length:FIELD-1},(_,k)=>k+2).map(b=>{
+          {rows.map(a=>(
+            <tr key={a}><td className="p-[2px]"><NumBadge no={a} size={20}/></td>
+              {cols.map(b=>{
                 if(b<=a) return <td key={b}></td>;
                 const k=quinKey(a,b), od=setup.odds.quin[k], on=sel.length===2&&quinKey(sel[0],sel[1])===k;
-                return <td key={b} className="p-0.5"><button onClick={()=>onPair(a,b)} className={`w-12 py-1 rounded font-bold ${on?'bg-yellow-300 text-black':od>=50?'bg-fuchsia-600/70 text-white':'bg-white/10 text-white hover:bg-white/20'}`}>{od>=100?Math.round(od):od.toFixed(1)}</button></td>;
+                return <td key={b} className="p-[2px]"><button onClick={()=>onPair(a,b)} className={`w-[38px] py-1 rounded font-bold ${on?'bg-yellow-300 text-black':od>=50?'bg-fuchsia-600/70 text-white':'bg-white/10 text-white'}`}>{od>=100?Math.round(od):od.toFixed(1)}</button></td>;
               })}
             </tr>
           ))}
@@ -1539,7 +1543,8 @@ function QuinMatrix({setup,sel,onPair}){
   );
 }
 
-function Paddock({setup,credit,bets,setBets,onStart,onQuiz,history,muted,setMuted}){
+function Paddock({setup,credit,bets,setBets,onStart,onQuiz,history}){
+  const [tab,setTab]=useState('card');
   const [type,setType]=useState('WIN');
   const [sel,setSel]=useState([]);
   const [amt,setAmt]=useState(100);
@@ -1550,6 +1555,7 @@ function Paddock({setup,credit,bets,setBets,onStart,onQuiz,history,muted,setMute
     if(type==='QUIN'){ setSel(s=>s.includes(no)?s.filter(x=>x!==no):(s.length<2?[...s,no]:[s[1],no])); }
     else setSel(s=>s[0]===no?[]:[no]);
   };
+  const goBet=no=>{ Sound.init(); Sound.click(); if(type==='QUIN') setSel(s=>s.includes(no)?s:(s.length<2?[...s,no]:[s[1],no])); else setSel([no]); setTab('bet'); window.scrollTo(0,0); };
   const changeType=t=>{ Sound.init(); Sound.click(); setType(t); setSel(s=>t==='QUIN'?s.slice(0,2):s.slice(0,1)); };
   const curOdds = (()=>{ if(type==='WIN'&&sel.length===1) return setup.odds.win[sel[0]];
     if(type==='PLACE'&&sel.length===1) return setup.odds.place[sel[0]];
@@ -1564,89 +1570,99 @@ function Paddock({setup,credit,bets,setBets,onStart,onQuiz,history,muted,setMute
   };
   const S=setup;
   return (
-    <div className="max-w-6xl mx-auto px-3 pb-36">
-      {/* 레이스 정보 헤더 */}
-      <div className="glass rounded-2xl p-4 mt-3 relative overflow-hidden">
-        <div className="absolute -right-10 -top-10 w-48 h-48 rounded-full bg-yellow-400/10 blur-2xl"/>
-        <div className="flex flex-wrap items-center gap-2">
-          <span className="px-2 py-0.5 rounded bg-red-600 text-white text-xs font-black">{S.raceNo}R</span>
-          <span className="px-2 py-0.5 rounded bg-yellow-400 text-black text-xs font-black">{S.grade}</span>
-          <h2 className="fx-title text-2xl sm:text-3xl gold">{S.name}</h2>
+    <div className="max-w-md mx-auto px-3 pb-28">
+      {/* 레이스 정보 */}
+      <div className="glass rounded-2xl px-3 py-2.5 mt-2">
+        <div className="flex items-center gap-1.5">
+          <span className="px-1.5 py-0.5 rounded bg-red-600 text-white text-[11px] font-black">{S.raceNo}R</span>
+          <span className="px-1.5 py-0.5 rounded bg-yellow-400 text-black text-[11px] font-black">{S.grade}</span>
+          <h2 className="fx-title text-xl gold truncate">{S.name}</h2>
         </div>
-        <div className="flex flex-wrap gap-2 mt-2 text-sm">
-          <span className="px-2 py-1 rounded-lg bg-white/10">📏 {S.D}m</span>
-          <span className={`px-2 py-1 rounded-lg ${S.surface==='turf'?'bg-green-600/40':'bg-amber-800/50'}`}>{S.surface==='turf'?'🌱 잔디':'🟫 더트'}</span>
-          <span className="px-2 py-1 rounded-lg bg-white/10">주로 {S.going}</span>
-          <span className="px-2 py-1 rounded-lg bg-white/10">{({'맑음':'☀️','흐림':'☁️','비':'🌧️','노을':'🌇','야간':'🌙'})[S.weather]} {S.weather==='야간'?'야간(나이트 경마)':S.weather}</span>
-          <span className="px-2 py-1 rounded-lg bg-white/10">출주 {S.horses.length}두</span>
+        <div className="flex flex-wrap gap-1.5 mt-1.5 text-[12px]">
+          <span className="px-1.5 py-0.5 rounded bg-white/10">📏 {S.D}m</span>
+          <span className={`px-1.5 py-0.5 rounded ${S.surface==='turf'?'bg-green-600/40':'bg-amber-800/50'}`}>{S.surface==='turf'?'🌱 잔디':'🟫 더트'}</span>
+          <span className="px-1.5 py-0.5 rounded bg-white/10">주로 {S.going}</span>
+          <span className="px-1.5 py-0.5 rounded bg-white/10">{({'맑음':'☀️','흐림':'☁️','비':'🌧️','노을':'🌇','야간':'🌙'})[S.weather]} {S.weather==='야간'?'나이트':S.weather}</span>
+          <span className="px-1.5 py-0.5 rounded bg-white/10">{S.horses.length}두</span>
         </div>
-        {history.length>0 && <div className="flex items-center gap-1.5 mt-3 overflow-x-auto no-scrollbar text-xs text-blue-200/80">
-          <span className="shrink-0">최근 결과</span>
-          {history.slice(0,8).map((h,i)=><span key={i} className="shrink-0 px-1.5 py-0.5 rounded bg-black/30 font-bold">{h[0]}-{h[1]}</span>)}
+        {history.length>0 && <div className="flex items-center gap-1 mt-1.5 overflow-x-auto no-scrollbar text-[11px] text-blue-200/80">
+          <span className="shrink-0">최근</span>
+          {history.slice(0,8).map((h,i)=><span key={i} className="shrink-0 px-1.5 rounded bg-black/30 font-bold">{h[0]}-{h[1]}</span>)}
         </div>}
       </div>
 
-      <div className="grid lg:grid-cols-[1fr_380px] gap-3 mt-3">
-        <div>
-          <div className="flex items-center justify-between mb-2 px-1">
-            <h3 className="fx-title text-xl">📋 패독 & 예상지</h3>
-            <span className="text-[11px] text-blue-200/70">◎본명 ○대항 ▲단혈 △연하</span>
-          </div>
-          <div className="grid sm:grid-cols-2 gap-2.5">
-            {S.horses.map(h=><HorseCard key={h.no} h={h} setup={S} type={type} selected={sel.includes(h.no)} onPick={pickHorse}/>)}
-          </div>
-        </div>
-
-        <div className="lg:sticky lg:top-3 self-start space-y-3">
-          <div className="glass rounded-2xl p-3">
-            <h3 className="fx-title text-xl mb-2">🎫 마권 구매</h3>
-            <div className="grid grid-cols-3 gap-1.5">
-              {Object.entries(TYPE_INFO).map(([k,v])=>(
-                <button key={k} onClick={()=>changeType(k)} className={`rounded-xl py-2 px-1 font-black text-sm transition ${type===k?`bg-gradient-to-b ${v.color} text-white shadow-lg scale-[1.03]`:'bg-white/10 text-blue-100'}`}>
-                  {v.label}<div className="text-[9px] font-bold opacity-80">{v.en}</div>
-                </button>))}
-            </div>
-            <p className="text-xs text-blue-200/80 mt-2">{TYPE_INFO[type].desc}{type==='QUIN'&&' · 최대 50배 이상 잭팟!'}</p>
-            {type==='QUIN' && <div className="mt-2 rounded-xl bg-black/25 p-2"><div className="text-[11px] text-blue-200/80 mb-1">복승 오즈표 (눌러서 선택)</div><QuinMatrix setup={S} sel={sel} onPair={(a,b)=>{Sound.init();Sound.click();setSel([a,b]);}}/></div>}
-            <div className="mt-3 flex items-center gap-2 rounded-xl bg-black/30 p-2 min-h-[52px]">
-              <span className="text-xs text-blue-200/80">선택</span>
-              {sel.length?sel.map(n=><NumBadge key={n} no={n} size={30}/>):<span className="text-sm text-blue-200/50">위에서 말을 눌러 주세요</span>}
-              {curOdds && <span className="ml-auto font-black text-2xl text-yellow-300">{curOdds.toFixed(1)}<span className="text-sm">배</span></span>}
-            </div>
-            <div className="grid grid-cols-5 gap-1.5 mt-2">
-              {[10,50,100,500].map(v=><button key={v} onClick={()=>{Sound.init();Sound.click();setAmt(v);}} className={`rounded-lg py-2 text-sm font-black ${amt===v?'bg-yellow-400 text-black':'bg-white/10'}`}>{v}</button>)}
-              <button onClick={()=>{Sound.init();Sound.click();setAmt(Math.max(0,avail));}} className={`rounded-lg py-2 text-sm font-black ${amt===avail&&avail>0?'bg-yellow-400 text-black':'bg-white/10'}`}>ALL</button>
-            </div>
-            {curOdds && <div className="text-xs text-center text-blue-200/80 mt-2">적중 시 예상 환급 <b className="text-yellow-300">{fmt(amt*curOdds)}</b> CR</div>}
-            <button onClick={addBet} className="w-full mt-2 py-3 rounded-xl font-black bg-gradient-to-b from-emerald-400 to-emerald-600 text-white shadow-lg active:scale-[.98]">＋ 마권 추가 ({fmt(amt)} CR)</button>
-            {msg && <div className="text-center text-red-300 text-sm mt-1 font-bold">{msg}</div>}
-          </div>
-
-          <div className="glass rounded-2xl p-3">
-            <div className="flex items-center justify-between"><h3 className="fx-title text-lg">🧾 내 마권</h3><span className="text-sm">합계 <b className="text-yellow-300">{fmt(total)}</b> CR</span></div>
-            {bets.length===0 ? <p className="text-sm text-blue-200/60 mt-2">아직 구매한 마권이 없습니다. (마권 없이 관람도 가능)</p> :
-              <div className="mt-2 space-y-1.5 max-h-56 overflow-y-auto no-scrollbar">
-                {bets.map(b=>(
-                  <div key={b.id} className="flex items-center gap-2 bg-black/30 rounded-lg px-2 py-1.5">
-                    <span className={`text-[10px] font-black px-1.5 py-0.5 rounded bg-gradient-to-b ${TYPE_INFO[b.type].color}`}>{TYPE_INFO[b.type].label}</span>
-                    {b.sel.map(n=><NumBadge key={n} no={n} size={22}/>)}
-                    <span className="text-xs text-yellow-200">{b.odds.toFixed(1)}배</span>
-                    <span className="ml-auto text-sm font-bold">{fmt(b.amount)}</span>
-                    <button onClick={()=>setBets(x=>x.filter(y=>y.id!==b.id))} className="text-red-300 text-lg px-1">×</button>
-                  </div>))}
-              </div>}
-          </div>
-          <button onClick={()=>{Sound.init();Sound.click();onQuiz();}} className={`w-full py-3 rounded-xl font-black bg-gradient-to-b from-fuchsia-500 to-purple-700 ${credit<100?'animate-pulse':''}`}>🧠 퀴즈 풀고 CREDIT 1,000 받기</button>
+      {/* 탭: 출전표 / 마권 구매 */}
+      <div className="sticky top-[52px] z-20 mt-2 -mx-3 px-3 py-1.5 bg-[#070d1f]/90 backdrop-blur">
+        <div className="grid grid-cols-2 gap-1 p-1 rounded-2xl bg-white/5">
+          <button onClick={()=>{Sound.init();Sound.click();setTab('card');}} className={`py-2.5 rounded-xl font-black text-[15px] ${tab==='card'?'bg-gradient-to-b from-sky-500 to-blue-700 text-white shadow':'text-blue-200'}`}>📋 출전표</button>
+          <button onClick={()=>{Sound.init();Sound.click();setTab('bet');}} className={`py-2.5 rounded-xl font-black text-[15px] ${tab==='bet'?'bg-gradient-to-b from-amber-400 to-orange-600 text-black shadow':'text-blue-200'}`}>🎫 마권 구매{bets.length?` (${bets.length})`:''}</button>
         </div>
       </div>
 
-      <div className="fixed bottom-0 inset-x-0 z-30 p-3 bg-gradient-to-t from-[#070d1f] via-[#070d1fee] to-transparent">
-        <div className="max-w-6xl mx-auto flex gap-2">
-          <div className="glass rounded-2xl px-4 py-2 flex flex-col justify-center">
+      {tab==='card' && <div className="mt-1">
+        <div className="flex items-center justify-between mb-2 px-1 text-[11px] text-blue-200/75">
+          <span>👆 말을 누르면 마권 구매로 넘어가요</span><span>◎본명 ○대항 ▲단혈 △연하</span>
+        </div>
+        <div className="grid gap-2.5">
+          {S.horses.map(h=><HorseCard key={h.no} h={h} setup={S} type={type} selected={false} onPick={goBet}/>)}
+        </div>
+      </div>}
+
+      {tab==='bet' && <div className="mt-1 space-y-2.5">
+        <div className="glass rounded-2xl p-3">
+          <div className="grid grid-cols-3 gap-1.5">
+            {Object.entries(TYPE_INFO).map(([k,v])=>(
+              <button key={k} onClick={()=>changeType(k)} className={`rounded-xl py-2 px-1 font-black text-sm ${type===k?`bg-gradient-to-b ${v.color} text-white shadow-lg`:'bg-white/10 text-blue-100'}`}>
+                {v.label}<div className="text-[9px] font-bold opacity-80">{v.en}</div>
+              </button>))}
+          </div>
+          <p className="text-[12px] text-blue-200/80 mt-1.5">{TYPE_INFO[type].desc}{type==='QUIN'&&' · 최대 50배 이상 잭팟!'}</p>
+          {type!=='QUIN' && <div className="grid grid-cols-2 gap-1.5 mt-2">
+            {S.horses.map(h=>{ const on=sel.includes(h.no), od=type==='PLACE'?S.odds.place[h.no]:S.odds.win[h.no], ci=COND_INFO[h.cond];
+              return <button key={h.no} onClick={()=>pickHorse(h.no)} className={`flex items-center gap-1.5 rounded-xl px-2 py-2 text-left ${on?'bg-yellow-300 text-black':'bg-white/10'}`}>
+                <NumBadge no={h.no} size={26}/>
+                <div className="min-w-0 flex-1"><div className="font-bold text-[13px] leading-tight truncate">{h.name}</div><div className="text-[10px] opacity-75">{h.style} · <span style={{color:on?undefined:ci.c}}>{ci.a}{ci.t}</span></div></div>
+                <div className="font-black text-[13px]">{od.toFixed(1)}</div>
+              </button>; })}
+          </div>}
+          {type==='QUIN' && <div className="mt-2 rounded-xl bg-black/25 p-1.5"><div className="text-[11px] text-blue-200/80 mb-1 px-1">복승 배당표 — 두 말이 만나는 칸을 누르세요</div><QuinMatrix setup={S} sel={sel} onPair={(a,b)=>{Sound.init();Sound.click();setSel([a,b]);}}/></div>}
+          <div className="mt-2 flex items-center gap-2 rounded-xl bg-black/30 p-2 min-h-[48px]">
+            <span className="text-xs text-blue-200/80">선택</span>
+            {sel.length?sel.map(n=><span key={n} className="flex items-center gap-1"><NumBadge no={n} size={26}/><span className="text-[12px] font-bold">{S.horses.find(h=>h.no===n).name}</span></span>):<span className="text-sm text-blue-200/50">말을 골라 주세요</span>}
+            {curOdds && <span className="ml-auto font-black text-xl text-yellow-300">{curOdds.toFixed(1)}<span className="text-xs">배</span></span>}
+          </div>
+          <div className="grid grid-cols-5 gap-1.5 mt-2">
+            {[10,50,100,500].map(v=><button key={v} onClick={()=>{Sound.init();Sound.click();setAmt(v);}} className={`rounded-lg py-2 text-sm font-black ${amt===v?'bg-yellow-400 text-black':'bg-white/10'}`}>{v}</button>)}
+            <button onClick={()=>{Sound.init();Sound.click();setAmt(Math.max(0,avail));}} className={`rounded-lg py-2 text-sm font-black ${amt===avail&&avail>0?'bg-yellow-400 text-black':'bg-white/10'}`}>ALL</button>
+          </div>
+          {curOdds && <div className="text-xs text-center text-blue-200/80 mt-1.5">적중 시 예상 환급 <b className="text-yellow-300">{fmt(amt*curOdds)}</b> CR</div>}
+          <button onClick={addBet} className="w-full mt-2 py-3 rounded-xl font-black bg-gradient-to-b from-emerald-400 to-emerald-600 text-white shadow-lg active:scale-[.98]">＋ 마권 추가 ({fmt(amt)} CR)</button>
+          {msg && <div className="text-center text-red-300 text-sm mt-1 font-bold">{msg}</div>}
+        </div>
+        <div className="glass rounded-2xl p-3">
+          <div className="flex items-center justify-between"><h3 className="fx-title text-base">🧾 내 마권</h3><span className="text-sm">합계 <b className="text-yellow-300">{fmt(total)}</b> CR</span></div>
+          {bets.length===0 ? <p className="text-[13px] text-blue-200/60 mt-1">구매한 마권이 없습니다. (마권 없이 관람도 가능)</p> :
+            <div className="mt-2 space-y-1.5">
+              {bets.map(b=>(
+                <div key={b.id} className="flex items-center gap-1.5 bg-black/30 rounded-lg px-2 py-1.5">
+                  <span className={`text-[10px] font-black px-1.5 py-0.5 rounded bg-gradient-to-b ${TYPE_INFO[b.type].color}`}>{TYPE_INFO[b.type].label}</span>
+                  {b.sel.map(n=><NumBadge key={n} no={n} size={22}/>)}
+                  <span className="text-xs text-yellow-200">{b.odds.toFixed(1)}배</span>
+                  <span className="ml-auto text-sm font-bold">{fmt(b.amount)}</span>
+                  <button onClick={()=>setBets(x=>x.filter(y=>y.id!==b.id))} className="text-red-300 text-lg px-1">×</button>
+                </div>))}
+            </div>}
+        </div>
+        <button onClick={()=>{Sound.init();Sound.click();onQuiz();}} className={`w-full py-3 rounded-xl font-black bg-gradient-to-b from-fuchsia-500 to-purple-700 ${credit<100?'animate-pulse':''}`}>🧠 퀴즈 풀고 CREDIT 1,000 받기</button>
+      </div>}
+
+      <div className="fixed bottom-0 inset-x-0 z-30 px-3 pt-6 pb-3 bg-gradient-to-t from-[#070d1f] via-[#070d1fee] to-transparent" style={{paddingBottom:'max(12px, env(safe-area-inset-bottom))'}}>
+        <div className="max-w-md mx-auto flex gap-2">
+          <div className="glass rounded-2xl px-3 py-2 flex flex-col justify-center">
             <span className="text-[10px] text-blue-200/80">잔여 CREDIT</span>
             <span className="font-black text-lg text-yellow-300 leading-none">{fmt(avail)}</span>
           </div>
-          <button onClick={()=>{Sound.init(); onStart();}} className="flex-1 rounded-2xl py-4 fx-title text-2xl bg-gradient-to-b from-yellow-300 via-amber-400 to-orange-600 text-black shadow-[0_0_30px_rgba(255,180,0,.5)] active:scale-[.98]">
+          <button onClick={()=>{Sound.init(); onStart();}} className="flex-1 rounded-2xl py-3.5 fx-title text-xl bg-gradient-to-b from-yellow-300 via-amber-400 to-orange-600 text-black shadow-[0_0_30px_rgba(255,180,0,.5)] active:scale-[.98]">
             🏁 출주! 레이스 시작
           </button>
         </div>
@@ -1655,18 +1671,16 @@ function Paddock({setup,credit,bets,setBets,onStart,onQuiz,history,muted,setMute
   );
 }
 
-/* ---------------- 레이스 중계 화면 ---------------- */
+/* ---------------- 레이스 중계 화면 (세로 전체화면) ---------------- */
 function RaceView({setup,bets,onDone}){
   const cvRef=useRef(null), engRef=useRef(null), wrapRef=useRef(null);
-  const [comms,setComms]=useState([]);
+  const [comm,setComm]=useState(null);
   const [ff,setFf]=useState(false);
   const [vo,setVo]=useState(Voice.on);
-  const [voices,setVoices]=useState(()=>Voice.list());
-  const [vname,setVname]=useState(()=>Voice.v?Voice.v.name:'');
-  useEffect(()=>{ if(!Voice.ok) return; const f=()=>{ Voice.pickVoice(); setVoices(Voice.list()); setVname(Voice.v?Voice.v.name:''); }; f(); const t=setTimeout(f,800); return ()=>clearTimeout(t); },[]);
   useEffect(()=>{
+    Voice.pickVoice();
     const eng=new RaceEngine(cvRef.current,setup,{
-      onComment:(text,hot,I)=>{ setComms(c=>[{id:Math.random(),text,hot},...c].slice(0,4)); Voice.say(text,hot,I); },
+      onComment:(text,hot,I)=>{ setComm({id:Math.random(),text,hot}); Voice.say(text,hot,I); },
       onDone:(res)=>setTimeout(()=>onDone(res),900)
     });
     engRef.current=eng;
@@ -1676,40 +1690,19 @@ function RaceView({setup,bets,onDone}){
   const toggleFf=()=>{ const v=!ff; setFf(v); if(engRef.current) engRef.current.ff=v; };
   const full=()=>{ try{ const el=wrapRef.current; if(document.fullscreenElement) document.exitFullscreen(); else if(el.requestFullscreen) el.requestFullscreen().catch(()=>{}); }catch(e){} };
   return (
-    <div className="max-w-6xl mx-auto px-0 sm:px-3 pb-6">
-      <div ref={wrapRef} className="relative bg-black sm:rounded-2xl overflow-hidden shadow-2xl sm:mt-3">
-        <canvas ref={cvRef} className="w-full" style={{aspectRatio:'16/9'}}/>
-        <div className="absolute bottom-2 right-2 flex gap-1.5">
-          {Voice.ok && voices.length>1 && <select value={vname} onChange={e=>{ setVname(e.target.value); Voice.setVoice(e.target.value); }} className="max-w-[130px] px-1 py-1 rounded-lg text-xs bg-black/70 text-white border border-white/20">
-            {voices.map(v=><option key={v.name} value={v.name}>{MALE_RE.test(v.name)?'🙋‍♂️ ':''}{v.name.replace(/Microsoft |Google |\(.*\)/g,'').slice(0,18)}</option>)}
-          </select>}
-          {Voice.ok && <button onClick={()=>{ const v=!vo; setVo(v); Voice.on=v; if(!v) Voice.stop(); else Voice.unlock(); }} className={`px-2.5 py-1 rounded-lg text-xs font-black ${vo?'bg-red-600 text-white':'bg-black/60 text-white'}`}>🎙️ 음성중계 {vo?'ON':'OFF'}</button>}
-          <button onClick={toggleFf} className={`px-2.5 py-1 rounded-lg text-xs font-black ${ff?'bg-yellow-400 text-black':'bg-black/60 text-white'}`}>▶▶ 빨리감기</button>
+    <div className="mx-auto" style={{maxWidth:'min(100vw, calc((100vh - 52px) * 9 / 16))'}}>
+      <div ref={wrapRef} className="relative bg-black overflow-hidden">
+        <canvas ref={cvRef} className="w-full block" style={{aspectRatio:'9/16'}}/>
+        {/* 아나운서 자막 */}
+        {comm && <div key={comm.id} className="tick-in absolute left-2 right-2 bottom-12 rounded-xl bg-black/65 backdrop-blur-sm px-3 py-2 border border-white/10">
+          <div className={`text-[15px] font-bold leading-snug ${comm.hot?'text-yellow-300':'text-white'}`}><span className="text-red-400 mr-1">🎙️</span>{comm.text}</div>
+        </div>}
+        <div className="absolute bottom-2 right-2 left-2 flex justify-end gap-1.5">
+          {bets.length>0 && <div className="mr-auto px-2 py-1 rounded-lg text-[11px] font-bold bg-black/60 text-yellow-200">🎫 마권 {bets.length}장 · {fmt(bets.reduce((s,b)=>s+b.amount,0))} CR</div>}
+          {Voice.ok && <button onClick={()=>{ const v=!vo; setVo(v); Voice.on=v; if(!v) Voice.stop(); else Voice.unlock(); }} className={`px-2.5 py-1 rounded-lg text-xs font-black ${vo?'bg-red-600 text-white':'bg-black/60 text-white'}`}>🎙️ {vo?'ON':'OFF'}</button>}
+          <button onClick={toggleFf} className={`px-2.5 py-1 rounded-lg text-xs font-black ${ff?'bg-yellow-400 text-black':'bg-black/60 text-white'}`}>▶▶</button>
           <button onClick={full} className="px-2.5 py-1 rounded-lg text-xs font-black bg-black/60 text-white">⛶</button>
         </div>
-      </div>
-      {/* 아나운서 문자 중계 */}
-      <div className="mx-3 sm:mx-0 mt-3 rounded-2xl overflow-hidden glass">
-        <div className="flex items-center gap-2 px-3 py-2 bg-gradient-to-r from-red-700 to-red-600">
-          <span className="w-2.5 h-2.5 rounded-full bg-white live-dot"/>
-          <span className="fx-title text-white tracking-wider">실시간 문자 중계</span>
-          <span className="ml-auto text-[11px] text-red-100">캐스터 · 링크 아나운서</span>
-        </div>
-        <div className="p-3 min-h-[118px]">
-          {comms.length===0 && <div className="text-blue-200/60">중계 준비 중...</div>}
-          {comms.map((c,i)=>(
-            <div key={c.id} className={`${i===0?'tick-in text-lg sm:text-xl font-black':'text-sm opacity-60'} ${i===0&&c.hot?'text-yellow-300':''} leading-snug mb-1.5`}>
-              {i===0?'🎙️ ':'· '}{c.text}
-            </div>))}
-        </div>
-      </div>
-      <div className="mx-3 sm:mx-0 mt-3 glass rounded-2xl p-3">
-        <div className="text-sm font-bold mb-2">🎫 나의 마권</div>
-        {bets.length===0?<div className="text-sm text-blue-200/60">관람 모드 (구매 마권 없음)</div>:
-        <div className="flex flex-wrap gap-1.5">{bets.map(b=>(
-          <div key={b.id} className="flex items-center gap-1 bg-black/30 rounded-lg px-2 py-1 text-xs">
-            <b>{TYPE_INFO[b.type].label}</b>{b.sel.map(n=><NumBadge key={n} no={n} size={20}/>)}<span className="text-yellow-200">{fmt(b.amount)}</span>
-          </div>))}</div>}
       </div>
     </div>
   );
@@ -1984,18 +1977,18 @@ function App(){
   return (
     <div className="min-h-screen" style={{background:'radial-gradient(1200px 600px at 50% -200px,#1b2f6e 0%,#070d1f 60%)'}}>
       <header className="sticky top-0 z-20 backdrop-blur bg-[#070d1f]/80 border-b border-white/5">
-        <div className="max-w-6xl mx-auto flex items-center gap-3 px-3 py-2">
-          <div className="fx-title text-2xl leading-none"><span className="gold">★ STAR</span> <span className="text-white">DERBY</span></div>
-          <span className="hidden sm:inline text-xs text-blue-200/70">아케이드 경마 중계 & 마권</span>
+        <div className="max-w-md mx-auto flex items-center gap-2 px-3 py-2 h-[52px]">
+          <div className="fx-title text-[19px] leading-none whitespace-nowrap"><span className="gold">★ STAR</span> <span className="text-white">DERBY</span></div>
+          
           <div className="ml-auto flex items-center gap-2">
-            {phase==='paddock' && <button onClick={()=>{Sound.init();Sound.click();setQuiz(true);}} className="h-9 px-3 rounded-full bg-gradient-to-b from-fuchsia-500 to-purple-700 text-sm font-black">🧠 퀴즈</button>}
-            <button onClick={()=>{Sound.init(); setMuted(m=>!m);}} className="w-9 h-9 rounded-full bg-white/10 text-lg">{muted?'🔇':'🔊'}</button>
-            <div className="rounded-full bg-gradient-to-b from-yellow-300 to-amber-500 text-black px-3 py-1.5 font-black text-sm shadow">CREDIT {fmt(phase==='paddock'?credit:credit)}</div>
+            {phase==='paddock' && <button onClick={()=>{Sound.init();Sound.click();setQuiz(true);}} className="h-8 px-2.5 rounded-full bg-gradient-to-b from-fuchsia-500 to-purple-700 text-[13px] font-black whitespace-nowrap">🧠 퀴즈</button>}
+            <button onClick={()=>{Sound.init(); setMuted(m=>!m);}} className="w-8 h-8 shrink-0 rounded-full bg-white/10 text-base">{muted?'🔇':'🔊'}</button>
+            <div className="rounded-full bg-gradient-to-b from-yellow-300 to-amber-500 text-black px-2.5 py-1 font-black text-[13px] shadow whitespace-nowrap">💰 {fmt(credit)}</div>
           </div>
         </div>
       </header>
       {!setup ? <div className="text-center py-24"><div className="fx-title text-3xl gold animate-pulse">예상지 집계 중...</div><div className="text-blue-200/70 mt-2 text-sm">배당률 계산 중입니다</div></div> :
-        phase==='paddock' ? <Paddock setup={setup} credit={credit} bets={bets} setBets={setBets} onStart={start} onQuiz={()=>setQuiz(true)} history={history} muted={muted} setMuted={setMuted}/> :
+        phase==='paddock' ? <Paddock setup={setup} credit={credit} bets={bets} setBets={setBets} onStart={start} onQuiz={()=>setQuiz(true)} history={history}/> :
         <RaceView key={setup.raceNo} setup={setup} bets={bets} onDone={done}/>}
       {quiz && setup && <QuizModal setup={setup} onClose={()=>setQuiz(false)} onReward={n=>setCredit(c=>c+n)}/>}
       {phase==='result' && result && <ResultModal setup={setup} result={result} bets={bets} payouts={payouts} onNext={next}/>}
