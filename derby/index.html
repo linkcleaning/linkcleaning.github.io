@@ -439,6 +439,12 @@ const Sound = {
 /* =========================================================
    아나운서 음성 중계 (Web Speech API, 한국어 TTS)
    ========================================================= */
+/* 내 구단 이름·로고 (사용자가 직접 설정) */
+const Club={ img:null,
+  get(){ try{ return JSON.parse(localStorage.getItem('sd_club'))||{name:'',logo:''}; }catch(e){ return {name:'',logo:''}; } },
+  set(c){ try{ localStorage.setItem('sd_club',JSON.stringify(c)); }catch(e){} this.load(); },
+  load(){ const c=this.get(); if(c.logo){ const i=new Image(); i.src=c.logo; this.img=i; } else this.img=null; } };
+Club.load();
 const MALE_RE=/injoon|in-joon|minsu|min-su|jian|hyunsu|bongjin|gookmin|seoyeon_m|male|남성|남자|kod|koc|ko-kr-standard-c|ko-kr-standard-d|wavenet-c|wavenet-d|neural2-c/i;
 const Voice={ on:true, ok:typeof window!=='undefined'&&'speechSynthesis' in window, v:null, curHot:false, male:false,
   list(){ try{ return speechSynthesis.getVoices().filter(v=>/^ko/i.test(v.lang)); }catch(e){ return []; } },
@@ -1467,7 +1473,8 @@ class RaceEngine{
     if(mine){ ctx.strokeStyle='#ffd43b'; ctx.lineWidth=3; rr(ctx,x+14*s-14,ty-14,28,24,6); ctx.stroke();
       ctx.fillStyle='#ffd43b'; rr(ctx,x+14*s-36,ty-11,20,18,4); ctx.fill(); ctx.fillStyle='#111'; ctx.font='700 12px sans-serif'; ctx.fillText('★',x+14*s-26,ty-2); }
     if(r.spurting&&!r.fin){ ctx.font='bold 18px sans-serif'; ctx.fillText('🔥',x+14*s+24,ty-2); }
-    if(owned){ ctx.font='bold 20px sans-serif'; ctx.textAlign='center'; ctx.fillText('👑',x+14*s,ty-26); }
+    if(owned){ const L=Club.img; if(L&&L.complete&&L.naturalWidth){ const R=15, cx=x+14*s, cy=ty-30; ctx.save(); ctx.beginPath(); ctx.arc(cx,cy,R,0,7); ctx.fillStyle='#fff'; ctx.fill(); ctx.clip(); ctx.drawImage(L,cx-R,cy-R,R*2,R*2); ctx.restore(); ctx.strokeStyle='#ffd43b'; ctx.lineWidth=2.5; ctx.beginPath(); ctx.arc(cx,cy,R,0,7); ctx.stroke(); }
+      else { ctx.font='bold 20px sans-serif'; ctx.textAlign='center'; ctx.fillText('👑',x+14*s,ty-26); } }
     if(r.pop && this.real-r.pop.t<1.2){ const e=this.real-r.pop.t; ctx.save(); ctx.globalAlpha=1-e/1.2; ctx.fillStyle='#69ff8a'; ctx.strokeStyle='rgba(0,0,0,0.6)'; ctx.lineWidth=3; ctx.font='700 20px "Noto Sans KR",sans-serif'; ctx.strokeText(r.pop.txt,x+14*s,ty-24-e*26); ctx.fillText(r.pop.txt,x+14*s,ty-24-e*26); ctx.restore(); }
   }
   drawGatePanel(ctx,z){
@@ -1741,7 +1748,7 @@ function HorseCard({h,setup,selected,onPick,type}){
               <div className="fx-title text-xl leading-none truncate">{h.name}</div>
               <div className="text-[11px] text-blue-200/80 mt-1">{h.sex}{h.age} · {h.coatName} · 기수 {h.jockey} · {h.weightKg}kg({h.delta>=0?'+':''}{h.delta})</div>
             </div>
-            {h.owned && <span className="ml-1 px-1.5 py-0.5 rounded bg-yellow-300 text-black text-[10px] font-black whitespace-nowrap">👑 내 말</span>}
+            {h.owned && <span className="ml-1 px-1.5 py-0.5 rounded bg-yellow-300 text-black text-[10px] font-black whitespace-nowrap inline-flex items-center gap-1 align-middle">{Club.get().logo?<img src={Club.get().logo} alt="" style={{width:14,height:14,borderRadius:7,objectFit:'cover'}}/>:'👑'}{Club.get().name||'내 말'}</span>}
               {h.world && <span className="ml-1 px-1.5 py-0.5 rounded bg-sky-400 text-black text-[10px] font-black whitespace-nowrap">{h.world.flag} {'★'.repeat(h.world.grade)}{h.world.home?' 홈':''}</span>}
             {mark && <div className="ml-auto text-2xl font-black text-yellow-300 drop-shadow">{mark}</div>}
           </div>
@@ -1898,7 +1905,7 @@ function Paddock({setup,credit,bets,setBets,onStart,onQuiz,onRps,onEvent,evLabel
       {/* 메뉴: 커피 이벤트 / 내 구단 / 퀴즈 */}
       <div className="grid grid-cols-3 gap-1.5 mt-2">
         <button onClick={()=>{Sound.init();Sound.click();onEvent();}} className="rounded-xl py-2 bg-gradient-to-b from-emerald-600 to-teal-800 text-[12.5px] font-black leading-tight">{evLabel?evLabel[0]:'☕ 커피 이벤트'}<div className="text-[9.5px] font-bold opacity-80 truncate px-1">{evLabel?evLabel[1]:'3만·5만 CR 교환'}</div></button>
-        <button onClick={()=>{Sound.init();Sound.click();onOwner();}} className="rounded-xl py-2 bg-gradient-to-b from-amber-500 to-orange-700 text-[12.5px] font-black leading-tight">🏇 내 구단<div className="text-[9.5px] font-bold opacity-80">{(barn&&barn.horses.length)?(barn.lastPay!==todayKey()?`💰 수익 ${fmt(barnDaily(barn))} 받기!`:`🐎 ${barn.horses.length+(stable?1:0)}마리 · WP ${barnWP(barn)}`):stable?`👑 ${stable.name}`:'구단주 되기 · 말 시장'}</div></button>
+        <button onClick={()=>{Sound.init();Sound.click();onOwner();}} className="rounded-xl py-2 bg-gradient-to-b from-amber-500 to-orange-700 text-[12.5px] font-black leading-tight">{Club.get().logo?<img src={Club.get().logo} alt="" className="inline-block align-middle mr-1" style={{width:18,height:18,borderRadius:9,objectFit:'cover',border:'1.5px solid #fff'}}/>:'🏇 '}{Club.get().name||'내 구단'}<div className="text-[9.5px] font-bold opacity-80">{(barn&&barn.horses.length)?(barn.lastPay!==todayKey()?`💰 수익 ${fmt(barnDaily(barn))} 받기!`:`🐎 ${barn.horses.length+(stable?1:0)}마리 · WP ${barnWP(barn)}`):stable?`👑 ${stable.name}`:'구단주 되기 · 말 시장'}</div></button>
         <button onClick={()=>{Sound.init();Sound.click();onQuiz();}} className="rounded-xl py-2 bg-gradient-to-b from-fuchsia-500 to-purple-700 text-[12.5px] font-black leading-tight">🧠 퀴즈<div className="text-[9.5px] font-bold opacity-80">오늘 {fmtN(quizToday())}/5,000</div></button>
       </div>
       <button onClick={()=>{Sound.init();Sound.click();onRps&&onRps();}} className="w-full mt-1.5 rounded-xl py-2 flex items-center justify-center gap-2 text-[13px] font-black" style={{background:'linear-gradient(90deg,#111,#1e293b,#111)',border:'2px solid #2563eb',boxShadow:'0 0 10px rgba(37,99,235,.5)'}}>
@@ -2503,7 +2510,6 @@ function TicketConfirm({setup,bets,onGo}){
       <div className="mt-2 text-[13px] text-blue-200/85">총 {bets.length}장 · {fmt(total)} CR</div>
       <div className="mt-6 text-[14px] text-blue-100">잠시 후 출발합니다</div>
       <div key={n} className="fx-title text-yellow-300 pop mt-1" style={{fontSize:72,lineHeight:1}}>{n}</div>
-      <button onClick={()=>{Sound.click();onGo();}} className="mt-6 px-6 py-3 rounded-2xl bg-white/10 font-black text-[14px]">바로 시작 ▶</button>
     </div>);
 }
 
@@ -2666,11 +2672,29 @@ function RpsModal({onClose,onReward,credit}){
 const FOUND_COST=1000, CARE_COST=200, PRIZE=[500,250,120];
 const trainCost=lv=>300+200*lv;
 const STAT_INFO={spd:{n:'스피드',e:'⚡',d:'기본 속도가 올라가요'},sta:{n:'지구력',e:'💪',d:'후반에 덜 지쳐요'},kick:{n:'순발력',e:'🔥',d:'막판 스퍼트가 강해져요'}};
+function resizeLogo(file,cb){ const rd=new FileReader(); rd.onload=()=>{ const im=new Image(); im.onload=()=>{ const S=160, c=document.createElement('canvas'); c.width=c.height=S; const x=c.getContext('2d');
+    const k=Math.max(S/im.width,S/im.height), w=im.width*k, h=im.height*k; x.fillStyle='#fff'; x.fillRect(0,0,S,S); x.drawImage(im,(S-w)/2,(S-h)/2,w,h); cb(c.toDataURL('image/jpeg',0.85)); }; im.src=rd.result; }; rd.readAsDataURL(file); }
+function ClubCard(){
+  const [c,setC]=useState(()=>Club.get()); const [edit,setEdit]=useState(false); const [nm,setNm]=useState(c.name); const fileRef=useRef(null);
+  const save=v=>{ Club.set(v); setC(v); };
+  return (<div className="rounded-2xl p-2.5 mb-2 flex items-center gap-3" style={{background:'linear-gradient(90deg,rgba(255,212,59,.18),rgba(255,146,43,.12))',border:'1px solid rgba(255,212,59,.35)'}}>
+    <button onClick={()=>fileRef.current&&fileRef.current.click()} className="relative shrink-0 rounded-full overflow-hidden flex items-center justify-center" style={{width:58,height:58,background:'#fff',border:'3px solid #ffd43b'}}>
+      {c.logo?<img src={c.logo} alt="구단 로고" style={{width:'100%',height:'100%',objectFit:'cover'}}/>:<span className="text-[26px]">👑</span>}
+      <span className="absolute bottom-0 inset-x-0 text-[9px] font-black text-white" style={{background:'rgba(0,0,0,.55)'}}>{c.logo?'변경':'로고'}</span></button>
+    <input ref={fileRef} type="file" accept="image/*" className="hidden" onChange={e=>{ const f=e.target.files&&e.target.files[0]; if(f) resizeLogo(f,d=>{ save({...c,logo:d}); Sound.coin(); }); e.target.value=''; }}/>
+    <div className="flex-1 min-w-0">
+      <div className="text-[10.5px] text-yellow-200/80">내 구단</div>
+      {edit ? <div className="flex gap-1 mt-0.5"><input autoFocus value={nm} maxLength={14} onChange={e=>setNm(e.target.value)} placeholder="예: 링크클린 레이싱" className="flex-1 min-w-0 px-2 py-1.5 rounded-lg bg-black/40 border border-white/20 text-[14px] text-white outline-none"/>
+          <button onClick={()=>{ save({...c,name:nm.trim()}); setEdit(false); Sound.click(); }} className="px-3 rounded-lg bg-yellow-300 text-black text-[12px] font-black">저장</button></div>
+        : <button onClick={()=>{ setNm(c.name); setEdit(true); }} className="text-left w-full"><span className="fx-title text-[19px] text-white truncate">{c.name||'구단 이름을 정해 주세요'}</span> <span className="text-[11px] text-yellow-200">✏️</span></button>}
+      {c.logo && !edit && <button onClick={()=>save({...c,logo:''})} className="text-[10px] text-white/50 underline">로고 지우기</button>}
+    </div></div>);
+}
 function OwnerModal(props){
   const [tab,setTab]=useState(props.barn&&props.barn.horses.length&&!props.stable?'market':'mine');
-  const tabs=<div className="grid grid-cols-2 gap-1 p-1 rounded-2xl bg-black/40 mb-2">
+  const tabs=<><ClubCard/><div className="grid grid-cols-2 gap-1 p-1 rounded-2xl bg-black/40 mb-2">
     {[['mine','👑 내 구단'],['market',`🌍 세계 말 시장 (${props.barn.horses.length}/${WORLD_HORSES.length})`]].map(([k,t])=>
-      <button key={k} onClick={()=>{Sound.click();setTab(k);}} className={`py-2 rounded-xl text-[13px] font-black ${tab===k?'bg-yellow-300 text-black':'text-white/70'}`}>{t}</button>)}</div>;
+      <button key={k} onClick={()=>{Sound.click();setTab(k);}} className={`py-2 rounded-xl text-[13px] font-black ${tab===k?'bg-yellow-300 text-black':'text-white/70'}`}>{t}</button>)}</div></>;
   return tab==='market'?<MarketModal {...props} tabs={tabs}/>:<StableModal {...props} tabs={tabs}/>;
 }
 function MarketModal({credit,spend,onClose,barn,setBarn,tabs}){
@@ -2760,7 +2784,7 @@ function StableModal({credit,stable,setStable,spend,onClose,tabs}){
     <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm overflow-y-auto" onClick={onClose}>
       <div className="max-w-md mx-auto p-3 pt-6" onClick={e=>e.stopPropagation()}>
         <div className="glass rounded-3xl p-4 pop">
-          <div className="flex items-center mb-2"><div className="fx-title text-2xl gold">👑 {st.name} 구단</div><button onClick={onClose} className="ml-auto w-9 h-9 rounded-full bg-white/10 text-xl">×</button></div>
+          <div className="flex items-center mb-2"><div className="fx-title text-2xl gold">🏇 대표마 {st.name}</div><button onClick={onClose} className="ml-auto w-9 h-9 rounded-full bg-white/10 text-xl">×</button></div>
           {tabs}
           <div className="text-[12px] text-yellow-200 mt-0.5">{PROFILES[st.name]?.tag} · 훈련 효과는 다음 경주부터 반영돼요</div>
           <div className="grid grid-cols-4 gap-1.5 mt-3 text-center">
