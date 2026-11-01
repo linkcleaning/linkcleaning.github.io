@@ -695,6 +695,18 @@ class MainActivity : AppCompatActivity() {
         draftCard.visibility = if (cardMode) View.GONE else View.VISIBLE
         cardOnlyNote.visibility = if (cardMode) View.VISIBLE else View.GONE
         if (cardMode) { cardPreview?.setImageBitmap(ReservationCard.render(this, fields)); return }
+        if (selectedTpl().id == "t_account") {
+            val bmp = ReservationCard.renderAccount(this)
+            val w = resources.displayMetrics.widthPixels - ui.dp(64)
+            val col = ui.col()
+            col.addView(ui.text("🏦 계좌 카드 사진 + 아래 글(복사용)이 함께 가요", 13f, Col.B700, true), ui.lp(bottom = 6))
+            col.addView(ImageView(this).apply {
+                setImageBitmap(bmp); adjustViewBounds = true; scaleType = ImageView.ScaleType.FIT_CENTER
+                background = ui.rect(Col.S100, 16f, Col.S200, 1f); clipToOutline = true
+            }, ui.lp())
+            sendImgs.addView(col, LinearLayout.LayoutParams(w, ui.WRAP))
+            return
+        }
         val files = Prefs.imageFiles(this)
         if (selectedTpl().hasTokens) {
             // 예약 카드 미리보기 (누르면 크게)
@@ -910,15 +922,20 @@ class MainActivity : AppCompatActivity() {
         if (!t.hasTokens && text.isEmpty()) { toast("보낼 문자가 비어 있어요", "err"); return }
         if (Templates.TOKEN_RE.containsMatchIn(text)) { toast("📝 예약 정보 빈칸을 채워 주세요", "err"); return }
         val imgs = Prefs.imageFiles(this)
-        val useImg = withImages && imgs.isNotEmpty() && !t.hasTokens
+        val useImg = withImages && imgs.isNotEmpty() && !t.hasTokens && t.id != "t_account"
         // 예약 문자({빈칸} 있는 문자)는 예약 카드 이미지를 항상 같이 보냄
-        val cardImg: List<ByteArray> = if (t.hasTokens) listOf(ReservationCard.jpeg(this, fields)) else emptyList()
+        val cardImg: List<ByteArray> = when {
+            t.hasTokens -> listOf(ReservationCard.jpeg(this, fields))
+            t.id == "t_account" -> listOf(ReservationCard.accountJpeg(this))
+            else -> emptyList()
+        }
         val notes = mutableListOf<String>()
         Prefs.excludeMemo(this, num)?.let { notes.add("🚫 발송제외 번호예요" + if (it.isNotEmpty()) " ($it)" else "") }
         val last = Prefs.lastSent(this, num); val hours = Prefs.cooldownHours(this)
         if (last > 0 && hours > 0 && System.currentTimeMillis() - last < hours * 3600_000L) notes.add("🔁 ${ago(last)}에 이미 보낸 번호예요")
         if (withImages && imgs.isEmpty() && !t.hasTokens) notes.add("📷 홍보 사진이 없어서 글만 보내요")
         notes.add("[${t.icon} ${t.name}] " + when {
+            cardImg.isNotEmpty() && t.id == "t_account" -> "🏦 계좌 카드 사진 + 계좌번호 글"
             cardImg.isNotEmpty() -> "📇 예약 카드 사진 한 장"
             useImg -> "사진 ${imgs.size}장 + 문자"
             else -> "문자 (${Compose.kind(text, false)})"

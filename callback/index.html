@@ -621,6 +621,41 @@ async function drawReservationCard() {
   x.fillStyle = '#64748b'; x.font = F(30); x.fillText('정확한 주소(동·호수)를 문자로 남겨주세요', 540, 1400);
   return new Promise((res, rej) => c.toBlob(b => b ? res(b) : rej(), 'image/png'));
 }
+const isAccountTpl = t => t && t.id === 't_account';
+let _acct = { blob: null, url: '' };
+async function drawAccountCard() {
+  const W = 1080, H = 1110, c = document.createElement('canvas'); c.width = W; c.height = H;
+  const x = c.getContext('2d');
+  try { if (document.fonts) await document.fonts.load('bold 40px Pretendard'); } catch (e) {}
+  const F = (sz) => `800 ${sz}px Pretendard, -apple-system, 'Apple SD Gothic Neo', sans-serif`;
+  x.fillStyle = '#f1f5f9'; x.fillRect(0, 0, W, H);
+  const g = x.createLinearGradient(0, 0, W, 420); g.addColorStop(0, '#0369a1'); g.addColorStop(1, '#0ea5e9');
+  x.fillStyle = g; x.fillRect(0, 0, W, 430);
+  x.fillStyle = '#fff'; x.beginPath(); x.arc(540, 150, 100, 0, Math.PI * 2); x.fill();
+  try { const lg = await loadImg('logo-sm.png'); x.save(); x.beginPath(); x.arc(540, 150, 92, 0, Math.PI * 2); x.clip(); x.drawImage(lg, 448, 58, 184, 184); x.restore(); } catch (e) {}
+  x.textAlign = 'center'; x.fillStyle = '#e0f2fe'; x.font = F(38); x.fillText('제주 청소 전문 링크클린', 540, 312);
+  x.fillStyle = '#fff'; x.font = F(64); x.fillText('입금 계좌 안내', 540, 386);
+  x.fillStyle = '#fff'; x.beginPath(); x.roundRect ? x.roundRect(60, 470, 960, 490, 40) : x.rect(60, 470, 960, 490); x.fill();
+  const ln = (y) => { x.strokeStyle = '#e2e8f0'; x.lineWidth = 3; x.beginPath(); x.moveTo(110, y); x.lineTo(970, y); x.stroke(); };
+  x.textAlign = 'left'; x.fillStyle = '#64748b'; x.font = F(38); x.fillText('은행', 110, 565);
+  x.textAlign = 'right'; x.fillStyle = '#0f172a'; x.font = F(46); x.fillText('토스뱅크', 970, 565);
+  ln(615);
+  x.textAlign = 'center'; x.fillStyle = '#64748b'; x.font = F(36); x.fillText('계좌번호', 540, 685);
+  x.fillStyle = '#0369a1'; x.font = F(84); x.fillText('1000-1626-3066', 540, 785);
+  ln(840);
+  x.textAlign = 'left'; x.fillStyle = '#64748b'; x.font = F(38); x.fillText('예금주', 110, 910);
+  x.textAlign = 'right'; x.fillStyle = '#0f172a'; x.font = F(46); x.fillText('링크클린', 970, 910);
+  x.textAlign = 'center'; x.fillStyle = '#334155'; x.font = F(34); x.fillText('입금 후 문자로 알려주시면 바로 확인해 드립니다', 540, 1025);
+  x.fillStyle = '#64748b'; x.font = F(30); x.fillText('링크클린 · 064-763-4545', 540, 1075);
+  return new Promise((res, rej) => c.toBlob(b => b ? res(b) : rej(), 'image/png'));
+}
+async function accountBlob() {
+  if (_acct.blob) return _acct.blob;
+  const blob = await drawAccountCard();
+  _acct = { blob, url: URL.createObjectURL(blob) };
+  return blob;
+}
+
 async function cardBlob() {
   const k = cardKey();
   if (_card.key === k && _card.blob) return _card.blob;
@@ -640,6 +675,14 @@ function renderCardPreview() {
 let pickedImg = 0; // 보낼 사진 번호 (0부터)
 function renderSendImgs() {
   const cardMode = isCardTpl(curTpl());
+  if (isAccountTpl(curTpl())) {
+    ['draft', 'charInfo'].forEach(id => $(id) && $(id).classList.add('hidden'));
+    $('btnRestore').classList.add('hidden'); $('sendImgsLabel').classList.add('hidden');
+    $('sendImgs').innerHTML = `<div class="w-full"><p class="mb-2 rounded-xl bg-brand-50 px-3 py-2 text-[14px] font-bold text-brand-700 ring-1 ring-brand-200">🏦 이 계좌 카드 사진을 보내요</p>
+      <img id="acctPrev" class="w-full rounded-2xl ring-1 ring-slate-200" src="${_acct.url || ''}" alt="계좌 카드"/></div>`;
+    accountBlob().then(() => { const im = document.getElementById('acctPrev'); if (im) im.src = _acct.url; }).catch(() => {});
+    return;
+  }
   ['draft', 'charInfo'].forEach(id => $(id) && $(id).classList.toggle('hidden', cardMode));
   if (cardMode) {
     $('btnRestore').classList.add('hidden'); $('sendImgsLabel').classList.add('hidden'); $('sendImgs').classList.remove('hidden');
@@ -825,13 +868,14 @@ async function shareImage(readyBlob, fname, method, build) {
 }
 async function sendCard() {
   if (!guard()) return;
+  if (isAccountTpl(curTpl())) return shareImage(_acct.blob, 'linkclean_계좌안내.png', '계좌카드', accountBlob);
   const ready = (_card.key === cardKey()) ? _card.blob : null;
   await shareImage(ready, 'linkclean_예약카드.png', '예약카드', cardBlob);
 }
-$('btnSms').onclick = () => { if (isCardTpl(curTpl())) return sendCard(); if (!guard()) return; vib(); record('문자'); location.href = smsHref(); };
+$('btnSms').onclick = () => { if (isCardTpl(curTpl()) || isAccountTpl(curTpl())) return sendCard(); if (!guard()) return; vib(); record('문자'); location.href = smsHref(); };
 
 $('btnShareAll').onclick = async () => {
-  if (isCardTpl(curTpl())) return sendCard();
+  if (isCardTpl(curTpl()) || isAccountTpl(curTpl())) return sendCard();
   if (!guard()) return;
   const imgs = tplImgs(curTpl());
   if (!imgs.length) { toast('🖼️ 등록된 사진이 없어요. 공통 홍보 사진을 넣어주세요'); if (usesCommon(curTpl())) go('msgs'); else openEditor(curTpl().id); return; }

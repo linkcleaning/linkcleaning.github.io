@@ -78,4 +78,51 @@ object ReservationCard {
         render(c, f).compress(Bitmap.CompressFormat.JPEG, 85, bos)
         return bos.toByteArray()
     }
+
+    /** 입금 계좌 안내 카드 */
+    fun renderAccount(c: Context): Bitmap {
+        val W = 1080; val H = 1110
+        val bmp = Bitmap.createBitmap(W, H, Bitmap.Config.ARGB_8888)
+        val cv = Canvas(bmp)
+        val bold = Typeface.create(Typeface.DEFAULT, Typeface.BOLD)
+        fun p(color: Int, size: Float, align: Paint.Align = Paint.Align.LEFT) = Paint(Paint.ANTI_ALIAS_FLAG).apply {
+            this.color = color; textSize = size; typeface = bold; textAlign = align
+        }
+        cv.drawColor(0xFFF1F5F9.toInt())
+        val head = Paint(Paint.ANTI_ALIAS_FLAG).apply {
+            shader = LinearGradient(0f, 0f, W.toFloat(), 420f, 0xFF0369A1.toInt(), 0xFF0EA5E9.toInt(), Shader.TileMode.CLAMP)
+        }
+        cv.drawRect(0f, 0f, W.toFloat(), 430f, head)
+        val logo = BitmapFactory.decodeResource(c.resources, R.drawable.logo_sm)
+        val lr = 92f; val lx = W / 2f; val ly = 150f
+        cv.drawCircle(lx, ly, lr + 8, p(Color.WHITE, 1f))
+        if (logo != null) {
+            cv.save(); cv.clipPath(Path().apply { addCircle(lx, ly, lr, Path.Direction.CW) })
+            cv.drawBitmap(logo, null, RectF(lx - lr, ly - lr, lx + lr, ly + lr), Paint(Paint.FILTER_BITMAP_FLAG))
+            cv.restore()
+        }
+        cv.drawText("제주 청소 전문 링크클린", W / 2f, 312f, p(0xFFE0F2FE.toInt(), 38f, Paint.Align.CENTER))
+        cv.drawText("입금 계좌 안내", W / 2f, 386f, p(Color.WHITE, 64f, Paint.Align.CENTER))
+
+        cv.drawRoundRect(RectF(60f, 470f, W - 60f, 960f), 40f, 40f, p(Color.WHITE, 1f))
+        val line = p(0xFFE2E8F0.toInt(), 1f).apply { strokeWidth = 3f }
+        cv.drawText("은행", 110f, 565f, p(0xFF64748B.toInt(), 38f))
+        cv.drawText("토스뱅크", W - 110f, 565f, p(0xFF0F172A.toInt(), 46f, Paint.Align.RIGHT))
+        cv.drawLine(110f, 615f, W - 110f, 615f, line)
+        cv.drawText("계좌번호", W / 2f, 685f, p(0xFF64748B.toInt(), 36f, Paint.Align.CENTER))
+        cv.drawText("1000-1626-3066", W / 2f, 785f, p(0xFF0369A1.toInt(), 84f, Paint.Align.CENTER))
+        cv.drawLine(110f, 840f, W - 110f, 840f, line)
+        cv.drawText("예금주", 110f, 910f, p(0xFF64748B.toInt(), 38f))
+        cv.drawText("링크클린", W - 110f, 910f, p(0xFF0F172A.toInt(), 46f, Paint.Align.RIGHT))
+
+        cv.drawText("입금 후 문자로 알려주시면 바로 확인해 드립니다", W / 2f, 1025f, p(0xFF334155.toInt(), 34f, Paint.Align.CENTER))
+        cv.drawText("링크클린 · 064-763-4545", W / 2f, 1075f, p(0xFF64748B.toInt(), 30f, Paint.Align.CENTER))
+        return bmp
+    }
+
+    fun accountJpeg(c: Context): ByteArray {
+        val bos = ByteArrayOutputStream()
+        renderAccount(c).compress(Bitmap.CompressFormat.JPEG, 85, bos)
+        return bos.toByteArray()
+    }
 }
