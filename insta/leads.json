@@ -1,13 +1,85 @@
 {
-"updated": "2026-11-01 02:04",
+"updated": "2026-11-01 09:13",
 "stats": {
+"restaurant": 114,
 "minbak": 62,
 "cafe": 52,
-"restaurant": 108,
 "build_done": 139,
 "build_start": 109
 },
 "items": [
+{
+"id": "restaurant:6510000-101-2026-00726",
+"src": "restaurant",
+"name": "호끌락컴퍼니",
+"type": "기타",
+"addr": "제주특별자치도 제주시 용담이동 372-3 일원",
+"date": "2026-10-30",
+"area": "9.00",
+"tel": "",
+"franchise": false,
+"firstSeen": "2026-11-01 09:13"
+},
+{
+"id": "restaurant:6510000-101-2026-00725",
+"src": "restaurant",
+"name": "애월혼술바연결고리",
+"type": "한식",
+"addr": "제주특별자치도 제주시 애월읍 곽지1길 26-7, 1층",
+"date": "2026-10-30",
+"area": "30.34",
+"tel": "",
+"franchise": false,
+"firstSeen": "2026-11-01 09:13"
+},
+{
+"id": "restaurant:6510000-101-2026-00724",
+"src": "restaurant",
+"name": "세화마을협동조합",
+"type": "기타",
+"addr": "제주특별자치도 제주시 구좌읍 상도리 471-31",
+"date": "2026-10-30",
+"area": "25.00",
+"tel": "",
+"franchise": false,
+"firstSeen": "2026-11-01 09:13"
+},
+{
+"id": "restaurant:6510000-101-2026-00722",
+"src": "restaurant",
+"name": "쉼터편의점",
+"type": "분식",
+"addr": "제주특별자치도 제주시 번영로 368, 1동 1층 (봉개동)",
+"date": "2026-10-30",
+"area": "75.00",
+"tel": "",
+"franchise": false,
+"firstSeen": "2026-11-01 09:13"
+},
+{
+"id": "restaurant:6510000-101-2026-00721",
+"src": "restaurant",
+"name": "함덕바당횟집",
+"type": "일식",
+"addr": "제주특별자치도 제주시 조천읍 조함해안로 488, 1층",
+"date": "2026-10-30",
+"area": "89.23",
+"tel": "",
+"franchise": false,
+"firstSeen": "2026-11-01 09:13"
+},
+{
+"id": "restaurant:6510000-101-2026-00720",
+"src": "restaurant",
+"name": "먹어보카",
+"type": "한식",
+"addr": "제주특별자치도 제주시 서광로2길 33, 1층 (오라일동)",
+"date": "2026-10-30",
+"area": "36.30",
+"tel": "",
+"franchise": false,
+"firstSeen": "2026-11-01 09:13"
+},
 {
 "id": "minbak:AGCV065100002026000364",
 "src": "minbak",
@@ -599,7 +671,7 @@
 {
 "id": "restaurant:6510000-101-2026-00689",
 "src": "restaurant",
-"name": "숙성도함덕",
+"name": "숙성도함덕점",
 "type": "식육(숯불구이)",
 "addr": "제주특별자치도 제주시 조천읍 조함해안로 518, 3층",
 "date": "2026-10-22",
@@ -1575,7 +1647,7 @@
 "type": "횟집",
 "addr": "제주특별자치도 서귀포시 성산읍 일출로 233, 1층",
 "date": "2026-10-07",
-"area": "86.80",
+"area": "64.50",
 "tel": "064-787-9688",
 "franchise": false,
 "firstSeen": "2026-11-01 01:58"
@@ -5899,7 +5971,7 @@
 ],
 "debug": {
 "errors": [],
-"calls": 235,
+"calls": 237,
 "notes": [
 "cafe path=rest_cafes",
 "cafe 6510000 total=388",
@@ -5907,10 +5979,10 @@
 "cafe 6500000 total=0",
 "cafe collected=52",
 "restaurant path=general_restaurants",
-"restaurant 6510000 total=716",
+"restaurant 6510000 total=723",
 "restaurant 6520000 total=391",
 "restaurant 6500000 total=0",
-"restaurant collected=108",
+"restaurant collected=114",
 "minbak path=rural_homestays",
 "minbak 6510000 total=362",
 "minbak 6520000 total=157",
