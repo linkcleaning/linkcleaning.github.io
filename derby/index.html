@@ -426,8 +426,10 @@ const Sound = {
     this.osc('sine',2400,t,0.001,0.04,0.2,1200);
   },
   jjangkem(){ if(!this.ok()) return; const t=this.ctx.currentTime;   // 짱-켐-보이~ 8비트 징글
-    [[784,0,0.16],[988,0.2,0.16],[1175,0.4,0.12],[1568,0.54,0.38]].forEach(([f,d,l])=>{ this.osc('square',f,t+d,0.005,l,0.13); this.osc('triangle',f/2,t+d,0.005,l,0.12); });
-    [0,0.2,0.4].forEach(d=>this.noise(t+d,0.05,0.25,'highpass',3000,0.7)); },
+    [[784,0,0.09],[988,0.11,0.09],[1175,0.22,0.08],[1568,0.31,0.24]].forEach(([f,d,l])=>{ this.osc('square',f,t+d,0.004,l,0.13); this.osc('triangle',f/2,t+d,0.004,l,0.12); });
+    [0,0.11,0.22].forEach(d=>this.noise(t+d,0.04,0.25,'highpass',3000,0.7)); },
+  coinIn(){ if(!this.ok()) return; const t=this.ctx.currentTime;   // 동전 '또르륵 짤랑'
+    [0,0.07,0.13,0.18].forEach((d,k)=>this.osc('triangle',1900-k*120,t+d,0.002,0.06,0.09)); this.osc('sine',2637,t+0.26,0.003,0.35,0.12); this.osc('sine',3520,t+0.3,0.003,0.3,0.08); this.osc('sine',90,t+0.24,0.004,0.12,0.25,50); },
   beep(f){ if(!this.ok()) return; const t=this.ctx.currentTime; this.osc('square',f,t,0.003,0.16,0.12); this.osc('sine',f*2,t,0.003,0.12,0.05); },
   drum(v){ if(!this.ok()) return; const t=this.ctx.currentTime; this.osc('sine',72,t,0.004,0.22,v,38); this.noise(t,0.08,v*0.35,'lowpass',300,0.7); this.osc('sine',66,t+0.16,0.004,0.18,v*0.7,36); },
   miss(){ if(!this.ok()) return; const t=this.ctx.currentTime; this.osc('sawtooth',300,t,0.01,0.35,0.07,150); this.osc('sawtooth',220,t+0.25,0.01,0.5,0.07,110); }
@@ -452,8 +454,8 @@ const Voice={ on:true, ok:typeof window!=='undefined'&&'speechSynthesis' in wind
     const u=new SpeechSynthesisUtterance('.'); u.volume=0.01; u.rate=2; u.lang='ko-KR'; speechSynthesis.speak(u); this.unlockedAt=Date.now(); }catch(e){} },
   noVoice:(()=>{ try{ return localStorage.getItem('sd_vnov')==='1'; }catch(e){ return false; } })(), started:0, fails:0, unlockedAt:0,
   log:[], L(m){ const t=new Date(); this.log.push(`${t.getMinutes()}:${String(t.getSeconds()).padStart(2,'0')} ${m}`); if(this.log.length>40) this.log.shift(); },
-  kick(text){ if(!this.ok||!this.on||Sound.muted) return; try{ this.pickVoice(); speechSynthesis.resume(); }catch(e){}
-    this.q=[{t:text,hot:true,I:0.4,at:Date.now()}]; this.waitStart=0; this.next(true); this.unlockedAt=Date.now(); },
+  kick(text,rate){ if(!this.ok||!this.on||Sound.muted) return; try{ this.pickVoice(); speechSynthesis.resume(); }catch(e){}
+    this.q=[{t:text,hot:true,I:0.4,at:Date.now(),rate}]; this.waitStart=0; this.next(true); this.unlockedAt=Date.now(); },
   // 자체 대기열 + 감시 타이머: iOS/크롬에서 onend가 안 오거나 cancel 직후 speak가 씹혀서 소리가 끊기는 문제 방지
   q:[], busy:false, cur:null, wd:null,
   // 겹침 방지: 절대 끊지(cancel) 않고, 기기가 아직 말하는 중이면 끝날 때까지 기다렸다가 다음 문장을 말함
@@ -485,7 +487,7 @@ const Voice={ on:true, ok:typeof window!=='undefined'&&'speechSynthesis' in wind
       if(speechSynthesis.paused) speechSynthesis.resume();
       const u=new SpeechSynthesisUtterance(it.t);
       u.lang='ko-KR'; if(this.v && !this.noVoice) u.voice=this.v;
-      u.rate=Math.min(1.3,1.0+0.22*it.I+(it.hot?0.05:0));   // 또렷하게 들리도록 속도 완화
+      u.rate=it.rate||Math.min(1.3,1.0+0.22*it.I+(it.hot?0.05:0));   // 또렷하게 들리도록 속도 완화
       u.pitch=this.male?(1.0+0.12*it.I):(0.88+0.1*it.I);     // 음높이를 과하게 낮추면 뭉개져서 자연스럽게
       u.volume=1;
       this.cur=u;
@@ -1900,7 +1902,7 @@ function Paddock({setup,credit,bets,setBets,onStart,onQuiz,onRps,onEvent,evLabel
         <button onClick={()=>{Sound.init();Sound.click();onQuiz();}} className="rounded-xl py-2 bg-gradient-to-b from-fuchsia-500 to-purple-700 text-[12.5px] font-black leading-tight">🧠 퀴즈<div className="text-[9.5px] font-bold opacity-80">오늘 {fmtN(quizToday())}/5,000</div></button>
       </div>
       <button onClick={()=>{Sound.init();Sound.click();onRps&&onRps();}} className="w-full mt-1.5 rounded-xl py-2 flex items-center justify-center gap-2 text-[13px] font-black" style={{background:'linear-gradient(90deg,#111,#1e293b,#111)',border:'2px solid #2563eb',boxShadow:'0 0 10px rgba(37,99,235,.5)'}}>
-        <span>✌️✊✋</span><span className="text-yellow-300">짱켐보이</span><span className="text-[10.5px] text-blue-200/80 font-bold">🎈 풍선 입장 · 도전 or 스톱</span></button>
+        <span>✌️✊✋</span><span className="text-yellow-300">짱켐보이</span><span className="text-[10.5px] text-blue-200/80 font-bold">🪙 코인 넣고 입장 · 도전 or 스톱</span></button>
       {/* 탭: 출전표 / 마권 구매 */}
       <div className="sticky top-[52px] z-20 mt-2 -mx-3 px-3 py-1.5 bg-[#070d1f]/90 backdrop-blur">
         <div className="grid grid-cols-2 gap-1 p-1 rounded-2xl bg-white/5">
@@ -2505,63 +2507,6 @@ function TicketConfirm({setup,bets,onGo}){
     </div>);
 }
 
-/* ---------------- 🎈 풍선 입장 (링크클린 풍선을 터뜨리면 입장) ---------------- */
-const BALLOON_KINDS=[{t:'링크클린',c:'#12b886',target:true},{t:'CREAMUS',c:'#ff6fae'},{t:'하나토탈클린',c:'#4c6ef5'},{t:'LINK DERBY',c:'#fab005'},{t:'꽝',c:'#868e96'},{t:'다음기회',c:'#e8590c'},{t:'링크클린?',c:'#20c997',fake:true}];
-function BalloonGate({onPass,onClose}){
-  const ref=useRef(null); const [msg,setMsg]=useState('🎈 링크클린 풍선을 터뜨리면 입장!'); const [miss,setMiss]=useState(0);
-  const st=useRef({bs:[],parts:[],t:0,done:false,last:0});
-  useEffect(()=>{ const c=ref.current, x=c.getContext('2d'); let raf; const S=st.current;
-    const dpr=Math.min(2,window.devicePixelRatio||1); c.width=Math.round(c.clientWidth*dpr); c.height=Math.round(c.clientHeight*dpr);
-    const W=c.width, H=c.height, k0=W/780; x.scale(1,1);
-    const spawn=(forceTarget)=>{ let k; if(forceTarget) k=BALLOON_KINDS[0]; else { k=BALLOON_KINDS[1+Math.floor(Math.random()*(BALLOON_KINDS.length-1))]; if(Math.random()<0.12 && S.bs.filter(q=>q.k.target&&!q.pop).length<2) k=BALLOON_KINDS[0]; }
-      const r=(40+Math.random()*8)*k0*1.05; S.bs.push({x:r*1.5+Math.random()*(W-3*r),y:H+r+Math.random()*120,r,k,vy:(1.6+Math.random()*1.6)*k0*1.4,ph:Math.random()*6,sw:0.6+Math.random()*0.8}); };
-    for(let i=0;i<8;i++){ spawn(i===2); S.bs[i].y=H*0.35+Math.random()*H*0.7; }
-    const loop=()=>{ raf=requestAnimationFrame(loop); S.t++;
-      const g=x.createLinearGradient(0,0,0,H); g.addColorStop(0,'#5ec8ff'); g.addColorStop(1,'#c9f0ff'); x.fillStyle=g; x.fillRect(0,0,W,H);
-      // 구름
-      x.fillStyle='rgba(255,255,255,.75)'; for(let i=0;i<4;i++){ const cx=((i*260+S.t*0.3)%(W+300))-150, cy=90+i*170; x.beginPath(); x.arc(cx,cy,40,0,7); x.arc(cx+45,cy-15,50,0,7); x.arc(cx+95,cy,38,0,7); x.fill(); }
-      S.bs.forEach(b=>{ if(!b.pop){ b.y-=b.vy*(S.done?0:1); b.x+=Math.sin(S.t*0.02*b.sw+b.ph)*0.8; b.x=Math.max(b.r*1.1,Math.min(W-b.r*1.1,b.x)); } });
-      S.bs=S.bs.filter(b=>b.y>-b.r*2.5&&!b.gone);
-      while(S.bs.filter(b=>!b.pop).length<8 && !S.done) spawn(!S.bs.some(b=>b.k.target&&!b.pop&&b.y>0));
-      S.bs.forEach(b=>{ if(b.pop) return; const {x:bx,y:by,r}=b;
-        // 꼬불꼬불 끈
-        const sw=Math.sin(S.t*0.05+b.ph); x.strokeStyle='rgba(255,255,255,.85)'; x.lineWidth=1.6*k0; x.beginPath(); x.moveTo(bx,by+r*1.12);
-        for(let q=1;q<=12;q++){ const yy=by+r*1.12+q*r*0.11, xx=bx+Math.sin(q*1.3+S.t*0.06+b.ph)*r*0.09+sw*q*0.6*k0; x.lineTo(xx,yy); } x.stroke();
-        // 풍선 몸통: 아래가 살짝 좁은 물방울 모양 + 입체 그라데이션
-        const shape=()=>{ x.beginPath(); x.moveTo(bx,by-r); x.bezierCurveTo(bx+r*1.02,by-r,bx+r*0.95,by+r*0.45,bx,by+r*1.02); x.bezierCurveTo(bx-r*0.95,by+r*0.45,bx-r*1.02,by-r,bx,by-r); x.closePath(); };
-        const gr=x.createRadialGradient(bx-r*0.35,by-r*0.45,r*0.08,bx,by,r*1.15); gr.addColorStop(0,'#ffffff'); gr.addColorStop(0.18,b.k.c); gr.addColorStop(1,shade(b.k.c,-70));
-        x.save(); x.shadowColor='rgba(0,0,0,.18)'; x.shadowBlur=10*k0; x.shadowOffsetY=6*k0; x.fillStyle=gr; shape(); x.globalAlpha=0.95; x.fill(); x.restore();
-        // 반사광
-        x.fillStyle='rgba(255,255,255,.55)'; x.beginPath(); x.ellipse(bx-r*0.38,by-r*0.42,r*0.12,r*0.24,-0.6,0,7); x.fill();
-        x.fillStyle='rgba(255,255,255,.35)'; x.beginPath(); x.arc(bx-r*0.18,by-r*0.72,r*0.06,0,7); x.fill();
-        // 매듭
-        x.fillStyle=shade(b.k.c,-50); x.beginPath(); x.moveTo(bx-r*0.13,by+r*1.15); x.lineTo(bx+r*0.13,by+r*1.15); x.lineTo(bx+r*0.04,by+r*1.0); x.lineTo(bx-r*0.04,by+r*1.0); x.closePath(); x.fill();
-        // 글자
-        x.fillStyle='#fff'; x.textAlign='center'; x.textBaseline='middle'; const fs=(b.k.t.length>7?11.5:b.k.t.length>4?14:17)*k0*1.05; x.font=`900 ${fs}px "Noto Sans KR",sans-serif`;
-        x.lineWidth=3*k0; x.strokeStyle='rgba(0,0,0,.28)'; x.strokeText(b.k.t,bx,by-r*0.05); x.fillText(b.k.t,bx,by-r*0.05); });
-      S.parts.forEach(p=>{ p.x+=p.vx; p.y+=p.vy; p.vy+=0.35; p.l--; x.fillStyle=p.c; x.globalAlpha=Math.max(0,p.l/40); x.fillRect(p.x,p.y,p.s,p.s); x.globalAlpha=1; });
-      S.parts=S.parts.filter(p=>p.l>0);
-      S.bs.forEach(b=>{ if(b.pop){ b.pt=(b.pt||0)+1; if(b.pt<14){ x.strokeStyle=b.k.c; x.lineWidth=5; for(let i=0;i<10;i++){ const a=i/10*6.28, r1=b.r*(0.4+b.pt*0.08), r2=r1+18; x.beginPath(); x.moveTo(b.x+Math.cos(a)*r1,b.y+Math.sin(a)*r1); x.lineTo(b.x+Math.cos(a)*r2,b.y+Math.sin(a)*r2); x.stroke(); } x.fillStyle='#fff'; x.font=`900 ${Math.round(30*k0)}px sans-serif`; x.fillText(b.k.target?'펑!':'꽝!',b.x,b.y); } else b.gone=true; } });
-    }; loop(); return ()=>cancelAnimationFrame(raf); },[]);
-  const tap=e=>{ const S=st.current; if(S.done) return; const c=ref.current, rc=c.getBoundingClientRect(); const px=(e.clientX-rc.left)*c.width/rc.width, py=(e.clientY-rc.top)*c.height/rc.height;
-    Sound.init(); const hit=[...S.bs].reverse().find(b=>!b.pop&&((px-b.x)/(b.r*1.05))**2+((py-b.y)/(b.r*1.1))**2<=1.25);
-    if(!hit) return;
-    hit.pop=true; for(let i=0;i<22;i++) S.parts.push({x:hit.x,y:hit.y,vx:(Math.random()-0.5)*14,vy:(Math.random()-0.8)*12,l:40,c:hit.k.c,s:6+Math.random()*6});
-    try{ if(Sound.ok()){ const t=Sound.ctx.currentTime; Sound.noise(t,0.09,0.6,'bandpass',1600,0.8); } }catch(_){}
-    if(hit.k.target){ S.done=true; Sound.jackpot(false); setMsg('🎉 입장 성공! 짱켐보이로 갑니다!'); setTimeout(onPass,1100); }
-    else { setMiss(m=>m+1); Sound.miss(); setMsg(hit.k.fake?'앗! "링크클린?" 은 가짜 풍선이에요!':`"${hit.k.t}" 풍선이에요. 링크클린을 찾아요!`); } };
-  return (
-    <div className="fixed inset-0 flex flex-col" style={{zIndex:60,background:'#000'}}>
-      <div className="flex items-center px-3 py-2" style={{background:'#0b1530'}}>
-        <div className="fx-title text-[17px] gold">🎈 짱켐보이 입장</div>
-        <span className="ml-3 text-[11px] text-blue-200/80">헛방 {miss}</span>
-        <button onClick={onClose} className="ml-auto w-9 h-9 rounded-full bg-white/10 text-xl">×</button>
-      </div>
-      <div className="text-center py-2 text-[14px] font-black" style={{background:'#0b1530',color:'#ffe066'}}>{msg}</div>
-      <canvas ref={ref} onPointerDown={tap} className="flex-1 w-full touch-none block" style={{minHeight:0}}/>
-    </div>);
-}
-
 /* ---------------- ✊ 레트로 가위바위보 ---------------- */
 const RPS_PRIZE={1:100,2:300,3:500,4:1000};  // 이길 때마다 상금 상승 → 도전 or 스톱 (4연승이 최종)
 const RPS_MAX=4;
@@ -2569,7 +2514,7 @@ const RPS_DAILY=Infinity;                     // 하루 도전 횟수 (제한 �
 const RPS_HANDS=[{k:'가위',e:'✌️',c:'linear-gradient(180deg,#ff5a5f,#c81e1e)',ring:'#7a0f12'},{k:'바위',e:'✊',c:'linear-gradient(180deg,#4f8dff,#1d4ed8)',ring:'#0b2a6b'},{k:'보',e:'✋',c:'linear-gradient(180deg,#ffc53d,#d97706)',ring:'#7a4b00'}];
 const LED_FONT={W:['10001','10001','10001','10101','10101','10101','01010'],I:['01110','00100','00100','00100','00100','00100','01110'],N:['10001','11001','11001','10101','10011','10011','10001'],
   L:['10000','10000','10000','10000','10000','10000','11111'],O:['01110','10001','10001','10001','10001','10001','01110'],S:['01111','10000','10000','01110','00001','00001','11110'],
-  E:['11111','10000','10000','11110','10000','10000','11111'],D:['11110','10001','10001','10001','10001','10001','11110'],R:['11110','10001','10001','11110','10100','10010','10001'],A:['01110','10001','10001','11111','10001','10001','10001'],' ':['00000','00000','00000','00000','00000','00000','00000']};
+  E:['11111','10000','10000','11110','10000','10000','11111'],D:['11110','10001','10001','10001','10001','10001','11110'],R:['11110','10001','10001','11110','10100','10010','10001'],A:['01110','10001','10001','11111','10001','10001','10001'],C:['01110','10001','10000','10000','10000','10001','01110'],T:['11111','00100','00100','00100','00100','00100','00100'],Y:['10001','10001','01010','00100','00100','00100','00100'],' ':['00000','00000','00000','00000','00000','00000','00000']};
 const handMaskCache={};
 function handMask(i,N){ const key=i+'_'+N; if(handMaskCache[key]) return handMaskCache[key];
   const K=8, S=N*K, c=document.createElement('canvas'); c.width=c.height=S; const x=c.getContext('2d'), u=S/N;
@@ -2599,12 +2544,22 @@ function RpsModal({onClose,onReward}){
   const [active,setActive]=useState(false);       // 도전 진행 중
   const [phase,setPhase]=useState('idle');          // idle(대기) | spin(돌아가는 중, 버튼 누르기) | stop(멈추는 중) | show(결과)
   const [res,setRes]=useState(null);                // {me,cpu,r:'win'|'lose'|'draw'}
-  const [msg,setMsg]=useState('▶ START를 누르면 도전이 시작돼요!');
+  const [msg,setMsg]=useState('🪙 동전을 투입구에 넣으면 게임이 켜져요!');
   const [pop,setPop]=useState(null);
   const [nudge,setNudge]=useState(0);
+  const [powered,setPowered]=useState(false);       // 코인 넣으면 기계 켜짐
+  const [coin,setCoin]=useState(null);              // 드래그 중 위치 {x,y}
+  const [coinAnim,setCoinAnim]=useState(false);
+  const slotRef=useRef(null), coinBox=useRef(null);
+  const insertDone=()=>{ Sound.init(); Sound.coinIn(); setCoinAnim(true); setTimeout(()=>{ setPowered(true); st.current.powered=true; Sound.jjangkem(); setMsg('▶ START를 눌러 도전하세요!'); },520); };
+  const coinDown=e=>{ if(powered||coinAnim) return; e.preventDefault(); e.currentTarget.setPointerCapture&&e.currentTarget.setPointerCapture(e.pointerId); setCoin({x:e.clientX,y:e.clientY,sx:e.clientX,sy:e.clientY}); };
+  const coinMove=e=>{ if(!coin) return; setCoin(c=>({...c,x:e.clientX,y:e.clientY})); };
+  const coinUp=e=>{ if(!coin) return; const sr=slotRef.current&&slotRef.current.getBoundingClientRect(); const moved=Math.hypot(e.clientX-coin.sx,e.clientY-coin.sy);
+    const inSlot=sr&&e.clientX>sr.left-30&&e.clientX<sr.right+30&&e.clientY>sr.top-30&&e.clientY<sr.bottom+30; setCoin(null);
+    if(inSlot||moved<8) insertDone(); else { Sound.beep(300); setMsg('동전을 오른쪽 투입구까지 밀어 넣어 주세요!'); } };
   const startRun=()=>{ if(active) return; Sound.init();
-    setActive(true); setStreak(0); setRes(null); st.current.res=null; setDay(d=>({...d,runs:d.runs+1})); Sound.jjangkem(); Voice.kick('짱! 켐! 보이!'); setPhase('spin'); setMsg('돌아가는 동안 가위·바위·보를 누르세요!'); };
-  const top=useRef(null), disp=useRef(null), st=useRef({idx:1,res:null,t:0});
+    setActive(true); setStreak(0); setRes(null); st.current.res=null; setDay(d=>({...d,runs:d.runs+1})); Sound.jjangkem(); Voice.kick('짱켐보이!',1.55); setPhase('spin'); setMsg('돌아가는 동안 가위·바위·보를 누르세요!'); };
+  const top=useRef(null), disp=useRef(null), st=useRef({idx:1,res:null,t:0,powered:false});
   useEffect(()=>ls.set('sd_rps',day),[day]);
   const left=RPS_DAILY-day.runs;
   // 그리기 루프
@@ -2612,7 +2567,7 @@ function RpsModal({onClose,onReward}){
       const c=disp.current, tc=top.current; if(!c||!tc) return;
       const x=c.getContext('2d'), W=c.width, N=23, cell=W/ (N+2);
       x.fillStyle='#111'; x.fillRect(0,0,W,W);
-      const idx=S.idx, m=handMask(idx,N), col=S.res==='lose'?'#ff3b30':S.res==='win'?'#ffd43b':'#ff5a2a';
+      const idx=S.idx, m=handMask(idx,N), col=!S.powered?'#5a2a1a':S.res==='lose'?'#ff3b30':S.res==='win'?'#ffd43b':'#ff5a2a';
       const cx=W/2, R2=(W/2-cell*0.6);
       for(let yy=0;yy<N;yy++) for(let xx=0;xx<N;xx++){ const px=cell*(xx+1.5), py=cell*(yy+1.5); if((px-cx)**2+(py-cx)**2>R2*R2) continue;
         const v=m[yy][xx], on=v===2||(v===1&&false); x.fillStyle=on?col:'#2b2b2b'; x.beginPath(); x.arc(px,py,cell*0.34,0,7); x.fill();
@@ -2620,6 +2575,7 @@ function RpsModal({onClose,onReward}){
       // 상단 WIN / LOSE 전광판
       const t=tc.getContext('2d'), TW=tc.width, TH=tc.height; t.fillStyle='#0d0d0d'; t.fillRect(0,0,TW,TH);
       const dot=TH/8.2, blink=Math.floor(S.t/10)%2===0;
+      if(!S.powered){ const d2=Math.min(dot,TW/(11*6+1)); drawLedText(t,'INSERT COIN',(TW-d2*66)/2+d2*0.5,(TH-d2*7)/2,d2,blink,'#ff5a2a'); return; }
       drawLedText(t,'WIN',TW*0.04,dot*0.6,dot,(S.res==='win'||S.res==='draw')&&blink,S.res==='draw'?'#7cf':'#ffd43b');
       drawLedText(t,'LOSE',TW*0.96-dot*24,dot*0.6,dot,(S.res==='lose'||S.res==='draw')&&blink,S.res==='draw'?'#7cf':'#ff3b30');
     }; loop(); return ()=>cancelAnimationFrame(raf); },[]);
@@ -2634,6 +2590,7 @@ function RpsModal({onClose,onReward}){
     setMsg(`스톱! 상금 +${fmt(prize)} CR 획득! 🎉`); };
   const play=i=>{
     Sound.init(); const base=streak;
+    if(!powered){ setMsg('먼저 동전을 넣어 주세요! 🪙'); Sound.beep(300); return; }
     if(!active){ setMsg('먼저 ▶ START 버튼을 눌러 주세요!'); setNudge(x=>x+1); Sound.beep(300); return; }
     if(phase==='choice'){ setMsg('도전 또는 스톱을 먼저 골라 주세요!'); Sound.beep(300); return; }
     if(phase!=='spin') return;
@@ -2667,7 +2624,17 @@ function RpsModal({onClose,onReward}){
             <canvas ref={disp} width={420} height={420} className="absolute inset-0 w-full h-full rounded-full"/>
             {pop && <div className="absolute inset-0 flex flex-col items-center justify-center pop"><div className="fx-title text-yellow-300" style={{fontSize:44,textShadow:'0 0 16px #000,0 0 6px #000'}}>{pop.n}연승!</div><div className="fx-title" style={{fontSize:28,color:'#7CFC00',textShadow:'0 0 10px #000'}}>상금 {fmt(pop.p)} CR</div></div>}
           </div>
-          {phase==='choice' ? <div className="flex justify-center gap-3 mt-3">
+          {!powered ? <div className="mt-3 select-none" style={{touchAction:'none'}}>
+            <div className="text-[11.5px] font-black text-yellow-200 text-center animate-pulse">👉 동전을 투입구로 밀어 넣으세요 (탭해도 OK)</div>
+            <div className="flex items-center justify-center" style={{gap:64,height:74}}>
+            <div ref={coinBox} onPointerDown={coinDown} onPointerMove={coinMove} onPointerUp={coinUp} onPointerCancel={()=>setCoin(null)}
+              className="rounded-full flex items-center justify-center font-black text-[13px]"
+              style={{width:52,height:52,background:'radial-gradient(circle at 35% 30%,#fff6bf,#ffd43b 40%,#e8a400 75%,#a86f00)',boxShadow:'0 3px 0 #8a5a00, 0 0 12px rgba(255,212,59,.6)',color:'#7a4b00',border:'2px solid #c78a00',
+                transform:coin?`translate(${coin.x-coin.sx}px,${coin.y-coin.sy}px) scale(1.1)`:coinAnim?'translate(110px,0) scale(.3) rotateY(80deg)':'none',transition:coin?'none':'transform .45s ease-in',opacity:coinAnim?0:1,cursor:'grab',zIndex:2}}>CR</div>
+            <div ref={slotRef} className="rounded-lg flex items-center justify-center" style={{width:46,height:62,background:'linear-gradient(135deg,#d9d9d9,#7a7a7a 45%,#bdbdbd)',boxShadow:'inset 0 0 6px rgba(0,0,0,.6), 0 2px 6px #000'}}>
+              <div style={{width:9,height:38,borderRadius:5,background:'#111',boxShadow:'inset 0 2px 4px #000, 0 0 0 2px #555'}}/></div>
+          </div></div> :
+          phase==='choice' ? <div className="flex justify-center gap-3 mt-3">
             <button onClick={goOn} className="pop px-5 py-2 rounded-2xl font-black text-[16px] text-white" style={{background:'linear-gradient(180deg,#ff6b6b,#c92a2a)',boxShadow:'0 5px 0 #7a1414, 0 0 14px rgba(255,80,80,.6)'}}>🔥 도전<div className="text-[10.5px] font-bold opacity-90">이기면 {fmt(RPS_PRIZE[streak+1])} CR</div></button>
             <button onClick={stop} className="pop px-5 py-2 rounded-2xl font-black text-[16px] text-black" style={{background:'linear-gradient(180deg,#ffe066,#f59f00)',boxShadow:'0 5px 0 #8a5a00, 0 0 14px rgba(255,200,0,.6)'}}>✋ 스톱<div className="text-[10.5px] font-bold opacity-80">{fmt(RPS_PRIZE[streak])} CR 받기</div></button>
           </div> :
@@ -2689,7 +2656,7 @@ function RpsModal({onClose,onReward}){
                 <span style={{fontSize:30,lineHeight:1}}>{h.e}</span><span className="text-[14px] font-black text-white" style={{textShadow:'0 2px 0 rgba(0,0,0,.4)'}}>{h.k}</span></span>
             </button>)}</div>
           <div className="flex justify-between text-[11px] text-blue-200/70 mt-4 px-1"><span>오늘 도전 <b className="text-white">{day.runs}</b>회</span><span>오늘 최고 {day.best}연승</span></div>
-          <div className="text-[10.5px] text-blue-200/50 mt-1 px-1">START → 전광판이 돌아가요 → 가위·바위·보를 누르면 멈춰요! 이기면 도전(상금 UP) 또는 스톱(상금 받기). 도전하다 지면 상금은 0!</div>
+          <div className="text-[10.5px] text-blue-200/50 mt-1 px-1">코인 넣기 → START → 전광판이 돌아가요 → 가위·바위·보를 누르면 멈춰요! 이기면 도전(상금 UP) 또는 스톱(상금 받기). 도전하다 지면 상금은 0!</div>
         </div>
       </div>
     </div>);
@@ -2941,7 +2908,7 @@ function App(){
       </header>
       {!setup ? <div className="text-center py-24"><div className="fx-title text-3xl gold animate-pulse">예상지 집계 중...</div><div className="text-blue-200/70 mt-2 text-sm">배당률 계산 중입니다</div></div> :
         phase==='ticket' ? <TicketConfirm setup={setup} bets={bets} onGo={()=>setPhase('race')}/> :
-        phase==='paddock' ? <Paddock setup={setup} credit={credit} bets={bets} setBets={setBets} onStart={start} onQuiz={()=>setQuiz(true)} onRps={()=>setRps('gate')} onEvent={()=>setModal('event')} evLabel={cupsOf(claims)>=COFFEE_MAX?(()=>{const se=seasonOf(ev); return [`${se.icon} 시즌 ${se.no}`,`${se.name} ${Math.min(seasonVal(ev,se),se.goal)>=se.goal?'✅':''}`];})():['☕ 커피 이벤트',cupsOf(claims)?`남은 1잔 · 2만 CR`:'3만·5만 CR 교환']} onOwner={()=>setModal('owner')} stable={stable} barn={barn} history={history} stats={stats} daily={daily} setDaily={setDaily} onCredit={n=>setCredit(c=>c+n)}/> :
+        phase==='paddock' ? <Paddock setup={setup} credit={credit} bets={bets} setBets={setBets} onStart={start} onQuiz={()=>setQuiz(true)} onRps={()=>setRps('game')} onEvent={()=>setModal('event')} evLabel={cupsOf(claims)>=COFFEE_MAX?(()=>{const se=seasonOf(ev); return [`${se.icon} 시즌 ${se.no}`,`${se.name} ${Math.min(seasonVal(ev,se),se.goal)>=se.goal?'✅':''}`];})():['☕ 커피 이벤트',cupsOf(claims)?`남은 1잔 · 2만 CR`:'3만·5만 CR 교환']} onOwner={()=>setModal('owner')} stable={stable} barn={barn} history={history} stats={stats} daily={daily} setDaily={setDaily} onCredit={n=>setCredit(c=>c+n)}/> :
         <RaceView key={setup.raceNo} setup={setup} bets={bets} onDone={done} onCheer={()=>setDaily(d=>({...d,cheer:(d.cheer||0)+1}))}/>}
       {attendMsg && <div className="fixed inset-0 z-[70] bg-black/70 flex items-center justify-center p-6" onClick={()=>setAttendMsg(null)}>
         <div className="glass rounded-3xl p-5 w-full max-w-xs text-center pop">
@@ -2954,7 +2921,6 @@ function App(){
           <button onClick={()=>{Sound.init();Sound.coin();setAttendMsg(null);}} className="w-full mt-3 py-3 rounded-xl font-black bg-gradient-to-b from-yellow-300 to-orange-500 text-black">받기</button>
         </div>
       </div>}
-      {rps==='gate' && <BalloonGate onPass={()=>setRps('game')} onClose={()=>setRps(false)}/>}
       {rps==='game' && <RpsModal onClose={()=>setRps(false)} onReward={n=>setCredit(c=>c+n)}/>}
       {quiz && setup && <QuizModal setup={setup} onClose={()=>setQuiz(false)} onReward={n=>setCredit(c=>c+n)}/>}
       {phase==='result' && result && <ResultModal setup={setup} result={result} bets={bets} payouts={payouts} bonus={bonus} streak={stats.streak} ownerPrize={ownerPrize} wpBonus={wpBonus} cheerBonus={cheerBonus} onNext={next}/>}
