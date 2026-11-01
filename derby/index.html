@@ -54,8 +54,37 @@ const COND_INFO = {5:{a:'↑',t:'최상',c:'#ff4d4f'},4:{a:'↗',t:'양호',c:'#
                    2:{a:'↘',t:'저조',c:'#4dabf7'},1:{a:'↓',t:'나쁨',c:'#748ffc'}};
 const GOING_MUL = {'양호':1.0,'다습':0.985,'불량':0.97};
 const K_PROF = 0.6;
-const RACE_NAMES = [['제주 그랑프리','G1'],['한라산 스테이크스','G2'],['광안리 오션컵','G3'],['탐라 마일','G2'],
-  ['부산 해운대 더비','G1'],['성산 일출배','G3'],['링크클린 컵','G2'],['하나토탈컵','G1'],['이케이클린컵','G2'],['크리머스 스위트 스테이크스','G3']];
+/* ---- 🌍 월드 투어: 경주마다 세계 각지의 경마장을 순회 ---- */
+const VENUES = [
+  { id:'jeju',  flag:'🇰🇷', country:'대한민국', city:'제주',   course:'제주 경마공원',     sky:'mountain', dirt:0.4,
+    races:[['제주 그랑프리','G1'],['한라산 스테이크스','G2'],['탐라 마일','G2'],['링크클린 컵','G2'],['하나토탈컵','G1']],
+    wx:[4,2,1.5,1.5,1], ad:['한라봉','제주 감귤 농장','#f08c00','#fff'], hello:'푸른 바다와 한라산이 내려다보는 제주 경마공원' },
+  { id:'busan', flag:'🇰🇷', country:'대한민국', city:'부산',   course:'부산경남 경마공원',  sky:'bridge', dirt:0.4,
+    races:[['부산 해운대 더비','G1'],['광안리 오션컵','G3'],['크리머스 스위트 스테이크스','G3'],['이케이클린컵','G2']],
+    wx:[4,2,1.5,2,2], ad:['광안대교','부산 바다 축제','#1971c2','#fff'], hello:'광안대교 불빛이 반짝이는 부산경남 경마공원' },
+  { id:'seoul', flag:'🇰🇷', country:'대한민국', city:'서울',   course:'서울 경마공원',     sky:'city', dirt:0.5,
+    races:[['서울 그랑프리','G1'],['한강 스테이크스','G2'],['남산 마일','G3']],
+    wx:[4,2,1.5,1.5,1.5], ad:['SEOUL','서울 시티 레이스','#e03131','#fff'], hello:'빌딩 숲 사이 서울 경마공원' },
+  { id:'tokyo', flag:'🇯🇵', country:'일본', city:'도쿄',       course:'도쿄 경마장',       sky:'fuji', dirt:0.25,
+    races:[['도쿄 사쿠라컵','G1'],['후지산 스테이크스','G2'],['신주쿠 마일','G3']],
+    wx:[4,2,1.5,1.5,1], ad:['TOKYO','도쿄 벚꽃 레이스','#f783ac','#fff'], hello:'멀리 후지산이 보이는 일본 도쿄 경마장' },
+  { id:'hk',    flag:'🇭🇰', country:'홍콩', city:'홍콩',       course:'홍콩 샤틴 경마장',  sky:'hongkong', dirt:0.2,
+    races:[['홍콩 야경컵','G1'],['빅토리아 하버 마일','G2'],['샤틴 스프린트','G3']],
+    wx:[2,1.5,1.5,1,4], ad:['HONG KONG','100만 불 야경','#7048e8','#fff'], hello:'백만 불짜리 야경이 펼쳐진 홍콩 샤틴' },
+  { id:'dubai', flag:'🇦🇪', country:'아랍에미리트', city:'두바이', course:'두바이 메이단 경마장', sky:'desert', dirt:0.75,
+    races:[['두바이 골드컵','G1'],['사막의 별 스테이크스','G2'],['오아시스 마일','G3']],
+    wx:[4,0.3,0.1,2,4], ad:['DUBAI','사막의 오일 왕자컵','#d4a017','#111'], hello:'황금빛 사막 위 두바이 메이단 경마장' },
+  { id:'paris', flag:'🇫🇷', country:'프랑스', city:'파리',     course:'파리 롱샹 경마장',  sky:'eiffel', dirt:0.05,
+    races:[['파리 개선 그랑프리','G1'],['센강 스테이크스','G2'],['몽마르트 마일','G3']],
+    wx:[3,2.5,1.5,2,1], ad:['PARIS','봉주르 레이스','#364fc7','#fff'], hello:'에펠탑이 바라보는 프랑스 파리 롱샹 경마장' },
+  { id:'london',flag:'🇬🇧', country:'영국', city:'런던',       course:'런던 애스콧 경마장', sky:'bigben', dirt:0.05,
+    races:[['로열 런던컵','G1'],['템스 스테이크스','G2'],['빅벤 마일','G3']],
+    wx:[2,3,3,1,1], ad:['LONDON','로열 티타임','#c92a2a','#fff'], hello:'빅벤의 종소리가 들리는 영국 런던 애스콧' },
+  { id:'kentucky',flag:'🇺🇸', country:'미국', city:'켄터키',  course:'켄터키 처칠 경마장', sky:'farm', dirt:0.85,
+    races:[['켄터키 로즈 더비','G1'],['블루그래스 스테이크스','G2'],['버번 마일','G3']],
+    wx:[4,1.5,1.5,2,1], ad:['KENTUCKY','장미 담요 더비','#c2255c','#fff'], hello:'푸른 초원과 장미의 땅 미국 켄터키' },
+];
+const venueOf = raceNo => VENUES[(raceNo-1)%VENUES.length];
 
 /* ---- 매 경주 새로 편성되는 출전마 (랜덤 이름·털색·무늬·복색·각질) ---- */
 const COATS=[
@@ -184,10 +213,10 @@ function computeOdds(horses,D,going,N){
   return odds;
 }
 function makeRaceSetup(raceNo,stable){
-  const nm = RACE_NAMES[(raceNo-1)%RACE_NAMES.length];
+  const venue = venueOf(raceNo), nm = pick(venue.races);
   const D = pick([1200,1400,1600,1800]);
-  const surface = Math.random()<0.6 ? 'turf' : 'dirt';
-  const weather = pickW(['맑음','흐림','비','노을','야간'],[4,2,1.8,1.5,1.7]);
+  const surface = Math.random()<venue.dirt ? 'dirt' : 'turf';
+  const weather = pickW(['맑음','흐림','비','노을','야간'],venue.wx);
   const going = weather==='비' ? pickW(['다습','불량'],[1,1.2]) : weather==='흐림' ? pickW(['양호','다습'],[3,1]) : pickW(['양호','다습'],[7,1]);
   const horses = generateField().map(h=>{
     let cond = pickW([1,2,3,4,5],[1,2,4,3,1.5]);
@@ -209,7 +238,7 @@ function makeRaceSetup(raceNo,stable){
   const pop={}; byOdds.forEach((no,i)=>pop[no]=i+1);
   const expert = horses.map(h=>({no:h.no, s:Math.log(odds.win[h.no])+(Math.random()-0.5)*0.9})).sort((a,b)=>a.s-b.s);
   const marks={}; ['◎','○','▲','△','△','','',''].slice(0,expert.length).forEach((m,i)=>marks[expert[i].no]=m);
-  return { raceNo, name:nm[0], grade:nm[1], D, surface, going, goingMul:GOING_MUL[going], weather, horses, odds, pop, marks };
+  return { raceNo, venue:{id:venue.id,flag:venue.flag,country:venue.country,city:venue.city,course:venue.course,sky:venue.sky,ad:venue.ad,hello:venue.hello}, tourIdx:((raceNo-1)%VENUES.length)+1, name:nm[0], grade:nm[1], D, surface, going, goingMul:GOING_MUL[going], weather, horses, odds, pop, marks };
 }
 /*SIM_END*/
 
@@ -733,6 +762,46 @@ function buildBg(){
   return BG_CACHE;
 }
 
+/* 경마장별 원경(스카이라인) — 2400×160 타일 */
+const SKY_CACHE={};
+function buildSkyline(type,night){
+  const key=type+(night?'N':''); if(SKY_CACHE[key]) return SKY_CACHE[key];
+  const c=document.createElement('canvas'); c.width=2400; c.height=160; const g=c.getContext('2d'); const r=seeded(type.length*977+13);
+  const far='#8fa7c0', mid='#6b86a3', dark='#4a627c', win=night?'rgba(255,225,140,0.9)':'rgba(255,255,255,0.25)';
+  const hills=(col,base,amp,step,ph)=>{ g.fillStyle=col; g.beginPath(); g.moveTo(0,160); for(let x=0;x<=2400;x+=step) g.lineTo(x,base-amp*(0.5+0.5*Math.sin(x/240+ph))-r()*amp*0.3); g.lineTo(2400,160); g.closePath(); g.fill(); };
+  const tower=(x,w,h,col,base)=>{ g.fillStyle=col; g.fillRect(x,base-h,w,h); for(let yy=base-h+6;yy<base-4;yy+=9) for(let xx=x+3;xx<x+w-3;xx+=7) if(r()<(night?0.55:0.35)){ g.fillStyle=win; g.fillRect(xx,yy,3,4); g.fillStyle=col; } };
+  const city=(base,maxH,col,dens)=>{ for(let x=0;x<2400;){ const w=24+r()*46, h=30+r()*maxH; tower(x,w,h,col,base); x+=w+r()*dens; } };
+  if(type==='mountain'){ hills(far,90,60,40,0); hills(mid,120,40,30,2); g.fillStyle='#6f8fae'; g.beginPath(); g.moveTo(900,160); g.quadraticCurveTo(1200,10,1500,160); g.fill();
+    g.fillStyle='rgba(255,255,255,0.7)'; g.beginPath(); g.moveTo(1150,52); g.quadraticCurveTo(1200,40,1250,52); g.lineTo(1235,60); g.lineTo(1165,60); g.fill(); hills('#4f7a5a',150,22,24,1); }
+  else if(type==='fuji'){ hills(far,120,30,40,1); g.fillStyle='#5f7ea3'; g.beginPath(); g.moveTo(700,160); g.lineTo(1120,30); g.lineTo(1280,30); g.lineTo(1700,160); g.fill();
+    g.fillStyle='#f8f9fa'; g.beginPath(); g.moveTo(1120,30); g.lineTo(1280,30); g.lineTo(1340,52); g.lineTo(1300,48); g.lineTo(1260,58); g.lineTo(1220,46); g.lineTo(1180,56); g.lineTo(1140,48); g.lineTo(1060,52); g.closePath(); g.fill();
+    for(let i=0;i<40;i++){ const x=r()*2400, y=120+r()*30; g.fillStyle=`rgba(255,${170+r()*40|0},${200+r()*30|0},0.85)`; g.beginPath(); g.arc(x,y,6+r()*10,0,6.283); g.fill(); } hills('#4f7a5a',155,12,24,2); }
+  else if(type==='city'){ hills(far,95,35,40,0); city(160,90,dark,18); city(160,50,'#3b4f66',30); }
+  else if(type==='hongkong'){ hills('#3d5470',70,50,40,1); city(160,120,'#2e3f57',6); city(160,70,'#263547',14); }
+  else if(type==='desert'){ g.fillStyle='#e0b872'; g.beginPath(); g.moveTo(0,160); for(let x=0;x<=2400;x+=30) g.lineTo(x,120-28*Math.sin(x/180)-r()*6); g.lineTo(2400,160); g.fill();
+    city(150,50,'#8a6f52',60);
+    g.fillStyle='#7d6448'; g.beginPath(); g.moveTo(1180,150); g.lineTo(1196,10); g.lineTo(1200,0); g.lineTo(1204,10); g.lineTo(1220,150); g.fill();   // 초고층 첨탑
+    for(let i=0;i<14;i++){ const x=r()*2400; g.strokeStyle='#6b5233'; g.lineWidth=4; g.beginPath(); g.moveTo(x,160); g.quadraticCurveTo(x+4,130,x,112); g.stroke(); g.fillStyle='#4f6b3a'; for(let k=0;k<5;k++){ g.beginPath(); g.ellipse(x+Math.cos(k*1.3)*12,112+Math.sin(k*1.3)*4,14,4,k*1.3,0,6.283); g.fill(); } } }
+  else if(type==='eiffel'){ hills(far,110,25,40,1); city(160,40,'#6c7f96',24);
+    const ex=1200; g.strokeStyle='#4b5a70'; g.fillStyle='#4b5a70'; g.lineWidth=3; g.beginPath(); g.moveTo(ex-70,160); g.quadraticCurveTo(ex-20,90,ex-4,8); g.lineTo(ex+4,8); g.quadraticCurveTo(ex+20,90,ex+70,160); g.lineTo(ex+40,160); g.quadraticCurveTo(ex,118,ex-40,160); g.closePath(); g.fill();
+    g.fillRect(ex-34,110,68,5); g.fillRect(ex-18,70,36,4); g.fillRect(ex-1.5,0,3,10);
+    g.strokeStyle='rgba(255,255,255,0.15)'; g.lineWidth=1; for(let y=20;y<150;y+=8){ g.beginPath(); g.moveTo(ex-(y/160)*70,y); g.lineTo(ex+(y/160)*70,y); g.stroke(); } }
+  else if(type==='bigben'){ hills(far,110,20,40,2); city(160,45,'#5d6b7d',20);
+    const bx=1200; g.fillStyle='#4a5566'; g.fillRect(bx-18,30,36,130); g.beginPath(); g.moveTo(bx-20,30); g.lineTo(bx,0); g.lineTo(bx+20,30); g.fill();
+    g.fillStyle='#e9e3c9'; g.beginPath(); g.arc(bx,48,11,0,6.283); g.fill(); g.strokeStyle='#4a5566'; g.lineWidth=2; g.beginPath(); g.moveTo(bx,48); g.lineTo(bx,40); g.moveTo(bx,48); g.lineTo(bx+6,50); g.stroke();
+    g.fillStyle='#4a5566'; for(let x=bx+30;x<bx+400;x+=26){ g.fillRect(x,100,20,60); g.beginPath(); g.moveTo(x,100); g.lineTo(x+10,86); g.lineTo(x+20,100); g.fill(); } }
+  else if(type==='farm'){ hills('#88b06a',110,30,40,0); hills('#6f9a52',135,18,30,2);
+    for(let i=0;i<6;i++){ const x=200+i*400+r()*100; g.fillStyle='#a52a2a'; g.fillRect(x,108,46,32); g.beginPath(); g.moveTo(x-4,108); g.lineTo(x+23,88); g.lineTo(x+50,108); g.fill(); g.fillStyle='#fff'; g.fillRect(x+16,122,14,18); }
+    g.strokeStyle='rgba(255,255,255,0.85)'; g.lineWidth=2; for(const yy of [146,153]){ g.beginPath(); g.moveTo(0,yy); g.lineTo(2400,yy); g.stroke(); } for(let x=0;x<2400;x+=30){ g.beginPath(); g.moveTo(x,142); g.lineTo(x,158); g.stroke(); }
+    const sx=1250; g.fillStyle='#e9ecef'; for(const dx of [-30,30]){ g.fillRect(sx+dx-7,60,14,90); g.beginPath(); g.moveTo(sx+dx-9,60); g.lineTo(sx+dx,30); g.lineTo(sx+dx+9,60); g.fill(); } g.fillRect(sx-50,100,100,50); }   // 쌍둥이 첨탑
+  else if(type==='bridge'){ hills(far,90,45,40,1); city(150,60,'#5b6f88',26);
+    g.fillStyle='rgba(60,110,170,0.55)'; g.fillRect(0,140,2400,20);
+    const by=128; g.strokeStyle=night?'#ffd8a8':'#e9ecef'; g.lineWidth=3; g.beginPath(); g.moveTo(0,by); g.lineTo(2400,by); g.stroke();
+    for(const tx of [700,1300,1900]){ g.fillStyle=night?'#ffd8a8':'#dee2e6'; g.fillRect(tx-4,60,8,80); g.lineWidth=1.5; for(let k=1;k<=10;k++){ g.beginPath(); g.moveTo(tx,62); g.lineTo(tx-k*26,by); g.moveTo(tx,62); g.lineTo(tx+k*26,by); g.stroke(); } }
+    if(night){ for(let x=0;x<2400;x+=14){ g.fillStyle=`hsl(${(x/7)%360},90%,65%)`; g.fillRect(x,by+2,6,3); } } }
+  SKY_CACHE[key]=c; return c;
+}
+
 /* =========================================================
    레이스 엔진 (TV 중계 카메라 2.5D 원근 렌더러)
    ========================================================= */
@@ -762,7 +831,9 @@ class RaceEngine{
     this.banner=null; this.photo=false; this.photoCanvas=null; this.photoT=0; this.doneT=null;
     this.hoofPh=[0,1.7]; this.crowdLv=0.15; this.closeSaid=false; this.firstFinSaid=false;
     this.bets=(cb&&cb.bets)||[]; this.myNos=new Set(this.bets.flatMap(b=>b.sel));
-    this.bg=buildBg(); this.wx=setup.weather; this.nextBolt=8+Math.random()*8;
+    this.bg=buildBg(); this.wx=setup.weather;
+    this.venue=setup.venue||VENUES[0]; this.skyline=buildSkyline(this.venue.sky, setup.weather==='야간'||setup.weather==='비');
+    this.ads=ADS.filter(a=>a[0]!=='JEJU').concat([this.venue.ad]); this.nextBolt=8+Math.random()*8;
     this.drops=[]; for(let i=0;i<220;i++) this.drops.push({x:Math.random()*(W+300),y:Math.random()*H,sp:900+Math.random()*700,len:18+Math.random()*26,a:0.25+Math.random()*0.35});
     if(this.wx==='비') Sound.rainStart();
     this.resize();
@@ -808,7 +879,7 @@ class RaceEngine{
     const S=this.setup;
     if(this.state==='intro'){
       if(!this.said.intro){ this.said.intro=1; Sound.fanfare();
-        this.say(`제${S.raceNo}경주 ${S.name}(${S.grade}) ${S.D}m ${this.dirt?'더트':'잔디'} 코스! ${this.runners.length}두 모두 게이트에 들어섰습니다.`); }
+        this.say(`여기는 ${this.venue.hello}! 월드 투어 ${S.tourIdx||1}번째 무대, ${S.name}(${S.grade}) ${S.D}m ${this.dirt?'더트':'잔디'} 코스! ${this.runners.length}두 모두 게이트에 들어섰습니다.`); }
       if(this.real>1.3 && !this.said.wxs){ this.said.wxs=1; this.say({'맑음':'오늘 경마공원은 화창한 날씨, 주로 상태 '+S.going+'입니다.','흐림':'잔뜩 흐린 하늘 아래 주로 상태 '+S.going+'. 변수가 생길 수 있습니다.','비':'굵은 빗줄기가 쏟아집니다! 주로 상태 '+S.going+', 진흙탕 승부가 예상됩니다!','노을':'붉은 노을이 경마장을 물들입니다. 오늘의 마지막 경주!','야간':'조명탑이 환하게 밝힌 나이트 경마! 관중 열기가 뜨겁습니다!'}[this.wx]||''); }
       if(this.real>2.6 && !this.said.intro2){ this.said.intro2=1; this.say('팡파르가 울려 퍼집니다! 관중석이 들썩이고 있습니다!'); }
       const k=Math.min(1,this.real/4.6); const e=1-Math.pow(1-k,3);
@@ -1077,7 +1148,7 @@ class RaceEngine{
     ctx.restore();
     { const cg=ctx.createLinearGradient(0,0,0,H); cg.addColorStop(0,'rgba(255,214,150,0.07)'); cg.addColorStop(0.5,'rgba(255,255,255,0)'); cg.addColorStop(1,'rgba(20,30,60,0.10)'); ctx.fillStyle=cg; ctx.fillRect(0,0,W,H);
       const vg0=ctx.createRadialGradient(W/2,H*0.55,H*0.45,W/2,H*0.55,H*1.05); vg0.addColorStop(0,'rgba(0,0,0,0)'); vg0.addColorStop(1,'rgba(0,0,0,0.32)'); ctx.fillStyle=vg0; ctx.fillRect(0,0,W,H);
-      if(this.wx==='맑음'){ const fl=ctx.createRadialGradient(W-170,BY-40,0,W-170,BY-40,260); fl.addColorStop(0,'rgba(255,240,200,0.18)'); fl.addColorStop(1,'rgba(255,240,200,0)'); ctx.fillStyle=fl; ctx.fillRect(W-450,0,450,BY+240); } }
+      if(this.wx==='맑음'){ const fl=ctx.createRadialGradient(W-110,BY+95,0,W-110,BY+95,260); fl.addColorStop(0,'rgba(255,240,200,0.18)'); fl.addColorStop(1,'rgba(255,240,200,0)'); ctx.fillStyle=fl; ctx.fillRect(W-450,0,450,BY+360); } }
     this.drawWeather(ctx);
     if(this.slow<0.8){ const a=(0.8-this.slow)*0.9; const vg=ctx.createRadialGradient(W/2,H/2,H*0.35,W/2,H/2,H*0.85); vg.addColorStop(0,'rgba(0,0,0,0)'); vg.addColorStop(1,`rgba(0,0,0,${a})`); ctx.fillStyle=vg; ctx.fillRect(0,0,W,H); }
     if((this.excite||0)>0.05 && this.state==='run'){ const ex=this.excite; ctx.save(); ctx.globalAlpha=0.10+0.22*ex; ctx.strokeStyle='#fff';
@@ -1121,18 +1192,18 @@ class RaceEngine{
     const sky=ctx.createLinearGradient(0,-200,0,340+BY); sky.addColorStop(0,SKY[0]); sky.addColorStop(0.6,SKY[1]); sky.addColorStop(1,SKY[2]);
     ctx.fillStyle=sky; ctx.fillRect(-200,-300,W+400,700+BY);
     ctx.save(); ctx.translate(0,BY);
-    if(wx==='맑음'){ ctx.fillStyle='rgba(255,250,220,0.9)'; ctx.beginPath(); ctx.arc(W-170,-40,34,0,6.283); ctx.fill();
-      ctx.fillStyle='rgba(255,250,220,0.18)'; ctx.beginPath(); ctx.arc(W-170,-40,70,0,6.283); ctx.fill(); }
+    if(wx==='맑음'){ ctx.fillStyle='rgba(255,250,220,0.9)'; ctx.beginPath(); ctx.arc(W-110,95,30,0,6.283); ctx.fill();
+      ctx.fillStyle='rgba(255,250,220,0.18)'; ctx.beginPath(); ctx.arc(W-110,95,62,0,6.283); ctx.fill(); }
     if(wx==='노을'){ const sg=ctx.createRadialGradient(W-240,150,10,W-240,150,260); sg.addColorStop(0,'rgba(255,200,120,0.95)'); sg.addColorStop(0.15,'rgba(255,150,80,0.6)'); sg.addColorStop(1,'rgba(255,120,60,0)'); ctx.fillStyle=sg; ctx.fillRect(W-600,-200,700,600);
       ctx.fillStyle='#ffd9a0'; ctx.beginPath(); ctx.arc(W-240,150,42,0,6.283); ctx.fill(); }
     if(wx==='야간'){ const sr=seeded(99); ctx.fillStyle='#fff'; for(let i=0;i<90;i++){ const x=sr()*W, y=-BY+sr()*(150+BY), tw=0.4+0.6*Math.abs(Math.sin(this.real*2+i)); ctx.globalAlpha=tw*0.8; ctx.fillRect(x,y,1.6,1.6);} ctx.globalAlpha=1;
-      ctx.fillStyle='rgba(240,240,220,0.95)'; ctx.beginPath(); ctx.arc(W-180,-60,24,0,6.283); ctx.fill(); ctx.fillStyle=SKY[1]; ctx.beginPath(); ctx.arc(W-170,-66,22,0,6.283); ctx.fill(); }
+      ctx.fillStyle='rgba(240,240,220,0.95)'; ctx.beginPath(); ctx.arc(W-120,90,24,0,6.283); ctx.fill(); ctx.fillStyle=SKY[1]; ctx.beginPath(); ctx.arc(W-110,84,22,0,6.283); ctx.fill(); }
     const cloudCol={'맑음':'rgba(255,255,255,0.85)','흐림':'rgba(200,205,212,0.95)','비':'rgba(95,104,114,0.97)','노을':'rgba(255,190,170,0.75)','야간':'rgba(40,50,80,0.6)'}[wx]||'rgba(255,255,255,0.85)';
     const cScale=(wx==='흐림'||wx==='비')?1.9:1;
     for(const c of bg.clouds){ let x=((c.x-cam*ppm*0.03)%2400+2400)%2400-300; ctx.fillStyle=cloudCol; c.s0=c.s0||c.s; c.s=c.s0*cScale;
       ctx.beginPath(); ctx.ellipse(x,c.y,60*c.s,18*c.s,0,0,6.283); ctx.ellipse(x+40*c.s,c.y-10*c.s,40*c.s,20*c.s,0,0,6.283); ctx.ellipse(x-38*c.s,c.y-4*c.s,34*c.s,14*c.s,0,0,6.283); ctx.fill(); }
     const mo=-(((cam*ppm*0.08)%2400)+2400)%2400;
-    ctx.drawImage(bg.mt,mo,70); ctx.drawImage(bg.mt,mo+2400,70); ctx.drawImage(bg.mt,mo-2400,70);
+    const sk=this.skyline||bg.mt; ctx.drawImage(sk,mo,56); ctx.drawImage(sk,mo+2400,56); ctx.drawImage(sk,mo-2400,56);
     // 조명탑 (야간·비엔 점등)
     { const lp=-(((cam*ppm*0.3)%900)+900)%900;
       for(let x=lp-900;x<W+900;x+=900){ const tx=x+420; ctx.fillStyle='#4a5160'; ctx.fillRect(tx-4,70,8,270); ctx.fillStyle='#2b313c'; ctx.fillRect(tx-34,56,68,22);
@@ -1143,11 +1214,11 @@ class RaceEngine{
     // 관중석
     const fr=(this.crowdLv>0.45 && Math.floor(this.real*(4+this.crowdLv*8))%2)?1:0;
     const go=-(((cam*ppm*par)%1600)+1600)%1600;
-    for(let k=-1;k<=1;k++) ctx.drawImage(bg.crowd[fr],go+k*1600,160);
+    for(let k=-1;k<=1;k++) ctx.drawImage(bg.crowd[fr],go+k*1600,214,1600,126);
     const blur=Math.min(26,Math.abs(this.camV||0)*ppm*par*0.045);
-    if(blur>1.5 && !this.lowQ){ ctx.globalAlpha=0.4; for(let k=-1;k<=1;k++) ctx.drawImage(bg.crowd[fr],go+k*1600-blur*0.8,160); ctx.globalAlpha=1; }
-    { const hz=ctx.createLinearGradient(0,150,0,345); hz.addColorStop(0,'rgba(190,215,240,0.28)'); hz.addColorStop(1,'rgba(190,215,240,0.06)'); ctx.fillStyle=hz; ctx.fillRect(-300,150,W+600,195); }
-    for(let k=-1;k<=1;k++){ const x=off+k*sp+700; if(x>-400&&x<W+100){ ctx.save(); ctx.translate(x,112); ctx.scale(0.82,0.82); this.drawJumbo(ctx,0,0); ctx.restore(); } }
+    if(blur>1.5 && !this.lowQ){ ctx.globalAlpha=0.4; for(let k=-1;k<=1;k++) ctx.drawImage(bg.crowd[fr],go+k*1600-blur*0.8,214,1600,126); ctx.globalAlpha=1; }
+    { const hz=ctx.createLinearGradient(0,205,0,345); hz.addColorStop(0,'rgba(190,215,240,0.28)'); hz.addColorStop(1,'rgba(190,215,240,0.06)'); ctx.fillStyle=hz; ctx.fillRect(-300,205,W+600,140); }
+    for(let k=-1;k<=1;k++){ const x=off+k*sp+700; if(x>-400&&x<W+100){ ctx.save(); ctx.translate(x,150); ctx.scale(0.8,0.8); this.drawJumbo(ctx,0,0); ctx.restore(); } }
     // 잔디 둔덕 + 광고판
     const gl=ctx.createLinearGradient(0,330,0,Y_FAR); gl.addColorStop(0,'#3e7d3a'); gl.addColorStop(1,'#2e6a2e');
     ctx.fillStyle=gl; ctx.fillRect(-200,336,W+400,yZ(-0.06)-BY-336+2);
@@ -1159,7 +1230,7 @@ class RaceEngine{
     ctx.fillStyle='#1d222b'; rr(ctx,x-8,y-8,w+16,h+16,6); ctx.fill();
     ctx.fillStyle='#04060c'; ctx.fillRect(x,y,w,h);
     ctx.fillStyle='#ffd43b'; ctx.font='600 17px "Noto Sans KR",sans-serif'; ctx.textAlign='left'; ctx.textBaseline='top';
-    ctx.fillText(`${this.setup.raceNo}R ${this.setup.name}`,x+10,y+8);
+    ctx.fillText(`${this.venue.city} ${this.setup.name}`,x+10,y+8);
     ctx.fillStyle='#ff4d4f'; ctx.fillText('● LIVE',x+w-78,y+8);
     const o=this.order;
     o.forEach((r,i)=>{ const fr=FRAME[r.h.no]; const bx=x+8+i*(314/o.length), by=y+40;
@@ -1176,7 +1247,7 @@ class RaceEngine{
     // 광고판
     const az=-0.13;
     for(let i=Math.floor(xmin/26)-1;i<=Math.ceil(xmax/26);i++){
-      const ad=ADS[((i%ADS.length)+ADS.length)%ADS.length]; const x0=i*26, x1=x0+21;
+      const AD=this.ads||ADS, ad=AD[((i%AD.length)+AD.length)%AD.length]; const x0=i*26, x1=x0+21;
       const [ax0,ay]=this.P(x0,az,0), [ax1]=this.P(x1,az,0), hgt=2.1*ppm*sZ(az);
       ctx.fillStyle='#222'; ctx.fillRect(ax0-3,ay-hgt-3,ax1-ax0+6,hgt+3); ctx.fillStyle=ad[2]; ctx.fillRect(ax0,ay-hgt,ax1-ax0,hgt); ctx.fillStyle='rgba(255,255,255,0.18)'; ctx.fillRect(ax0,ay-hgt,ax1-ax0,hgt*0.3);
       ctx.fillStyle='rgba(0,0,0,0.25)'; ctx.fillRect(ax0,ay-3,ax1-ax0,3);
@@ -1326,7 +1397,7 @@ class RaceEngine{
     ctx.fillStyle=fg; ctx.fillRect(-300,y0,W+600,H-y0+300);
     // 근경 펜스 광고판 (LED 보드)
     for(let i=Math.floor(xmin/16)-1;i<=Math.ceil(xmax/16)+1;i++){
-      const ad=ADS[(((i+2)%ADS.length)+ADS.length)%ADS.length]; const bx0=this.X(i*16,z), bx1=this.X(i*16+15,z);
+      const AD=this.ads||ADS, ad=AD[(((i+2)%AD.length)+AD.length)%AD.length]; const bx0=this.X(i*16,z), bx1=this.X(i*16+15,z);
       if(bx1<-50||bx0>W+50) continue;
       ctx.fillStyle=ad[2]; ctx.fillRect(bx0,yt+2,bx1-bx0,rh-2);
       ctx.fillStyle='rgba(255,255,255,0.2)'; ctx.fillRect(bx0,yt+2,bx1-bx0,rh*0.25);
@@ -1350,7 +1421,7 @@ class RaceEngine{
     // 좌상단 레이스 정보
     ctx.fillStyle='rgba(6,12,30,0.78)'; rr(ctx,16,14,300,74,10); ctx.fill();
     ctx.fillStyle='#ffd43b'; ctx.font='700 19px "Noto Sans KR",sans-serif'; ctx.textAlign='left'; ctx.textBaseline='top';
-    ctx.fillText(`${S.raceNo}R ${S.name}`,28,22);
+    ctx.fillText(`${this.venue.flag} ${this.venue.city} · ${S.name}`,28,22);
     ctx.fillStyle='#ffffff'; ctx.font='bold 15px "Noto Sans KR",sans-serif';
     ctx.fillText(`${S.grade} · ${S.D}m · ${this.dirt?'더트':'잔디'} · ${S.going}`,28,46);
     const rem=this.state==='intro'?S.D:Math.max(0,Math.ceil(S.D-o[0].pos));
@@ -1443,7 +1514,7 @@ class RaceEngine{
     g.strokeStyle='#fff'; g.fillStyle='#fff'; g.font='600 11px monospace'; g.textAlign='center'; g.textBaseline='top';
     for(let k=0;k<200;k++){ const x=lineX-k*0.01*pps; if(x<0) break; const big=k%10===0; g.lineWidth=1; g.beginPath(); g.moveTo(x,Hp-34); g.lineTo(x,Hp-34+(big?14:k%5===0?9:5)); g.stroke(); if(big){ const tv=t1+k*0.01; g.fillText(`${Math.floor(tv/60)}:${(tv%60).toFixed(2).padStart(5,'0')}`,x,Hp-17); } }
     g.fillStyle='rgba(0,0,0,0.8)'; g.fillRect(0,0,Wp,30); g.fillStyle='#fff'; g.font='700 15px "Noto Sans KR",sans-serif'; g.textAlign='left'; g.textBaseline='middle';
-    g.fillText(`PHOTO FINISH  ·  제${this.setup.raceNo}경주 ${this.setup.name}  ·  ${this.setup.D}m`,12,15);
+    g.fillText(`PHOTO FINISH  ·  ${this.venue.course}  ·  ${this.setup.name}  ·  ${this.setup.D}m`,12,15);
     g.textAlign='right'; g.fillText(`1착 기록 ${Math.floor(t1/60)}:${(t1%60).toFixed(2).padStart(5,'0')}`,Wp-12,15);
     // 세피아 톤 (실제 판독 사진 느낌)
     try{ const im=g.getImageData(0,30,Wp,Hp-64), d=im.data;
@@ -1689,6 +1760,13 @@ function Paddock({setup,credit,bets,setBets,onStart,onQuiz,onEvent,onOwner,stabl
           <span className="px-1.5 py-0.5 rounded bg-yellow-400 text-black text-[11px] font-black">{S.grade}</span>
           <h2 className="fx-title text-xl gold truncate">{S.name}</h2>
         </div>
+        {S.venue && <div className="mt-1.5 flex items-center gap-1.5 text-[12px]">
+          <span className="text-lg leading-none">{S.venue.flag}</span>
+          <b className="text-white">{S.venue.course}</b>
+          <span className="text-blue-200/70">{S.venue.country}</span>
+          <span className="ml-auto px-1.5 py-0.5 rounded bg-sky-500/25 text-sky-100 font-bold whitespace-nowrap">🌍 월드 투어 {S.tourIdx}/{VENUES.length}</span>
+        </div>}
+        {S.venue && <div className="flex items-center gap-0.5 mt-1 overflow-x-auto no-scrollbar">{VENUES.map((v,i)=><span key={v.id} title={v.course} className={`shrink-0 text-[15px] px-1 rounded ${i+1===S.tourIdx?'bg-yellow-300/30 ring-1 ring-yellow-300':i+1<S.tourIdx?'opacity-90':'opacity-35'}`}>{v.flag}</span>)}<span className="text-[10px] text-blue-200/60 ml-1 whitespace-nowrap">다음: {venueOf(S.raceNo+1).city}</span></div>}
         {stats && <div className="flex flex-wrap items-center gap-1.5 mt-1.5 text-[11px] whitespace-nowrap">
           <span className="px-1.5 py-0.5 rounded bg-gradient-to-r from-yellow-500/30 to-amber-700/30 text-yellow-100 font-bold">🏅 {ownerTitle(stats.earned)}</span>
           {stats.streak>0 && <span className="px-1.5 py-0.5 rounded bg-red-600/40 text-red-100 font-bold">🔥 {stats.streak}연속 적중 · 다음 보너스 +{Math.min(50,stats.streak*10)}%</span>}
