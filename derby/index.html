@@ -1862,6 +1862,10 @@ function QuinMatrix({setup,sel,onPair}){
 
 function Paddock({setup,credit,bets,setBets,onStart,onQuiz,onRps,onLeague,onEvent,evLabel,onOwner,stable,barn,history,stats,daily,setDaily,onCredit}){
   const [tab,setTab]=useState('card');
+  const [top,setTop]=useState(()=>League.on()?null:[]); const myName=ls.get('sd_me','');
+  useEffect(()=>{ if(!League.on()) return; let alive=true; const load=()=>League.list().then(l=>{ if(alive) setTop(l||[]); }); load(); const t=setInterval(load,60000); return ()=>{ alive=false; clearInterval(t); }; },[]);
+  const myRank=top?top.findIndex(p=>p.name===myName)+1:0;
+  const shortCr=n=>n>=10000?(Math.floor(n/1000)/10)+'만':fmt(n);
   const [type,setType]=useState('WIN');
   const [sel,setSel]=useState([]);
   const [amt,setAmt]=useState(100);
@@ -1903,6 +1907,15 @@ function Paddock({setup,credit,bets,setBets,onStart,onQuiz,onRps,onLeague,onEven
   };
   return (
     <div className="max-w-md mx-auto px-3 pb-28">
+      <div className="flex gap-1.5 mt-2" style={{alignItems:'stretch'}}>
+        <button onClick={()=>{Sound.init();Sound.click();onLeague&&onLeague();}} className="flex-1 min-w-0 rounded-xl px-2.5 py-1.5 text-left" style={{background:'linear-gradient(90deg,rgba(245,159,0,.35),rgba(255,212,59,.15))',border:'1px solid rgba(255,212,59,.5)'}}>
+          <div className="flex items-center text-[12.5px] font-black text-yellow-200">🏆 8인 순위<span className="ml-auto text-[10px] text-yellow-100/70 font-bold">전체 보기 ›</span></div>
+          <div className="text-[11.5px] font-bold text-white truncate mt-0.5">{top===null?'불러오는 중…':top.length?top.slice(0,3).map((p,i)=>`${['🥇','🥈','🥉'][i]}${p.name}${p.name===myName?'(나)':''} ${shortCr(p.credit||0)}`).join(' '):'첫 번째 주인공이 되어 보세요!'}</div>
+          {top&&myRank>3 && <div className="text-[10.5px] text-yellow-100/80 font-bold">내 순위 {myRank}위 · {fmt(credit)} CR</div>}
+        </button>
+        <button onClick={()=>{Sound.init();Sound.click();onRps&&onRps();}} className="shrink-0 rounded-xl px-3 flex flex-col items-center justify-center font-black" style={{background:'linear-gradient(180deg,#1e293b,#0b1120)',border:'2px solid #2563eb',boxShadow:'0 0 10px rgba(37,99,235,.5)'}}>
+          <span className="text-[13px] leading-none">✌️✊✋</span><span className="text-yellow-300 text-[13px] mt-0.5">짱켐보이</span><span className="text-[9px] text-blue-200/80 font-bold">1판 10 CR</span></button>
+      </div>
       {quick && <div className="fixed inset-0 z-50 bg-black/70 backdrop-blur-sm flex items-end justify-center" onClick={()=>setQuick(false)}>
         <div className="glass w-full max-w-md rounded-t-3xl p-4 pop" onClick={e=>e.stopPropagation()} style={{paddingBottom:'max(16px, env(safe-area-inset-bottom))'}}>
           <div className="fx-title text-xl gold text-center">🎫 마권을 사야 출주할 수 있어요!</div>
@@ -1956,9 +1969,6 @@ function Paddock({setup,credit,bets,setBets,onStart,onQuiz,onRps,onLeague,onEven
         <button onClick={()=>{Sound.init();Sound.click();onOwner();}} className="rounded-xl py-2 bg-gradient-to-b from-amber-500 to-orange-700 text-[12.5px] font-black leading-tight">{Club.get().logo?<img src={Club.get().logo} alt="" className="inline-block align-middle mr-1" style={{width:18,height:18,borderRadius:9,objectFit:'cover',border:'1.5px solid #fff'}}/>:'🏇 '}{Club.get().name||'내 구단'}<div className="text-[9.5px] font-bold opacity-80">{(barn&&barn.horses.length)?(barn.lastPay!==todayKey()?`💰 수익 ${fmt(barnDaily(barn))} 받기!`:`🐎 ${barn.horses.length+(stable?1:0)}마리 · WP ${barnWP(barn)}`):stable?`👑 ${stable.name}`:'구단주 되기 · 말 시장'}</div></button>
         <button onClick={()=>{Sound.init();Sound.click();onQuiz();}} className="rounded-xl py-2 bg-gradient-to-b from-fuchsia-500 to-purple-700 text-[12.5px] font-black leading-tight">🧠 퀴즈<div className="text-[9.5px] font-bold opacity-80">오늘 {fmtN(quizToday())}/5,000</div></button>
       </div>
-      <button onClick={()=>{Sound.init();Sound.click();onRps&&onRps();}} className="w-full mt-1.5 rounded-xl py-2 flex items-center justify-center gap-2 text-[13px] font-black" style={{background:'linear-gradient(90deg,#111,#1e293b,#111)',border:'2px solid #2563eb',boxShadow:'0 0 10px rgba(37,99,235,.5)'}}>
-        <span>✌️✊✋</span><span className="text-yellow-300">짱켐보이</span><span className="text-[10.5px] text-blue-200/80 font-bold">🪙 1판 10 CR · 도전 or 스톱</span></button>
-      <button onClick={()=>{Sound.init();Sound.click();onLeague&&onLeague();}} className="w-full mt-1.5 rounded-xl py-1.5 flex items-center justify-center gap-2 text-[13px] font-black bg-gradient-to-r from-amber-500/30 to-yellow-400/20" style={{border:'1px solid rgba(255,212,59,.45)'}}>🏆 8인 크레딧 순위 <span className="text-[10.5px] text-yellow-100/80 font-bold">누가 1등?</span></button>
       {/* 탭: 출전표 / 마권 구매 */}
       <div className="sticky top-[52px] z-20 mt-2 -mx-3 px-3 py-1.5 bg-[#070d1f]/90 backdrop-blur">
         <div className="grid grid-cols-2 gap-1 p-1 rounded-2xl bg-white/5">
