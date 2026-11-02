@@ -1801,7 +1801,8 @@ function HorseCard({h,setup,selected,onPick,type}){
             {mark && <div className="ml-auto text-2xl font-black text-yellow-300 drop-shadow">{mark}</div>}
           </div>
           <div className="flex items-end gap-1 mt-1">
-            <div className="shrink-0 -ml-2 -mb-1"><MiniHorse h={h} w={128} hgt={84}/></div>
+            <div className="shrink-0 -ml-2 -mb-1 relative"><MiniHorse h={h} w={128} hgt={84}/>
+              <div className="absolute" style={{left:8,top:-2}}><JockeyFace h={h} size={38}/></div></div>
             <div className="flex-1 grid grid-cols-2 gap-1.5 text-[12px]">
               <div className="rounded-lg bg-black/30 px-2 py-1">
                 <div className="text-blue-200/70 text-[10px]">컨디션</div>
@@ -1863,6 +1864,8 @@ function QuinMatrix({setup,sel,onPair}){
 function Paddock({setup,credit,bets,setBets,onStart,onQuiz,onRps,onLeague,onEvent,evLabel,onOwner,stable,barn,history,stats,daily,setDaily,onCredit}){
   const [tab,setTab]=useState('card');
   const [top,setTop]=useState(()=>League.on()?null:[]); const myName=ls.get('sd_me','');
+  const [,setAvVer]=useState(0);
+  useEffect(()=>{ League.avatars().then(m=>{ Object.assign(AV.map,m); setAvVer(v=>v+1); }); },[]);
   useEffect(()=>{ if(!League.on()) return; let alive=true; const load=()=>League.list().then(l=>{ if(alive) setTop(l||[]); }); load(); const t=setInterval(load,60000); return ()=>{ alive=false; clearInterval(t); }; },[]);
   const myRank=top?top.findIndex(p=>p.name===myName)+1:0;
   const shortCr=n=>n>=10000?(Math.floor(n/1000)/10)+'만':fmt(n);
@@ -1916,6 +1919,13 @@ function Paddock({setup,credit,bets,setBets,onStart,onQuiz,onRps,onLeague,onEven
         <button onClick={()=>{Sound.init();Sound.click();onRps&&onRps();}} className="shrink-0 rounded-xl px-3 flex flex-col items-center justify-center font-black" style={{background:'linear-gradient(180deg,#1e293b,#0b1120)',border:'2px solid #2563eb',boxShadow:'0 0 10px rgba(37,99,235,.5)'}}>
           <span className="text-[13px] leading-none">✌️✊✋</span><span className="text-yellow-300 text-[13px] mt-0.5">짱켐보이</span><span className="text-[9px] text-blue-200/80 font-bold">1판 10 CR</span></button>
       </div>
+      {daily && <DailyPanel daily={daily} setDaily={setDaily} onReward={n=>onCredit(n)}/>}
+      {/* 메뉴: 커피 이벤트 / 내 구단 / 퀴즈 */}
+      <div className="grid grid-cols-3 gap-1.5 mt-2">
+        <button onClick={()=>{Sound.init();Sound.click();onEvent();}} className="rounded-xl py-2 bg-gradient-to-b from-emerald-600 to-teal-800 text-[12.5px] font-black leading-tight">{evLabel?evLabel[0]:'☕ 커피 이벤트'}<div className="text-[9.5px] font-bold opacity-80 truncate px-1">{evLabel?evLabel[1]:'3만·5만 CR 교환'}</div></button>
+        <button onClick={()=>{Sound.init();Sound.click();onOwner();}} className="rounded-xl py-2 bg-gradient-to-b from-amber-500 to-orange-700 text-[12.5px] font-black leading-tight">{Club.get().logo?<img src={Club.get().logo} alt="" className="inline-block align-middle mr-1" style={{width:18,height:18,borderRadius:9,objectFit:'cover',border:'1.5px solid #fff'}}/>:'🏇 '}{Club.get().name||'내 구단'}<div className="text-[9.5px] font-bold opacity-80">{(barn&&barn.horses.length)?(barn.lastPay!==todayKey()?`💰 수익 ${fmt(barnDaily(barn))} 받기!`:`🐎 ${barn.horses.length+(stable?1:0)}마리 · WP ${barnWP(barn)}`):stable?`👑 ${stable.name}`:'구단주 되기 · 말 시장'}</div></button>
+        <button onClick={()=>{Sound.init();Sound.click();onQuiz();}} className="rounded-xl py-2 bg-gradient-to-b from-fuchsia-500 to-purple-700 text-[12.5px] font-black leading-tight">🧠 퀴즈<div className="text-[9.5px] font-bold opacity-80">오늘 {fmtN(quizToday())}/5,000</div></button>
+      </div>
       {quick && <div className="fixed inset-0 z-50 bg-black/70 backdrop-blur-sm flex items-end justify-center" onClick={()=>setQuick(false)}>
         <div className="glass w-full max-w-md rounded-t-3xl p-4 pop" onClick={e=>e.stopPropagation()} style={{paddingBottom:'max(16px, env(safe-area-inset-bottom))'}}>
           <div className="fx-title text-xl gold text-center">🎫 마권을 사야 출주할 수 있어요!</div>
@@ -1962,13 +1972,6 @@ function Paddock({setup,credit,bets,setBets,onStart,onQuiz,onRps,onLeague,onEven
         </div>}
       </div>
 
-      {daily && <DailyPanel daily={daily} setDaily={setDaily} onReward={n=>onCredit(n)}/>}
-      {/* 메뉴: 커피 이벤트 / 내 구단 / 퀴즈 */}
-      <div className="grid grid-cols-3 gap-1.5 mt-2">
-        <button onClick={()=>{Sound.init();Sound.click();onEvent();}} className="rounded-xl py-2 bg-gradient-to-b from-emerald-600 to-teal-800 text-[12.5px] font-black leading-tight">{evLabel?evLabel[0]:'☕ 커피 이벤트'}<div className="text-[9.5px] font-bold opacity-80 truncate px-1">{evLabel?evLabel[1]:'3만·5만 CR 교환'}</div></button>
-        <button onClick={()=>{Sound.init();Sound.click();onOwner();}} className="rounded-xl py-2 bg-gradient-to-b from-amber-500 to-orange-700 text-[12.5px] font-black leading-tight">{Club.get().logo?<img src={Club.get().logo} alt="" className="inline-block align-middle mr-1" style={{width:18,height:18,borderRadius:9,objectFit:'cover',border:'1.5px solid #fff'}}/>:'🏇 '}{Club.get().name||'내 구단'}<div className="text-[9.5px] font-bold opacity-80">{(barn&&barn.horses.length)?(barn.lastPay!==todayKey()?`💰 수익 ${fmt(barnDaily(barn))} 받기!`:`🐎 ${barn.horses.length+(stable?1:0)}마리 · WP ${barnWP(barn)}`):stable?`👑 ${stable.name}`:'구단주 되기 · 말 시장'}</div></button>
-        <button onClick={()=>{Sound.init();Sound.click();onQuiz();}} className="rounded-xl py-2 bg-gradient-to-b from-fuchsia-500 to-purple-700 text-[12.5px] font-black leading-tight">🧠 퀴즈<div className="text-[9.5px] font-bold opacity-80">오늘 {fmtN(quizToday())}/5,000</div></button>
-      </div>
       {/* 탭: 출전표 / 마권 구매 */}
       <div className="sticky top-[52px] z-20 mt-2 -mx-3 px-3 py-1.5 bg-[#070d1f]/90 backdrop-blur">
         <div className="grid grid-cols-2 gap-1 p-1 rounded-2xl bg-white/5">
@@ -2580,6 +2583,9 @@ const League={
   key(n){ return encodeURIComponent(n.replace(/[.#$\[\]\/]/g,'_')); },
   async push(me,data){ if(!this.on()||!me) return false;
     try{ const r=await fetch(`${LEAGUE_URL.replace(/\/$/,'')}/derby/players/${this.key(me)}.json`,{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify({...data,name:me,ts:Date.now()})}); return r.ok; }catch(e){ return false; } },
+  async putAvatar(me,data){ if(!this.on()||!me) return false;
+    try{ const r=await fetch(`${LEAGUE_URL.replace(/\/$/,'')}/derby/avatars/${this.key(me)}.json`,{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify(data)}); return r.ok; }catch(e){ return false; } },
+  async avatars(){ if(!this.on()) return {}; try{ const r=await fetch(`${LEAGUE_URL.replace(/\/$/,'')}/derby/avatars.json`); if(!r.ok) return {}; const d=await r.json()||{}; const o={}; Object.keys(d).forEach(k=>o[decodeURIComponent(k)]=d[k]); return o; }catch(e){ return {}; } },
   async list(){ if(!this.on()) return null;
     try{ const r=await fetch(`${LEAGUE_URL.replace(/\/$/,'')}/derby/players.json`); if(!r.ok) return null; const d=await r.json()||{}; return Object.values(d).filter(x=>x&&x.name).sort((a,b)=>(b.credit||0)-(a.credit||0)); }catch(e){ return null; } } };
 function thumb(dataUrl,cb){ if(!dataUrl) return cb(''); const im=new Image(); im.onload=()=>{ const c=document.createElement('canvas'); c.width=c.height=48; c.getContext('2d').drawImage(im,0,0,48,48); cb(c.toDataURL('image/jpeg',0.7)); }; im.onerror=()=>cb(''); im.src=dataUrl; }
@@ -2783,6 +2789,28 @@ const trainCost=lv=>300+200*lv;
 const STAT_INFO={spd:{n:'스피드',e:'⚡',d:'기본 속도가 올라가요'},sta:{n:'지구력',e:'💪',d:'후반에 덜 지쳐요'},kick:{n:'순발력',e:'🔥',d:'막판 스퍼트가 강해져요'}};
 function resizeLogo(file,cb){ const rd=new FileReader(); rd.onload=()=>{ const im=new Image(); im.onload=()=>{ const S=160, c=document.createElement('canvas'); c.width=c.height=S; const x=c.getContext('2d');
     const k=Math.max(S/im.width,S/im.height), w=im.width*k, h=im.height*k; x.fillStyle='#fff'; x.fillRect(0,0,S,S); x.drawImage(im,(S-w)/2,(S-h)/2,w,h); cb(c.toDataURL('image/jpeg',0.85)); }; im.src=rd.result; }; rd.readAsDataURL(file); }
+const AV={map:{}};   // 기수 이름 → 이모티콘 이미지(dataURL)
+function avatarOf(name){ if(name===ls.get('sd_me','')){ const mine=ls.get('sd_avatar',''); if(mine) return mine; } return AV.map[name]||''; }
+function JockeyFace({h,size=40}){ const src=avatarOf(h.jockey);
+  return (<div className="rounded-full overflow-hidden flex items-center justify-center shrink-0" style={{width:size,height:size,background:src?'#fff':h.silk.base,border:`2.5px solid ${h.silk.accent}`,boxShadow:'0 2px 6px rgba(0,0,0,.45)'}}>
+    {src?<img src={src} alt={h.jockey} style={{width:'100%',height:'100%',objectFit:'cover'}}/>:<span className="font-black" style={{fontSize:size*0.42,color:h.silk.base==='#ffffff'||h.silk.base==='#fcc419'?'#222':'#fff',textShadow:'0 1px 2px rgba(0,0,0,.35)'}}>{h.jockey.slice(-2,-1)||h.jockey[0]}</span>}
+  </div>); }
+function resizeAvatar(file,cb){ const rd=new FileReader(); rd.onload=()=>{ const im=new Image(); im.onload=()=>{ const S=112, c=document.createElement('canvas'); c.width=c.height=S; const x=c.getContext('2d');
+    const k=Math.max(S/im.width,S/im.height), w=im.width*k, hh=im.height*k; x.drawImage(im,(S-w)/2,(S-hh)/2,w,hh); cb(c.toDataURL('image/png')); }; im.src=rd.result; }; rd.readAsDataURL(file); }
+function AvatarPicker({me}){
+  const [src,setSrc]=useState(()=>ls.get('sd_avatar','')); const [msg,setMsg]=useState(''); const ref=useRef(null);
+  const pick=f=>resizeAvatar(f,async d=>{ ls.set('sd_avatar',d); AV.map[me]=d; setSrc(d); Sound.coin(); setMsg('저장 중…'); const ok=await League.putAvatar(me,d); setMsg(League.on()?(ok?'✅ 8명 모두에게 보여요!':'⚠️ 서버 저장 실패 (내 폰에만 보여요)'):'내 폰에 저장됐어요'); });
+  return (<div className="mt-3 rounded-2xl p-3 flex items-center gap-3" style={{background:'rgba(255,255,255,.07)',border:'1px dashed rgba(255,212,59,.5)'}}>
+    <button onClick={()=>ref.current&&ref.current.click()} className="shrink-0 rounded-full overflow-hidden flex items-center justify-center" style={{width:64,height:64,background:'#fff',border:'3px solid #ffd43b'}}>
+      {src?<img src={src} alt="내 기수 이모티콘" style={{width:'100%',height:'100%',objectFit:'cover'}}/>:<span style={{fontSize:30}}>🏇</span>}</button>
+    <input ref={ref} type="file" accept="image/*" className="hidden" onChange={e=>{ const f=e.target.files&&e.target.files[0]; if(f) pick(f); e.target.value=''; }}/>
+    <div className="flex-1 min-w-0 text-left">
+      <div className="font-black text-[14px]">🎭 내 기수 이모티콘</div>
+      <div className="text-[11px] text-blue-100/80 leading-snug">이모티콘 앱으로 만든 내 얼굴 이모티콘 한 장을 넣으면 출전표 말 사진 옆에 나와요</div>
+      <button onClick={()=>ref.current&&ref.current.click()} className="mt-1 px-2.5 py-1 rounded-lg bg-yellow-300 text-black text-[11.5px] font-black">{src?'사진 바꾸기':'사진 넣기'}</button>
+      {msg && <span className="ml-2 text-[10.5px] text-emerald-200">{msg}</span>}
+    </div></div>);
+}
 function WhoModal({me,onPick,onClose}){
   return (<div className="fixed inset-0 flex items-center justify-center p-4" style={{zIndex:70,background:'rgba(0,0,0,.85)'}} onClick={onClose}>
     <div className="glass rounded-3xl p-4 w-full max-w-sm pop" onClick={e=>e.stopPropagation()}>
@@ -2791,6 +2819,7 @@ function WhoModal({me,onPick,onClose}){
       <div className="grid grid-cols-2 gap-2 mt-3">{Object.entries(ROSTER).map(([j,h])=>
         <button key={j} onClick={()=>onPick(j)} className={`rounded-2xl p-2.5 text-left ${me===j?'bg-yellow-300 text-black':'bg-white/10'}`}>
           <div className="font-black text-[15px]">{j}</div><div className={`text-[11.5px] font-bold ${me===j?'text-black/70':'text-yellow-200'}`}>🐎 {h}</div></button>)}</div>
+      {me && <AvatarPicker key={me} me={me}/>}
       {me && <button onClick={onClose} className="w-full mt-3 py-2.5 rounded-xl bg-white/10 font-black text-[13px]">닫기</button>}
     </div></div>);
 }
@@ -2985,7 +3014,7 @@ function App(){
   const lastPush=useRef(0);
   const [me,setMe]=useState(()=>ls.get('sd_me',''));
   const [who,setWho]=useState(()=>!ls.get('sd_me',''));
-  const pickMe=j=>{ Sound.init(); Sound.coin(); setMe(j); ls.set('sd_me',j); setWho(false);
+  const pickMe=j=>{ Sound.init(); Sound.coin(); setMe(j); ls.set('sd_me',j);
     const horse=ROSTER[j];
     setStable(st=>{ const base=st||{spd:0,sta:0,kick:0,care:false,invested:0,prize:0,w:[0,0,0],races:0}; const ns={...base,name:horse}; ls.set('sd_stable',ns); return ns; });
     if(phase==='paddock'){ setBets([]); setSetup(makeRaceSetup(raceNo,ls.get('sd_stable',null),ls.get('sd_barn',null))); } };

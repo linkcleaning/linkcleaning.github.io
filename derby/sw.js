@@ -1,4 +1,4 @@
-const CACHE = "link-derby-v45";
+const CACHE = "link-derby-v46";
 const CORE = ["./", "./index.html", "./ld-manifest.webmanifest", "./ld-icon-192.png", "./ld-icon-512.png"];
 self.addEventListener("install", (e) => {
   e.waitUntil(caches.open(CACHE).then((c) => c.addAll(CORE)).then(() => self.skipWaiting()));
