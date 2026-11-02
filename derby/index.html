@@ -2564,7 +2564,7 @@ function TicketConfirm({setup,bets,onGo}){
 }
 
 /* ---------------- 🏆 8인 크레딧 순위 (공유 서버: Firebase Realtime Database REST) ---------------- */
-const LEAGUE_URL='';   // 예: https://link-derby-xxxx-default-rtdb.asia-southeast1.firebasedatabase.app  (비어 있으면 공유 꺼짐)
+const LEAGUE_URL='https://link-derby-default-rtdb.asia-southeast1.firebasedatabase.app';   // 예: https://link-derby-xxxx-default-rtdb.asia-southeast1.firebasedatabase.app  (비어 있으면 공유 꺼짐)
 const League={
   on(){ return !!LEAGUE_URL; },
   key(n){ return encodeURIComponent(n.replace(/[.#$\[\]\/]/g,'_')); },
