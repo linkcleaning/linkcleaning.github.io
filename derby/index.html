@@ -580,6 +580,10 @@ function ik(hx,hy,fx,fy,L1,L2,sign){
   const ja=a+sign*b;
   return [hx+Math.cos(ja)*L1, hy+Math.sin(ja)*L1, fx, fy];
 }
+// 두 점 사이를 굵기가 변하는 둥근 사지(살)로 채움
+function limb(ctx,x1,y1,x2,y2,w1,w2){ const a=Math.atan2(y2-y1,x2-x1), nx=-Math.sin(a), ny=Math.cos(a);
+  ctx.beginPath(); ctx.moveTo(x1+nx*w1/2,y1+ny*w1/2); ctx.lineTo(x2+nx*w2/2,y2+ny*w2/2);
+  ctx.arc(x2,y2,w2/2,a+Math.PI/2,a-Math.PI/2,true); ctx.lineTo(x1-nx*w1/2,y1-ny*w1/2); ctx.arc(x1,y1,w1/2,a-Math.PI/2,a+Math.PI/2,true); ctx.closePath(); ctx.fill(); }
 function drawGallopLeg(ctx,h,leg,u,amp,P,col){
   const fore=leg.fore;
   const hip=fore?P(22,-52):P(-30,-62);
@@ -587,21 +591,28 @@ function drawGallopLeg(ctx,h,leg,u,amp,P,col){
   const fx=hip[0]+fxr, fy=fyr-8;                         // 구절(fetlock) 위치
   const L1=fore?26:31, L2=fore?27:30;
   const [jx,jy,ex,ey]=ik(hip[0],hip[1],fx,fy,L1,L2,fore?-1:1);
-  ctx.lineCap='round'; ctx.lineJoin='round'; ctx.strokeStyle=col;
-  // 상완/대퇴 근육
-  ctx.lineWidth=fore?13:17; ctx.beginPath(); ctx.moveTo(hip[0],hip[1]-6); ctx.lineTo((hip[0]+jx)/2,(hip[1]+jy)/2); ctx.stroke();
-  ctx.lineWidth=fore?9:10; ctx.beginPath(); ctx.moveTo(hip[0],hip[1]); ctx.lineTo(jx,jy); ctx.stroke();
-  // 관부(정강이)
+  ctx.fillStyle=col;
+  // 상완/대퇴: 위는 두툼한 근육, 아래로 갈수록 가늘게
+  const mx=(hip[0]+jx)/2, my=(hip[1]+jy)/2;
+  limb(ctx,hip[0],hip[1]-6,mx,my,fore?15:21,fore?11:13);
+  limb(ctx,mx,my,jx,jy,fore?11:13,fore?7.5:8.5);
+  // 무릎(앞)·비절(뒤) 관절 돌기
+  ctx.beginPath(); ctx.ellipse(jx,jy,fore?4.6:5.2,fore?4:4.6,0,0,6.283); ctx.fill();
+  if(!fore){ ctx.beginPath(); ctx.arc(jx-3,jy-1,3.4,0,6.283); ctx.fill(); }   // 비절 뒤쪽 뾰족한 끝
+  // 관부(정강이): 가늘고 곧게, 힘줄 라인
   const sock=h.socks&&h.socks[leg.sock];
-  ctx.lineWidth=fore?6:6.5; ctx.beginPath(); ctx.moveTo(jx,jy); ctx.lineTo(ex,ey); ctx.stroke();
+  limb(ctx,jx,jy,ex,ey,fore?6.2:6.6,5.2);
+  ctx.strokeStyle='rgba(255,240,220,0.16)'; ctx.lineWidth=1; ctx.beginPath(); ctx.moveTo(jx+1.5,jy+3); ctx.lineTo(ex+1,ey-3); ctx.stroke();
   // 계부 + 발굽 (착지 시 평평, 들 때 뒤로 접힘)
   const la=Math.atan2(ey-jy,ex-jx);
   const pa = fyr>-0.5 ? Math.PI/2-0.75 : la+(fore?1.1:0.7)*flex;
-  const px=ex+Math.cos(pa)*7, py=ey+Math.sin(pa)*7;
-  if(sock){ ctx.strokeStyle='#f3f1ea'; ctx.lineWidth=6.5; ctx.beginPath(); ctx.moveTo((jx+ex*2)/3,(jy+ey*2)/3); ctx.lineTo(ex,ey); ctx.lineTo(px,py); ctx.stroke(); }
-  else { ctx.lineWidth=5.5; ctx.beginPath(); ctx.moveTo(ex,ey); ctx.lineTo(px,py); ctx.stroke(); }
+  const px=ex+Math.cos(pa)*7.5, py=ey+Math.sin(pa)*7.5;
+  if(sock){ ctx.fillStyle='#f3f1ea'; limb(ctx,(jx+ex*2)/3,(jy+ey*2)/3,ex,ey,5.6,5.6); limb(ctx,ex,ey,px,py,6,5); }
+  else { limb(ctx,ex,ey,px,py,6,5); }
+  ctx.fillStyle=sock?'#e8e4da':col; ctx.beginPath(); ctx.ellipse(ex,ey,3.8,3.3,0,0,6.283); ctx.fill();   // 구절 볼록
   ctx.fillStyle='#16110e'; ctx.save(); ctx.translate(px,py); ctx.rotate(pa-Math.PI/2); ctx.beginPath();
-  ctx.moveTo(-3.5,-1); ctx.lineTo(3.5,-1); ctx.lineTo(5,3.5); ctx.lineTo(-4,3.5); ctx.closePath(); ctx.fill(); ctx.restore();
+  ctx.moveTo(-3.6,-1.2); ctx.lineTo(3.6,-1.2); ctx.lineTo(5.4,3.8); ctx.quadraticCurveTo(0.5,5.2,-4.4,3.8); ctx.closePath(); ctx.fill();
+  ctx.fillStyle='rgba(255,255,255,0.15)'; ctx.fillRect(-3,-1,2,4); ctx.restore();
 }
 function drawSilk(ctx,silk,path){
   ctx.save(); path(); ctx.fillStyle=silk.base; ctx.fill(); ctx.clip();
@@ -703,7 +714,12 @@ function drawHorse(ctx,h,x,y,s,phase,amp,o){
   ctx.fillStyle='rgba(255,255,255,0.5)'; ctx.beginPath(); ctx.ellipse(68,-106,3.2,2.4,0.6,0,6.283); ctx.fill();
   ctx.fillStyle='#0b0b0b'; ctx.beginPath(); ctx.ellipse(68,-106,2.4,2,0.6,0,6.283); ctx.fill();
   ctx.fillStyle='rgba(255,255,255,0.8)'; ctx.beginPath(); ctx.arc(68.8,-106.8,0.7,0,6.283); ctx.fill();
-  ctx.fillStyle='rgba(0,0,0,0.6)'; ctx.beginPath(); ctx.ellipse(89,-86,2.2,1.4,0.7,0,6.283); ctx.fill();
+  ctx.fillStyle='rgba(0,0,0,0.65)'; ctx.beginPath(); ctx.ellipse(89,-86,2.2+amp*1.1,1.4+amp*0.6,0.7,0,6.283); ctx.fill();   // 콧구멍 (질주할수록 벌름)
+  ctx.strokeStyle='rgba(255,255,255,0.18)'; ctx.lineWidth=0.9; ctx.beginPath(); ctx.arc(89,-86,3.4+amp,3.6,5.2); ctx.stroke();
+  if(amp>0.7){ ctx.fillStyle='rgba(255,255,255,0.75)'; [[81,-80.5,1.5],[83.5,-79.6,1.1],[79.5,-81.6,1]].forEach(([a,b2,r])=>{ ctx.beginPath(); ctx.arc(a,b2,r,0,6.283); ctx.fill(); }); }   // 재갈 거품
+  // 볼 근육(교근) 하이라이트 + 눈 위 뼈
+  ctx.fillStyle='rgba(255,250,235,0.14)'; ctx.beginPath(); ctx.ellipse(64,-99,6,4.5,0.7,0,6.283); ctx.fill();
+  ctx.strokeStyle='rgba(0,0,0,0.25)'; ctx.lineWidth=0.9; ctx.beginPath(); ctx.arc(68,-106,4.2,3.6,5.6); ctx.stroke();
   ctx.strokeStyle='rgba(0,0,0,0.4)'; ctx.lineWidth=1; ctx.beginPath(); ctx.moveTo(86,-79.5); ctx.lineTo(80,-81); ctx.stroke();
   // 굴레 + 재갈 + 차안대(블링커)
   ctx.strokeStyle='#2a1d14'; ctx.lineWidth=1.8; ctx.beginPath(); ctx.moveTo(58,-115); ctx.lineTo(70,-90); ctx.moveTo(64,-101); ctx.lineTo(88,-91); ctx.moveTo(70,-90); ctx.lineTo(80,-82); ctx.stroke();
@@ -737,34 +753,48 @@ function drawHorse(ctx,h,x,y,s,phase,amp,o){
   // 기수 그림자 (말 등 위)
   ctx.fillStyle='rgba(0,0,0,0.18)'; ctx.beginPath(); ctx.ellipse(6,-88,16,3,0,0,6.283); ctx.fill();
   ctx.lineCap='round'; ctx.lineJoin='round';
-  // 하의(흰 바지) — 허벅지·정강이, 음영
-  ctx.strokeStyle='#ebe8df'; ctx.lineWidth=9; ctx.beginPath(); ctx.moveTo(-4,-100); ctx.lineTo(14,-94); ctx.stroke();
-  ctx.strokeStyle='rgba(0,0,0,0.12)'; ctx.lineWidth=3; ctx.beginPath(); ctx.moveTo(-3,-97); ctx.lineTo(13,-91.5); ctx.stroke();
-  ctx.strokeStyle='#ebe8df'; ctx.lineWidth=6.5; ctx.beginPath(); ctx.moveTo(14,-94); ctx.lineTo(8,-84); ctx.stroke();
-  // 부츠(검정 + 갈색 테두리) + 등자
-  ctx.strokeStyle='#121212'; ctx.lineWidth=6; ctx.beginPath(); ctx.moveTo(10,-87); ctx.lineTo(5,-79); ctx.stroke();
-  ctx.strokeStyle='#8a5a2b'; ctx.lineWidth=6.5; ctx.beginPath(); ctx.moveTo(10.5,-88); ctx.lineTo(9.5,-86.5); ctx.stroke();
-  ctx.strokeStyle='#c9ced6'; ctx.lineWidth=1.5; ctx.beginPath(); ctx.moveTo(2,-78); ctx.lineTo(9,-78); ctx.stroke();
-  // 상체(복색)
-  drawSilk(ctx,h.silk,()=>{ ctx.beginPath(); ctx.moveTo(-12,-104); ctx.quadraticCurveTo(-8,-95,-2,-93); ctx.lineTo(26,-107); ctx.quadraticCurveTo(24,-115,19,-119); ctx.closePath(); });
-  ctx.strokeStyle='rgba(0,0,0,0.3)'; ctx.lineWidth=1; ctx.beginPath(); ctx.moveTo(-12,-104); ctx.quadraticCurveTo(-8,-95,-2,-93); ctx.lineTo(26,-107); ctx.stroke();
-  ctx.fillStyle='rgba(255,255,255,0.18)'; ctx.beginPath(); ctx.moveTo(-10,-104); ctx.lineTo(18,-118); ctx.lineTo(20,-115); ctx.lineTo(-6,-101); ctx.closePath(); ctx.fill();
-  // 팔: 말 목의 펌핑에 맞춰 고삐를 밀어줌 (소매 + 커프스)
+  // 다리: 엉덩이를 들고 무릎을 높게(기갑 쪽), 종아리는 뒤로 — 흰 바지 + 무릎 음영
+  const hipX=-4, hipY=-101, knX=16, knY=-97, anX=7, anY=-85;
+  ctx.fillStyle='#ece9e1'; limb(ctx,hipX,hipY,knX,knY,10.5,7.5); limb(ctx,knX,knY,anX+1,anY-1,7,5.2);
+  ctx.fillStyle='rgba(0,0,0,0.13)'; limb(ctx,hipX+1,hipY+2.5,knX-1,knY+2.2,4,3);
+  ctx.fillStyle='#f7f5ef'; ctx.beginPath(); ctx.arc(knX+0.6,knY-0.6,2.2,0,6.283); ctx.fill();   // 무릎 하이라이트
+  // 부츠(검정 가죽 + 갈색 커프) — 발끝은 등자에
+  ctx.fillStyle='#141414'; limb(ctx,anX+2,anY-3,4,-78.5,5.4,4.4);
+  ctx.beginPath(); ctx.moveTo(1.5,-80.5); ctx.lineTo(11,-79.5); ctx.quadraticCurveTo(12,-77.2,9,-76.8); ctx.lineTo(1,-77.6); ctx.closePath(); ctx.fill();
+  ctx.fillStyle='#8a5a2b'; limb(ctx,anX+3.2,anY-4.6,anX+2.2,anY-2.8,6,6);
+  ctx.fillStyle='rgba(255,255,255,0.18)'; ctx.fillRect(5,-83,1.2,4);
+  ctx.strokeStyle='#c9ced6'; ctx.lineWidth=1.6; ctx.beginPath(); ctx.moveTo(1,-77); ctx.lineTo(10,-77); ctx.stroke();   // 등자
+  // 상체(복색): 수평으로 낮게 엎드린 등, 어깨 쪽이 살짝 높음
+  const torso=()=>{ ctx.beginPath(); ctx.moveTo(-9,-108); ctx.bezierCurveTo(-9,-98,-3,-95,4,-97); ctx.lineTo(25,-106);
+    ctx.bezierCurveTo(28,-110,26,-117,21,-119); ctx.bezierCurveTo(10,-119,-2,-116,-9,-108); ctx.closePath(); };
+  drawSilk(ctx,h.silk,torso);
+  ctx.save(); torso(); ctx.clip();
+  const tg=ctx.createLinearGradient(0,-119,0,-95); tg.addColorStop(0,'rgba(255,255,255,0.28)'); tg.addColorStop(0.45,'rgba(255,255,255,0)'); tg.addColorStop(1,'rgba(0,0,0,0.28)');
+  ctx.fillStyle=tg; ctx.fillRect(-12,-122,40,30);
+  ctx.strokeStyle='rgba(0,0,0,0.16)'; ctx.lineWidth=1; for(let k=0;k<3;k++){ ctx.beginPath(); ctx.moveTo(-2+k*7,-114+k); ctx.quadraticCurveTo(1+k*7,-108,-1+k*7,-101); ctx.stroke(); }  // 옷 주름
+  ctx.restore();
+  ctx.strokeStyle='rgba(0,0,0,0.35)'; ctx.lineWidth=1; torso(); ctx.stroke();
+  ctx.fillStyle='#ece9e1'; ctx.beginPath(); ctx.ellipse(-7,-104,4.6,5.5,0.3,0,6.283); ctx.fill();   // 엉덩이(흰 바지)
+  // 팔: 어깨→팔꿈치(살짝 바깥)→손, 말 목 펌핑에 맞춰 고삐를 밀어줌
   const push=amp*5*Math.sin(6.283*(u-0.28));
-  const ex=33+push*0.6, ey=-103, hx=45+push, hy=-96;
-  ctx.strokeStyle=h.silk.base; ctx.lineWidth=6; ctx.beginPath(); ctx.moveTo(21,-114); ctx.lineTo(ex,ey); ctx.lineTo(hx,hy); ctx.stroke();
-  ctx.strokeStyle=h.silk.accent; ctx.lineWidth=6.2; ctx.beginPath(); ctx.moveTo(hx-4*(hx-ex)/14,hy-4*(hy-ey)/14); ctx.lineTo(hx-1.5*(hx-ex)/14,hy-1.5*(hy-ey)/14); ctx.stroke();
-  ctx.fillStyle='#f6f4ee'; ctx.beginPath(); ctx.arc(hx+0.5,hy,2.9,0,6.283); ctx.fill();   // 장갑
-  ctx.strokeStyle='#2b1d12'; ctx.lineWidth=1.3; ctx.beginPath(); ctx.moveTo(hx,hy); ctx.quadraticCurveTo(hx+12,hy+3,70+nb*20,-96+nb*30); ctx.stroke();
+  const shX=20, shY=-114, ex=33+push*0.6, ey=-104, hx=45+push, hy=-97;
+  ctx.fillStyle=shade(h.silk.base,-18); limb(ctx,shX,shY,ex,ey,7,5.6);
+  ctx.fillStyle=h.silk.base; limb(ctx,shX,shY-0.5,ex,ey-0.5,6,4.8); limb(ctx,ex,ey,hx-2,hy-0.6,5,4.2);
+  ctx.fillStyle=h.silk.accent; limb(ctx,hx-6,hy-2.2,hx-2.5,hy-1,5,4.6);                       // 소매 커프스
+  ctx.fillStyle='#f6f4ee'; ctx.beginPath(); ctx.ellipse(hx+0.4,hy,3.2,2.7,0.3,0,6.283); ctx.fill();   // 장갑
+  ctx.strokeStyle='#2b1d12'; ctx.lineWidth=1.4; ctx.beginPath(); ctx.moveTo(hx,hy); ctx.quadraticCurveTo(hx+12,hy+3,70+nb*20,-96+nb*30); ctx.stroke();
   if(o.whip){
     const wa=Math.sin(o.t*14)*0.9;
     ctx.save(); ctx.translate(40+push,-98); ctx.rotate(-2.2+wa); ctx.strokeStyle='#1b1b1b'; ctx.lineWidth=2; ctx.beginPath(); ctx.moveTo(0,0); ctx.lineTo(30,0); ctx.stroke();
     ctx.fillStyle='#1b1b1b'; ctx.fillRect(29,-1.8,5,3.6); ctx.restore();
   }
   // 목 + 얼굴 + 헬멧(캡 커버, 챙, 꼭지) + 고글
-  ctx.fillStyle='#e9b994'; ctx.fillRect(24,-116,5,4);
+  ctx.fillStyle='#e2ad86'; limb(ctx,24,-114,29,-117,4.6,4.4);                                       // 목
   ctx.fillStyle='#f1c9a5'; ctx.beginPath(); ctx.ellipse(33,-118,5.2,5.6,0.2,0,6.283); ctx.fill();
-  ctx.fillStyle='rgba(0,0,0,0.12)'; ctx.beginPath(); ctx.ellipse(31,-115.5,3.4,2.2,0,0,6.283); ctx.fill();
+  ctx.beginPath(); ctx.moveTo(37.5,-118.5); ctx.lineTo(39.6,-116.4); ctx.lineTo(37.4,-115.6); ctx.closePath(); ctx.fill();   // 코
+  ctx.fillStyle='rgba(0,0,0,0.13)'; ctx.beginPath(); ctx.ellipse(31,-115.5,3.4,2.2,0,0,6.283); ctx.fill();
+  ctx.strokeStyle='rgba(120,60,40,0.55)'; ctx.lineWidth=0.8; ctx.beginPath(); ctx.moveTo(35.5,-114.2); ctx.lineTo(37.6,-114.6); ctx.stroke();   // 입
+  ctx.strokeStyle='#222'; ctx.lineWidth=0.9; ctx.beginPath(); ctx.moveTo(29,-117); ctx.quadraticCurveTo(32,-112.5,35,-114); ctx.stroke();  // 턱끈
   const cg=ctx.createRadialGradient(28,-125,1,30,-121,8.5); cg.addColorStop(0,shade(h.cap,45)); cg.addColorStop(1,h.cap);
   ctx.fillStyle=cg; ctx.beginPath(); ctx.arc(30,-121,7.6,Math.PI*0.95,Math.PI*2.15); ctx.closePath(); ctx.fill();
   ctx.strokeStyle='rgba(0,0,0,0.4)'; ctx.lineWidth=0.9; ctx.stroke();
