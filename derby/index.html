@@ -2574,6 +2574,7 @@ function TicketConfirm({setup,bets,onGo}){
 }
 
 /* ---------------- 🏆 8인 크레딧 순위 (공유 서버: Firebase Realtime Database REST) ---------------- */
+const ADMIN_NAME='한승우';   // 관리인
 const LEAGUE_URL='https://link-derby-default-rtdb.asia-southeast1.firebasedatabase.app';   // 예: https://link-derby-xxxx-default-rtdb.asia-southeast1.firebasedatabase.app  (비어 있으면 공유 꺼짐)
 const League={
   on(){ return !!LEAGUE_URL; },
@@ -2583,11 +2584,71 @@ const League={
   async putAvatar(me,data){ if(!this.on()||!me) return false;
     try{ const r=await fetch(`${LEAGUE_URL.replace(/\/$/,'')}/derby/avatars/${this.key(me)}.json`,{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify(data)}); return r.ok; }catch(e){ return false; } },
   async avatars(){ if(!this.on()) return {}; try{ const r=await fetch(`${LEAGUE_URL.replace(/\/$/,'')}/derby/avatars.json`); if(!r.ok) return {}; const d=await r.json()||{}; const o={}; Object.keys(d).forEach(k=>o[decodeURIComponent(k)]=d[k]); return o; }catch(e){ return {}; } },
+  base(){ return LEAGUE_URL.replace(/\/$/,''); },
+  async req(path,method,body){ if(!this.on()) return null; try{ const r=await fetch(`${this.base()}/derby/${path}.json`,{method:method||'GET',headers:{'Content-Type':'application/json'},body:body===undefined?undefined:JSON.stringify(body)}); if(!r.ok) return null; return await r.json(); }catch(e){ return null; } },
+  sendGift(to,g){ return this.req(`gifts/${this.key(to)}`,'POST',{...g,ts:Date.now()}); },
+  async myGifts(me){ const d=await this.req(`gifts/${this.key(me)}`); return d?Object.entries(d).map(([id,g])=>({id,...g})):[]; },
+  delGift(me,id){ return this.req(`gifts/${this.key(me)}/${id}`,'DELETE'); },
   async list(){ if(!this.on()) return null;
     try{ const r=await fetch(`${LEAGUE_URL.replace(/\/$/,'')}/derby/players.json`); if(!r.ok) return null; const d=await r.json()||{}; return Object.values(d).filter(x=>x&&x.name).sort((a,b)=>(b.credit||0)-(a.credit||0)); }catch(e){ return null; } } };
 function thumb(dataUrl,cb){ if(!dataUrl) return cb(''); const im=new Image(); im.onload=()=>{ const c=document.createElement('canvas'); c.width=c.height=48; c.getContext('2d').drawImage(im,0,0,48,48); cb(c.toDataURL('image/jpeg',0.7)); }; im.onerror=()=>cb(''); im.src=dataUrl; }
-function myRecord(me,credit,stable,stats){ const c=Club.get(); return {credit:Math.round(credit),horse:ROSTER[me]||(stable&&stable.name)||'',club:c.name||'',prize:(stable&&stable.prize)||0,wins:(stable&&stable.w&&stable.w[0])||0,hits:(stats&&stats.hits)||0,races:(stats&&stats.races)||0,best:(stats&&stats.best)||0}; }
-function LeagueModal({me,credit,stable,stats,onClose,onWho}){
+function myRecord(me,credit,stable,stats){ const c=Club.get(); return {title:ls.get('sd_title',''),admin:me===ADMIN_NAME,credit:Math.round(credit),horse:ROSTER[me]||(stable&&stable.name)||'',club:c.name||'',prize:(stable&&stable.prize)||0,wins:(stable&&stable.w&&stable.w[0])||0,hits:(stats&&stats.hits)||0,races:(stats&&stats.races)||0,best:(stats&&stats.best)||0}; }
+async function sha(t){ try{ const b=await crypto.subtle.digest('SHA-256',new TextEncoder().encode('LD|'+t)); return [...new Uint8Array(b)].map(x=>x.toString(16).padStart(2,'0')).join(''); }catch(e){ return 'x'+t; } }
+const GIFT_AMTS=[100,500,1000,3000,5000];
+function AdminModal({onClose,players}){
+  const [stage,setStage]=useState('pin'); const [pin,setPin]=useState(''); const [pin2,setPin2]=useState(''); const [hasPin,setHasPin]=useState(null); const [err,setErr]=useState('');
+  const [to,setTo]=useState([]); const [amt,setAmt]=useState(1000); const [items,setItems]=useState(false); const [title,setTitle]=useState(''); const [msg,setMsg]=useState(''); const [sent,setSent]=useState('');
+  useEffect(()=>{ League.req('admin').then(d=>setHasPin(!!(d&&d.pin))); },[]);
+  const unlock=async()=>{ setErr(''); if(hasPin){ const d=await League.req('admin'); if(d&&d.pin===await sha(pin)){ setStage('panel'); Sound.coin(); } else { setErr('비밀번호가 틀려요'); Sound.miss(); } }
+    else { if(pin.length<4){ setErr('4자리 이상으로 정해 주세요'); return; } if(pin!==pin2){ setErr('두 번 입력한 비밀번호가 달라요'); return; } await League.req('admin','PUT',{pin:await sha(pin)}); setStage('panel'); Sound.coin(); } };
+  const names=Object.keys(ROSTER);
+  const send=async()=>{ if(!to.length){ setErr('받을 사람을 골라 주세요'); return; } setErr(''); setSent('보내는 중…');
+    const g={from:ADMIN_NAME,cr:Math.max(0,Math.round(amt)||0),items:items?1:0,title:title.trim(),msg:msg.trim()};
+    const r=await Promise.all(to.map(n=>League.sendGift(n,g))); const ok=r.filter(Boolean).length;
+    setSent(ok===to.length?`✅ ${to.join(', ')}님에게 보냈어요! (앱을 열면 바로 받아요)`:`⚠️ ${ok}/${to.length}명만 보냈어요. 인터넷을 확인해 주세요`); if(ok) Sound.jackpot(false); };
+  return (<div className="fixed inset-0 overflow-y-auto" style={{zIndex:75,background:'rgba(0,0,0,.9)'}} onClick={onClose}>
+    <div className="max-w-md mx-auto p-3 pt-6" onClick={e=>e.stopPropagation()}>
+      <div className="glass rounded-3xl p-4 pop">
+        <div className="flex items-center"><div className="fx-title text-[22px] gold">👑 관리인 선물함</div><button onClick={onClose} className="ml-auto w-9 h-9 rounded-full bg-white/10 text-xl">×</button></div>
+        {stage==='pin' ? <div className="mt-3">
+          <p className="text-[12.5px] text-blue-100/85">{hasPin===null?'확인 중…':hasPin?'관리인 비밀번호를 입력하세요.':'처음이에요! 관리인 비밀번호를 정해 주세요 (다른 사람이 못 쓰게).'}</p>
+          <input type="password" inputMode="numeric" value={pin} onChange={e=>setPin(e.target.value)} placeholder="비밀번호" className="w-full mt-2 px-3 py-2.5 rounded-xl bg-black/40 border border-white/15 text-white outline-none"/>
+          {hasPin===false && <input type="password" inputMode="numeric" value={pin2} onChange={e=>setPin2(e.target.value)} placeholder="한 번 더" className="w-full mt-2 px-3 py-2.5 rounded-xl bg-black/40 border border-white/15 text-white outline-none"/>}
+          {err && <div className="text-red-300 text-[12px] mt-1">{err}</div>}
+          <button disabled={hasPin===null} onClick={unlock} className="w-full mt-3 py-3 rounded-xl font-black bg-gradient-to-b from-yellow-300 to-orange-500 text-black">{hasPin?'열기':'비밀번호 정하고 열기'}</button>
+        </div> : <div className="mt-2">
+          <div className="text-[12px] font-black text-yellow-200">1. 받을 사람 (여러 명 가능)</div>
+          <div className="grid grid-cols-4 gap-1.5 mt-1">{names.map(n=>{ const on=to.includes(n), pl=(players||[]).find(p=>p.name===n); return (
+            <button key={n} onClick={()=>setTo(t=>on?t.filter(x=>x!==n):[...t,n])} className={`rounded-xl py-1.5 text-[12px] font-black leading-tight ${on?'bg-yellow-300 text-black':'bg-white/10'}`}>{n}<div className={`text-[9.5px] font-bold ${on?'text-black/60':'text-blue-200/70'}`}>{pl?fmt(pl.credit||0):'-'}</div></button>); })}</div>
+          <button onClick={()=>setTo(to.length===names.length?[]:names)} className="mt-1 text-[11px] text-blue-200 underline">{to.length===names.length?'모두 해제':'8명 모두 선택'}</button>
+          <div className="text-[12px] font-black text-yellow-200 mt-3">2. 💰 크레딧</div>
+          <div className="flex flex-wrap gap-1.5 mt-1">{GIFT_AMTS.map(a=><button key={a} onClick={()=>setAmt(a)} className={`px-2.5 py-1.5 rounded-lg text-[12px] font-black ${amt===a?'bg-yellow-300 text-black':'bg-white/10'}`}>{fmt(a)}</button>)}
+            <input type="number" value={amt} onChange={e=>setAmt(Number(e.target.value))} className="w-24 px-2 py-1.5 rounded-lg bg-black/40 border border-white/15 text-white text-[12px] outline-none"/></div>
+          <div className="text-[12px] font-black text-yellow-200 mt-3">3. 🎁 혜택 (선택)</div>
+          <label className="flex items-center gap-2 mt-1 text-[12.5px]"><input type="checkbox" checked={items} onChange={e=>setItems(e.target.checked)}/>🛒 매점 아이템 4종 풀세트 (영양제·모래주머니·마훈자루·스파)</label>
+          <input value={title} maxLength={10} onChange={e=>setTitle(e.target.value)} placeholder="🏅 칭호 주기 (예: 이달의 MVP) — 순위표에 표시" className="w-full mt-1.5 px-3 py-2 rounded-xl bg-black/40 border border-white/15 text-white text-[12.5px] outline-none"/>
+          <input value={msg} maxLength={40} onChange={e=>setMsg(e.target.value)} placeholder="💌 한마디 (예: 이번 주 수고했어요!)" className="w-full mt-1.5 px-3 py-2 rounded-xl bg-black/40 border border-white/15 text-white text-[12.5px] outline-none"/>
+          {err && <div className="text-red-300 text-[12px] mt-1">{err}</div>}
+          <button onClick={send} className="w-full mt-3 py-3 rounded-xl font-black bg-gradient-to-b from-yellow-300 to-orange-500 text-black">🎁 {to.length?`${to.length}명에게`:''} 선물 보내기</button>
+          {sent && <div className="text-[12px] mt-2 text-emerald-200">{sent}</div>}
+        </div>}
+      </div></div></div>);
+}
+function GiftPopup({gifts,onTake}){
+  const total=gifts.reduce((a,g)=>a+(g.cr||0),0), its=gifts.some(g=>g.items), title=(gifts.find(g=>g.title)||{}).title, msgs=gifts.filter(g=>g.msg);
+  return (<div className="fixed inset-0 flex items-center justify-center p-5" style={{zIndex:80,background:'rgba(0,0,0,.8)'}}>
+    <div className="glass rounded-3xl p-5 w-full max-w-xs text-center pop">
+      <div style={{fontSize:60,lineHeight:1}}>🎁</div>
+      <div className="fx-title text-[22px] gold mt-1">관리인 선물 도착!</div>
+      <div className="text-[12.5px] text-blue-100/85 mt-0.5">👑 {ADMIN_NAME}님이 보냈어요</div>
+      {total>0 && <div className="fx-title text-[32px] text-yellow-300 mt-2">+{fmt(total)} CR</div>}
+      {its && <div className="text-[13px] font-bold mt-1">🛒 매점 아이템 풀세트 (다음 경주 적용)</div>}
+      {title && <div className="mt-1 inline-block px-2 py-0.5 rounded bg-fuchsia-500/70 text-[12px] font-black">🏅 칭호: {title}</div>}
+      {msgs.map(g=><div key={g.id} className="mt-2 rounded-xl bg-white/10 px-3 py-2 text-[13px]">💌 {g.msg}</div>)}
+      <button onClick={onTake} className="w-full mt-4 py-3 rounded-xl font-black bg-gradient-to-b from-yellow-300 to-orange-500 text-black">받기</button>
+    </div></div>);
+}
+function LeagueModal({me,credit,stable,stats,onClose,onWho,onAdmin}){
   const [list,setList]=useState(null); const [err,setErr]=useState(false); const [busy,setBusy]=useState(false);
   const load=async()=>{ setBusy(true); if(me){ const rec=myRecord(me,credit,stable,stats); await new Promise(r=>thumb(Club.get().logo,t=>{ rec.logo=t; r(); })); await League.push(me,rec); }
     const l=await League.list(); setErr(l===null); setList(l||[]); setBusy(false); };
@@ -2607,7 +2668,7 @@ function LeagueModal({me,credit,stable,stats,onClose,onWho}){
             <div key={p.name} className={`flex items-center gap-2.5 rounded-2xl px-3 py-2 ${mine?'bg-yellow-300/20 ring-2 ring-yellow-300':i<3?'bg-white/10':'bg-white/5'}`}>
               <div className="w-7 text-center font-black text-[18px]">{medal(i)}</div>
               {p.logo?<img src={p.logo} alt="" style={{width:34,height:34,borderRadius:17,objectFit:'cover',border:'2px solid #ffd43b'}}/>:<div className="rounded-full bg-white/10 flex items-center justify-center text-[16px]" style={{width:34,height:34}}>🐎</div>}
-              <div className="flex-1 min-w-0"><div className="font-black text-[14.5px] truncate">{p.name}{mine&&<span className="text-yellow-300 text-[11px]"> (나)</span>}</div>
+              <div className="flex-1 min-w-0"><div className="font-black text-[14.5px] truncate">{p.admin&&'👑 '}{p.name}{mine&&<span className="text-yellow-300 text-[11px]"> (나)</span>}{p.title&&<span className="ml-1 px-1.5 py-0.5 rounded bg-fuchsia-500/70 text-[10px] font-black align-middle">🏅 {p.title}</span>}</div>
                 <div className="text-[11px] text-blue-200/80 truncate">🐎 {p.horse}{p.club?` · ${p.club}`:''} · 우승 {p.wins||0}회</div></div>
               <div className="text-right"><div className="font-black text-[16px] text-yellow-300">{fmt(p.credit||0)}</div><div className="text-[9.5px] text-blue-200/60">{p.ts?new Date(p.ts).toLocaleDateString('ko-KR',{month:'numeric',day:'numeric'}):''}</div></div>
             </div>); })}
@@ -2622,6 +2683,7 @@ function LeagueModal({me,credit,stable,stats,onClose,onWho}){
             </div>
           </div>}
         <button onClick={share} className="w-full mt-3 py-2.5 rounded-xl font-black text-black text-[14px]" style={{background:'#FEE500'}}>💬 내 기록 카톡으로 자랑하기</button>
+        {me===ADMIN_NAME && League.on() && <button onClick={()=>onAdmin&&onAdmin(list)} className="w-full mt-2 py-2.5 rounded-xl font-black text-[14px] bg-gradient-to-r from-fuchsia-600 to-purple-700">👑 관리인 선물함 (크레딧·혜택 주기)</button>}
       </div></div></div>);
 }
 
@@ -3008,9 +3070,12 @@ function App(){
   const [claims,setClaims]=useState(()=>ls.get('sd_claims',[]));
   const [vtest,setVtest]=useState(false);
   const [league,setLeague]=useState(false);
-  const lastPush=useRef(0);
+  const [admin,setAdmin]=useState(null);
+  const [gifts,setGifts]=useState([]);
+  const lastPush=useRef(0); const takenGifts=useRef(new Set());
   const [me,setMe]=useState(()=>ls.get('sd_me',''));
   const [who,setWho]=useState(()=>!ls.get('sd_me',''));
+  useEffect(()=>{ if(!League.on()||!me) return; let alive=true; const chk=()=>League.myGifts(me).then(g=>{ g=g.filter(x=>!takenGifts.current.has(x.id)); if(alive&&g.length) setGifts(g); }); const t0=setTimeout(chk,1500); const t=setInterval(chk,60000); return ()=>{ alive=false; clearTimeout(t0); clearInterval(t); }; },[me]);
   const pickMe=j=>{ Sound.init(); Sound.coin(); setMe(j); ls.set('sd_me',j);
     const horse=ROSTER[j];
     setStable(st=>{ const base=st||{spd:0,sta:0,kick:0,care:false,invested:0,prize:0,w:[0,0,0],races:0}; const ns={...base,name:horse}; ls.set('sd_stable',ns); return ns; });
@@ -3120,7 +3185,12 @@ function App(){
           <button onClick={()=>{Sound.init();Sound.coin();setAttendMsg(null);}} className="w-full mt-3 py-3 rounded-xl font-black bg-gradient-to-b from-yellow-300 to-orange-500 text-black">받기</button>
         </div>
       </div>}
-      {league && <LeagueModal me={me} credit={credit} stable={stable} stats={stats} onClose={()=>setLeague(false)} onWho={()=>{ setLeague(false); setWho(true); }}/>}
+      {league && <LeagueModal me={me} credit={credit} stable={stable} stats={stats} onClose={()=>setLeague(false)} onWho={()=>{ setLeague(false); setWho(true); }} onAdmin={pl=>setAdmin(pl||[])}/>}
+      {admin && <AdminModal players={admin} onClose={()=>setAdmin(null)}/>}
+      {gifts.length>0 && phase==='paddock' && <GiftPopup gifts={gifts} onTake={()=>{ Sound.init(); Sound.jackpot(true); const total=gifts.reduce((a,g)=>a+(g.cr||0),0); setCredit(c=>c+total);
+          if(gifts.some(g=>g.items)) setStable(st=>({...(st||{name:ROSTER[me],spd:0,sta:0,kick:0,care:false,invested:0,prize:0,w:[0,0,0],races:0}),items:{nutri:true,sack:true,diet:true,spa:true}}));
+          const t=(gifts.find(g=>g.title)||{}).title; if(t) ls.set('sd_title',t);
+          gifts.forEach(g=>{ takenGifts.current.add(g.id); League.delGift(me,g.id); }); setGifts([]); }}/>}
       {who && <WhoModal me={me} onPick={pickMe} onClose={()=>me&&setWho(false)}/>}
       {rps==='game' && <RpsModal credit={credit} onClose={()=>setRps(false)} onReward={n=>setCredit(c=>c+n)}/>}
       {quiz && setup && <QuizModal setup={setup} onClose={()=>setQuiz(false)} onReward={n=>setCredit(c=>c+n)}/>}
