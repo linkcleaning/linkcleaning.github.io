@@ -2605,7 +2605,7 @@ function AdminModal({onClose,players}){
   const send=async()=>{ if(!to.length){ setErr('받을 사람을 골라 주세요'); return; } setErr(''); setSent('보내는 중…');
     const g={from:ADMIN_NAME,cr:Math.max(0,Math.round(amt)||0),items:items?1:0,title:title.trim(),msg:msg.trim()};
     const r=await Promise.all(to.map(n=>League.sendGift(n,g))); const ok=r.filter(Boolean).length;
-    setSent(ok===to.length?`✅ ${to.join(', ')}님에게 보냈어요! (앱을 열면 바로 받아요)`:`⚠️ ${ok}/${to.length}명만 보냈어요. 인터넷을 확인해 주세요`); if(ok) Sound.jackpot(false); };
+    setSent(ok===to.length?`✅ ${to.join(', ')}님에게 보냈어요! (앱을 열면 바로 받아요)`:`⚠️ ${ok}/${to.length}명만 보냈어요. 인터넷을 확인해 주세요`); if(ok) Sound.jackpot(false); setTimeout(()=>window.dispatchEvent(new Event('ld-gift-check')),600); };
   return (<div className="fixed inset-0 overflow-y-auto" style={{zIndex:75,background:'rgba(0,0,0,.9)'}} onClick={onClose}>
     <div className="max-w-md mx-auto p-3 pt-6" onClick={e=>e.stopPropagation()}>
       <div className="glass rounded-3xl p-4 pop">
@@ -3075,7 +3075,8 @@ function App(){
   const lastPush=useRef(0); const takenGifts=useRef(new Set());
   const [me,setMe]=useState(()=>ls.get('sd_me',''));
   const [who,setWho]=useState(()=>!ls.get('sd_me',''));
-  useEffect(()=>{ if(!League.on()||!me) return; let alive=true; const chk=()=>League.myGifts(me).then(g=>{ g=g.filter(x=>!takenGifts.current.has(x.id)); if(alive&&g.length) setGifts(g); }); const t0=setTimeout(chk,1500); const t=setInterval(chk,60000); return ()=>{ alive=false; clearTimeout(t0); clearInterval(t); }; },[me]);
+  useEffect(()=>{ if(!League.on()||!me) return; let alive=true; const chk=()=>League.myGifts(me).then(g=>{ g=g.filter(x=>!takenGifts.current.has(x.id)); if(alive&&g.length) setGifts(g); }); const t0=setTimeout(chk,1500); const t=setInterval(chk,30000); const onVis=()=>{ if(!document.hidden) chk(); }; document.addEventListener('visibilitychange',onVis); window.addEventListener('ld-gift-check',chk);
+    return ()=>{ alive=false; clearTimeout(t0); clearInterval(t); document.removeEventListener('visibilitychange',onVis); window.removeEventListener('ld-gift-check',chk); }; },[me]);
   const pickMe=j=>{ Sound.init(); Sound.coin(); setMe(j); ls.set('sd_me',j);
     const horse=ROSTER[j];
     setStable(st=>{ const base=st||{spd:0,sta:0,kick:0,care:false,invested:0,prize:0,w:[0,0,0],races:0}; const ns={...base,name:horse}; ls.set('sd_stable',ns); return ns; });
