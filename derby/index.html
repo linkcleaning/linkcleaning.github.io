@@ -1867,8 +1867,9 @@ function Paddock({setup,credit,bets,setBets,onStart,onQuiz,onRps,onLeague,onEven
   const [,setAvVer]=useState(0);
   useEffect(()=>{ League.avatars().then(m=>{ Object.assign(AV.map,m); setAvVer(v=>v+1); }); },[]);
   useEffect(()=>{ if(!League.on()) return; let alive=true; const load=()=>League.list().then(l=>{ if(alive) setTop(l||[]); }); load(); const t=setInterval(load,60000); return ()=>{ alive=false; clearInterval(t); }; },[]);
-  const myRank=top?top.findIndex(p=>p.name===myName)+1:0;
-  const shortCr=n=>n>=10000?(Math.floor(n/1000)/10)+'만':fmt(n);
+  const live=top?(myName?[...top.filter(p=>p.name!==myName),{...(top.find(p=>p.name===myName)||{name:myName}),credit:Math.round(credit)}]:top).sort((a,b)=>(b.credit||0)-(a.credit||0)):null;   // 내 크레딧은 항상 지금 값으로
+  const myRank=live?live.findIndex(p=>p.name===myName)+1:0;
+  const shortCr=n=>n>=10000?(n/10000).toFixed(1).replace(/\.0$/,'')+'만':fmt(n);
   const [type,setType]=useState('WIN');
   const [sel,setSel]=useState([]);
   const [amt,setAmt]=useState(100);
@@ -1913,8 +1914,8 @@ function Paddock({setup,credit,bets,setBets,onStart,onQuiz,onRps,onLeague,onEven
       <div className="flex gap-1.5 mt-2" style={{alignItems:'stretch'}}>
         <button onClick={()=>{Sound.init();Sound.click();onLeague&&onLeague();}} className="flex-1 min-w-0 rounded-xl px-2.5 py-1.5 text-left" style={{background:'linear-gradient(90deg,rgba(245,159,0,.35),rgba(255,212,59,.15))',border:'1px solid rgba(255,212,59,.5)'}}>
           <div className="flex items-center text-[12.5px] font-black text-yellow-200">🏆 8인 순위<span className="ml-auto text-[10px] text-yellow-100/70 font-bold">전체 보기 ›</span></div>
-          <div className="text-[11.5px] font-bold text-white truncate mt-0.5">{top===null?'불러오는 중…':top.length?top.slice(0,3).map((p,i)=>`${['🥇','🥈','🥉'][i]}${p.name}${p.name===myName?'(나)':''} ${shortCr(p.credit||0)}`).join(' '):'첫 번째 주인공이 되어 보세요!'}</div>
-          {top&&myRank>3 && <div className="text-[10.5px] text-yellow-100/80 font-bold">내 순위 {myRank}위 · {fmt(credit)} CR</div>}
+          <div className="text-[11.5px] font-bold text-white truncate mt-0.5">{live===null?'불러오는 중…':live.length?live.slice(0,3).map((p,i)=>`${['🥇','🥈','🥉'][i]}${p.name}${p.name===myName?'(나)':''} ${shortCr(p.credit||0)}`).join(' '):'첫 번째 주인공이 되어 보세요!'}</div>
+          {live&&myRank>3 && <div className="text-[10.5px] text-yellow-100/80 font-bold">내 순위 {myRank}위 · {fmt(credit)} CR</div>}
         </button>
         <button onClick={()=>{Sound.init();Sound.click();onRps&&onRps();}} className="shrink-0 rounded-xl px-3 flex flex-col items-center justify-center font-black" style={{background:'linear-gradient(180deg,#1e293b,#0b1120)',border:'2px solid #2563eb',boxShadow:'0 0 10px rgba(37,99,235,.5)'}}>
           <span className="text-[13px] leading-none">✌️✊✋</span><span className="text-yellow-300 text-[13px] mt-0.5">짱켐보이</span><span className="text-[9px] text-blue-200/80 font-bold">1판 10 CR</span></button>
