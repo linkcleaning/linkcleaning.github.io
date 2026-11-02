@@ -461,13 +461,14 @@ const Club={ img:null,
   set(c){ try{ localStorage.setItem('sd_club',JSON.stringify(c)); }catch(e){} this.load(); },
   load(){ const c=this.get(); if(c.logo){ const i=new Image(); i.src=c.logo; this.img=i; } else this.img=null; } };
 Club.load();
-const MALE_RE=/injoon|in-joon|minsu|min-su|jian|hyunsu|bongjin|gookmin|seoyeon_m|male|남성|남자|kod|koc|ko-kr-standard-c|ko-kr-standard-d|wavenet-c|wavenet-d|neural2-c/i;
+const MALE_RE=/injoon|in-joon|minsu|min-su|jian|hyunsu|bongjin|gookmin|seoyeon_m|(^|[^e])male|남성|남자|kod|koc|ko-kr-standard-c|ko-kr-standard-d|wavenet-c|wavenet-d|neural2-c/i;
 const Voice={ on:true, ok:typeof window!=='undefined'&&'speechSynthesis' in window, v:null, curHot:false, male:false,
   list(){ try{ return speechSynthesis.getVoices().filter(v=>/^ko/i.test(v.lang)); }catch(e){ return []; } },
   pickVoice(){ try{
     const ko=this.list();
     let saved=''; try{ saved=localStorage.getItem('sd_voice')||''; }catch(e){}
-    this.v = (saved&&ko.find(v=>v.name===saved)) || ko.find(v=>MALE_RE.test(v.name)) || ko[0] || null;
+    const males=ko.filter(v=>MALE_RE.test(v.name));   // 남자 목소리가 있으면 무조건 남자 (PC·폰 동일)
+    this.v = (saved&&males.find(v=>v.name===saved)) || males[0] || ko[0] || null;
     this.male = !!(this.v && MALE_RE.test(this.v.name));
   }catch(e){} },
   setVoice(name){ try{ localStorage.setItem('sd_voice',name); }catch(e){} this.pickVoice(); this.say('안녕하세요, 링크 더비 중계를 맡은 아나운서입니다!',true); },
@@ -510,7 +511,7 @@ const Voice={ on:true, ok:typeof window!=='undefined'&&'speechSynthesis' in wind
       const u=new SpeechSynthesisUtterance(it.t);
       u.lang='ko-KR'; if(this.v && !this.noVoice) u.voice=this.v;
       u.rate=it.rate||Math.min(1.3,1.0+0.22*it.I+(it.hot?0.05:0));   // 또렷하게 들리도록 속도 완화
-      u.pitch=this.male?(1.0+0.12*it.I):(0.88+0.1*it.I);     // 음높이를 과하게 낮추면 뭉개져서 자연스럽게
+      u.pitch=this.male?(1.0+0.12*it.I):(0.66+0.08*it.I);     // 폰에 여자 목소리만 있으면 음을 낮춰 남자 아나운서처럼
       u.volume=1;
       this.cur=u;
       let done=false; const fin=()=>{ if(done||myTok!==this.tok) return; done=true; this.cur=null; this.wd=setTimeout(()=>this.next(),120); };
