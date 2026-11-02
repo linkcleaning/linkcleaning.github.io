@@ -64,25 +64,25 @@ const VENUES = [
     wx:[4,2,1.5,2,2], ad:['광안대교','부산 바다 축제','#1971c2','#fff'], hello:'광안대교 불빛이 반짝이는 부산경남 경마공원' },
   { id:'seoul', flag:'🇰🇷', country:'대한민국', city:'서울',   course:'서울 경마공원',     sky:'city', dirt:0.5,
     races:[['서울 그랑프리','G1'],['한강 스테이크스','G2'],['남산 마일','G3']],
-    wx:[4,2,1.5,1.5,1.5], ad:['SEOUL','서울 시티 레이스','#e03131','#fff'], hello:'빌딩 숲 사이 서울 경마공원' },
+    wx:[4,2,1.5,1.5,1.5], ad:['서울','시티 레이스','#e03131','#fff'], hello:'빌딩 숲 사이 서울 경마공원' },
   { id:'tokyo', flag:'🇯🇵', country:'일본', city:'도쿄',       course:'도쿄 경마장',       sky:'fuji', dirt:0.25,
     races:[['도쿄 사쿠라컵','G1'],['후지산 스테이크스','G2'],['신주쿠 마일','G3']],
-    wx:[4,2,1.5,1.5,1], ad:['TOKYO','도쿄 벚꽃 레이스','#f783ac','#fff'], hello:'멀리 후지산이 보이는 일본 도쿄 경마장' },
+    wx:[4,2,1.5,1.5,1], ad:['도쿄','벚꽃 레이스','#f783ac','#fff'], hello:'멀리 후지산이 보이는 일본 도쿄 경마장' },
   { id:'hk',    flag:'🇭🇰', country:'홍콩', city:'홍콩',       course:'홍콩 샤틴 경마장',  sky:'hongkong', dirt:0.2,
     races:[['홍콩 야경컵','G1'],['빅토리아 하버 마일','G2'],['샤틴 스프린트','G3']],
-    wx:[2,1.5,1.5,1,4], ad:['HONG KONG','100만 불 야경','#7048e8','#fff'], hello:'백만 불짜리 야경이 펼쳐진 홍콩 샤틴' },
+    wx:[2,1.5,1.5,1,4], ad:['홍콩','100만 불 야경','#7048e8','#fff'], hello:'백만 불짜리 야경이 펼쳐진 홍콩 샤틴' },
   { id:'dubai', flag:'🇦🇪', country:'아랍에미리트', city:'두바이', course:'두바이 메이단 경마장', sky:'desert', dirt:0.75,
     races:[['두바이 골드컵','G1'],['사막의 별 스테이크스','G2'],['오아시스 마일','G3']],
-    wx:[4,0.3,0.1,2,4], ad:['DUBAI','사막의 오일 왕자컵','#d4a017','#111'], hello:'황금빛 사막 위 두바이 메이단 경마장' },
+    wx:[4,0.3,0.1,2,4], ad:['두바이','오일 왕자컵','#d4a017','#111'], hello:'황금빛 사막 위 두바이 메이단 경마장' },
   { id:'paris', flag:'🇫🇷', country:'프랑스', city:'파리',     course:'파리 롱샹 경마장',  sky:'eiffel', dirt:0.05,
     races:[['파리 개선 그랑프리','G1'],['센강 스테이크스','G2'],['몽마르트 마일','G3']],
-    wx:[3,2.5,1.5,2,1], ad:['PARIS','봉주르 레이스','#364fc7','#fff'], hello:'에펠탑이 바라보는 프랑스 파리 롱샹 경마장' },
+    wx:[3,2.5,1.5,2,1], ad:['파리','봉주르 레이스','#364fc7','#fff'], hello:'에펠탑이 바라보는 프랑스 파리 롱샹 경마장' },
   { id:'london',flag:'🇬🇧', country:'영국', city:'런던',       course:'런던 애스콧 경마장', sky:'bigben', dirt:0.05,
     races:[['로열 런던컵','G1'],['템스 스테이크스','G2'],['빅벤 마일','G3']],
-    wx:[2,3,3,1,1], ad:['LONDON','로열 티타임','#c92a2a','#fff'], hello:'빅벤의 종소리가 들리는 영국 런던 애스콧' },
+    wx:[2,3,3,1,1], ad:['런던','로열 티타임','#c92a2a','#fff'], hello:'빅벤의 종소리가 들리는 영국 런던 애스콧' },
   { id:'kentucky',flag:'🇺🇸', country:'미국', city:'켄터키',  course:'켄터키 처칠 경마장', sky:'farm', dirt:0.85,
     races:[['켄터키 로즈 더비','G1'],['블루그래스 스테이크스','G2'],['버번 마일','G3']],
-    wx:[4,1.5,1.5,2,1], ad:['KENTUCKY','장미 담요 더비','#c2255c','#fff'], hello:'푸른 초원과 장미의 땅 미국 켄터키' },
+    wx:[4,1.5,1.5,2,1], ad:['켄터키','장미 담요 더비','#c2255c','#fff'], hello:'푸른 초원과 장미의 땅 미국 켄터키' },
 ];
 const venueOf = raceNo => VENUES[(raceNo-1)%VENUES.length];
 
@@ -916,8 +916,8 @@ const FIRE_GLOW=(()=>{ try{ const c=document.createElement('canvas'); c.width=20
   g.fillStyle=fg; g.fillRect(0,0,200,120); return c; }catch(e){ return document.createElement('canvas'); } })();
 const sZ = z => 0.62+0.38*z;
 const yZ = z => Y_FAR+(Y_NEAR-Y_FAR)*z;
-const ADS=[['링크클린','LINKCLEAN 제주 청소 전문','#0ca678','#fff'],['CREAMUS','크리머스 광안리 케이크','#f06595','#fff'],
-           ['하나토탈클린','HANA TOTAL CLEAN','#1c7ed6','#fff'],['LINK DERBY','링크 더비 경마','#ffd43b','#111'],['JEJU','제주 경마공원','#e8590c','#fff']];
+const ADS=[['링크클린','제주 청소 전문','#0ca678','#fff'],['크리머스','광안리 케이크','#f06595','#fff'],
+           ['하나토탈클린','토탈 클린 서비스','#1c7ed6','#fff'],['링크 더비','신나는 경마','#ffd43b','#111'],['제주','제주 경마공원','#e8590c','#fff']];
 
 class RaceEngine{
   constructor(canvas,setup,cb){
@@ -937,7 +937,7 @@ class RaceEngine{
     this.bets=(cb&&cb.bets)||[]; this.myNos=new Set(this.bets.flatMap(b=>b.sel));
     this.bg=buildBg(); this.wx=setup.weather;
     this.venue=setup.venue||VENUES[0]; this.skyline=buildSkyline(this.venue.sky, setup.weather==='야간'||setup.weather==='비');
-    this.ads=ADS.filter(a=>a[0]!=='JEJU').concat([this.venue.ad]); this.nextBolt=8+Math.random()*8;
+    this.ads=ADS.filter(a=>a[0]!=='제주').concat([this.venue.ad]); this.nextBolt=8+Math.random()*8;
     this.drops=[]; for(let i=0;i<220;i++) this.drops.push({x:Math.random()*(W+300),y:Math.random()*H,sp:900+Math.random()*700,len:18+Math.random()*26,a:0.25+Math.random()*0.35});
     if(this.wx==='비') Sound.rainStart();
     this.resize();
@@ -1413,8 +1413,8 @@ class RaceEngine{
       ctx.fillStyle='#222'; ctx.fillRect(ax0-3,ay-hgt-3,ax1-ax0+6,hgt+3); ctx.fillStyle=ad[2]; ctx.fillRect(ax0,ay-hgt,ax1-ax0,hgt); ctx.fillStyle='rgba(255,255,255,0.18)'; ctx.fillRect(ax0,ay-hgt,ax1-ax0,hgt*0.3);
       ctx.fillStyle='rgba(0,0,0,0.25)'; ctx.fillRect(ax0,ay-3,ax1-ax0,3);
       ctx.fillStyle=ad[3]; ctx.textAlign='center'; ctx.textBaseline='middle';
-      ctx.font=`500 ${Math.round(hgt*0.58)}px "Noto Sans KR",sans-serif`; ctx.fillText(ad[0],(ax0+ax1)/2-(ax1-ax0)*0.2,ay-hgt/2);
-      ctx.font=`400 ${Math.round(hgt*0.3)}px "Noto Sans KR",sans-serif`; ctx.fillText(ad[1],(ax0+ax1)/2+(ax1-ax0)*0.24,ay-hgt/2);
+      ctx.font=`700 ${Math.round(hgt*0.7)}px "Noto Sans KR",sans-serif`; ctx.fillText(ad[0],(ax0+ax1)/2-(ax1-ax0)*0.18,ay-hgt/2+1);
+      ctx.font=`600 ${Math.round(hgt*0.36)}px "Noto Sans KR",sans-serif`; ctx.fillText(ad[1],(ax0+ax1)/2+(ax1-ax0)*0.27,ay-hgt/2+1);
     }
     // 주로 바탕
     const yF=yZ(zF), yN=yZ(zN);
@@ -1549,7 +1549,7 @@ class RaceEngine{
     ctx.strokeStyle='#2b8a3e'; ctx.lineWidth=5; ctx.beginPath(); ctx.moveTo(A[0],A[1]); ctx.lineTo(B[0],B[1]); ctx.moveTo(C[0],C[1]); ctx.lineTo(Dd[0],Dd[1]); ctx.moveTo(A[0],A[1]); ctx.lineTo(Dd[0],Dd[1]); ctx.stroke();
     const E=this.P(0.3,zB,2.3), F=this.P(0.3,zB,2.9), G=this.P(0.3,zA,2.9);
     ctx.fillStyle='#2b8a3e'; ctx.beginPath(); ctx.moveTo(B[0],B[1]); ctx.lineTo(E[0],E[1]); ctx.lineTo(F[0],F[1]); ctx.lineTo(G[0],G[1]); ctx.closePath(); ctx.fill();
-    ctx.fillStyle='#fff'; ctx.font='700 16px "Noto Sans KR",sans-serif'; ctx.textAlign='center'; ctx.textBaseline='middle'; ctx.fillText('LINK GATE',(G[0]+F[0])/2,(G[1]+F[1])/2+(E[1]-F[1])*0.0-8);
+    ctx.fillStyle='#fff'; ctx.font='700 16px "Noto Sans KR",sans-serif'; ctx.textAlign='center'; ctx.textBaseline='middle'; ctx.fillText('링크 게이트',(G[0]+F[0])/2,(G[1]+F[1])/2+(E[1]-F[1])*0.0-8);
   }
   drawForeground(ctx){
     const ppm=this.ppm, cam=this.camX, z=1.12;
@@ -1564,8 +1564,8 @@ class RaceEngine{
       ctx.fillStyle=ad[2]; ctx.fillRect(bx0,yt+2,bx1-bx0,rh-2);
       ctx.fillStyle='rgba(255,255,255,0.2)'; ctx.fillRect(bx0,yt+2,bx1-bx0,rh*0.25);
       ctx.fillStyle=ad[3]; ctx.textAlign='center'; ctx.textBaseline='middle';
-      ctx.font=`500 ${Math.round(rh*0.58)}px "Noto Sans KR",sans-serif`; ctx.fillText(ad[0],bx0+(bx1-bx0)*0.3,yt+rh/2+1);
-      ctx.font=`400 ${Math.round(rh*0.34)}px "Noto Sans KR",sans-serif`; ctx.fillText(ad[1],bx0+(bx1-bx0)*0.72,yt+rh/2+1);
+      ctx.font=`700 ${Math.round(rh*0.7)}px "Noto Sans KR",sans-serif`; ctx.fillText(ad[0],bx0+(bx1-bx0)*0.32,yt+rh/2+2);
+      ctx.font=`600 ${Math.round(rh*0.38)}px "Noto Sans KR",sans-serif`; ctx.fillText(ad[1],bx0+(bx1-bx0)*0.76,yt+rh/2+2);
     }
     ctx.fillStyle='#f1f3f5';
     for(let i=Math.floor(xmin/16)-1;i<=Math.ceil(xmax/16)+1;i++){ const px=this.X(i*16-0.5,z); ctx.fillRect(px-4,yt,8,rh); }
