@@ -2841,7 +2841,7 @@ function ClubCard(){
 }
 function OwnerModal(props){
   const [tab,setTab]=useState(props.barn&&props.barn.horses.length&&!props.stable?'market':'mine');
-  const tabs=<><ClubCard/><div className="grid grid-cols-2 gap-1 p-1 rounded-2xl bg-black/40 mb-2">
+  const tabs=<><ClubCard/>{ls.get('sd_me','') && <div className="-mt-1 mb-2"><AvatarPicker me={ls.get('sd_me','')}/></div>}<div className="grid grid-cols-2 gap-1 p-1 rounded-2xl bg-black/40 mb-2">
     {[['mine','👑 내 구단'],['market',`🌍 세계 말 시장 (${props.barn.horses.length}/${WORLD_HORSES.length})`]].map(([k,t])=>
       <button key={k} onClick={()=>{Sound.click();setTab(k);}} className={`py-2 rounded-xl text-[13px] font-black ${tab===k?'bg-yellow-300 text-black':'text-white/70'}`}>{t}</button>)}</div></>;
   return tab==='market'?<MarketModal {...props} tabs={tabs}/>:<StableModal {...props} tabs={tabs}/>;
