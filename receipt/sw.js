@@ -1,5 +1,5 @@
-const CACHE = 'receipt-v4';
-const SHELL = ['./', './index.html', './manifest.webmanifest', './icon-192.png', './icon-512.png', './estimate.js', './invoice.js', './contract.js', './estimate.css', './lib/html2canvas.min.js', './lib/jspdf.umd.min.js'];
+const CACHE = 'receipt-v5';
+const SHELL = ['./', './index.html', './manifest.webmanifest', './icon-192.png', './icon-512.png', './estimate.js', './invoice.js', './contract.js', './estimate.css', './theme.css', './logo.png', './lib/html2canvas.min.js', './lib/jspdf.umd.min.js'];
 self.addEventListener('install', e => { e.waitUntil(caches.open(CACHE).then(c => c.addAll(SHELL))); self.skipWaiting(); });
 self.addEventListener('activate', e => { e.waitUntil(caches.keys().then(ks => Promise.all(ks.filter(k => k !== CACHE).map(k => caches.delete(k))))); self.clients.claim(); });
 self.addEventListener('fetch', e => {

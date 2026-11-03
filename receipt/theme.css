@@ -1,0 +1,90 @@
+/* =====================================================================
+   링크클린 홈페이지(linkclean.co.kr) 디자인 테마
+   네이비 #0A1D37 · 스카이 #38BDF8 · Pretendard · 둥근 흰 카드
+   ※ 문서(영수증·견적서 등) 출력물 디자인은 바꾸지 않습니다.
+   ===================================================================== */
+:root{
+  --navy:#0A1D37; --navy2:#102A4E; --sky:#38BDF8; --sky2:#0EA5E9; --sky3:#0284C7;
+  --ink:#0A1D37; --bg:#F1F5F9; --card:#fff; --line:#E2E8F0; --txt:#0F172A; --sub:#64748B; --red:#E11D48;
+}
+html,body{font-family:"Pretendard",-apple-system,BlinkMacSystemFont,"Apple SD Gothic Neo","Noto Sans KR",sans-serif;
+  background:var(--bg);color:var(--txt);letter-spacing:-.2px;-webkit-font-smoothing:antialiased}
+
+/* ── 상단 헤더 ── */
+header{background:linear-gradient(110deg,var(--navy) 0%,var(--navy2) 55%,var(--navy) 100%);
+  padding:calc(env(safe-area-inset-top) + 12px) 16px 12px;gap:10px;overflow:hidden;box-shadow:0 4px 20px rgba(10,29,55,.25)}
+header::after{content:"";position:absolute;right:-60px;top:-80px;width:220px;height:220px;border-radius:50%;
+  background:var(--sky);opacity:.16;filter:blur(40px);pointer-events:none}
+header .brand{display:flex;align-items:center;gap:10px;flex:1;min-width:0}
+header .logo{width:40px;height:40px;border-radius:14px;background:#fff;border:1px solid rgba(255,255,255,.4);
+  display:flex;align-items:center;justify-content:center;overflow:hidden;flex:none;box-shadow:0 4px 12px rgba(0,0,0,.2)}
+header .logo img{width:30px;height:auto}
+header .bt{display:flex;flex-direction:column;line-height:1.15;min-width:0}
+header .bt small{font-size:9.5px;font-weight:800;letter-spacing:.32em;color:var(--sky)}
+header h1{font-size:18px;font-weight:800;letter-spacing:-.5px;margin:0;color:#fff;white-space:nowrap}
+header select{position:relative;z-index:1;background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.22);
+  color:#fff;border-radius:12px;padding:8px 28px 8px 12px;font-weight:700;font-size:13px;width:auto;max-width:42%;
+  -webkit-appearance:none;appearance:none;
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%2338BDF8' stroke-width='3'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");
+  background-repeat:no-repeat;background-position:right 10px center;backdrop-filter:blur(6px)}
+
+/* ── 탭 메뉴 ── */
+nav.tabs{top:calc(env(safe-area-inset-top) + 64px);background:rgba(241,245,249,.92);backdrop-filter:blur(10px);
+  padding:12px 0 8px;margin:-12px 0 6px;gap:6px}
+nav.tabs button{background:#fff;color:var(--sub);border:1px solid var(--line);border-radius:999px;
+  padding:9px 15px;font-weight:700;font-size:14px;box-shadow:0 1px 2px rgba(15,23,42,.04);transition:.15s;flex:1 0 auto;white-space:nowrap}
+nav.tabs button.on{background:var(--navy);color:#fff;border-color:var(--navy);box-shadow:0 6px 14px rgba(10,29,55,.22)}
+nav.tabs button.on::before{content:"";display:inline-block;width:6px;height:6px;border-radius:50%;background:var(--sky);margin:0 6px 2px 0;vertical-align:middle}
+
+/* ── 카드 ── */
+main{padding:12px 14px 120px}
+.card{border:1px solid rgba(226,232,240,.95);border-radius:20px;padding:16px;margin-bottom:14px;
+  box-shadow:0 4px 16px rgba(15,23,42,.05)}
+.card h2{display:flex;align-items:center;gap:8px;font-size:15px;font-weight:800;color:var(--navy);margin:0 0 12px;letter-spacing:-.4px}
+.card h2::before{content:"";width:4px;height:16px;border-radius:4px;background:linear-gradient(var(--sky),var(--sky2));flex:none}
+
+/* ── 입력칸 ── */
+label{font-size:12px;font-weight:700;color:#334155;margin-bottom:5px}
+input,select,textarea{border:1px solid var(--line);border-radius:12px;background:#fff;color:var(--txt);padding:11px 12px;
+  transition:border-color .15s,box-shadow .15s}
+input::placeholder,textarea::placeholder{color:#94A3B8}
+input:focus,select:focus,textarea:focus{outline:none;border-color:var(--sky);box-shadow:0 0 0 3px rgba(56,189,248,.22)}
+input[type=checkbox]{accent-color:var(--sky2)}
+
+/* ── 버튼 ── */
+.btn{border-radius:14px;background:#F1F5F9;color:var(--navy);border:1px solid var(--line);font-weight:800;transition:transform .1s,background .15s}
+.btn:active{transform:scale(.97)}
+.btn.pri{background:linear-gradient(135deg,var(--sky) 0%,var(--sky2) 100%);color:#fff;border:0;box-shadow:0 8px 18px rgba(14,165,233,.3)}
+.btn.red{background:#FFF1F2;color:var(--red);border-color:#FFE4E6}
+.seg{background:#F1F5F9;border:1px solid var(--line);border-radius:12px}
+.seg button{border-radius:9px;font-weight:600}
+.seg button.on{background:var(--navy);color:#fff;box-shadow:0 4px 10px rgba(10,29,55,.2)}
+.chips button{border-color:rgba(56,189,248,.45);background:rgba(56,189,248,.08);color:var(--sky3);font-weight:700}
+.chips button:active{background:var(--sky);color:#fff}
+
+/* ── 품목 카드 ── */
+.item{border:1px solid var(--line);border-radius:16px;background:#FCFDFE}
+.item .num{background:var(--navy);border-radius:999px;font-weight:700;padding:1px 8px}
+.item .del{background:#FFF1F2;color:var(--red);border-radius:10px}
+.item .amt b{color:var(--navy)}
+.item.grp{background:#F0F9FF;border-color:rgba(56,189,248,.4)}
+.total b,.sumtbl tr.big td{color:var(--navy);font-weight:800}
+.total b{background:linear-gradient(135deg,var(--navy),var(--sky3));-webkit-background-clip:text;background-clip:text;color:transparent}
+.kor{color:var(--sky3);font-weight:600}
+
+/* ── 미리보기 ── */
+#preview,.ep-wrap{border-radius:12px;box-shadow:0 10px 30px rgba(15,23,42,.12);border:1px solid var(--line)}
+
+/* ── 하단 버튼 줄 (홈페이지 모바일 바와 같은 네이비 유리) ── */
+.bar{background:rgba(10,29,55,.95);backdrop-filter:blur(12px);border-top:1px solid #1E293B;
+  box-shadow:0 -4px 20px rgba(0,0,0,.3);gap:7px;padding:10px 12px calc(env(safe-area-inset-bottom) + 10px)}
+.bar .btn{background:rgba(30,41,59,.9);border:1px solid #334155;color:#F1F5F9;border-radius:12px;font-size:14px}
+.bar .btn.pri{background:linear-gradient(135deg,var(--sky),var(--sky2));border:0;color:#fff;box-shadow:0 6px 16px rgba(56,189,248,.35)}
+
+/* ── 기록 · 설정 ── */
+.hist{border-bottom:1px solid #F1F5F9}
+.hist .m{color:var(--navy);font-weight:800}
+.hist button{background:rgba(56,189,248,.12);color:var(--sky3);border-radius:10px;font-weight:700}
+.stampbox .pv{border-radius:14px;border-color:var(--line)}
+.hint{color:var(--sub)}
+.toast{background:var(--navy);border:1px solid rgba(56,189,248,.35);border-radius:14px;box-shadow:0 10px 24px rgba(10,29,55,.35)}
