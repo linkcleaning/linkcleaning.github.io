@@ -109,20 +109,5 @@ nav.tabs{overflow-x:auto;scrollbar-width:none;position:sticky;top:calc(env(safe-
 .iv-sign .who{margin-bottom:8px;letter-spacing:3px}
 .iv-sign .rel{position:relative}
 .iv-stamp{position:absolute;left:118px;top:50%;width:60px;height:60px;right:auto}
-
-/* ===== 계약서 ===== */
-.ct{font-size:13.6px;line-height:1.62;padding-top:6px}
-.ct-title{text-align:center;font-size:32px;font-weight:700;letter-spacing:16px;margin:0 0 26px}
-.ct p{margin:0 0 7px;white-space:pre-wrap}
-.ct .art{font-weight:700}
-.ct .ind{padding-left:16px;text-indent:-16px;margin:0 0 3px 14px}
-.ct-box{border:1px solid #000;padding:8px 14px;margin:6px 0 10px 14px;white-space:pre-wrap;line-height:1.6}
-.ct-date{text-align:center;font-size:15px;margin:20px 0 16px}
-.ct-sign{display:flex;gap:24px;font-size:14px;line-height:1.95}
-.ct-sign>div{flex:1}
-.ct-sign .who{font-weight:700}
-.ct-sign .rel{position:relative}
-.ct-stamp{position:absolute;left:104px;top:50%;width:56px;height:56px;right:auto}
-
 nav.tabs::-webkit-scrollbar{display:none}
 nav.tabs button{flex:1 0 auto;padding:10px 12px;font-size:14px}

@@ -70,9 +70,15 @@ nav.tabs button.on{background:var(--ink);color:#fff}
 .toast{position:fixed;left:50%;bottom:90px;transform:translateX(-50%);background:#1b2133;color:#fff;padding:10px 16px;border-radius:20px;font-size:14px;opacity:0;transition:.25s;pointer-events:none;z-index:9;white-space:nowrap}
 .toast.on{opacity:1}
 .hidden{display:none!important}
-@media print{body *{visibility:hidden}#printImg,#printImg *{visibility:visible}#printImg{position:fixed;left:0;top:0;width:100%}}
 #printImg{display:none}
-@media print{#printImg{display:block}}
+@media print{
+  @page{size:A4 portrait;margin:0}
+  body>*:not(#printImg){display:none!important}
+  html,body{background:#fff!important}
+  #printImg{display:block}
+  .pr-sheet{width:210mm;height:297mm;display:flex;justify-content:center;gap:10mm;padding-top:12mm;box-sizing:border-box}
+  .pr-sheet img{width:85mm;height:190mm;display:block}
+}
 </style>
 <link rel="stylesheet" href="theme.css">
 </head>
@@ -87,7 +93,6 @@ nav.tabs button.on{background:var(--ink);color:#fff}
     <button data-tab="write" class="on">영수증</button>
     <button data-tab="estimate">견적서</button>
     <button data-tab="invoice">청구서</button>
-    <button data-tab="contract">계약서</button>
     <button data-tab="hist">기록</button>
     <button data-tab="settings">설정</button>
   </nav>
@@ -304,7 +309,10 @@ function changed(save = true){
 }
 
 /* ===================== 영수증 그리기 (인쇄 양식) ===================== */
-const W = 1000;               // 출력 해상도 기준 폭(px)
+/* 문구점 간이영수증 실물 규격: 85 × 190 mm (명진문구 순백지 간이영수증 기준)
+   → 1mm = 10px 로 그려서 850 × 1900px. 품목 15줄도 실물 양식과 같습니다. */
+const PAPER_W_MM = 85, PAPER_H_MM = 190, PX_PER_MM = 10;
+const W = PAPER_W_MM * PX_PER_MM;   // 850
 const FONT = '"Noto Sans KR","Apple SD Gothic Neo","Malgun Gothic",sans-serif';
 let stampImg = null;
 
@@ -315,141 +323,135 @@ function loadStamp(){
   });
 }
 
-function buildCanvas(scale = 2){
+function buildCanvas(scale = 2, kindOverride){
   const p = prof();
-  const MIN_ROWS = 12;
-  const rows = Math.max(MIN_ROWS, doc.items.length);
-  const L = 40, R = W - 40;
-  const titleH = 120, noH = 46, supRow = 66, hdrH = 50, valH = 54, msgH = 50, itemHdrH = 50, itemH = 50, sumH = 58, footH = p.tel ? 54 : 30;
-  const H = 40 + titleH + noH + supRow*4 + hdrH + valH + msgH + itemHdrH + itemH*rows + sumH + footH + 30;
+  const kind = kindOverride || doc.kind;
+  const ROWS = 15;                                   // 실물 양식 품목 줄 수
+  const rows = Math.max(ROWS, doc.items.length);
+  const L = 34, R = W - 34;
+  const titleH = 120, noH = 50, supRow = 84, hdrH = 56, valH = 60, msgH = 52, itemHdrH = 58, itemH = 66, sumH = 64;
+  const top = 40;
+  const formH = titleH + noH + supRow*4 + hdrH + valH + msgH + itemHdrH + itemH*rows + sumH;
+  const H = Math.max(PAPER_H_MM * PX_PER_MM, top + formH + 74);
 
   const cv = document.createElement('canvas'); cv.width = W*scale; cv.height = H*scale;
   const c = cv.getContext('2d'); c.scale(scale, scale);
   c.fillStyle = '#fff'; c.fillRect(0,0,W,H);
   c.strokeStyle = color; c.fillStyle = color; c.textBaseline = 'middle'; c.lineJoin = 'miter';
 
-  const line = (x1,y1,x2,y2,w=1.4) => { c.lineWidth = w; c.beginPath(); c.moveTo(x1,y1); c.lineTo(x2,y2); c.stroke(); };
-  const rect = (x,y,w,h,lw=1.4) => { c.lineWidth = lw; c.strokeRect(x,y,w,h); };
-  // 칸 너비에 맞게 자동 축소되는 글자
-  const text = (s, x, y, {size=22, weight=400, align='center', maxW=9999, fill=color, spacing=0} = {}) => {
+  const line = (x1,y1,x2,y2,w=1.3) => { c.lineWidth = w; c.beginPath(); c.moveTo(x1,y1); c.lineTo(x2,y2); c.stroke(); };
+  const rect = (x,y,w,h,lw=1.3) => { c.lineWidth = lw; c.strokeRect(x,y,w,h); };
+  const text = (s, x, y, {size=21, weight=400, align='center', maxW=9999, fill=color, spacing=0} = {}) => {
     s = String(s ?? ''); if(!s) return;
     let fs = size;
     c.font = `${weight} ${fs}px ${FONT}`;
     const meas = () => c.measureText(s).width + spacing*(s.length-1);
-    while(meas() > maxW && fs > 10){ fs -= 1; c.font = `${weight} ${fs}px ${FONT}`; }
+    while(meas() > maxW && fs > 9){ fs -= 1; c.font = `${weight} ${fs}px ${FONT}`; }
     c.fillStyle = fill;
     if(!spacing){ c.textAlign = align; c.fillText(s, x, y); return; }
     const w = meas(); let sx = align === 'center' ? x - w/2 : align === 'right' ? x - w : x;
     c.textAlign = 'left';
     for(const ch of s){ c.fillText(ch, sx, y); sx += c.measureText(ch).width + spacing; }
   };
-  const vtext = (s, x, yTop, h, size=22) => { // 세로쓰기 (공급자, 성명, 종목)
-    const chars = [...s]; const step = Math.min(h / chars.length, size*1.35);
+  const vtext = (s, x, yTop, h, size=21) => {
+    const chars = [...s]; const step = Math.min(h / chars.length, size*1.4);
     const start = yTop + h/2 - step*(chars.length-1)/2;
     chars.forEach((ch,i) => text(ch, x, start + step*i, {size, weight:500}));
   };
 
-  let y = 40;
-  const top = y;
-  // ── 제목
-  const kindTxt = doc.kind === 'seller' ? '(공급자용)' : '(공급받는자용)';
-  text('영 수 증', W/2 + 40, y + titleH/2 + 4, {size:62, weight:900, spacing:6, align:'right'});
-  text(kindTxt, W/2 + 56, y + titleH/2 + 14, {size:26, weight:700, align:'left'});
+  let y = top;
+  // ── 제목 (실물처럼 바깥 테두리 안에 제목이 들어감)
+  const kindTxt = kind === 'seller' ? '(공급자용)' : '(공급받는자용)';
+  text('영 수 증', W/2 + 62, y + titleH/2 + 8, {size:60, weight:900, spacing:8, align:'right'});
+  text(kindTxt, W/2 + 74, y + titleH/2 + 18, {size:23, weight:700, align:'left', maxW:R - W/2 - 84});
   y += titleH;
-  // ── NO / 귀하
-  text('NO.' + (doc.no ? ' ' + doc.no : ''), L + 8, y + noH/2, {size:22, weight:500, align:'left', maxW:300});
+  text('NO.' + (doc.no ? ' ' + doc.no : ''), L + 8, y + noH/2, {size:20, weight:500, align:'left', maxW:260});
   const cust = (doc.customer || '').trim();
-  text((cust ? cust + '  ' : '') + '귀 하', R - 10, y + noH/2, {size: cust ? 26 : 22, weight: cust ? 700 : 500, align:'right', maxW:560, fill: color});
+  text((cust ? cust + '  ' : '') + '귀 하', R - 10, y + noH/2, {size: cust ? 24 : 21, weight: cust ? 700 : 500, align:'right', maxW:470});
   y += noH;
 
   // ── 공급자 블록
-  const supTop = y, c0 = L, c1 = L + 62, c2 = L + 232, cS = L + 600, cS2 = L + 646;
-  rect(L, supTop, R-L, supRow*4, 3);
-  line(c1, supTop, c1, supTop + supRow*4, 1.4);
-  vtext('공급자', (c0+c1)/2, supTop, supRow*4, 26);
+  const supTop = y, c0 = L, c1 = L + 40, c2 = 232, cS = 572, cS2 = 614;
+  line(L, supTop, R, supTop, 2.6);
+  line(c1, supTop, c1, supTop + supRow*4);
+  vtext('공급자', (c0+c1)/2, supTop, supRow*4, 22);
   for(let i = 1; i < 4; i++) line(c1, supTop + supRow*i, R, supTop + supRow*i);
   line(c2, supTop, c2, supTop + supRow*4);
   const labels = [['사업자','등록번호'], ['상호'], ['사업장','소재지'], ['업태']];
   labels.forEach((lb, i) => {
     const cy = supTop + supRow*i + supRow/2;
-    if(lb.length === 2){ text(lb[0], (c1+c2)/2, cy - 13, {size:22, weight:500}); text(lb[1], (c1+c2)/2, cy + 14, {size:22, weight:500}); }
-    else text(lb[0], (c1+c2)/2, cy, {size:22, weight:500, spacing:10});
+    if(lb.length === 2){ text(lb[0], (c1+c2)/2, cy - 15, {size:21, weight:500}); text(lb[1], (c1+c2)/2, cy + 15, {size:21, weight:500}); }
+    else text(lb[0], (c1+c2)/2, cy, {size:21, weight:500, spacing:10});
   });
-  // 상호/성명, 업태/종목 칸 나누기
   [1,3].forEach(i => { line(cS, supTop + supRow*i, cS, supTop + supRow*(i+1)); line(cS2, supTop + supRow*i, cS2, supTop + supRow*(i+1)); });
-  vtext('성명', (cS+cS2)/2, supTop + supRow, supRow, 21);
-  vtext('종목', (cS+cS2)/2, supTop + supRow*3, supRow, 21);
-  // 값
+  vtext('성명', (cS+cS2)/2, supTop + supRow, supRow, 20);
+  vtext('종목', (cS+cS2)/2, supTop + supRow*3, supRow, 20);
   const vy = i => supTop + supRow*i + supRow/2;
-  text(p.bizno, (c2+R)/2, vy(0), {size:28, weight:500, maxW:R-c2-30, spacing:1});
-  text(p.name, (c2+cS)/2, vy(1), {size:27, weight:700, maxW:cS-c2-24});
-  text(p.owner, (cS2+R)/2 - 20, vy(1), {size:26, weight:500, maxW:R-cS2-60, spacing:p.owner.length<=3?8:0});
-  text(p.addr, (c2+R)/2, vy(2), {size:23, weight:400, maxW:R-c2-30});
-  text(p.type, (c2+cS)/2, vy(3), {size:24, weight:400, maxW:cS-c2-24});
-  text(p.item, (cS2+R)/2, vy(3), {size:24, weight:400, maxW:R-cS2-24});
-  const stampPos = {x: R - 78, y: vy(1)};  // 성명 끝에 걸치게
+  text(p.bizno, (c2+R)/2, vy(0), {size:26, weight:500, maxW:R-c2-24, spacing:1});
+  text(p.name, (c2+cS)/2, vy(1), {size:25, weight:700, maxW:cS-c2-20});
+  text(p.owner, (cS2+R)/2 - 14, vy(1), {size:23, weight:500, maxW:R-cS2-44, spacing:p.owner.length<=3?6:0});
+  text(p.addr, (c2+R)/2, vy(2), {size:21, weight:400, maxW:R-c2-22});
+  text(p.type, (c2+cS)/2, vy(3), {size:22, weight:400, maxW:cS-c2-20});
+  text(p.item, (cS2+R)/2, vy(3), {size:22, weight:400, maxW:R-cS2-18});
+  const stampPos = {x: R - 52, y: vy(1)};
   y = supTop + supRow*4;
 
   // ── 작성년월일 / 공급대가 총액 / 비고
-  const k1 = L + 232, k2 = R - 170;
-  rect(L, y, R-L, hdrH + valH, 3);
-  line(L, y + hdrH, R, y + hdrH); line(k1, y, k1, y + hdrH + valH); line(k2, y, k2, y + hdrH + valH);
-  text('작성년월일', (L+k1)/2, y + hdrH/2, {size:23, weight:500});
-  text('공급대가 총액', (k1+k2)/2, y + hdrH/2, {size:23, weight:500, spacing:2});
-  text('비 고', (k2+R)/2, y + hdrH/2, {size:23, weight:500, spacing:4});
+  const k1 = 232, k2 = 670;
+  line(L, y, R, y, 2.6); line(L, y + hdrH, R, y + hdrH);
+  line(k1, y, k1, y + hdrH + valH); line(k2, y, k2, y + hdrH + valH);
+  text('작성년월일', (L+k1)/2, y + hdrH/2, {size:21, weight:500});
+  text('공급대가 총액', (k1+k2)/2, y + hdrH/2, {size:21, weight:500, spacing:2});
+  text('비 고', (k2+R)/2, y + hdrH/2, {size:21, weight:500, spacing:4});
   const dt = doc.date ? doc.date.replace(/-/g, '.') : '';
-  text(dt, (L+k1)/2, y + hdrH + valH/2, {size:25, weight:500, fill:'#111'});
-  text('₩', k1 + 16, y + hdrH + valH/2, {size:25, weight:700, align:'left', fill:'#111'});
-  text(won(total()), k2 - 16, y + hdrH + valH/2, {size:30, weight:700, align:'right', fill:'#111'});
-  text(doc.memo, (k2+R)/2, y + hdrH + valH/2, {size:20, maxW:R-k2-14, fill:'#111'});
+  text(dt, (L+k1)/2, y + hdrH + valH/2, {size:23, weight:500, fill:'#111', maxW:k1-L-14});
+  text('₩', k1 + 12, y + hdrH + valH/2, {size:23, weight:700, align:'left', fill:'#111'});
+  text(won(total()), k2 - 12, y + hdrH + valH/2, {size:28, weight:700, align:'right', fill:'#111', maxW:k2-k1-60});
+  text(doc.memo, (k2+R)/2, y + hdrH + valH/2, {size:18, maxW:R-k2-12, fill:'#111'});
   y += hdrH + valH;
 
   // ── 위 금액을 영수(청구)함.
-  rect(L, y, R-L, msgH, 3);
-  const isRecv = doc.mode !== '청구';
-  text(`위 금액을 ${isRecv ? '영수' : '청구'}함.`, W/2, y + msgH/2, {size:24, weight:700, spacing:3});
+  line(L, y, R, y, 2.6);
+  text(`위 금액을 ${doc.mode !== '청구' ? '영수' : '청구'}함.`, W/2, y + msgH/2, {size:22, weight:700, spacing:3});
   y += msgH;
 
   // ── 품목 표
-  const cols = [L, L+120, L+400, L+500, L+700, R];
+  const cols = [L, 136, 329, 426, 622, R];
   const tableTop = y;
-  rect(L, tableTop, R-L, itemHdrH + itemH*rows + sumH, 3);
-  line(L, y + itemHdrH, R, y + itemHdrH, 2);
-  ['월일','품 목','수량','단 가','금 액'].forEach((h, i) => text(h, (cols[i]+cols[i+1])/2, y + itemHdrH/2, {size:23, weight:700, spacing:2}));
+  line(L, y, R, y, 2.6); line(L, y + itemHdrH, R, y + itemHdrH, 1.8);
+  ['월일','품 목','수량','단 가','금 액'].forEach((hh, i) => text(hh, (cols[i]+cols[i+1])/2, y + itemHdrH/2, {size:22, weight:700, spacing:2}));
   y += itemHdrH;
   for(let r = 0; r < rows; r++){
     if(r) line(L, y, R, y, 1);
     const it = doc.items[r];
     if(it && (it.name || num(it.price))){
       const cy = y + itemH/2, ink = '#111';
-      text(it.md || mdOf(doc.date), (cols[0]+cols[1])/2, cy, {size:22, maxW:cols[1]-cols[0]-12, fill:ink});
-      text(it.name, (cols[1]+cols[2])/2, cy, {size:23, maxW:cols[2]-cols[1]-16, fill:ink});
-      text(it.qty, (cols[2]+cols[3])/2, cy, {size:23, maxW:cols[3]-cols[2]-12, fill:ink});
-      text(it.price ? won(num(it.price)) : '', cols[4]-14, cy, {size:23, align:'right', maxW:cols[4]-cols[3]-24, fill:ink});
-      text(won(lineAmt(it)), cols[5]-14, cy, {size:23, align:'right', maxW:cols[5]-cols[4]-24, fill:ink});
+      text(it.md || mdOf(doc.date), (cols[0]+cols[1])/2, cy, {size:21, maxW:cols[1]-cols[0]-10, fill:ink});
+      text(it.name, (cols[1]+cols[2])/2, cy, {size:22, maxW:cols[2]-cols[1]-12, fill:ink});
+      text(it.qty, (cols[2]+cols[3])/2, cy, {size:22, maxW:cols[3]-cols[2]-10, fill:ink});
+      text(it.price ? won(num(it.price)) : '', cols[4]-12, cy, {size:22, align:'right', maxW:cols[4]-cols[3]-20, fill:ink});
+      text(won(lineAmt(it)), cols[5]-12, cy, {size:22, align:'right', maxW:cols[5]-cols[4]-20, fill:ink});
     }
     y += itemH;
   }
-  // 세로 칸선
-  for(let i = 1; i < 5; i++) line(cols[i], tableTop, cols[i], y, 1.2);
+  for(let i = 1; i < 5; i++) line(cols[i], tableTop, cols[i], y, 1.1);
   // 합계
   line(L, y, R, y, 2.6);
-  line(cols[3], y, cols[3], y + sumH, 1.2); // 단가 칸 기준으로 ₩
-  text('합', (cols[0]+cols[1])/2 + 40, y + sumH/2, {size:25, weight:700});
-  text('계', (cols[2]+cols[3])/2 - 30, y + sumH/2, {size:25, weight:700});
-  text('₩', cols[3] + 16, y + sumH/2, {size:26, weight:700, align:'left', fill:'#111'});
-  text(won(total()), R - 14, y + sumH/2, {size:30, weight:900, align:'right', fill:'#111'});
+  line(cols[3], y, cols[3], y + sumH);
+  text('합', (cols[0]+cols[1])/2 + 30, y + sumH/2, {size:23, weight:700});
+  text('계', (cols[2]+cols[3])/2 - 20, y + sumH/2, {size:23, weight:700});
+  text('₩', cols[3] + 12, y + sumH/2, {size:24, weight:700, align:'left', fill:'#111'});
+  text(won(total()), R - 12, y + sumH/2, {size:28, weight:900, align:'right', fill:'#111', maxW:R-cols[3]-50});
   y += sumH;
-  // 바깥 테두리 덧씌우기 (진하게)
-  rect(L, supTop, R-L, y - supTop, 3.4);
+  rect(L, top, R-L, y - top, 3.2);   // 바깥 테두리
 
-  // ── 하단
-  if(p.tel){ text(`문의 ${p.tel}`, R, y + 28, {size:19, align:'right', fill:'#666'}); }
-  text(korWon(total()), L, y + 28, {size:19, align:'left', fill:'#666'});
+  // ── 하단 (양식 밖 여백)
+  text(korWon(total()), L, y + 30, {size:17, align:'left', fill:'#666', maxW:420});
+  if(p.tel) text(`문의 ${p.tel}`, R, y + 30, {size:17, align:'right', fill:'#666'});
 
-  // ── 도장 (인주 느낌: multiply)
+  // ── 도장
   if(stampImg){
-    const sz = 108;
+    const sz = 96;
     c.save(); c.globalCompositeOperation = 'multiply'; c.globalAlpha = .92;
     c.translate(stampPos.x, stampPos.y); c.rotate(-4 * Math.PI/180);
     c.drawImage(stampImg, -sz/2, -sz/2, sz, sz); c.restore();
@@ -459,7 +461,7 @@ function buildCanvas(scale = 2){
 
 async function draw(){
   await fontsReady;
-  const cv = buildCanvas(1.4);
+  const cv = buildCanvas(1.2);
   const pv = $('#preview'); pv.width = cv.width; pv.height = cv.height;
   pv.getContext('2d').drawImage(cv, 0, 0);
 }
@@ -487,10 +489,11 @@ $('#shareBtn').onclick = async () => {
 $('#saveBtn').onclick = async () => { if(!validate()) return; const b = await makeBlob(); saveHistory(true); download(b); };
 $('#printBtn').onclick = async () => {
   if(!validate()) return;
-  const b = await makeBlob(); saveHistory(true);
-  const url = URL.createObjectURL(b);
-  $('#printImg').innerHTML = `<img src="${url}" style="width:100%">`;
-  setTimeout(() => window.print(), 300);
+  await fontsReady; saveHistory(true);
+  // A4 한 장에 실물 크기(85×190mm)로 공급받는자용 + 공급자용을 나란히 인쇄
+  const a = buildCanvas(2, 'buyer').toDataURL('image/png'), b = buildCanvas(2, 'seller').toDataURL('image/png');
+  $('#printImg').innerHTML = `<div class="pr-sheet"><img src="${a}"><img src="${b}"></div>`;
+  setTimeout(() => window.print(), 400);
 };
 function download(blob){
   const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = fileName();
@@ -626,6 +629,5 @@ if('serviceWorker' in navigator) window.addEventListener('load', () => navigator
 </script>
 <script src="estimate.js"></script>
 <script src="invoice.js"></script>
-<script src="contract.js"></script>
 </body>
 </html>
