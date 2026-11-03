@@ -80,15 +80,50 @@ E$('#i_nSave').onclick = () => {
   if(!bank || !account){ toast('은행명과 계좌번호를 입력해 주세요'); return; }
   const a = { id:newId(), bank, account, holder }; accounts().push(a); LS.set('rc_profiles', profiles);
   iv.acctId = a.id; ['i_nBank','i_nAcct','i_nHolder'].forEach(id => E$('#'+id).value = '');
-  E$('#i_acctForm').classList.add('hidden'); fillAcct(); changed(); toast('계좌를 저장했습니다');
+  E$('#i_acctForm').classList.add('hidden'); fillAcct(); renderSetAccts(); changed(); toast('계좌를 저장했습니다');
 };
 E$('#i_acctDel').onclick = () => {
   const c = curAcct(); if(!c) return;
   if(!confirm(`'${acctLabel(c)}' 계좌를 삭제할까요?`)) return;
   prof().accounts = accounts().filter(a => a.id !== c.id); LS.set('rc_profiles', profiles);
-  iv.acctId = ''; fillAcct(); changed();
+  iv.acctId = ''; fillAcct(); renderSetAccts(); changed();
 };
 E$('#profileSel').addEventListener('change', () => { iv.acctId = ''; fillAcct(); changed(); });
+
+/* ---------- 설정 탭: 입금 계좌 관리 (청구서 탭과 같은 목록) ---------- */
+const setCard = document.createElement('div'); setCard.className = 'card';
+setCard.innerHTML = `<h2>입금 계좌 <span id="s_acctCo" style="font-weight:500;color:var(--sub);font-size:12px"></span></h2>
+  <div id="s_acctList"></div>
+  <div class="row mb" style="margin-top:10px"><div><label>은행명</label><input id="s_nBank" placeholder="예) 농협 은행" list="bankList"></div>
+    <div><label>예금주</label><input id="s_nHolder"></div></div>
+  <div class="mb"><label>계좌번호</label><input id="s_nAcct" inputmode="numeric" placeholder="예) 351-0870-3486-93"></div>
+  <button class="btn pri" id="s_nSave">＋ 입금 계좌 추가</button>
+  <p class="hint">여기 저장한 계좌는 청구서 탭에서 골라 쓸 수 있습니다. 회사(링크클린 / 이케이클린)마다 따로 저장되니, 상단에서 회사를 먼저 고르세요.</p>`;
+E$('#tab-settings').insertBefore(setCard, E$('#tab-settings').children[1]);
+function renderSetAccts(){
+  const list = accounts();
+  E$('#s_acctCo').textContent = '· ' + (prof().name || '');
+  E$('#s_nHolder').placeholder = prof().owner || '';
+  E$('#s_acctList').innerHTML = list.length ? list.map(a => `<div class="hist" data-id="${a.id}"><div class="t"><b>${esc(a.bank)}</b><span>${esc(a.account)} · ${esc(a.holder)}</span></div><button data-act="del">삭제</button></div>`).join('')
+    : '<p class="hint">저장된 계좌가 없습니다. 아래에서 추가해 주세요.</p>';
+  E$('#s_acctList').querySelectorAll('button[data-act=del]').forEach(b => b.onclick = () => {
+    const a = list.find(x => x.id === b.closest('.hist').dataset.id);
+    if(!confirm(`'${acctLabel(a)}' 계좌를 삭제할까요?`)) return;
+    prof().accounts = accounts().filter(x => x.id !== a.id); LS.set('rc_profiles', profiles);
+    if(iv.acctId === a.id) iv.acctId = '';
+    renderSetAccts(); fillAcct(); changed();
+  });
+}
+E$('#s_nAcct').addEventListener('input', e => { e.target.value = e.target.value.replace(/[^\d-]/g, ''); });
+E$('#s_nSave').onclick = () => {
+  const bank = E$('#s_nBank').value.trim(), account = E$('#s_nAcct').value.trim(), holder = E$('#s_nHolder').value.trim() || prof().owner || '';
+  if(!bank || !account){ toast('은행명과 계좌번호를 입력해 주세요'); return; }
+  accounts().push({ id:newId(), bank, account, holder }); LS.set('rc_profiles', profiles);
+  ['s_nBank','s_nAcct','s_nHolder'].forEach(id => E$('#'+id).value = '');
+  renderSetAccts(); fillAcct(); changed(); toast('입금 계좌를 저장했습니다');
+};
+document.querySelector('nav.tabs button[data-tab=settings]').addEventListener('click', renderSetAccts);
+E$('#profileSel').addEventListener('change', renderSetAccts);
 K.companySelect(E$('#i_company'));
 
 function bind(){
@@ -156,5 +191,5 @@ K.openInvoiceFrom = ({ title, amount, to }) => {
 };
 
 K.addTab('invoice', sec, bar, () => { bind(); requestAnimationFrame(() => K.fitPreview(E$('#i_wrap'), E$('#i_page'))); });
-bind();
+bind(); renderSetAccts();
 })();
