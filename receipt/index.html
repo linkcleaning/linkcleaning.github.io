@@ -197,7 +197,7 @@ nav.tabs button.on{background:var(--ink);color:#fff}
 </main>
 
 <div class="bar" id="bar">
-  <button class="btn" id="resetBtn">새로</button>
+  <button class="btn" id="resetBtn">초기화</button>
   <button class="btn" id="saveBtn">저장</button>
   <button class="btn" id="printBtn">인쇄</button>
   <button class="btn pri" id="shareBtn">보내기</button>
@@ -206,6 +206,7 @@ nav.tabs button.on{background:var(--ink);color:#fff}
 <datalist id="presetList"></datalist>
 <div id="printImg"></div>
 <div class="toast" id="toast"></div>
+<button id="toTop" aria-label="맨 위로"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M12 19V5M5 12l7-7 7 7"/></svg></button>
 
 <script>
 /* ===================== 저장소 ===================== */
@@ -502,7 +503,7 @@ function download(blob){
   const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = fileName();
   document.body.appendChild(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(a.href), 5000);
 }
-$('#resetBtn').onclick = () => { if(!confirm('새 영수증을 작성할까요?')) return; doc = blankDoc(); LS.set('rc_draft', doc); bindForm(); window.scrollTo(0,0); };
+$('#resetBtn').onclick = () => { if(!confirm('입력한 내용을 모두 지우고 초기화할까요?')) return; doc = blankDoc(); LS.set('rc_draft', doc); bindForm(); window.scrollTo(0,0); };
 
 /* ===================== 기록 ===================== */
 function nextNo(){
@@ -620,6 +621,10 @@ function showTab(t){
   window.scrollTo(0,0);
 }
 document.querySelectorAll('nav.tabs button').forEach(b => b.onclick = () => showTab(b.dataset.tab));
+// 맨 위로 버튼: 조금 내려가면 오른쪽 아래에 나타남
+const toTop = $('#toTop');
+window.addEventListener('scroll', () => toTop.classList.toggle('on', window.scrollY > 300), {passive:true});
+toTop.onclick = () => window.scrollTo({top:0, behavior:'smooth'});
 let tt; function toast(m){ const t = $('#toast'); t.textContent = m; t.classList.add('on'); clearTimeout(tt); tt = setTimeout(() => t.classList.remove('on'), 2200); }
 
 const fontsReady = (async () => {
