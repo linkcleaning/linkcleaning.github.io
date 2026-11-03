@@ -197,7 +197,8 @@ nav.tabs button.on{background:var(--ink);color:#fff}
 
 <div class="bar" id="bar">
   <button class="btn" id="resetBtn">초기화</button>
-  <button class="btn" id="saveBtn">저장</button>
+  <button class="btn" id="saveBtn">이미지</button>
+  <button class="btn" id="pdfBtn">PDF</button>
   <button class="btn" id="printBtn">인쇄</button>
   <button class="btn pri" id="shareBtn">보내기</button>
 </div>
@@ -490,6 +491,16 @@ $('#shareBtn').onclick = async () => {
   } else { download(blob); toast('이미지를 저장했습니다. 카톡에서 사진으로 보내 주세요'); }
 };
 $('#saveBtn').onclick = async () => { if(!validate()) return; const b = await makeBlob(); saveHistory(true); download(b); };
+// PDF 저장: 실물 간이영수증 크기(85×190mm) 한 장
+$('#pdfBtn').onclick = async () => {
+  if(!validate()) return;
+  await fontsReady; saveHistory(true);
+  const cv = buildCanvas(3);
+  const hmm = PAPER_W_MM * cv.height / cv.width;          // 품목이 15줄을 넘으면 그만큼 길어짐
+  const pdf = new window.jspdf.jsPDF({ unit:'mm', format:[PAPER_W_MM, hmm], orientation:'portrait', compress:true });
+  pdf.addImage(cv.toDataURL('image/jpeg', 0.95), 'JPEG', 0, 0, PAPER_W_MM, hmm);
+  download(pdf.output('blob'), fileName().replace(/\.png$/, '.pdf'));
+};
 $('#printBtn').onclick = async () => {
   if(!validate()) return;
   await fontsReady; saveHistory(true);
@@ -498,8 +509,8 @@ $('#printBtn').onclick = async () => {
   $('#printImg').innerHTML = `<div class="pr-sheet"><img src="${a}"><img src="${b}"></div>`;
   setTimeout(() => window.print(), 400);
 };
-function download(blob){
-  const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = fileName();
+function download(blob, name){
+  const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = name || fileName();
   document.body.appendChild(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(a.href), 5000);
 }
 $('#resetBtn').onclick = () => { if(!confirm('입력한 내용을 모두 지우고 초기화할까요?')) return; doc = blankDoc(); LS.set('rc_draft', doc); bindForm(); window.scrollTo(0,0); };

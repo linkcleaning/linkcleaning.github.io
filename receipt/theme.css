@@ -95,3 +95,5 @@ input[type=checkbox]{accent-color:var(--sky2)}
   box-shadow:0 8px 20px rgba(10,29,55,.35);backdrop-filter:blur(8px);opacity:0;transform:translateY(12px);pointer-events:none;transition:.2s}
 #toTop.on{opacity:1;transform:none;pointer-events:auto}
 #toTop:active{transform:scale(.92)}
+
+#bar .btn{padding:13px 4px;font-size:13.5px}
