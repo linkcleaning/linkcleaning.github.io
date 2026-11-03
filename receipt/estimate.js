@@ -38,7 +38,15 @@ async function capture(html){
   exportBox.innerHTML = '';
   return cv;
 }
-async function makePNG(html){ const cv = await capture(html); return new Promise(r => cv.toBlob(r, 'image/png')); }
+async function makePNG(html){                  // 이미지도 A4 비율(210×297)로 맞춤
+  const cv = await capture(html);
+  const w = cv.width, h = Math.round(w * 297 / 210);
+  const out = document.createElement('canvas'); out.width = w; out.height = h;
+  const c = out.getContext('2d'); c.fillStyle = '#fff'; c.fillRect(0, 0, w, h);
+  const s = Math.min(1, h / cv.height), dw = w * s;
+  c.drawImage(cv, (w - dw) / 2, 0, dw, cv.height * s);
+  return new Promise(r => out.toBlob(r, 'image/png'));
+}
 async function makePDF(html){
   const cv = await capture(html);
   const { jsPDF } = window.jspdf;
