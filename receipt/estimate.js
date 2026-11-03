@@ -393,7 +393,7 @@ function layoutA(){
   }
   if(est.round !== 'none') body += `<tr><td class="nm">${++k}. 단수정리</td><td></td><td></td><td></td><td class="num">${signed(roundAdj())}</td><td></td></tr>`;
   body += `<tr class="tot"><td class="nm">총 합계</td><td></td><td></td><td></td><td class="num">₩${won(grand())}</td>
-           <td class="nt" style="font-size:12.5px;font-weight:400">${est.vat ? '부가세 포함' : '부가세 별도'}</td></tr>`;
+           <td class="nt" style="font-size:12.5px;font-weight:400">${est.vat ? '' : '부가세 별도'}</td></tr>`;
   return `
     <div class="ep-title">見積書</div>
     <div class="ep-to"><span>${esc(est.customer) || '&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;'}&nbsp; 귀하</span></div>
@@ -452,7 +452,7 @@ function layoutB(){            // 공급자 오른쪽 배치형 (견 적 서)
     <table class="eb-info">
       <colgroup><col style="width:22%"><col></colgroup>
       <tr><th>${jl('작업명')}</th><td>${esc(est.title)}${est.site ? ` <span class="sm">(${esc(est.site)})</span>` : ''}</td></tr>
-      <tr class="gray"><th>${jl('합계금액')}</th><td><b>${korLegal(grand()).replace('일금 ', '')} (￦ ${won(grand())} )</b> ${est.vat ? '<span class="sm">부가세 포함</span>' : '<span class="sm">부가세 별도</span>'}</td></tr>
+      <tr class="gray"><th>${jl('합계금액')}</th><td><b>${korLegal(grand()).replace('일금 ', '')} (￦ ${won(grand())} )</b> ${est.vat ? '' : '<span class="sm">부가세 별도</span>'}</td></tr>
     </table>
     <table class="eb-items">
       <colgroup><col style="width:28%"><col style="width:10%"><col style="width:10%"><col style="width:15%"><col style="width:18%"><col style="width:19%"></colgroup>
