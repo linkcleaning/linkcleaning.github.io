@@ -12,7 +12,10 @@
 <link rel="icon" href="icon-192.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700;900&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700;900&family=Noto+Serif+KR:wght@500;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="estimate.css">
+<script src="lib/html2canvas.min.js" defer></script>
+<script src="lib/jspdf.umd.min.js" defer></script>
 <style>
 :root{--ink:#1f3fbf;--bg:#f3f5fb;--card:#fff;--line:#dfe3ef;--txt:#1b2133;--sub:#6b7390;--red:#d0213c}
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
@@ -73,13 +76,14 @@ nav.tabs button.on{background:var(--ink);color:#fff}
 </head>
 <body>
 <header>
-  <h1>🧾 간이영수증</h1>
+  <h1>🧾 영수증·견적서</h1>
   <select id="profileSel" aria-label="공급자 선택"></select>
 </header>
 
 <main>
   <nav class="tabs">
-    <button data-tab="write" class="on">작성</button>
+    <button data-tab="write" class="on">영수증</button>
+    <button data-tab="estimate">견적서</button>
     <button data-tab="hist">기록</button>
     <button data-tab="settings">설정</button>
   </nav>
@@ -614,5 +618,6 @@ fillProfileSel(); fillPresets(); bindForm();
 loadStamp().then(draw);
 if('serviceWorker' in navigator) window.addEventListener('load', () => navigator.serviceWorker.register('sw.js').catch(()=>{}));
 </script>
+<script src="estimate.js"></script>
 </body>
 </html>

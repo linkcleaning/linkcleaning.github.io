@@ -1,0 +1,49 @@
+/* ===================== 견적서 탭 전용 스타일 ===================== */
+nav.tabs{position:sticky;top:calc(env(safe-area-inset-top) + 46px);z-index:4;background:var(--bg);padding:12px 0 6px;margin-top:-12px}
+.chips{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:10px}
+.chips button{border:1px solid var(--line);background:#fff;color:var(--ink);border-radius:20px;padding:7px 12px;font:inherit;font-size:13px;font-weight:500}
+.chips button:active{background:var(--ink);color:#fff}
+.vatline{display:flex;align-items:center;gap:8px;font-size:15px;margin:4px 0 8px}
+.vatline input{width:22px;height:22px}
+.sumtbl{width:100%;font-size:14px;border-collapse:collapse}
+.sumtbl td{padding:3px 2px}.sumtbl td:last-child{text-align:right;font-weight:700}
+.sumtbl tr.big td{font-size:19px;color:var(--ink);padding-top:6px}
+
+/* 미리보기: A4(794×1123px) 원본을 화면 폭에 맞게 축소 */
+.ep-wrap{width:100%;overflow:hidden;border-radius:6px;box-shadow:0 2px 10px rgba(20,30,70,.12);background:#fff}
+.ep-wrap .ep{transform-origin:0 0}
+#epExport{position:fixed;left:-10000px;top:0;pointer-events:none}
+
+/* ===== 견적서 양식 (HWP 見積書 레이아웃 재현) ===== */
+.ep{width:794px;min-height:1123px;background:#fff;color:#000;padding:48px 58px 36px;box-sizing:border-box;
+  font-family:"Noto Sans KR","Malgun Gothic",sans-serif;font-size:14.5px;line-height:1.25;position:relative}
+.ep *{box-sizing:border-box}
+.ep-title{font-family:"Noto Serif KR","Batang",serif;font-weight:500;font-size:56px;letter-spacing:22px;text-align:center;margin:4px 0 44px;padding-left:22px}
+.ep-to{text-align:right;margin:0 6px 20px;font-size:18px}
+.ep-to span{border-bottom:1.5px solid #000;padding:0 2px 2px}
+.ep table{width:100%;border-collapse:collapse;table-layout:fixed}
+.ep th,.ep td{border:1px solid #000;padding:0 8px;height:32px;font-weight:400;text-align:center;vertical-align:middle;overflow:hidden;white-space:nowrap}
+.ep th{font-weight:700;letter-spacing:6px}
+.ep-sup{border:2px solid #000}
+.ep-sup th.v{font-weight:700;letter-spacing:0;line-height:2.1;font-size:15px}
+.ep-sup td{letter-spacing:.5px}
+.ep-sup td.l{text-align:left;padding-left:56px}
+.ep-sup td.rel{position:relative;overflow:visible}
+.ep-sup td.sp{letter-spacing:7px}
+.ep-stamp{position:absolute;right:-28px;top:50%;width:62px;height:62px;transform:translateY(-50%) rotate(-4deg);opacity:.92;z-index:2}
+.ep-info{border:2px solid #000;border-top:0}
+.ep-info th,.ep-info td{height:40px}
+.ep-info th{font-weight:400;letter-spacing:9px}
+.ep-info td{text-align:left;padding-left:12px}
+.ep-info td.amt{font-weight:700;font-size:16px}
+.ep-items{border:2px solid #000;border-top:3px solid #000}
+.ep-items thead th{height:46px;font-size:16px;letter-spacing:4px;border-bottom:3px double #000}
+.ep-items td{height:44px}
+.ep-items td.nm{text-align:left;padding-left:20px;font-weight:700;font-size:15.5px}
+.ep-items td.num{text-align:center}
+.ep-items td.nt{font-size:12.5px;white-space:normal;line-height:1.2}
+.ep-items tr.sub td.nm,.ep-items tr.tot td.nm{text-align:center;padding-left:0;letter-spacing:18px}
+.ep-items tr.tot td{height:58px;font-size:17px;font-weight:700}
+.ep-items tr.tot td.nm{letter-spacing:6px}
+.ep-scope{border:2px solid #000;border-top:0;padding:14px 12px 22px;min-height:96px;white-space:pre-wrap;font-size:14.5px;line-height:1.75;letter-spacing:.5px}
+.ep-foot{margin-top:14px;text-align:right;font-size:12px;color:#444}
