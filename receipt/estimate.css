@@ -115,3 +115,6 @@ nav.tabs button{flex:1 0 auto;padding:10px 12px;font-size:14px}
 /* 균등분할 라벨 */
 .ep .jl{display:flex;justify-content:space-between;width:100%;padding:0 12px;letter-spacing:0}
 .ep .jl i{font-style:normal}
+
+/* 긴 주소는 두 줄로 */
+.ep td.addr,.eb-top td.sm{white-space:normal;line-height:1.25;font-size:13px;padding-top:2px;padding-bottom:2px}
