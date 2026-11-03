@@ -1,5 +1,5 @@
 /* ===================== 견적서 탭 전용 스타일 ===================== */
-nav.tabs{position:sticky;top:calc(env(safe-area-inset-top) + 46px);z-index:4;background:var(--bg);padding:12px 0 6px;margin-top:-12px}
+nav.tabs{overflow-x:auto;scrollbar-width:none;position:sticky;top:calc(env(safe-area-inset-top) + 46px);z-index:4;background:var(--bg);padding:12px 0 6px;margin-top:-12px}
 .chips{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:10px}
 .chips button{border:1px solid var(--line);background:#fff;color:var(--ink);border-radius:20px;padding:7px 12px;font:inherit;font-size:13px;font-weight:500}
 .chips button:active{background:var(--ink);color:#fff}
@@ -47,3 +47,82 @@ nav.tabs{position:sticky;top:calc(env(safe-area-inset-top) + 46px);z-index:4;bac
 .ep-items tr.tot td.nm{letter-spacing:6px}
 .ep-scope{border:2px solid #000;border-top:0;padding:14px 12px 22px;min-height:96px;white-space:pre-wrap;font-size:14.5px;line-height:1.75;letter-spacing:.5px}
 .ep-foot{margin-top:14px;text-align:right;font-size:12px;color:#444}
+
+/* ===== 품목 종류 ===== */
+.item.sub{margin-left:18px;border-style:dashed}
+.item.grp{background:#f6f8fe}
+.ep-items td.subnm{padding-left:34px;font-weight:400}
+.ep .l{text-align:left;padding-left:10px}.ep .r{text-align:right;padding-right:10px}.ep .b{font-weight:700}
+.ep td.subnm{padding-left:26px}
+.ep .sm{font-size:12px}
+
+/* ===== 양식 B : 공급자 오른쪽 배치형 ===== */
+.eb-title{text-align:center;font-size:40px;font-weight:700;letter-spacing:4px;margin:0 0 30px;text-decoration:underline;text-underline-offset:10px}
+.eb-top{border:2px solid #000}
+.eb-top th,.eb-top td{height:38px;font-size:13.5px}
+.eb-top th{letter-spacing:1px;background:#f2f2f2}
+.eb-top th.v{line-height:2;font-size:15px}
+.eb-top td.rel{position:relative;overflow:visible}
+.eb-left{vertical-align:middle;line-height:2.3;font-size:15px}
+.eb-cust{font-size:21px;font-weight:700;border-bottom:1px solid #000;margin:6px 18px;padding-bottom:2px}
+.eb-cust small{font-size:15px;font-weight:400}
+.eb-stamp{right:-6px;width:56px;height:56px}
+.eb-info{border:2px solid #000;border-top:0}
+.eb-info th,.eb-info td{height:42px}
+.eb-info td{text-align:left;padding-left:14px}
+.eb-info tr.gray th,.eb-info tr.gray td{background:#ececec}
+.eb-items{border:2px solid #000;border-top:0}
+.eb-items thead th{background:#ececec;letter-spacing:2px;height:38px}
+.eb-items td{height:34px}
+.eb-items tfoot th,.eb-items tfoot td{height:40px;background:#f2f2f2;border-top:2px solid #000}
+.eb-note{border:2px solid #000;border-top:0}
+.eb-noteh{text-align:center;font-weight:700;padding:8px;border-bottom:1px solid #000;background:#f2f2f2}
+.eb-notec{min-height:110px;padding:10px 14px;white-space:pre-wrap;line-height:1.7}
+
+/* ===== 양식 C : 간단형 ===== */
+.ec-title{text-align:center;font-size:36px;font-weight:700;letter-spacing:10px;margin:6px 0 40px}
+.ec-line{font-size:16px;margin:0 0 12px 4px}
+.ec-items{border:2px solid #000;margin-top:10px}
+.ec-items thead th{background:#ececec;height:40px;letter-spacing:2px}
+.ec-items td{height:38px}
+.ec-items tfoot th,.ec-items tfoot td{height:42px;border-top:2px solid #000}
+.ec-items td.ec-scope{text-align:left;padding:12px 14px;height:auto;white-space:pre-wrap;line-height:1.6}
+.ec-mid{text-align:center;font-size:17px;margin:40px 0 18px}
+.ec-date{text-align:center;font-size:17px;margin-bottom:46px}
+.ec-sign{margin-left:auto;width:54%;font-size:16px;line-height:2.1}
+.ec-sign .rel{position:relative}
+.ec-stamp{position:absolute;left:118px;top:50%;width:58px;height:58px;right:auto}
+
+/* ===== 청구서 ===== */
+.iv{border:2px solid #000;min-height:1020px;padding:60px 70px;position:relative}
+.iv-title{text-align:center;font-size:40px;font-weight:700;letter-spacing:22px;margin:30px 0 70px}
+.iv-tbl th,.iv-tbl td{height:56px;font-size:16px}
+.iv-tbl th{width:30%;text-align:left;padding-left:16px;letter-spacing:3px;background:#f4f4f4}
+.iv-tbl td{text-align:left;padding-left:16px;font-weight:700}
+.iv-msg{text-align:center;font-size:16px;margin:44px 0 30px}
+.iv-sub{text-align:center;font-size:16px;margin-bottom:14px;letter-spacing:2px}
+.iv-bank{width:70%!important;margin:0 auto}
+.iv-bank th,.iv-bank td{height:44px;font-size:15.5px}
+.iv-bank th{background:#f4f4f4;width:32%;letter-spacing:3px}
+.iv-date{text-align:center;font-size:17px;margin:56px 0 30px}
+.iv-sign{margin-left:auto;width:58%;font-size:16px;line-height:2.2}
+.iv-sign .who{margin-bottom:8px;letter-spacing:3px}
+.iv-sign .rel{position:relative}
+.iv-stamp{position:absolute;left:118px;top:50%;width:60px;height:60px;right:auto}
+
+/* ===== 계약서 ===== */
+.ct{font-size:13.6px;line-height:1.62;padding-top:6px}
+.ct-title{text-align:center;font-size:32px;font-weight:700;letter-spacing:16px;margin:0 0 26px}
+.ct p{margin:0 0 7px;white-space:pre-wrap}
+.ct .art{font-weight:700}
+.ct .ind{padding-left:16px;text-indent:-16px;margin:0 0 3px 14px}
+.ct-box{border:1px solid #000;padding:8px 14px;margin:6px 0 10px 14px;white-space:pre-wrap;line-height:1.6}
+.ct-date{text-align:center;font-size:15px;margin:20px 0 16px}
+.ct-sign{display:flex;gap:24px;font-size:14px;line-height:1.95}
+.ct-sign>div{flex:1}
+.ct-sign .who{font-weight:700}
+.ct-sign .rel{position:relative}
+.ct-stamp{position:absolute;left:104px;top:50%;width:56px;height:56px;right:auto}
+
+nav.tabs::-webkit-scrollbar{display:none}
+nav.tabs button{flex:1 0 auto;padding:10px 12px;font-size:14px}
