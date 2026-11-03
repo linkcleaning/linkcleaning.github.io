@@ -105,7 +105,8 @@ nav.tabs{overflow-x:auto;scrollbar-width:none;position:sticky;top:calc(env(safe-
 .iv-bank th,.iv-bank td{height:44px;font-size:15.5px}
 .iv-bank th{background:#f4f4f4;width:32%;letter-spacing:3px}
 .iv-date{text-align:center;font-size:17px;margin:56px 0 30px}
-.iv-sign{margin-left:auto;width:58%;font-size:16px;line-height:2.2}
+.iv-sign{display:table;margin:0 0 0 auto;font-size:16px;line-height:2.2;white-space:nowrap}
+.iv-sign>div{white-space:nowrap}
 .iv-sign .who{margin-bottom:8px;letter-spacing:3px}
 .iv-sign .rel{position:relative}
 .iv-stamp{position:absolute;left:118px;top:50%;width:60px;height:60px;right:auto}

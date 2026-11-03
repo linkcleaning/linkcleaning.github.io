@@ -16,9 +16,9 @@ header{background:linear-gradient(110deg,var(--navy) 0%,var(--navy2) 55%,var(--n
 header::after{content:"";position:absolute;right:-60px;top:-80px;width:220px;height:220px;border-radius:50%;
   background:var(--sky);opacity:.16;filter:blur(40px);pointer-events:none}
 header .brand{display:flex;align-items:center;gap:10px;flex:1;min-width:0}
-header .logo{width:40px;height:40px;border-radius:14px;background:#fff;border:1px solid rgba(255,255,255,.4);
+header .logo{width:40px;height:40px;border-radius:12px;background:transparent;border:1px solid rgba(255,255,255,.18);
   display:flex;align-items:center;justify-content:center;overflow:hidden;flex:none;box-shadow:0 4px 12px rgba(0,0,0,.2)}
-header .logo img{width:30px;height:auto}
+header .logo img{width:40px;height:40px;display:block}
 header .bt{display:flex;flex-direction:column;line-height:1.15;min-width:0}
 header .bt small{font-size:9.5px;font-weight:800;letter-spacing:.32em;color:var(--sky)}
 header h1{font-size:18px;font-weight:800;letter-spacing:-.5px;margin:0;color:#fff;white-space:nowrap}
