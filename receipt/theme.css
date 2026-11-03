@@ -97,3 +97,19 @@ input[type=checkbox]{accent-color:var(--sky2)}
 #toTop:active{transform:scale(.92)}
 
 #bar .btn{padding:13px 4px;font-size:13.5px}
+
+/* ── 미리보기: 작게 보여주고, 누르면 크게 ── */
+#preview,.ep-wrap{width:48%!important;margin:0 auto;cursor:zoom-in}
+.pv-hint{text-align:center;font-size:12.5px;color:var(--sub);margin:10px 0 0}
+.pv-hint b{color:var(--sky3)}
+#pvModal{position:fixed;inset:0;z-index:50;background:rgba(10,29,55,.88);backdrop-filter:blur(6px);display:none;
+  overflow:auto;-webkit-overflow-scrolling:touch;padding:calc(env(safe-area-inset-top) + 60px) 12px calc(env(safe-area-inset-bottom) + 30px)}
+#pvModal.on{display:block}
+#pvModal .pv-body{margin:0 auto;background:#fff;border-radius:8px;box-shadow:0 20px 50px rgba(0,0,0,.45);overflow:hidden}
+#pvModal .pv-body>img{display:block;width:100%;height:auto}
+#pvModal .pv-body .ep{transform-origin:0 0}
+#pvClose{position:fixed;top:calc(env(safe-area-inset-top) + 12px);right:14px;z-index:51;width:44px;height:44px;border-radius:50%;
+  border:1px solid rgba(56,189,248,.5);background:rgba(10,29,55,.9);color:#fff;font-size:22px;line-height:1;display:none}
+#pvModal.on + #pvClose{display:block}
+#pvTitle{position:fixed;top:calc(env(safe-area-inset-top) + 22px);left:16px;z-index:51;color:#fff;font-weight:800;font-size:15px;display:none}
+#pvModal.on ~ #pvTitle{display:block}

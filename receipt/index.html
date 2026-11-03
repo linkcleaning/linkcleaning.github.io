@@ -635,6 +635,37 @@ document.querySelectorAll('nav.tabs button').forEach(b => b.onclick = () => show
 const toTop = $('#toTop');
 window.addEventListener('scroll', () => toTop.classList.toggle('on', window.scrollY > 300), {passive:true});
 toTop.onclick = () => window.scrollTo({top:0, behavior:'smooth'});
+/* 미리보기 크게 보기: 작은 미리보기를 누르면 화면 폭에 맞춰 크게 */
+const pvModal = document.createElement('div'); pvModal.id = 'pvModal'; pvModal.innerHTML = '<div class="pv-body"></div>';
+const pvClose = document.createElement('button'); pvClose.id = 'pvClose'; pvClose.setAttribute('aria-label','닫기'); pvClose.textContent = '✕';
+const pvTitle = document.createElement('div'); pvTitle.id = 'pvTitle'; pvTitle.textContent = '미리보기';
+document.body.append(pvModal, pvClose, pvTitle);
+function openPreview(src){
+  const body = pvModal.firstChild; body.innerHTML = '';
+  const maxW = Math.min(window.innerWidth - 24, 820);
+  if(src.tagName === 'CANVAS'){                 // 영수증
+    const img = new Image(); img.src = src.toDataURL('image/png');
+    body.style.width = Math.min(maxW, 520) + 'px'; body.style.height = ''; body.appendChild(img);
+  } else {                                      // 견적서·청구서 (A4)
+    const page = src.querySelector('.ep').cloneNode(true); page.removeAttribute('id'); page.style.transform = '';
+    body.style.width = maxW + 'px'; body.appendChild(page);
+    pvModal.classList.add('on');                // 보이는 상태에서 높이를 재야 정확함
+    const s = maxW / 794; page.style.transform = `scale(${s})`; body.style.height = (page.scrollHeight * s) + 'px';
+  }
+  pvModal.classList.add('on'); pvModal.scrollTop = 0; document.body.style.overflow = 'hidden';
+}
+function closePreview(){ pvModal.classList.remove('on'); document.body.style.overflow = ''; }
+pvClose.onclick = closePreview;
+pvModal.addEventListener('click', e => { if(e.target === pvModal) closePreview(); });
+document.addEventListener('click', e => {
+  const t = e.target.closest('#preview, .ep-wrap'); if(t) openPreview(t);
+});
+// 미리보기 아래 안내 문구
+window.addEventListener('load', () => document.querySelectorAll('#preview, .ep-wrap').forEach(el => {
+  if(el.nextElementSibling && el.nextElementSibling.classList.contains('pv-hint')) return;
+  const p = document.createElement('p'); p.className = 'pv-hint'; p.innerHTML = '🔍 미리보기를 <b>누르면 크게</b> 볼 수 있어요'; el.after(p);
+}));
+
 let tt; function toast(m){ const t = $('#toast'); t.textContent = m; t.classList.add('on'); clearTimeout(tt); tt = setTimeout(() => t.classList.remove('on'), 2200); }
 
 const fontsReady = (async () => {
