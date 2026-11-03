@@ -99,10 +99,8 @@ function switchCompany(id){
   if(id !== curPid && profiles.some(p => p.id === id)){ E$('#profileSel').value = id; E$('#profileSel').dispatchEvent(new Event('change')); }
 }
 showTab = function(tab){
-  // '이케이 견적서' 탭 = 이케이클린 견적서, '견적서' 탭 = 링크클린(또는 그 밖의 회사) 견적서
-  if(tab === 'ekest') switchCompany('ekclean');
-  else if(tab === 'estimate' && curPid === 'ekclean') switchCompany('linkclean');
-  const t = tab === 'ekest' ? 'estimate' : tab;
+  // 회사(링크클린/이케이클린)는 상단 선택 상자로 구분
+  const t = tab;
   Object.values(extraTabs).forEach(x => { x.sec.classList.add('hidden'); x.bar.classList.add('hidden'); });
   if(extraTabs[t]){
     document.querySelectorAll('nav.tabs button').forEach(b => b.classList.toggle('on', b.dataset.tab === tab));
@@ -510,7 +508,7 @@ E$('#profileSel').addEventListener('change', () => { est = LS.get(draftKey(curPi
 /* =================== 5. 내보내기 · 기록 =================== */
 const estHist = makeHistory({ key:'rc_est_history', title:'견적서 기록',
   line: h => ({ t: h.customer || '(고객명 없음)', s: `${h.date} · ${h.title || h.items.map(i => i.name).filter(Boolean).join(', ')}`, m: h.total }),
-  onOpen: d => { delete d.total; est = d; est.items.forEach(it => { if(!it.kind) it.kind = 'item'; }); est.layout = est.layout || 'A'; est.round = est.round || 'none'; bindEst(); showTab(curPid === 'ekclean' ? 'ekest' : 'estimate'); } });
+  onOpen: d => { delete d.total; est = d; est.items.forEach(it => { if(!it.kind) it.kind = 'item'; }); est.layout = est.layout || 'A'; est.round = est.round || 'none'; bindEst(); showTab('estimate'); } });
 function validEst(){
   if(!est.items.some(it => it.kind !== 'group' && it.name && num(it.price))){ toast('품목과 단가를 입력해 주세요'); return false; }
   return true;
