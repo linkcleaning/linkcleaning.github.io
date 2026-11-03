@@ -23,6 +23,8 @@ function korLegal(n){           // 1000000 → "일금 일백만원정"
 }
 const krDate = d => { if(!d) return ''; const [y,m,dd] = d.split('-'); return `${y}년 ${+m}월 ${+dd}일`; };
 const krDate2 = d => { if(!d) return ''; const [y,m,dd] = d.split('-'); return `${y}년 ${m}월 ${dd}일`; };
+// 균등분할: 글자를 칸 폭에 양쪽 끝까지 고르게 배치 (HWP 배분 정렬과 같음)
+const jl = s => `<span class="jl">${[...s.replace(/\s/g,'')].map(ch => `<i>${ch}</i>`).join('')}</span>`;
 const signed = n => (n < 0 ? '-' : '') + won(Math.abs(n));
 
 const exportBox = document.createElement('div'); exportBox.id = 'epExport'; document.body.appendChild(exportBox);
@@ -380,10 +382,10 @@ function layoutA(){
     </table>
     <table class="ep-info">
       <colgroup><col style="width:23%"><col></colgroup>
-      <tr><th>작 업 명</th><td>${esc(est.title)}</td></tr>
-      ${est.site ? `<tr><th>현장 주소</th><td>${esc(est.site)}</td></tr>` : ''}
-      <tr><th style="letter-spacing:4px">견적 합계 금액</th><td class="amt">${korLegal(grand())} &nbsp;(₩${won(grand())})</td></tr>
-      <tr><th>견 적 일 자</th><td>${krDate(est.date)}</td></tr>
+      <tr><th>${jl('작업명')}</th><td>${esc(est.title)}</td></tr>
+      ${est.site ? `<tr><th>${jl('현장주소')}</th><td>${esc(est.site)}</td></tr>` : ''}
+      <tr><th>${jl('견적합계금액')}</th><td class="amt">${korLegal(grand())} &nbsp;(₩${won(grand())})</td></tr>
+      <tr><th>${jl('견적일자')}</th><td>${krDate(est.date)}</td></tr>
     </table>
     <table class="ep-items">
       <colgroup><col style="width:28%"><col style="width:9%"><col style="width:11%"><col style="width:14%"><col style="width:18%"><col style="width:20%"></colgroup>
@@ -423,8 +425,8 @@ function layoutB(){            // 공급자 오른쪽 배치형 (견 적 서)
     </table>
     <table class="eb-info">
       <colgroup><col style="width:22%"><col></colgroup>
-      <tr><th>작 업 명</th><td>${esc(est.title)}${est.site ? ` <span class="sm">(${esc(est.site)})</span>` : ''}</td></tr>
-      <tr class="gray"><th>합 계 금 액</th><td><b>${korLegal(grand()).replace('일금 ', '')} (￦ ${won(grand())} )</b> ${est.vat ? '<span class="sm">부가세 포함</span>' : '<span class="sm">부가세 별도</span>'}</td></tr>
+      <tr><th>${jl('작업명')}</th><td>${esc(est.title)}${est.site ? ` <span class="sm">(${esc(est.site)})</span>` : ''}</td></tr>
+      <tr class="gray"><th>${jl('합계금액')}</th><td><b>${korLegal(grand()).replace('일금 ', '')} (￦ ${won(grand())} )</b> ${est.vat ? '<span class="sm">부가세 포함</span>' : '<span class="sm">부가세 별도</span>'}</td></tr>
     </table>
     <table class="eb-items">
       <colgroup><col style="width:28%"><col style="width:10%"><col style="width:10%"><col style="width:15%"><col style="width:18%"><col style="width:19%"></colgroup>

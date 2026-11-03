@@ -111,3 +111,7 @@ nav.tabs{overflow-x:auto;scrollbar-width:none;position:sticky;top:calc(env(safe-
 .iv-stamp{position:absolute;left:118px;top:50%;width:60px;height:60px;right:auto}
 nav.tabs::-webkit-scrollbar{display:none}
 nav.tabs button{flex:1 0 auto;padding:10px 12px;font-size:14px}
+
+/* 균등분할 라벨 */
+.ep .jl{display:flex;justify-content:space-between;width:100%;padding:0 12px;letter-spacing:0}
+.ep .jl i{font-style:normal}
