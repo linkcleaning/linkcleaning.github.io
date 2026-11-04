@@ -1,0 +1,550 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="링크 패스">
+<meta name="theme-color" content="#0B2A31">
+<meta name="format-detection" content="telephone=no">
+<title>링크 패스 · 아이폰 지갑에 멤버십 넣기</title>
+<link rel="apple-touch-icon" id="appleIcon">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+KR:wght@400;500;600;700&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="https://cdn.jsdelivr.net/npm/jsbarcode@3.11.6/dist/JsBarcode.all.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/node-forge@1.3.1/dist/forge.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/fflate@0.8.2/umd/index.js"></script>
+<style>
+  :root { --deep:#0B2A31; --orange:#F08A3C; --paper:#F6F1EA; }
+  html, body { background: var(--paper); }
+  body { font-family:'IBM Plex Sans KR',system-ui,sans-serif; color:#0B2A31; -webkit-tap-highlight-color:transparent; -webkit-font-smoothing:antialiased; }
+  .mono { font-family:'JetBrains Mono',ui-monospace,monospace; }
+  input, select, textarea { font-size:16px; }
+  .inp { width:100%; border-radius:14px; background:#fff; border:1.5px solid rgba(11,42,49,.12); padding:12px 14px; outline:none; transition:border-color .2s; }
+  .inp:focus { border-color: var(--orange); }
+  .lbl { display:block; font-size:13px; font-weight:600; color:rgba(11,42,49,.7); margin:20px 0 8px; }
+  .hint { font-size:12px; color:#1F7A8C; margin-top:6px; }
+  .chip { padding:7px 12px; border-radius:999px; font-size:13px; font-weight:600; border:1.5px solid transparent; white-space:nowrap; transition:transform .15s; }
+  .chip:active { transform:scale(.95); }
+  .tool { display:flex; align-items:center; justify-content:center; gap:6px; padding:12px 8px; border-radius:14px; font-weight:600; font-size:14px; transition:transform .15s; }
+  .tool:active { transform:scale(.97); }
+  .seg { display:grid; gap:4px; padding:4px; border-radius:14px; background:rgba(0,0,0,.06); }
+  .seg button { padding:9px 4px; border-radius:10px; font-size:13.5px; font-weight:600; transition:all .2s; }
+  .seg button.on { background:#0B2A31; color:#fff; }
+  .swatch { width:34px; height:34px; border-radius:50%; border:1px solid rgba(0,0,0,.12); transition:transform .2s; }
+  .swatch.on { transform:scale(1.12); box-shadow:0 0 0 3px var(--paper),0 0 0 5.5px #0B2A31; }
+  /* 패스 미리보기 */
+  .pass { border-radius:16px; padding:16px 18px 18px; box-shadow:0 14px 34px rgba(11,42,49,.22); transition:background .3s,color .3s; }
+  .pass .plabel { font-size:10.5px; font-weight:700; letter-spacing:.06em; opacity:.85; }
+  .pass .barbox { background:#fff; border-radius:8px; padding:12px 14px 8px; margin:18px auto 0; width:86%; }
+  #toast { transform:translate(-50%,20px); opacity:0; transition:all .35s cubic-bezier(.2,.85,.25,1); pointer-events:none; }
+  #toast.show { transform:translate(-50%,0); opacity:1; }
+  .spin { animation:spin 1s linear infinite; } @keyframes spin { to { transform:rotate(360deg); } }
+  #reader { width:100%; border-radius:22px; overflow:hidden; background:#000; }
+  #reader video { object-fit:cover; }
+  #reader img[alt="Info icon"], #reader__dashboard { display:none !important; }
+</style>
+</head>
+<body>
+<div id="fileReader" style="position:fixed;left:-9999px;top:0;width:300px;height:300px"></div>
+
+<header class="bg-[#0B2A31] text-white" style="padding-top:calc(env(safe-area-inset-top) + 18px)">
+  <div class="max-w-[520px] mx-auto px-5 pb-6">
+    <div class="mono text-[11px] tracking-[.28em] text-[#F3A86B] font-bold">LINK PASS</div>
+    <h1 class="text-[26px] font-bold leading-tight mt-1">아이폰 지갑에<br>멤버십 넣기</h1>
+    <p class="text-white/60 text-[13.5px] mt-2 leading-relaxed">번호만 넣으면 아이폰 기본 <b class="text-white">지갑(Wallet) 앱</b>에 바코드 카드로 들어가요.</p>
+  </div>
+</header>
+
+<main class="max-w-[520px] mx-auto px-5" style="padding-bottom:calc(env(safe-area-inset-bottom) + 40px)">
+  <div id="setupBanner" class="hidden mt-5 rounded-2xl bg-[#FFF4E8] border border-[#F08A3C]/40 px-4 py-3 text-[13.5px] leading-relaxed">
+    <b>애플 인증서 연결 전이에요.</b> 미리보기는 되지만 아직 지갑에 넣을 수는 없어요. 인증서를 연결하면 바로 쓸 수 있어요.
+  </div>
+  <div id="safariTip" class="hidden mt-5 rounded-2xl bg-white border border-black/10 px-4 py-3 text-[13.5px] leading-relaxed">
+    지갑 추가는 <b>아이폰 사파리</b>에서 열어야 돼요. 카카오톡·인스타그램 안에서 열었다면 오른쪽 아래 메뉴에서 'Safari로 열기'를 눌러주세요.
+  </div>
+
+  <!-- 미리보기 -->
+  <section class="mt-6">
+    <div id="pass" class="pass"></div>
+  </section>
+
+  <!-- 빠른 선택 -->
+  <label class="lbl">어떤 카드인가요?</label>
+  <div id="presets" class="flex gap-2 overflow-x-auto pb-1 -mx-5 px-5"></div>
+
+  <!-- 스캔 -->
+  <div class="grid grid-cols-2 gap-2 mt-5">
+    <button id="scanCamBtn" class="tool bg-[#0B2A31] text-white">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M3 8V6a2 2 0 0 1 2-2h2M17 4h2a2 2 0 0 1 2 2v2M21 16v2a2 2 0 0 1-2 2h-2M7 20H5a2 2 0 0 1-2-2v-2M7 9v6M10 9v6M13 9v6M17 9v6"/></svg>
+      카메라로 스캔
+    </button>
+    <button id="scanPhotoBtn" class="tool bg-white border border-black/10">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><rect x="3" y="4" width="18" height="16" rx="3"/><circle cx="9" cy="10" r="2"/><path d="M21 16l-5-5-9 9"/></svg>
+      캡처 사진 인식
+    </button>
+  </div>
+
+  <label class="lbl">카드 이름 *</label>
+  <input id="fTitle" class="inp" maxlength="20" placeholder="예: CJ ONE, 링크클린 회원카드">
+
+  <label class="lbl">멤버십 번호 *</label>
+  <input id="fNumber" class="inp mono tracking-wider" inputmode="text" autocomplete="off" autocapitalize="characters" spellcheck="false" placeholder="카드 번호를 입력하세요">
+  <p class="hint">* 공백이나 '-'는 자동으로 빼고 넣어요.</p>
+
+  <label class="lbl">번호 표기 방법</label>
+  <div id="segSpace" class="seg grid-cols-2">
+    <button data-v="4">네 자리마다 띄어쓰기</button>
+    <button data-v="0">모두 붙여쓰기</button>
+  </div>
+
+  <label class="lbl">이름</label>
+  <input id="fHolder" class="inp" maxlength="20" placeholder="예: 한승우 (선택)">
+
+  <label class="lbl">등급</label>
+  <input id="fLevel" class="inp" maxlength="12" placeholder="예: 일반, VIP, GOLD (선택)">
+
+  <label class="lbl">바코드 종류</label>
+  <div id="segCode" class="seg grid-cols-4">
+    <button data-v="PKBarcodeFormatCode128">바코드</button>
+    <button data-v="PKBarcodeFormatQR">QR</button>
+    <button data-v="PKBarcodeFormatPDF417">PDF417</button>
+    <button data-v="PKBarcodeFormatAztec">Aztec</button>
+  </div>
+  <p class="hint">* 멤버십은 대부분 '바코드(Code 128)'로 두시면 돼요.</p>
+
+  <label class="lbl">카드 색상</label>
+  <div id="swatches" class="flex flex-wrap gap-3 items-center"></div>
+
+  <label class="lbl">뒷면 메모</label>
+  <textarea id="fMemo" rows="2" class="inp resize-none" placeholder="지갑에서 카드 뒷면(ⓘ)에 보이는 내용 (선택)"></textarea>
+
+  <button id="addBtn" class="mt-7 w-full rounded-2xl bg-black text-white py-4 font-bold text-[16px] flex items-center justify-center gap-2 active:scale-[.98] transition shadow-[0_10px_24px_rgba(0,0,0,.25)]">
+    <svg width="22" height="22" viewBox="0 0 24 24" fill="none"><rect x="3" y="5" width="18" height="14" rx="3" fill="#fff"/><rect x="3" y="7" width="18" height="3" fill="#4AA3DF"/><rect x="3" y="10" width="18" height="2.5" fill="#F5B83D"/><rect x="3" y="12.5" width="18" height="2.5" fill="#6CC04A"/></svg>
+    Apple 지갑에 추가
+  </button>
+  <button id="saveBtn" class="mt-2 w-full rounded-2xl bg-white border border-black/10 py-3.5 font-semibold text-[14.5px] active:scale-[.98] transition">지갑에 안 들어가면: 파일로 저장해서 넣기</button>
+
+  <section id="historySec" class="hidden mt-10">
+    <h2 class="font-bold text-[16px] mb-3">내가 만든 패스</h2>
+    <div id="history" class="space-y-2"></div>
+  </section>
+
+  <details class="mt-10 rounded-2xl bg-white border border-black/10 px-4 py-3 text-[13.5px] leading-relaxed">
+    <summary class="font-semibold cursor-pointer">사용 방법 · 자주 묻는 질문</summary>
+    <ol class="list-decimal pl-5 mt-3 space-y-1.5">
+      <li>카드 이름과 번호를 넣고 <b>Apple 지갑에 추가</b>를 누르세요.</li>
+      <li>미리보기 화면 오른쪽 위 <b>'추가'</b>를 누르면 지갑 앱에 들어가요.</li>
+      <li>매장에서는 지갑 앱(또는 측면 버튼 두 번)으로 바코드를 보여주세요.</li>
+    </ol>
+    <p class="mt-3"><b>추가 화면이 안 떠요</b> → '파일로 저장해서 넣기' → '파일에 저장' → 파일 앱에서 그 파일을 누르면 추가 화면이 떠요.</p>
+    <p class="mt-2"><b>포인트 잔액은요?</b> 지갑 카드는 바코드만 보여줘요. 포인트는 각 멤버십 앱에서 확인하세요.</p>
+    <p class="mt-2"><b>EAN-13(13자리 상품형) 카드는요?</b> 애플 지갑은 Code 128·QR·PDF417·Aztec만 지원해요. 같은 번호를 Code 128로 넣으면 대부분 매장 스캐너에서 그대로 읽혀요.</p>
+    <p class="mt-2"><b>내 정보는 어디 저장돼요?</b> 서버로 보내지 않아요. 이 휴대폰 안에서 바로 만들어져요.</p>
+  </details>
+</main>
+
+<!-- 비밀번호 -->
+<div id="lock" class="fixed inset-0 z-50 hidden bg-black/55 flex items-end sm:items-center justify-center">
+  <div class="w-full max-w-[520px] bg-[#F6F1EA] rounded-t-[28px] sm:rounded-[28px] px-5 pt-6" style="padding-bottom:calc(env(safe-area-inset-bottom) + 24px)">
+    <h3 class="font-bold text-[18px]">발급 비밀번호</h3>
+    <p class="text-[13.5px] text-[#0B2A31]/60 mt-1 leading-relaxed">처음 한 번만 입력하면 이 휴대폰에 기억돼요.</p>
+    <input id="pwInput" class="inp mono mt-4 tracking-wider" autocomplete="off" autocapitalize="none" spellcheck="false" placeholder="xxxx-xxxx-xxxx-xxxx">
+    <p id="pwErr" class="hidden text-[13px] text-[#C2410C] mt-2">비밀번호가 맞지 않아요.</p>
+    <div class="grid grid-cols-2 gap-2 mt-4">
+      <button id="pwCancel" class="tool bg-white border border-black/10">취소</button>
+      <button id="pwOk" class="tool bg-[#0B2A31] text-white">확인</button>
+    </div>
+  </div>
+</div>
+
+<!-- 스캐너 -->
+<div id="scanner" class="fixed inset-0 z-[60] hidden bg-[#061A1F] flex flex-col text-white" style="padding-top:calc(env(safe-area-inset-top) + 12px);padding-bottom:calc(env(safe-area-inset-bottom) + 20px)">
+  <div class="px-4"><button id="scanClose" class="h-10 px-4 rounded-full bg-white/10 font-semibold text-[15px]">닫기</button></div>
+  <div class="flex-1 flex flex-col justify-center px-4">
+    <div id="reader"></div>
+    <p id="scanMsg" class="text-center text-white/70 text-[14px] mt-5 leading-relaxed">카드 바코드를 네모 칸 안에 맞춰주세요.</p>
+  </div>
+</div>
+
+<div id="busy" class="fixed inset-0 z-[80] hidden bg-black/40 grid place-items-center">
+  <div class="rounded-2xl bg-[#0B2A31] text-white px-6 py-5 flex items-center gap-3 shadow-2xl">
+    <svg class="spin" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#F08A3C" stroke-width="3" stroke-linecap="round"><path d="M12 3a9 9 0 1 0 9 9"/></svg>
+    <span id="busyText" class="font-semibold">패스 만드는 중…</span>
+  </div>
+</div>
+<div id="toast" class="fixed left-1/2 z-[90] px-5 py-3 rounded-full bg-[#F08A3C] text-[#0B2A31] font-bold text-[15px] shadow-[0_10px_30px_rgba(0,0,0,.35)] whitespace-nowrap" style="bottom:calc(env(safe-area-inset-bottom) + 34px)"><span id="toastText"></span></div>
+
+<script>
+/* =====================================================================
+   설정: 애플 Pass Type ID 인증서(공개 정보)와 암호화된 개인키
+   ===================================================================== */
+const CERT_PEM = ``; // ← 애플에서 받은 인증서(pass.cer)를 PEM으로 변환해 넣는 자리
+const ENC_KEY = {"s":"96vGJb+HglJF17RL+iRowg==","i":"VMsHGvp9XgJOl880","n":310000,"c":"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"};
+const ORG_NAME = '링크클린';
+const WWDR_G4_PEM = `-----BEGIN CERTIFICATE-----
+MIIEVTCCAz2gAwIBAgIUE9x3lVJx5T3GMujM/+Uh88zFztIwDQYJKoZIhvcNAQEL
+BQAwYjELMAkGA1UEBhMCVVMxEzARBgNVBAoTCkFwcGxlIEluYy4xJjAkBgNVBAsT
+HUFwcGxlIENlcnRpZmljYXRpb24gQXV0aG9yaXR5MRYwFAYDVQQDEw1BcHBsZSBS
+b290IENBMB4XDTIwMTIxNjE5MzYwNFoXDTMwMTIxMDAwMDAwMFowdTFEMEIGA1UE
+Aww7QXBwbGUgV29ybGR3aWRlIERldmVsb3BlciBSZWxhdGlvbnMgQ2VydGlmaWNh
+dGlvbiBBdXRob3JpdHkxCzAJBgNVBAsMAkc0MRMwEQYDVQQKDApBcHBsZSBJbmMu
+MQswCQYDVQQGEwJVUzCCASIwDQYJKoZIhvcNAQEBBQADggEPADCCAQoCggEBANAf
+eKp6JzKwRl/nF3bYoJ0OKY6tPTKlxGs3yeRBkWq3eXFdDDQEYHX3rkOPR8SGHgjo
+v9Y5Ui8eZ/xx8YJtPH4GUnadLLzVQ+mxtLxAOnhRXVGhJeG+bJGdayFZGEHVD41t
+QSo5SiHgkJ9OE0/QjJoyuNdqkh4laqQyziIZhQVg3AJK8lrrd3kCfcCXVGySjnYB
+5kaP5eYq+6KwrRitbTOFOCOL6oqW7Z+uZk+jDEAnbZXQYojZQykn/e2kv1MukBVl
+PNkuYmQzHWxq3Y4hqqRfFcYw7V/mjDaSlLfcOQIA+2SM1AyB8j/VNJeHdSbCb64D
+YyEMe9QbsWLFApy9/a8CAwEAAaOB7zCB7DASBgNVHRMBAf8ECDAGAQH/AgEAMB8G
+A1UdIwQYMBaAFCvQaUeUdgn+9GuNLkCm90dNfwheMEQGCCsGAQUFBwEBBDgwNjA0
+BggrBgEFBQcwAYYoaHR0cDovL29jc3AuYXBwbGUuY29tL29jc3AwMy1hcHBsZXJv
+b3RjYTAuBgNVHR8EJzAlMCOgIaAfhh1odHRwOi8vY3JsLmFwcGxlLmNvbS9yb290
+LmNybDAdBgNVHQ4EFgQUW9n6HeeaGgujmXYiUIY+kchbd6gwDgYDVR0PAQH/BAQD
+AgEGMBAGCiqGSIb3Y2QGAgEEAgUAMA0GCSqGSIb3DQEBCwUAA4IBAQA/Vj2e5bbD
+eeZFIGi9v3OLLBKeAuOugCKMBB7DUshwgKj7zqew1UJEggOCTwb8O0kU+9h0UoWv
+p50h5wESA5/NQFjQAde/MoMrU1goPO6cn1R2PWQnxn6NHThNLa6B5rmluJyJlPef
+x4elUWY0GzlxOSTjh2fvpbFoe4zuPfeutnvi0v/fYcZqdUmVIkSoBPyUuAsuORFJ
+EtHlgepZAE9bPFo22noicwkJac3AfOriJP6YRLj477JxPxpd1F1+M02cHSS+APCQ
+A1iZQT0xWmJArzmoUUOSqwSonMJNsUvSq3xKX+udO7xPiEAGE/+QF4oIRynoYpgp
+pU8RBWk6z/Kf
+-----END CERTIFICATE-----`;
+
+/* ===================== 공통 ===================== */
+const $ = s => document.querySelector(s);
+const $$ = s => [...document.querySelectorAll(s)];
+const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' }[c]));
+let toastT;
+function toast(m) { $('#toastText').textContent = m; $('#toast').classList.add('show'); clearTimeout(toastT); toastT = setTimeout(() => $('#toast').classList.remove('show'), 1900); }
+function busy(on, t) { $('#busyText').textContent = t || '패스 만드는 중…'; $('#busy').classList.toggle('hidden', !on); }
+const isIOS = /iphone|ipad|ipod/i.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+const inApp = /KAKAOTALK|Instagram|FBAN|FBAV|NAVER|Line\//i.test(navigator.userAgent);
+
+const PRESETS = [
+  { t: '직접 입력', c: '#0E5A66' },
+  { t: '링크클린 회원카드', c: '#0E5A66' },
+  { t: 'CJ ONE', c: '#F39A1E' },
+  { t: 'GS&POINT', c: '#FFFFFF' },
+  { t: 'KT 멤버십', c: '#1E1E1E' },
+  { t: 'U+ 멤버십', c: '#D6006F' },
+  { t: '해피포인트', c: '#EC5B91' },
+  { t: 'L.POINT', c: '#E3262D' },
+  { t: 'CU 멤버십', c: '#652F8D' },
+  { t: '신세계포인트', c: '#C8102E' },
+  { t: '올리브영', c: '#86B817' }
+];
+const COLORS = ['#0E5A66','#F08A3C','#4E9F3D','#1F2A44','#1E1E1E','#FFFFFF','#E3262D','#D6006F','#652F8D','#F39A1E','#A8844E','#2F6FDF'];
+
+const form = { title: '', number: '', space: '4', holder: '', level: '', format: 'PKBarcodeFormatCode128', color: '#0E5A66', memo: '' };
+
+/* ===================== 색상 계산 ===================== */
+const hexRgb = h => [1, 3, 5].map(i => parseInt(h.slice(i, i + 2), 16));
+const rgbStr = a => `rgb(${a.join(',')})`;
+const isLight = h => { const [r, g, b] = hexRgb(h); return (r * 299 + g * 587 + b * 114) / 1000 > 180; };
+const fg = h => isLight(h) ? '#1A1A1A' : '#FFFFFF';
+const labelCol = h => isLight(h) ? '#6B6B6B' : 'rgba(255,255,255,.78)';
+const labelRgb = h => isLight(h) ? [107, 107, 107] : (() => { const [r, g, b] = hexRgb(h); return [r, g, b].map(v => Math.round(v + (255 - v) * .72)); })();
+
+const cleanNum = v => String(v || '').replace(/[\s-]/g, '');
+const fmtNum = (v, sp) => sp === '4' ? cleanNum(v).replace(/(.{4})(?=.)/g, '$1 ') : cleanNum(v);
+
+/* ===================== 미리보기 ===================== */
+function renderPass() {
+  const c = form.color, num = cleanNum(form.number);
+  const el = $('#pass');
+  el.style.background = c; el.style.color = fg(c);
+  el.style.border = isLight(c) ? '1px solid rgba(0,0,0,.1)' : 'none';
+  const lab = `style="color:${labelCol(c)}"`;
+  el.innerHTML = `
+    <div class="flex items-start justify-between gap-3">
+      <div class="font-bold text-[19px] leading-tight truncate pt-0.5">${esc(form.title || '카드 이름')}</div>
+      ${form.level ? `<div class="text-right shrink-0"><div class="plabel" ${lab}>LEVEL</div><div class="text-[17px] font-medium leading-tight">${esc(form.level)}</div></div>` : ''}
+    </div>
+    <div class="mt-6 flex gap-6">
+      <div class="min-w-0"><div class="plabel" ${lab}>카드번호</div><div class="text-[19px] mono font-medium truncate">${esc(fmtNum(num, form.space) || '0000 0000 0000')}</div></div>
+    </div>
+    ${form.holder ? `<div class="mt-3"><div class="plabel" ${lab}>이름</div><div class="text-[15px] font-medium">${esc(form.holder)}</div></div>` : ''}
+    <div class="barbox text-[#111]">
+      ${form.format === 'PKBarcodeFormatCode128'
+        ? '<svg id="pvBar"></svg>'
+        : `<div class="grid place-items-center py-3 text-[12.5px] text-black/50">${form.format.replace('PKBarcodeFormat', '')} 코드는 지갑에서 그려져요</div>`}
+      <div class="text-center mono text-[11.5px] mt-1 text-black/70">${esc(fmtNum(num, form.space))}</div>
+    </div>`;
+  const svg = $('#pvBar');
+  if (svg && num && typeof JsBarcode !== 'undefined') {
+    try {
+      JsBarcode(svg, num, { format: 'CODE128', displayValue: false, margin: 0, height: 56, width: 2 });
+      const w = svg.getAttribute('width'), h = svg.getAttribute('height');
+      svg.setAttribute('viewBox', `0 0 ${w} ${h}`); svg.removeAttribute('width'); svg.removeAttribute('height');
+      svg.style.width = '100%'; svg.style.height = '56px';
+    } catch (e) {}
+  } else if (svg) svg.outerHTML = '<div class="h-[56px] grid place-items-center text-[12px] text-black/40">번호를 넣으면 바코드가 보여요</div>';
+}
+function syncUI() {
+  $$('#segSpace button').forEach(b => b.classList.toggle('on', b.dataset.v === form.space));
+  $$('#segCode button').forEach(b => b.classList.toggle('on', b.dataset.v === form.format));
+  $$('.swatch').forEach(s => s.classList.toggle('on', (s.dataset.c || '').toLowerCase() === form.color.toLowerCase()));
+  renderPass();
+}
+
+/* ===================== 아이콘 PNG (지갑 알림·잠금화면용, 필수 파일) ===================== */
+function iconPng(size, color) {
+  const cv = document.createElement('canvas'); cv.width = cv.height = size;
+  const x = cv.getContext('2d');
+  x.fillStyle = color === '#FFFFFF' ? '#0E5A66' : color; x.fillRect(0, 0, size, size);
+  const s = size / 29;
+  x.fillStyle = '#fff';
+  const r = (X, Y, W, H) => x.fillRect(X * s, Y * s, W * s, H * s);
+  r(6, 9, 17, 11);
+  x.fillStyle = '#F08A3C'; r(6, 11, 17, 2.4);
+  x.fillStyle = '#0B2A31'; [8, 10, 11.5, 13.5, 15, 17, 18.5, 20].forEach(px => r(px, 14.6, .9, 3.6));
+  return new Promise(res => cv.toBlob(b => b.arrayBuffer().then(a => res(new Uint8Array(a))), 'image/png'));
+}
+async function brandIcon() {
+  const u8 = await iconPng(180, '#0E5A66');
+  $('#appleIcon').href = URL.createObjectURL(new Blob([u8], { type: 'image/png' }));
+}
+
+/* ===================== 개인키 잠금 해제 (WebCrypto, 이 휴대폰 안에서만) ===================== */
+const b64 = s => Uint8Array.from(atob(s), c => c.charCodeAt(0));
+async function decryptKey(pw) {
+  const base = await crypto.subtle.importKey('raw', new TextEncoder().encode(pw), 'PBKDF2', false, ['deriveKey']);
+  const k = await crypto.subtle.deriveKey({ name: 'PBKDF2', salt: b64(ENC_KEY.s), iterations: ENC_KEY.n, hash: 'SHA-256' }, base, { name: 'AES-GCM', length: 256 }, false, ['decrypt']);
+  const pt = await crypto.subtle.decrypt({ name: 'AES-GCM', iv: b64(ENC_KEY.i) }, k, b64(ENC_KEY.c));
+  return new TextDecoder().decode(pt);
+}
+let keyPem = null;
+async function unlock() {
+  if (keyPem) return true;
+  const saved = (() => { try { return localStorage.getItem('linkpass.pw'); } catch (e) { return null; } })();
+  if (saved) { try { keyPem = await decryptKey(saved); return true; } catch (e) {} }
+  return new Promise(resolve => {
+    $('#lock').classList.remove('hidden'); $('#pwErr').classList.add('hidden'); $('#pwInput').value = '';
+    setTimeout(() => $('#pwInput').focus(), 100);
+    $('#pwCancel').onclick = () => { $('#lock').classList.add('hidden'); resolve(false); };
+    $('#pwOk').onclick = async () => {
+      const pw = $('#pwInput').value.trim().toLowerCase();
+      try {
+        keyPem = await decryptKey(pw);
+        try { localStorage.setItem('linkpass.pw', pw); } catch (e) {}
+        $('#lock').classList.add('hidden'); resolve(true);
+      } catch (e) { $('#pwErr').classList.remove('hidden'); }
+    };
+  });
+}
+
+/* ===================== .pkpass 만들기 ===================== */
+const u8ToBin = u8 => { let s = ''; for (let i = 0; i < u8.length; i += 8192) s += String.fromCharCode.apply(null, u8.subarray(i, i + 8192)); return s; };
+const binToU8 = s => Uint8Array.from(s, c => c.charCodeAt(0));
+const sha1Hex = u8 => { const md = forge.md.sha1.create(); md.update(u8ToBin(u8)); return md.digest().toHex(); };
+
+function certInfo() {
+  const cert = forge.pki.certificateFromPem(CERT_PEM);
+  const uid = cert.subject.attributes.find(a => a.type === '0.9.2342.19200300.100.1.1');
+  const ou = cert.subject.getField('OU');
+  return { cert, passTypeId: uid && uid.value, teamId: ou && ou.value };
+}
+
+async function buildPkpass(d) {
+  const { cert, passTypeId, teamId } = certInfo();
+  if (!passTypeId || !teamId) throw new Error('인증서에서 Pass Type ID를 읽지 못했어요');
+  const num = cleanNum(d.number), shown = fmtNum(num, d.space);
+  const serial = 'LP-' + Date.now().toString(36) + '-' + Math.random().toString(36).slice(2, 8);
+  const pass = {
+    formatVersion: 1,
+    passTypeIdentifier: passTypeId,
+    teamIdentifier: teamId,
+    serialNumber: serial,
+    organizationName: ORG_NAME,
+    description: `${d.title} 멤버십`,
+    logoText: d.title,
+    foregroundColor: rgbStr(hexRgb(fg(d.color))),
+    backgroundColor: rgbStr(hexRgb(d.color)),
+    labelColor: rgbStr(labelRgb(d.color)),
+    storeCard: {
+      headerFields: d.level ? [{ key: 'level', label: 'LEVEL', value: d.level }] : [],
+      primaryFields: [],
+      secondaryFields: [{ key: 'number', label: '카드번호', value: shown }],
+      auxiliaryFields: d.holder ? [{ key: 'name', label: '이름', value: d.holder }] : [],
+      backFields: [
+        ...(d.memo ? [{ key: 'memo', label: '메모', value: d.memo }] : []),
+        { key: 'num', label: '멤버십 번호', value: num },
+        { key: 'by', label: '만든 곳', value: '링크 패스 · linkcleaning.github.io/pass' }
+      ]
+    },
+    barcodes: [{ format: d.format, message: num, messageEncoding: 'iso-8859-1', altText: shown }],
+    barcode: { format: d.format, message: num, messageEncoding: 'iso-8859-1', altText: shown }
+  };
+  const enc = new TextEncoder();
+  const files = {
+    'pass.json': enc.encode(JSON.stringify(pass)),
+    'icon.png': await iconPng(29, d.color),
+    'icon@2x.png': await iconPng(58, d.color),
+    'icon@3x.png': await iconPng(87, d.color)
+  };
+  const manifest = {};
+  for (const [n, b] of Object.entries(files)) manifest[n] = sha1Hex(b);
+  const manifestBytes = enc.encode(JSON.stringify(manifest));
+
+  // PKCS#7 분리 서명 (Pass 인증서 + Apple WWDR G4)
+  const key = forge.pki.privateKeyFromPem(keyPem);
+  const p7 = forge.pkcs7.createSignedData();
+  p7.content = forge.util.createBuffer(u8ToBin(manifestBytes));
+  p7.addCertificate(cert);
+  p7.addCertificate(forge.pki.certificateFromPem(WWDR_G4_PEM));
+  p7.addSigner({
+    key, certificate: cert, digestAlgorithm: forge.pki.oids.sha256,
+    authenticatedAttributes: [
+      { type: forge.pki.oids.contentType, value: forge.pki.oids.data },
+      { type: forge.pki.oids.messageDigest },
+      { type: forge.pki.oids.signingTime, value: new Date() }
+    ]
+  });
+  p7.sign({ detached: true });
+  const sig = binToU8(forge.asn1.toDer(p7.toAsn1()).getBytes());
+
+  const zip = fflate.zipSync({ ...files, 'manifest.json': manifestBytes, 'signature': sig });
+  const name = (d.title.replace(/[\\/:*?"<>|]/g, '').trim() || 'pass') + '.pkpass';
+  return new File([zip], name, { type: 'application/vnd.apple.pkpass' });
+}
+
+/* ===================== 발급 ===================== */
+function validate() {
+  form.title = $('#fTitle').value.trim();
+  form.number = $('#fNumber').value;
+  form.holder = $('#fHolder').value.trim();
+  form.level = $('#fLevel').value.trim();
+  form.memo = $('#fMemo').value.trim();
+  if (!form.title) { toast('카드 이름을 넣어주세요'); $('#fTitle').focus(); return false; }
+  const n = cleanNum(form.number);
+  if (!n) { toast('멤버십 번호를 넣어주세요'); $('#fNumber').focus(); return false; }
+  if (!/^[\x20-\x7E]+$/.test(n)) { toast('번호는 영문·숫자만 넣을 수 있어요'); return false; }
+  return true;
+}
+async function make() {
+  if (!validate()) return null;
+  if (!CERT_PEM || !ENC_KEY) { toast('애플 인증서 연결 후 사용할 수 있어요'); return null; }
+  if (typeof forge === 'undefined' || typeof fflate === 'undefined') { toast('인터넷 연결을 확인해 주세요'); return null; }
+  if (!(await unlock())) return null;
+  busy(true);
+  try {
+    const file = await buildPkpass({ ...form });
+    saveHistory();
+    return file;
+  } catch (e) { toast('만들기 실패: ' + (e.message || e)); return null; }
+  finally { busy(false); }
+}
+$('#addBtn').onclick = async () => {
+  if (inApp) { toast('사파리에서 열어주세요'); $('#safariTip').classList.remove('hidden'); }
+  const file = await make(); if (!file) return;
+  const url = URL.createObjectURL(file);
+  const a = document.createElement('a'); a.href = url; a.rel = 'noopener';
+  if (!isIOS) a.download = file.name;            // PC에서는 파일로 저장
+  document.body.appendChild(a); a.click(); a.remove();
+  setTimeout(() => URL.revokeObjectURL(url), 60000);
+};
+$('#saveBtn').onclick = async () => {
+  const file = await make(); if (!file) return;
+  if (navigator.canShare && navigator.canShare({ files: [file] })) {
+    try { await navigator.share({ files: [file] }); return; } catch (e) { if (e.name === 'AbortError') return; }
+  }
+  const a = document.createElement('a'); a.href = URL.createObjectURL(file); a.download = file.name;
+  document.body.appendChild(a); a.click(); a.remove();
+  toast('파일을 저장했어요');
+};
+
+/* ===================== 기록 ===================== */
+const HKEY = 'linkpass.history';
+const loadH = () => { try { return JSON.parse(localStorage.getItem(HKEY) || '[]'); } catch (e) { return []; } };
+function saveHistory() {
+  const h = loadH().filter(x => !(x.title === form.title && cleanNum(x.number) === cleanNum(form.number)));
+  h.unshift({ ...form, at: Date.now() });
+  try { localStorage.setItem(HKEY, JSON.stringify(h.slice(0, 30))); } catch (e) {}
+  renderHistory();
+}
+function renderHistory() {
+  const h = loadH();
+  $('#historySec').classList.toggle('hidden', !h.length);
+  $('#history').innerHTML = h.map((x, i) => `
+    <div class="flex items-center gap-3 rounded-2xl bg-white border border-black/10 px-3 py-2.5">
+      <span class="w-9 h-6 rounded-md shrink-0 border border-black/10" style="background:${esc(x.color)}"></span>
+      <button data-load="${i}" class="flex-1 min-w-0 text-left"><div class="font-semibold text-[14.5px] truncate">${esc(x.title)}</div><div class="mono text-[12px] text-black/50 truncate">${esc(fmtNum(x.number, '4'))}</div></button>
+      <button data-del="${i}" class="w-9 h-9 rounded-full bg-black/5 text-black/40">✕</button>
+    </div>`).join('');
+}
+$('#history').addEventListener('click', e => {
+  const l = e.target.closest('[data-load]'), d = e.target.closest('[data-del]'), h = loadH();
+  if (l) { Object.assign(form, h[+l.dataset.load]); fillInputs(); syncUI(); scrollTo({ top: 0, behavior: 'smooth' }); toast('불러왔어요 · 다시 추가할 수 있어요'); }
+  if (d) { h.splice(+d.dataset.del, 1); try { localStorage.setItem(HKEY, JSON.stringify(h)); } catch (e) {} renderHistory(); }
+});
+function fillInputs() { $('#fTitle').value = form.title; $('#fNumber').value = form.number; $('#fHolder').value = form.holder; $('#fLevel').value = form.level; $('#fMemo').value = form.memo; }
+
+/* ===================== 바코드 인식 ===================== */
+function scanCfg() {
+  const cfg = { verbose: false, experimentalFeatures: { useBarCodeDetectorIfSupported: true } };
+  if (typeof Html5QrcodeSupportedFormats !== 'undefined') {
+    const F = Html5QrcodeSupportedFormats;
+    cfg.formatsToSupport = ['CODE_128', 'EAN_13', 'EAN_8', 'UPC_A', 'CODE_39', 'ITF', 'QR_CODE', 'PDF_417', 'AZTEC'].map(k => F[k]).filter(v => v !== undefined);
+  }
+  return cfg;
+}
+function applyScan(text, res) {
+  const v = String(text || '').trim(); if (!v) return;
+  $('#fNumber').value = v; form.number = v;
+  const fname = String(res?.result?.format?.formatName || '');
+  form.format = /QR/.test(fname) ? 'PKBarcodeFormatQR' : /PDF/.test(fname) ? 'PKBarcodeFormatPDF417' : /AZTEC/.test(fname) ? 'PKBarcodeFormatAztec' : 'PKBarcodeFormatCode128';
+  syncUI(); toast('번호를 인식했어요');
+}
+let cam = null;
+$('#scanCamBtn').onclick = async () => {
+  if (typeof Html5Qrcode === 'undefined') return toast('인식 기능을 불러오지 못했어요');
+  $('#scanner').classList.remove('hidden');
+  try {
+    cam = new Html5Qrcode('reader', scanCfg());
+    await cam.start({ facingMode: 'environment' }, { fps: 12, qrbox: (w, h) => ({ width: Math.floor(w * .88), height: Math.floor(Math.min(h * .5, w * .45)) }) },
+      async (t, r) => { await closeCam(); applyScan(t, r); }, () => {});
+  } catch (e) { $('#scanMsg').innerHTML = '카메라를 열 수 없어요.<br>\'캡처 사진 인식\'을 이용해 주세요.'; }
+};
+async function closeCam() { if (cam) { try { if (cam.isScanning) await cam.stop(); } catch (e) {} try { cam.clear(); } catch (e) {} cam = null; } $('#scanner').classList.add('hidden'); }
+$('#scanClose').onclick = closeCam;
+$('#scanPhotoBtn').onclick = () => {
+  if (typeof Html5Qrcode === 'undefined') return toast('인식 기능을 불러오지 못했어요');
+  const inp = document.createElement('input'); inp.type = 'file'; inp.accept = 'image/*';
+  inp.onchange = async () => {
+    const f = inp.files[0]; if (!f) return;
+    busy(true, '바코드 찾는 중…');
+    const r = new Html5Qrcode('fileReader', scanCfg()); let found = null;
+    try { found = await r.scanFileV2(f, false); } catch (e) {}
+    try { r.clear(); } catch (e) {}
+    busy(false);
+    found ? applyScan(found.decodedText, found) : toast('바코드를 찾지 못했어요. 바코드만 크게 캡처해 보세요');
+  };
+  inp.click();
+};
+
+/* ===================== 입력 이벤트 ===================== */
+$('#presets').innerHTML = PRESETS.map((p, i) => `<button class="chip" data-p="${i}" style="background:${p.c};color:${fg(p.c)};${isLight(p.c) ? 'border-color:rgba(0,0,0,.15)' : ''}">${esc(p.t)}</button>`).join('');
+$('#presets').addEventListener('click', e => {
+  const b = e.target.closest('[data-p]'); if (!b) return;
+  const p = PRESETS[+b.dataset.p];
+  form.color = p.c; form.title = p.t === '직접 입력' ? '' : p.t; $('#fTitle').value = form.title;
+  syncUI(); (form.title ? $('#fNumber') : $('#fTitle')).focus();
+});
+$('#swatches').innerHTML = COLORS.map(c => `<button class="swatch" data-c="${c}" style="background:${c}"></button>`).join('') +
+  `<label class="swatch grid place-items-center text-[16px] cursor-pointer" style="background:conic-gradient(red,yellow,lime,cyan,blue,magenta,red)"><input id="customColor" type="color" class="opacity-0 w-0 h-0"></label>`;
+$('#swatches').addEventListener('click', e => { const s = e.target.closest('[data-c]'); if (s) { form.color = s.dataset.c; syncUI(); } });
+$('#customColor').oninput = e => { form.color = e.target.value.toUpperCase(); syncUI(); };
+$$('#segSpace button').forEach(b => b.onclick = () => { form.space = b.dataset.v; syncUI(); });
+$$('#segCode button').forEach(b => b.onclick = () => { form.format = b.dataset.v; syncUI(); });
+[['#fTitle', 'title'], ['#fNumber', 'number'], ['#fHolder', 'holder'], ['#fLevel', 'level'], ['#fMemo', 'memo']]
+  .forEach(([s, k]) => $(s).addEventListener('input', e => { form[k] = e.target.value; renderPass(); }));
+
+if (!CERT_PEM || !ENC_KEY) $('#setupBanner').classList.remove('hidden');
+if (inApp) $('#safariTip').classList.remove('hidden');
+brandIcon(); renderHistory(); syncUI();
+</script>
+</body>
+</html>
