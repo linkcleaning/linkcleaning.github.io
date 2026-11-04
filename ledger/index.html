@@ -66,6 +66,8 @@
   input[type=date] { -webkit-appearance: none; appearance: none; min-height: 48px; }
   #toast { transition: opacity .2s ease, transform .2s ease; }
   .hidden-x { display: none !important; }
+  details > summary { list-style: none; }
+  details > summary::-webkit-details-marker { display: none; }
 </style>
 </head>
 <body class="bg-slate-50 text-slate-800">
@@ -73,10 +75,10 @@
 <!-- ================= 상단 대시보드 ================= -->
 <header class="bg-gradient-to-br from-teal-600 to-teal-800 text-white safe-top pb-4 px-4 rounded-b-3xl shadow-lg">
   <div class="max-w-xl mx-auto">
-    <div class="flex items-center justify-between">
-      <div>
-        <div class="text-[11px] tracking-widest text-teal-100 font-semibold">LINK CLEAN · 일반과세자</div>
-        <h1 class="text-xl font-extrabold">링크클린 세무장부</h1>
+    <div class="flex items-center justify-between gap-2">
+      <div class="min-w-0">
+        <div class="text-[11px] tracking-widest text-teal-100 font-semibold">일반과세자 세무 간편장부</div>
+        <select id="bizSel" class="bg-transparent text-xl font-extrabold outline-none max-w-[60vw] truncate -ml-1"></select>
       </div>
       <select id="yearSel" class="bg-white/15 border border-white/30 text-white rounded-xl px-3 py-2 text-base font-bold outline-none"></select>
     </div>
@@ -90,17 +92,17 @@
     <div class="mt-3 space-y-2">
       <div class="bg-white text-slate-800 rounded-2xl p-4 shadow">
         <div class="flex items-center justify-between">
-          <div class="text-sm font-bold text-slate-500">🧾 예상 납부 부가세</div>
+          <div class="text-sm font-bold text-slate-500" id="cardVatTitle">🧾 예상 납부 부가세</div>
           <div class="text-[11px] text-slate-400" id="deadlineTxt"></div>
         </div>
         <div class="text-3xl font-extrabold num mt-1" id="cardVat">0원</div>
-        <div class="text-xs text-slate-500 mt-1 num" id="cardVatSub">매출세액 0 − 매입세액(초록불) 0</div>
+        <div class="text-xs text-slate-500 mt-1 num leading-snug" id="cardVatSub"></div>
       </div>
       <div class="grid grid-cols-2 gap-2">
         <div class="bg-white text-slate-800 rounded-2xl p-3 shadow">
-          <div class="text-xs font-bold text-slate-500">💰 순수익(과세표준 예상)</div>
+          <div class="text-xs font-bold text-slate-500">💰 순수익(소득금액 예상)</div>
           <div class="text-xl font-extrabold num mt-1" id="cardNet">0원</div>
-          <div class="text-[11px] text-slate-400 mt-1 leading-tight">매출공급가 − 경비(초록+노랑) − 인건비</div>
+          <div class="text-[11px] text-slate-400 mt-1 leading-tight" id="cardNetSub">매출공급가 − 경비 − 인건비</div>
         </div>
         <div class="bg-white text-slate-800 rounded-2xl p-3 shadow">
           <div class="text-xs font-bold text-slate-500" id="cardFlowTitle">📊 이번 반기</div>
@@ -114,11 +116,12 @@
 </header>
 
 <!-- ================= 탭 ================= -->
-<nav class="max-w-xl mx-auto px-4 mt-4">
-  <div class="grid grid-cols-3 gap-1 bg-white rounded-2xl p-1 shadow-sm border border-slate-200">
-    <button class="tabbtn rounded-xl py-3 text-sm font-bold" data-tab="input">✏️ 거래 입력</button>
-    <button class="tabbtn rounded-xl py-3 text-sm font-bold" data-tab="hometax">🏛️ 홈택스 요약</button>
-    <button class="tabbtn rounded-xl py-3 text-sm font-bold" data-tab="list">📋 내역·백업</button>
+<nav class="max-w-xl mx-auto px-4 mt-4 sticky top-0 z-30 pt-2 bg-slate-50/90 backdrop-blur">
+  <div class="grid grid-cols-4 gap-1 bg-white rounded-2xl p-1 shadow-sm border border-slate-200">
+    <button class="tabbtn rounded-xl py-3 text-[13px] font-bold" data-tab="input">✏️ 입력</button>
+    <button class="tabbtn rounded-xl py-3 text-[13px] font-bold" data-tab="hometax">🏛️ 신고표</button>
+    <button class="tabbtn rounded-xl py-3 text-[13px] font-bold" data-tab="list">📋 내역</button>
+    <button class="tabbtn rounded-xl py-3 text-[13px] font-bold" data-tab="settings">⚙️ 설정</button>
   </div>
 </nav>
 
@@ -126,6 +129,11 @@
 
   <!-- ================= 거래 입력 ================= -->
   <section id="panel-input" class="mt-4 space-y-4">
+    <div id="editBanner" class="hidden-x bg-amber-100 border-2 border-amber-400 rounded-2xl p-3 flex items-center justify-between">
+      <div class="text-sm font-bold text-amber-900">✏️ 내역 수정 중 — 고친 뒤 저장하세요</div>
+      <button id="cancelEditBtn" class="text-sm font-bold bg-white border border-amber-400 rounded-lg px-3 py-1.5">취소</button>
+    </div>
+
     <div class="grid grid-cols-3 gap-2" id="typeGroup">
       <button class="typebtn choice border-2 border-slate-200 bg-white rounded-2xl py-4 text-base font-extrabold" data-k="sale">매출 (+)</button>
       <button class="typebtn choice border-2 border-slate-200 bg-white rounded-2xl py-4 text-base font-extrabold" data-k="purchase">매입 (−)</button>
@@ -143,12 +151,13 @@
         <div>
           <div class="text-sm font-bold text-slate-600 mb-2">결제 수단</div>
           <div id="salePayGroup" class="grid grid-cols-2 gap-2"></div>
+          <div id="salePayHint" class="text-[11px] text-slate-500 mt-2 leading-snug"></div>
         </div>
         <label id="cashVatWrap" class="hidden-x flex items-start gap-3 bg-amber-50 border border-amber-200 rounded-xl p-3">
           <input type="checkbox" id="cashVatChk" class="mt-1 w-6 h-6 accent-teal-700" checked>
           <span class="text-sm leading-snug">
-            <b>이 현금에 부가세가 포함된 것으로 보고 신고</b><br>
-            <span class="text-slate-500 text-xs">일반과세자는 미발행 현금매출도 원칙적으로 부가세 신고 대상이에요. 체크 해제 시 부가세 0원으로 기록(공급가액=전액)됩니다.</span>
+            <b>받은 금액 안에 부가세가 포함된 것으로 신고 (권장)</b><br>
+            <span class="text-slate-500 text-xs">영수증을 안 끊은 현금·계좌이체도 일반과세자는 부가세 신고 대상이에요. 체크 해제하면 받은 금액을 공급가액으로 보고 부가세 10%를 따로 얹어 계산해요(고객에게 부가세를 별도로 받은 경우).</span>
           </span>
         </label>
       </div>
@@ -163,6 +172,13 @@
           <div class="text-sm font-bold text-slate-600 mb-2">증빙 수단</div>
           <div id="purEvidGroup" class="grid grid-cols-2 gap-2"></div>
         </div>
+        <label id="fixedWrap" class="hidden-x flex items-start gap-3 bg-sky-50 border border-sky-200 rounded-xl p-3">
+          <input type="checkbox" id="fixedChk" class="mt-1 w-6 h-6 accent-sky-700">
+          <span class="text-sm leading-snug">
+            <b>차량·장비를 새로 산 것 (100만원 넘는 자산)</b><br>
+            <span class="text-slate-500 text-xs">부가세 신고 때 '고정자산 매입' 칸에 따로 적어야 해요. 소득세에서는 한 번에 경비가 아니라 몇 년에 나눠(감가상각) 경비 처리돼요.</span>
+          </span>
+        </label>
         <div id="lightBanner" class="rounded-xl p-3 text-sm font-bold"></div>
       </div>
 
@@ -171,6 +187,7 @@
         <div>
           <div class="text-sm font-bold text-slate-600 mb-2">인력 구분</div>
           <div id="laborKindGroup" class="grid grid-cols-2 gap-2"></div>
+          <div id="laborHint" class="text-[11px] text-slate-500 mt-2 leading-snug"></div>
         </div>
         <div class="grid grid-cols-3 gap-2">
           <div class="col-span-2">
@@ -187,7 +204,7 @@
       <!-- 공통: 날짜/금액/메모 -->
       <div class="grid grid-cols-1 gap-3">
         <div>
-          <div class="text-sm font-bold text-slate-600 mb-2">날짜</div>
+          <div class="text-sm font-bold text-slate-600 mb-2" id="dateLabel">날짜</div>
           <input id="dateInp" type="date" class="w-full border-2 border-slate-200 rounded-xl px-3 py-3 text-base outline-none focus:border-teal-600 bg-white">
         </div>
         <div>
@@ -206,8 +223,9 @@
           </div>
         </div>
         <div id="preview" class="bg-slate-50 border border-dashed border-slate-300 rounded-xl p-3 text-sm num"></div>
+        <div id="warnBox" class="hidden-x bg-red-50 border border-red-200 rounded-xl p-3 text-xs text-red-800 leading-snug"></div>
         <div>
-          <div class="text-sm font-bold text-slate-600 mb-2">메모 <span class="text-xs font-medium text-slate-400">(선택)</span></div>
+          <div class="text-sm font-bold text-slate-600 mb-2">메모 <span class="text-xs font-medium text-slate-400">(선택 — 거래처·현장명)</span></div>
           <input id="memoInp" type="text" placeholder="예: 노형동 32평 입주청소 / 고객명" class="w-full border-2 border-slate-200 rounded-xl px-3 py-3 text-base outline-none focus:border-teal-600">
         </div>
       </div>
@@ -215,22 +233,26 @@
       <button id="saveBtn" class="w-full rounded-2xl py-5 text-xl font-extrabold text-white bg-teal-700 active:bg-teal-800 shadow-lg">저장하기</button>
     </div>
 
-    <div id="purHelp" class="hidden-x bg-white rounded-2xl p-4 border border-slate-200 text-xs text-slate-500 leading-relaxed space-y-1">
-      <div class="font-bold text-slate-700 text-sm mb-1">🚦 신호등 기준</div>
-      <div>🟢 <b>초록불</b> — 부가세 환급(매입세액공제) O + 5월 소득세 경비 O</div>
-      <div>🟡 <b>노란불</b> — 부가세 환급 X, 5월 소득세 경비로만 인정 (전액을 경비로 기록)</div>
-      <div>• 간이영수증은 품목과 관계없이 자동 노란불 (부가세 공제 불가). 건당 3만원 초과는 적격증빙 미수취 가산세(2%) 대상일 수 있어요.</div>
-      <div>• 작업차량은 화물차·경차·9인승 이상 승합차만 초록불, 일반 5인승 승용차는 노란불이에요.</div>
-      <div>• 대표자 본인 식대는 가사비용으로 보아 경비 부인될 수 있으니 메모에 현장·출장 등 업무 관련성을 남겨 두세요.</div>
-      <div>• 접대비(고객 다과)는 건당 3만원 초과 시 반드시 사업용카드 등 적격증빙이 필요해요.</div>
-    </div>
+    <details id="purHelp" class="hidden-x bg-white rounded-2xl p-4 border border-slate-200 text-xs text-slate-600 leading-relaxed">
+      <summary class="font-bold text-slate-700 text-sm">🚦 신호등 기준 자세히 보기 ▾</summary>
+      <div class="mt-2 space-y-1">
+        <div>🟢 <b>초록불</b> — 부가세 돌려받음(매입세액공제) + 5월 소득세 경비 인정</div>
+        <div>🟡 <b>노란불</b> — 부가세는 못 돌려받고, 5월 소득세 경비로만 인정 (낸 돈 전액을 경비로 기록)</div>
+        <div>• <b>간이영수증·계좌이체(증빙 없음)</b>은 품목과 관계없이 자동 노란불이에요. 한 건에 3만원(부가세 포함)이 넘으면 '증빙불비 가산세 2%'가 붙을 수 있으니 되도록 사업용카드로 결제하세요.</div>
+        <div>• 작업차량은 <b>화물차·경차·9인승 이상 승합차</b>만 초록불이에요. 일반 5인승 승용차는 노란불이에요.</div>
+        <div>• 외주·하청(다른 청소업체에 일을 넘긴 경우)은 반드시 <b>세금계산서</b>를 받아야 부가세를 돌려받아요.</div>
+        <div>• 카드·PG 수수료, 보험료, 대형폐기물 스티커·처리 수수료는 원래 부가세가 없는 항목이라 노란불이에요.</div>
+        <div>• 대표자 혼자 먹은 밥값은 세무서가 '개인 생활비'로 보고 경비에서 뺄 수 있어요. 메모에 어느 현장·출장이었는지 꼭 남겨 두세요.</div>
+        <div>• 고객 접대(음료·다과)는 한 건에 3만원이 넘으면 반드시 사업용카드 등 정식 증빙이 있어야 경비로 인정돼요.</div>
+      </div>
+    </details>
   </section>
 
-  <!-- ================= 홈택스 요약 ================= -->
+  <!-- ================= 신고표 ================= -->
   <section id="panel-hometax" class="mt-4 space-y-4 hidden-x">
     <div class="bg-teal-50 border border-teal-200 rounded-2xl p-3 text-sm text-teal-900">
       <b id="htPeriodTitle">기간</b><br>
-      <span class="text-xs">숫자를 누르면 복사돼요. 홈택스 입력칸에 그대로 붙여넣으세요.</span>
+      <span class="text-xs">초록색 숫자를 누르면 복사돼요. 홈택스 입력칸에 그대로 붙여넣으세요.</span>
     </div>
     <div id="hometaxBody" class="space-y-4"></div>
   </section>
@@ -257,13 +279,77 @@
     <div class="text-xs text-slate-500" id="listCount"></div>
     <div id="txList" class="space-y-2"></div>
   </section>
+
+  <!-- ================= 설정 ================= -->
+  <section id="panel-settings" class="mt-4 space-y-4 hidden-x">
+    <div class="bg-white rounded-2xl p-4 shadow-sm border border-slate-200 space-y-3">
+      <div class="text-sm font-extrabold">🏢 사업자 (사업자등록번호마다 따로)</div>
+      <div class="text-[11px] text-slate-500 leading-snug">링크클린·이케이클린처럼 사업자등록번호가 다르면 장부와 신고도 따로예요. 사업자를 추가하고 위쪽 이름을 눌러 바꿔 가며 쓰세요.</div>
+      <div id="bizList" class="space-y-2"></div>
+      <button id="addBizBtn" class="choice w-full rounded-xl border-2 border-dashed border-teal-500 text-teal-700 py-3 text-sm font-extrabold">+ 사업자 추가</button>
+    </div>
+
+    <div class="bg-white rounded-2xl p-4 shadow-sm border border-slate-200 space-y-3">
+      <div class="text-sm font-extrabold">📏 장부 의무 판정 <span class="text-xs font-medium text-slate-400" id="setBizName"></span></div>
+      <div>
+        <div class="text-xs font-bold text-slate-600 mb-1" id="prevRevLabel">작년 1년 매출 (부가세 뺀 공급가액)</div>
+        <div class="relative">
+          <input id="prevRevInp" type="text" inputmode="numeric" placeholder="예: 120,000,000" class="w-full border-2 border-slate-200 rounded-xl pl-3 pr-10 py-3 text-lg font-bold text-right outline-none focus:border-teal-600 num">
+          <span class="absolute right-3 top-1/2 -translate-y-1/2 text-sm font-bold text-slate-400">원</span>
+        </div>
+        <div class="text-[11px] text-slate-400 mt-1">작년 부가세 신고서 1기+2기 '과세표준(공급가액)' 합계를 넣으세요.</div>
+      </div>
+      <div id="bookTypeBox"></div>
+    </div>
+
+    <div class="bg-white rounded-2xl p-4 shadow-sm border border-slate-200 space-y-3">
+      <div class="text-sm font-extrabold">🧮 세금 계산에 쓰는 정보</div>
+      <label class="flex items-start gap-3">
+        <input type="checkbox" id="under10Chk" class="mt-1 w-6 h-6 accent-teal-700">
+        <span class="text-sm leading-snug"><b>작년 공급가액 10억원 이하</b><br><span class="text-xs text-slate-500">해당하면 카드·현금영수증 매출의 1.3%를 부가세에서 깎아줘요 (신용카드 발행세액공제).</span></span>
+      </label>
+      <label class="flex items-start gap-3">
+        <input type="checkbox" id="halfYearChk" class="mt-1 w-6 h-6 accent-teal-700">
+        <span class="text-sm leading-snug"><b>원천세 반기납부 승인 받음</b><br><span class="text-xs text-slate-500">승인 받은 경우 원천세를 매달이 아니라 7월·1월 10일에 한 번에 내요. 잘 모르면 체크하지 마세요.</span></span>
+      </label>
+      <div class="grid grid-cols-1 gap-2">
+        <div>
+          <div class="text-xs font-bold text-slate-600 mb-1">부양가족 수 (본인 제외: 배우자·자녀·부모님 등)</div>
+          <input id="depInp" type="number" inputmode="numeric" min="0" value="0" class="w-full border-2 border-slate-200 rounded-xl px-3 py-3 text-base outline-none focus:border-teal-600 num">
+          <div class="text-[11px] text-slate-400 mt-1">소득·나이 요건이 있어요(배우자 소득 100만원 이하, 자녀 20세 이하, 부모님 60세 이상 등).</div>
+        </div>
+        <div>
+          <div class="text-xs font-bold text-slate-600 mb-1">1년 국민연금 낸 금액 (본인)</div>
+          <input id="pensionInp" type="text" inputmode="numeric" placeholder="0" class="w-full border-2 border-slate-200 rounded-xl px-3 py-3 text-base text-right outline-none focus:border-teal-600 num">
+        </div>
+        <div>
+          <div class="text-xs font-bold text-slate-600 mb-1">1년 노란우산공제 낸 금액</div>
+          <input id="umbrellaInp" type="text" inputmode="numeric" placeholder="0" class="w-full border-2 border-slate-200 rounded-xl px-3 py-3 text-base text-right outline-none focus:border-teal-600 num">
+        </div>
+      </div>
+      <div class="text-[11px] text-slate-400">이 값들은 이 기기에만 저장되고, 백업 파일에도 함께 들어가요.</div>
+    </div>
+
+    <div class="bg-white rounded-2xl p-4 shadow-sm border border-slate-200 text-xs text-slate-600 leading-relaxed space-y-1">
+      <div class="text-sm font-extrabold text-slate-800 mb-1">📅 링크클린 세무 달력</div>
+      <div>• <b>매달 10일</b> — 지난달 인건비 원천세 신고·납부 (홈택스 → 원천세)</div>
+      <div>• <b>매달 말일</b> — 지난달 일용직 지급명세서 / 3.3% 간이지급명세서 제출</div>
+      <div>• <b>1월 25일</b> — 부가세 2기 확정신고 (작년 7~12월)</div>
+      <div>• <b>4월</b> — 부가세 예정고지서 납부 (작년 2기 세금의 절반, 50만원 미만은 고지 없음)</div>
+      <div>• <b>5월 31일</b> — 종합소득세 신고 (성실신고 대상은 6월 30일)</div>
+      <div>• <b>7월 25일</b> — 부가세 1기 확정신고 (1~6월)</div>
+      <div>• <b>10월</b> — 부가세 예정고지서 납부 (1기 세금의 절반)</div>
+      <div>• <b>11월</b> — 종합소득세 중간예납 고지서 납부</div>
+      <div class="text-slate-400">마감일이 주말·공휴일이면 다음 영업일까지예요.</div>
+    </div>
+  </section>
 </main>
 
 <div id="toast" class="fixed left-1/2 -translate-x-1/2 bottom-8 z-50 bg-slate-900 text-white text-sm font-bold px-5 py-3 rounded-full shadow-xl opacity-0 pointer-events-none translate-y-2"></div>
 
 <script>
 // =====================================================================
-//  링크클린 세무장부 — 단일 파일 PWA (LocalStorage 저장)
+//  링크클린 세무장부 v2 — 단일 파일 PWA (LocalStorage 저장)
 // =====================================================================
 var STORE_KEY = 'linkclean_ledger_v1';
 var META_KEY = 'linkclean_ledger_meta_v1';
@@ -274,29 +360,36 @@ var SALE_CATS = [
 ];
 var SALE_PAYS = [
   { k: 'card', l: '카드결제', i: '💳' }, { k: 'invoice', l: '세금계산서', i: '📄' },
-  { k: 'cashReceipt', l: '현금영수증', i: '🧾' }, { k: 'cash', l: '순수현금(미발행)', i: '💵' }
+  { k: 'cashReceipt', l: '현금영수증', i: '🧾' }, { k: 'cash', l: '현금·계좌이체', sub: '영수증 미발행', i: '💵' }
 ];
 var PUR_ITEMS = [
   { k: 'chem', l: '청소세제·약품', light: 'green', i: '🧴' },
-  { k: 'equip', l: '장비·도구', sub: '스퀴지·청소기 등', light: 'green', i: '🧹' },
-  { k: 'vehicle', l: '작업차량 주유·수리', sub: '화물·경차·9인승↑', light: 'green', i: '🚚' },
+  { k: 'equip', l: '장비·도구', sub: '스퀴지·청소기 등', light: 'green', i: '🧹', asset: true },
+  { k: 'vehicle', l: '작업차량 주유·수리', sub: '화물·경차·9인승↑', light: 'green', i: '🚚', asset: true },
   { k: 'wear', l: '작업복·안전용품', light: 'green', i: '🦺' },
   { k: 'telecom', l: '통신비·인터넷', light: 'green', i: '📱' },
-  { k: 'marketing', l: '홍보·마케팅비', light: 'green', i: '📣' },
+  { k: 'marketing', l: '홍보·마케팅비', sub: '광고·플랫폼 수수료', light: 'green', i: '📣' },
+  { k: 'outsource', l: '외주·하청 용역비', sub: '세금계산서 필수', light: 'green', i: '🤝' },
+  { k: 'rent', l: '사무실·창고 임차료', light: 'green', i: '🏬' },
+  { k: 'supplies', l: '소모품·사무용품', light: 'green', i: '📦' },
   { k: 'meal', l: '대표자 식대', sub: '혼자 먹은 밥·음료', light: 'yellow', i: '🍚' },
   { k: 'entertain', l: '고객 음료·다과', sub: '접대비', light: 'yellow', i: '☕' },
   { k: 'taxfree', l: '면세 물품 구입', light: 'yellow', i: '🥬' },
-  { k: 'car', l: '승용차(5인승) 비용', light: 'yellow', i: '🚗' }
+  { k: 'car', l: '승용차(5인승) 비용', light: 'yellow', i: '🚗', asset: true },
+  { k: 'insurance', l: '보험료·공과금', sub: '차보험·건보료·자동차세', light: 'yellow', i: '🛡️' },
+  { k: 'cardfee', l: '카드·PG 수수료', light: 'yellow', i: '🏦' },
+  { k: 'waste', l: '폐기물 처리비', sub: '대형폐기물 스티커 등', light: 'yellow', i: '♻️' }
 ];
 var PUR_EVIDS = [
   { k: 'bizCard', l: '사업용카드', i: '💳' }, { k: 'invoice', l: '세금계산서', i: '📄' },
-  { k: 'cashReceipt', l: '현금영수증', i: '🧾' }, { k: 'simple', l: '간이영수증', i: '📝', note: '자동 노란불' }
+  { k: 'cashReceipt', l: '현금영수증', sub: '지출증빙용', i: '🧾' }, { k: 'simple', l: '간이영수증', i: '📝', note: '자동 노란불' },
+  { k: 'transfer', l: '계좌이체', sub: '증빙 없음', i: '🏧', note: '자동 노란불' }
 ];
 var LABOR_KINDS = [
   { k: 'daily', l: '일용직(일당)', i: '👷' }, { k: 'freelance', l: '3.3% 프리랜서', i: '🧑‍💼' }
 ];
 
-function labelOf(list, k) { for (var j = 0; j < list.length; j++) if (list[j].k === k) return list[j].l || list[j].k; return k; }
+function labelOf(list, k) { for (var j = 0; j < list.length; j++) if (list[j].k === k) return list[j].l || list[j].k; return k || ''; }
 function itemOf(k) { for (var j = 0; j < PUR_ITEMS.length; j++) if (PUR_ITEMS[j].k === k) return PUR_ITEMS[j]; return PUR_ITEMS[0]; }
 
 // ---------- 저장소 ----------
@@ -313,6 +406,27 @@ function saveMeta() { try { localStorage.setItem(META_KEY, JSON.stringify(meta))
 
 var txs = loadTx();
 var meta = loadMeta();
+function normalizeMeta() {
+  if (!Array.isArray(meta.bizList) || !meta.bizList.length) meta.bizList = [{ id: 'main', name: '링크클린' }];
+  if (!meta.curBiz || !meta.bizList.some(function (b) { return b.id === meta.curBiz; })) meta.curBiz = meta.bizList[0].id;
+  if (!meta.settings || typeof meta.settings !== 'object') meta.settings = {};
+  meta.bizList.forEach(function (b) {
+    var s = meta.settings[b.id] || {};
+    if (typeof s.under10eok !== 'boolean') s.under10eok = true;
+    if (typeof s.halfYear !== 'boolean') s.halfYear = false;
+    if (!s.prepaid || typeof s.prepaid !== 'object') s.prepaid = {};
+    s.dependents = Math.max(0, parseInt(s.dependents, 10) || 0);
+    s.pension = Math.max(0, Number(s.pension) || 0);
+    s.umbrella = Math.max(0, Number(s.umbrella) || 0);
+    s.prevRevenue = (s.prevRevenue === null || s.prevRevenue === undefined || s.prevRevenue === '') ? null : Math.max(0, Number(s.prevRevenue) || 0);
+    meta.settings[b.id] = s;
+  });
+}
+normalizeMeta();
+txs.forEach(function (t) { if (!t.biz) t.biz = meta.bizList[0].id; });
+function S_() { return meta.settings[meta.curBiz]; }
+function bizName(id) { var b = meta.bizList.filter(function (x) { return x.id === (id || meta.curBiz); })[0]; return b ? b.name : ''; }
+function myTx() { return txs.filter(function (t) { return t.biz === meta.curBiz; }); }
 
 // ---------- 유틸 ----------
 function won(n) { n = Math.round(n || 0); return (n < 0 ? '-' : '') + Math.abs(n).toLocaleString('ko-KR') + '원'; }
@@ -323,75 +437,86 @@ function floor10(n) { return Math.floor(n / 10) * 10; }
 function uid() { return Date.now().toString(36) + Math.random().toString(36).slice(2, 8); }
 function esc(s) { return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]; }); }
 function $(id) { return document.getElementById(id); }
+function numOf(v) { return parseInt(String(v || '').replace(/[^0-9]/g, ''), 10) || 0; }
 
 var toastTimer = null;
 function toast(msg) {
   var t = $('toast'); t.textContent = msg;
   t.style.opacity = '1'; t.style.transform = 'translate(-50%, 0)';
   clearTimeout(toastTimer);
-  toastTimer = setTimeout(function () { t.style.opacity = '0'; t.style.transform = 'translate(-50%, 8px)'; }, 1800);
+  toastTimer = setTimeout(function () { t.style.opacity = '0'; t.style.transform = 'translate(-50%, 8px)'; }, 2000);
 }
 
 // ---------- 세금 계산 ----------
-function splitVat(total) {
-  var supply = Math.round(total / 1.1);
-  return { supply: supply, vat: total - supply };
-}
-// 3.3% 사업소득 원천징수 (소득세 3% + 지방소득세 0.3%, 소액부징수 1,000원 미만)
+function splitVat(total) { var supply = Math.round(total / 1.1); return { supply: supply, vat: total - supply }; }
+// 3.3% 사업소득 원천징수 (소득세 3% + 지방소득세 0.3%, 소득세 1,000원 미만 소액부징수)
 function calcFreelance(total) {
-  var it = floor10(total * 0.03);
-  if (it < 1000) it = 0;
+  var it = floor10(total * 0.03); if (it < 1000) it = 0;
   var lt = floor10(it * 0.1);
   return { incomeTax: it, localTax: lt, withholding: it + lt, net: total - it - lt };
 }
-// 일용근로소득 원천징수: (일당 − 15만원) × 6% × (1 − 55%) = 2.7%, 지방세 10%, 소액부징수
+// 일용근로소득: (일당 − 15만원) × 6% × (1 − 55%) = 2.7%, 지방세 10%, 소액부징수(1,000원 미만)
 function calcDaily(total, days) {
   days = Math.max(1, Math.floor(days || 1));
   var perDay = total / days;
-  var perTax = floor10(Math.max(0, perDay - 150000) * 0.027);
-  if (perTax < 1000) perTax = 0;
-  var it = perTax * days;
-  var lt = floor10(perTax * 0.1) * days;
+  var perTax = floor10(Math.max(0, perDay - 150000) * 0.027); if (perTax < 1000) perTax = 0;
+  var it = perTax * days, lt = floor10(perTax * 0.1) * days;
   return { incomeTax: it, localTax: lt, withholding: it + lt, net: total - it - lt, perDay: perDay };
+}
+// 신용카드매출전표 등 발행세액공제 (직전연도 공급가액 10억 이하 개인사업자)
+function cardRule(y) {
+  if (y <= 2026) return { rate: 0.013, limit: 10000000, note: '1.3% · 연 1,000만원 한도 (2026년 공급분까지)' };
+  return { rate: 0.012, limit: 5000000, note: '1.2% · 연 500만원 한도 (2027년~ 정부 개편안 기준, 국회 확정 여부 확인)' };
+}
+// 종합소득세 기본세율 (2023년 귀속~)
+var BRACKETS = [
+  [14000000, 0.06, 0], [50000000, 0.15, 1260000], [88000000, 0.24, 5760000], [150000000, 0.35, 15440000],
+  [300000000, 0.38, 19940000], [500000000, 0.40, 25940000], [1000000000, 0.42, 35940000], [Infinity, 0.45, 65940000]
+];
+function incomeTaxOf(base) {
+  if (base <= 0) return { tax: 0, rate: 0 };
+  for (var j = 0; j < BRACKETS.length; j++) if (base <= BRACKETS[j][0]) return { tax: Math.max(0, Math.floor(base * BRACKETS[j][1] - BRACKETS[j][2])), rate: BRACKETS[j][1] };
+  return { tax: 0, rate: 0 };
+}
+// 장부 의무 (사업시설관리·사업지원 서비스업 = 청소업 기준)
+function bookType(rev) {
+  if (rev === null || rev === undefined) return null;
+  if (rev < 24000000) return { k: 'simple', t: '간편장부 대상자 (단순경비율 대상)', c: 'green', d: '이 앱 숫자로 홈택스에서 혼자 신고할 수 있어요. 장부 없이 신고해도 되지만, 실제 경비가 많다면 간편장부로 신고하는 게 유리할 수 있어요.' };
+  if (rev < 75000000) return { k: 'simple', t: '간편장부 대상자', c: 'green', d: '이 앱이 만들어 주는 숫자로 홈택스에서 혼자 종합소득세 신고를 할 수 있어요. (복식부기로 신고하면 산출세액 20%, 최대 100만원 기장세액공제)' };
+  if (rev < 150000000) return { k: 'double', t: '복식부기 의무자 (자기조정 가능)', c: 'amber', d: '종합소득세는 간편장부가 아니라 복식부기 장부(재무상태표·손익계산서)로 신고해야 해요. 장부 없이 신고하면 무기장 가산세(산출세액 20%)가 붙어요. 부가세는 이 앱으로 혼자 신고 가능하고, 종소세는 이 앱 CSV를 세무사에게 넘기는 걸 추천해요. 사업용 계좌 신고·사용도 의무예요.' };
+  if (rev < 500000000) return { k: 'external', t: '복식부기 의무자 · 외부조정 대상', c: 'red', d: '종합소득세는 세무사가 작성한 조정계산서를 붙여야 해서 혼자 신고할 수 없어요. 부가세는 이 앱으로 혼자 신고하고, 종소세는 이 앱의 CSV·백업 파일을 세무사에게 주면 기장료를 줄일 수 있어요. 사업용 계좌 신고·사용 의무, 업무용 승용차 운행기록부도 챙기세요.' };
+  return { k: 'sincere', t: '성실신고확인 대상', c: 'red', d: '종합소득세를 세무사의 성실신고확인을 받아 6월 30일까지 신고해야 해요. 부가세는 이 앱으로 혼자 신고 가능해요.' };
 }
 
 // ---------- 입력 상태 ----------
-var form = {
-  type: 'sale',
-  saleCat: SALE_CATS[0].k, salePay: 'card', cashVat: true,
-  purItem: 'chem', purEvid: 'bizCard',
-  laborKind: 'daily'
-};
-var view = {
-  tab: 'input', year: new Date().getFullYear(),
-  period: (new Date().getMonth() < 6 ? 'H1' : 'H2'),
-  listFilter: 'all'
-};
+var form = { type: 'sale', saleCat: SALE_CATS[0].k, salePay: 'card', cashVat: true, purItem: 'chem', purEvid: 'bizCard', fixed: false, laborKind: 'daily' };
+var editing = null; // 수정 중인 거래
+var view = { tab: 'input', year: new Date().getFullYear(), period: (new Date().getMonth() < 6 ? 'H1' : 'H2'), listFilter: 'all' };
 
-function getAmount() { return parseInt(($('amountInp').value || '').replace(/[^0-9]/g, ''), 10) || 0; }
+function getAmount() { return numOf($('amountInp').value); }
 function setAmount(n) { $('amountInp').value = n > 0 ? comma(n) : ''; renderPreview(); }
-
-function purLight() {
-  if (form.purEvid === 'simple') return 'yellow';
-  return itemOf(form.purItem).light;
-}
+function purLight() { if (form.purEvid === 'simple' || form.purEvid === 'transfer') return 'yellow'; return itemOf(form.purItem).light; }
 
 function buildEntry() {
   var total = getAmount();
-  var e = { id: uid(), type: form.type, date: $('dateInp').value || todayStr(), total: total, memo: $('memoInp').value.trim(), createdAt: Date.now() };
+  var e = { id: editing ? editing.id : uid(), biz: meta.curBiz, type: form.type, date: $('dateInp').value || todayStr(), total: total, memo: $('memoInp').value.trim(), createdAt: editing ? editing.createdAt : Date.now() };
   if (form.type === 'sale') {
     e.category = form.saleCat; e.pay = form.salePay;
-    if (form.salePay === 'cash' && !form.cashVat) { e.supply = total; e.vat = 0; e.vatIncluded = false; }
-    else { var s = splitVat(total); e.supply = s.supply; e.vat = s.vat; e.vatIncluded = true; }
+    if (form.salePay === 'cash' && !form.cashVat) {
+      // 받은 금액 = 공급가액, 부가세 10% 별도
+      e.supply = total; e.vat = Math.round(total * 0.1); e.total = total + e.vat; e.vatIncluded = false; e.received = total;
+    } else { var s = splitVat(total); e.supply = s.supply; e.vat = s.vat; e.vatIncluded = true; }
   } else if (form.type === 'purchase') {
     e.item = form.purItem; e.evid = form.purEvid; e.light = purLight();
+    e.fixed = !!(form.fixed && itemOf(form.purItem).asset);
     if (e.light === 'green') { var p = splitVat(total); e.supply = p.supply; e.vat = p.vat; }
     else { e.supply = total; e.vat = 0; } // 노란불: 부가세 불공제 → 전액 소득세 경비
   } else {
     e.kind = form.laborKind; e.name = $('laborName').value.trim();
     e.supply = total; e.vat = 0;
-    var w = form.laborKind === 'freelance' ? calcFreelance(total) : calcDaily(total, parseInt($('laborDays').value, 10));
-    e.days = form.laborKind === 'daily' ? Math.max(1, parseInt($('laborDays').value, 10) || 1) : null;
+    var days = Math.max(1, parseInt($('laborDays').value, 10) || 1);
+    var w = form.laborKind === 'freelance' ? calcFreelance(total) : calcDaily(total, days);
+    e.days = form.laborKind === 'daily' ? days : null;
     e.incomeTax = w.incomeTax; e.localTax = w.localTax; e.withholding = w.withholding; e.net = w.net;
   }
   return e;
@@ -419,84 +544,129 @@ function renderForm() {
   $('purOpts').classList.toggle('hidden-x', form.type !== 'purchase');
   $('purHelp').classList.toggle('hidden-x', form.type !== 'purchase');
   $('laborOpts').classList.toggle('hidden-x', form.type !== 'labor');
+  $('editBanner').classList.toggle('hidden-x', !editing);
 
   var btn = $('saveBtn');
   btn.className = 'w-full rounded-2xl py-5 text-xl font-extrabold text-white shadow-lg ' +
     (form.type === 'sale' ? 'bg-blue-600 active:bg-blue-700' : form.type === 'purchase' ? 'bg-red-600 active:bg-red-700' : 'bg-violet-600 active:bg-violet-700');
-  btn.textContent = form.type === 'sale' ? '매출 저장하기' : form.type === 'purchase' ? '매입 저장하기' : '인건비 저장하기';
+  var nm = form.type === 'sale' ? '매출' : form.type === 'purchase' ? '매입' : '인건비';
+  btn.textContent = editing ? nm + ' 수정 저장' : nm + ' 저장하기';
 
-  $('amountLabel').textContent = form.type === 'labor' ? '지급 총액 (원천징수 전 금액)' : '금액 (부가세 포함 총액)';
+  $('amountLabel').textContent = form.type === 'labor' ? '지급 총액 (세금 떼기 전 금액)' :
+    (form.type === 'sale' && form.salePay === 'cash' && !form.cashVat) ? '받은 금액 (부가세 별도)' : '금액 (부가세 포함 총액)';
+  $('dateLabel').textContent = form.type === 'labor' ? '지급한 날짜' : form.type === 'sale' ? '날짜 (작업 완료일 또는 결제일)' : '날짜 (결제일)';
 
   if (form.type === 'sale') {
     renderChoices('saleCatGroup', SALE_CATS, form.saleCat, function (k) { form.saleCat = k; renderForm(); });
     renderChoices('salePayGroup', SALE_PAYS, form.salePay, function (k) { form.salePay = k; renderForm(); });
     $('cashVatWrap').classList.toggle('hidden-x', form.salePay !== 'cash');
     $('cashVatChk').checked = form.cashVat;
+    var hints = {
+      card: '카드 매출은 카드사 자료가 국세청에 자동으로 넘어가요. 카드 매출의 1.3%는 부가세에서 깎아줘요.',
+      invoice: '사업자 고객에게 전자세금계산서를 발행했다면 홈택스에 자동 반영돼요. ⚠️ 세금계산서를 끊고 같은 돈을 카드로도 받았다면 둘 중 하나만 입력하세요(이중 매출 방지).',
+      cashReceipt: '현금영수증 매출도 1.3% 발행세액공제를 받아요. 현금 받을 땐 되도록 현금영수증을 끊어 주세요.',
+      cash: '영수증 없이 받은 현금·계좌이체도 꼭 입력하세요. 고객이 요청하면 현금영수증을 발급해야 하고, 손택스 앱에서 바로 발급할 수 있어요. 발급하면 1.3% 공제도 받아요.'
+    };
+    $('salePayHint').textContent = hints[form.salePay] || '';
   } else if (form.type === 'purchase') {
-    var forcedYellow = form.purEvid === 'simple';
-    renderChoices('purItemGroup', PUR_ITEMS, form.purItem, function (k) { form.purItem = k; renderForm(); },
+    var forcedYellow = form.purEvid === 'simple' || form.purEvid === 'transfer';
+    renderChoices('purItemGroup', PUR_ITEMS, form.purItem, function (k) { form.purItem = k; if (!itemOf(k).asset) form.fixed = false; renderForm(); },
       function (o) { return o.light === 'yellow' || forcedYellow; });
     renderChoices('purEvidGroup', PUR_EVIDS, form.purEvid, function (k) { form.purEvid = k; renderForm(); },
-      function (o) { return o.k === 'simple'; });
+      function (o) { return o.k === 'simple' || o.k === 'transfer'; });
+    $('fixedWrap').classList.toggle('hidden-x', !itemOf(form.purItem).asset);
+    $('fixedChk').checked = !!form.fixed;
     var L = purLight(); var banner = $('lightBanner');
     if (L === 'green') {
       banner.className = 'rounded-xl p-3 text-sm font-bold bg-green-50 border-2 border-green-500 text-green-800';
-      banner.innerHTML = '🟢 초록불 — 부가세 환급 O + 소득세 경비 O';
+      banner.innerHTML = '🟢 초록불 — 부가세 돌려받음 + 소득세 경비 O';
     } else {
       banner.className = 'rounded-xl p-3 text-sm font-bold bg-yellow-50 border-2 border-yellow-400 text-yellow-800';
-      banner.innerHTML = '🟡 노란불 — 부가세 환급 X, 5월 소득세 경비만 O' + (forcedYellow && itemOf(form.purItem).light === 'green' ? '<div class="text-xs font-medium mt-1">간이영수증이라 초록불 품목이지만 노란불로 바뀌었어요. 다음엔 사업용카드로 결제하세요!</div>' : '');
+      banner.innerHTML = '🟡 노란불 — 부가세 환급 X, 5월 소득세 경비만 O' + (forcedYellow && itemOf(form.purItem).light === 'green' ? '<div class="text-xs font-medium mt-1">원래 초록불 품목인데 증빙이 약해서 노란불이 됐어요. 다음엔 사업용카드·세금계산서로 받으세요!</div>' : '');
     }
   } else {
     renderChoices('laborKindGroup', LABOR_KINDS, form.laborKind, function (k) { form.laborKind = k; renderForm(); });
     $('daysWrap').classList.toggle('hidden-x', form.laborKind !== 'daily');
+    $('laborHint').textContent = form.laborKind === 'daily'
+      ? '하루 단위로 일당을 받는 사람. 같은 사람을 3개월 넘게 계속 쓰면 일용직이 아니라 일반 직원(4대보험)이 돼요. 한 달 8일 이상 일하면 국민연금·건강보험 가입 대상일 수 있어요.'
+      : '사업자등록 없는 개인에게 일을 맡기고 3.3%를 떼고 준 경우. 매달 간이지급명세서를 내야 경비로 인정받기 쉬워요.';
   }
   renderPreview();
 }
 
 function renderPreview() {
-  var e = buildEntry(); var p = $('preview');
-  if (!e.total) { p.innerHTML = '<span class="text-slate-400">금액을 입력하면 자동으로 계산돼요.</span>'; return; }
+  var e = buildEntry(); var p = $('preview'); var w = $('warnBox'); var warns = [];
+  function row(a, b) { return '<div class="flex justify-between py-0.5"><span class="text-slate-500">' + a + '</span><span class="font-bold">' + b + '</span></div>'; }
+  if (!e.total) { p.innerHTML = '<span class="text-slate-400">금액을 입력하면 자동으로 계산돼요.</span>'; w.classList.add('hidden-x'); return; }
   if (e.type === 'sale') {
     p.innerHTML = row('공급가액', won(e.supply)) + row('부가세', won(e.vat)) +
-      (e.pay === 'cash' && !e.vatIncluded ? '<div class="text-xs text-amber-600 mt-1">부가세 0원으로 기록됩니다.</div>' : '');
+      (e.pay === 'cash' && !e.vatIncluded ? row('고객에게 받을 총액', won(e.total)) : '');
   } else if (e.type === 'purchase') {
-    if (e.light === 'green') p.innerHTML = row('공급가액 (경비)', won(e.supply)) + row('부가세 (환급 대상)', '<b class="text-green-700">' + won(e.vat) + '</b>');
+    if (e.light === 'green') p.innerHTML = row('공급가액 (경비)', won(e.supply)) + row('부가세 (돌려받을 돈)', '<b class="text-green-700">' + won(e.vat) + '</b>');
     else p.innerHTML = row('소득세 경비 인정액', won(e.supply)) + row('부가세 환급', '<span class="text-slate-400">없음</span>');
+    if (e.fixed) p.innerHTML += '<div class="text-[11px] text-sky-700 mt-1">고정자산으로 따로 기록돼요 (경비는 감가상각으로 나눠서).</div>';
+    if ((e.evid === 'simple' || e.evid === 'transfer') && e.total > 30000 && e.item !== 'insurance' && e.item !== 'waste' && e.item !== 'rent')
+      warns.push('3만원이 넘는 지출을 ' + (e.evid === 'simple' ? '간이영수증으로' : '증빙 없는 계좌이체로') + ' 처리하면 증빙불비 가산세 2%(' + won(e.total * 0.02) + ')가 붙을 수 있어요.');
+    if (e.item === 'entertain' && e.total > 30000 && e.evid !== 'bizCard' && e.evid !== 'invoice' && e.evid !== 'cashReceipt')
+      warns.push('3만원 넘는 접대비는 카드·현금영수증 등 정식 증빙이 없으면 경비로 아예 인정되지 않아요.');
+    if (e.item === 'outsource' && e.evid !== 'invoice')
+      warns.push('외주·하청비는 세금계산서를 받아야 부가세를 돌려받아요. 상대가 3.3% 프리랜서라면 [인건비]로 입력하세요.');
+    if (e.item === 'equip' && !e.fixed && e.total > 1000000)
+      warns.push('100만원이 넘는 장비 구입이라면 위의 "차량·장비를 새로 산 것"을 체크하세요.');
   } else {
-    var html = row('경비 인정액 (지급 총액)', won(e.total)) +
-      row('원천징수 소득세', won(e.incomeTax)) + row('지방소득세', won(e.localTax)) +
-      '<div class="border-t border-slate-300 my-1"></div>' +
-      row('<b>실지급액</b>', '<b class="text-violet-700 text-base">' + won(e.net) + '</b>');
-    if (e.kind === 'daily') html += '<div class="text-[11px] text-slate-500 mt-1">일당 ' + won(e.total / (e.days || 1)) + ' 기준 · 일당 15만원까지 비과세, 초과분 2.7% (1,000원 미만 미징수)</div>';
-    else html += '<div class="text-[11px] text-slate-500 mt-1">사업소득 3% + 지방세 0.3% · 다음 달 10일까지 원천세 신고·납부</div>';
+    var html = row('경비 인정액 (지급 총액)', won(e.total)) + row('원천징수 소득세', won(e.incomeTax)) + row('지방소득세', won(e.localTax)) +
+      '<div class="border-t border-slate-300 my-1"></div>' + row('<b>실제로 줄 돈</b>', '<b class="text-violet-700 text-base">' + won(e.net) + '</b>');
+    if (e.kind === 'daily') html += '<div class="text-[11px] text-slate-500 mt-1">일당 ' + won(e.total / (e.days || 1)) + ' 기준 · 일당 15만원까지 세금 없음, 넘는 부분만 2.7% (1,000원 미만은 안 뗌)</div>';
+    else html += '<div class="text-[11px] text-slate-500 mt-1">사업소득세 3% + 지방세 0.3% · 뗀 세금은 다음 달 10일까지 홈택스 원천세로 납부</div>';
     p.innerHTML = html;
   }
-  function row(a, b) { return '<div class="flex justify-between py-0.5"><span class="text-slate-500">' + a + '</span><span class="font-bold">' + b + '</span></div>'; }
+  if (warns.length) { w.innerHTML = warns.map(function (x) { return '⚠️ ' + esc(x); }).join('<br>'); w.classList.remove('hidden-x'); }
+  else w.classList.add('hidden-x');
 }
 
-// ---------- 저장 ----------
+// ---------- 저장 / 수정 ----------
 function saveEntry() {
   var e = buildEntry();
   if (!e.total) { toast('금액을 입력해 주세요'); $('amountInp').focus(); return; }
   if (e.type === 'labor' && !e.name) { toast('이름을 입력해 주세요'); $('laborName').focus(); return; }
-  txs.push(e); persist();
+  var wasEdit = !!editing;
+  if (editing) { txs = txs.map(function (t) { return t.id === e.id ? e : t; }); editing = null; }
+  else txs.push(e);
+  persist();
   $('amountInp').value = ''; $('memoInp').value = '';
   if (e.type === 'labor') { $('laborName').value = ''; $('laborDays').value = '1'; }
-  var y = parseInt(e.date.slice(0, 4), 10);
-  if (y !== view.year) { view.year = y; }
-  toast('✅ ' + (e.type === 'sale' ? '매출' : e.type === 'purchase' ? '매입' : '인건비') + ' ' + won(e.total) + ' 저장');
-  renderAll();
+  var y = parseInt(e.date.slice(0, 4), 10); if (y) view.year = y;
+  toast((wasEdit ? '✏️ 수정 완료 ' : '✅ ') + (e.type === 'sale' ? '매출' : e.type === 'purchase' ? '매입' : '인건비') + ' ' + won(e.total));
+  if (wasEdit) { view.tab = 'list'; }
+  renderForm(); renderAll();
+}
+function startEdit(t) {
+  editing = t; form.type = t.type;
+  if (t.type === 'sale') { form.saleCat = t.category; form.salePay = t.pay; form.cashVat = t.vatIncluded !== false; }
+  if (t.type === 'purchase') { form.purItem = t.item; form.purEvid = t.evid; form.fixed = !!t.fixed; }
+  if (t.type === 'labor') { form.laborKind = t.kind; $('laborName').value = t.name || ''; $('laborDays').value = t.days || 1; }
+  $('dateInp').value = t.date;
+  var amt = (t.type === 'sale' && t.vatIncluded === false) ? (t.received != null ? t.received : t.supply) : t.total;
+  $('amountInp').value = comma(amt);
+  $('memoInp').value = t.memo || '';
+  view.tab = 'input'; renderForm(); renderAll(); window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+function cancelEdit() {
+  editing = null; $('amountInp').value = ''; $('memoInp').value = ''; $('laborName').value = ''; $('laborDays').value = '1';
+  $('dateInp').value = todayStr(); view.tab = 'list'; renderForm(); renderAll();
 }
 
 // ---------- 기간 필터 & 집계 ----------
-function inPeriod(t) {
-  if (!t.date) return false;
-  var y = parseInt(t.date.slice(0, 4), 10), m = parseInt(t.date.slice(5, 7), 10);
-  if (y !== view.year) return false;
-  if (view.period === 'H1') return m >= 1 && m <= 6;
-  if (view.period === 'H2') return m >= 7 && m <= 12;
+function monthOf(t) { return parseInt((t.date || '').slice(5, 7), 10); }
+function yearOf(t) { return parseInt((t.date || '').slice(0, 4), 10); }
+function inRange(t, y, p) {
+  if (!t.date || yearOf(t) !== y) return false;
+  var m = monthOf(t);
+  if (p === 'H1') return m >= 1 && m <= 6;
+  if (p === 'H2') return m >= 7 && m <= 12;
   return true;
 }
+function inPeriod(t) { return inRange(t, view.year, view.period); }
 function periodName() {
   var y = view.year;
   if (view.period === 'H1') return y + '년 1기 (1~6월) · 부가세 확정신고 ' + y + '.7.1~7.25';
@@ -508,8 +678,8 @@ function summarize(list) {
   var S = {
     saleCardCash: { supply: 0, vat: 0, total: 0 }, saleCard: { total: 0 }, saleCashReceipt: { total: 0 },
     saleInvoice: { supply: 0, vat: 0, total: 0 }, saleCash: { supply: 0, vat: 0, total: 0 },
-    purInvoiceGreen: { supply: 0, vat: 0, total: 0 }, purCardGreen: { supply: 0, vat: 0, total: 0 },
-    yellow: { total: 0, count: 0 }, greenAll: { supply: 0, vat: 0, total: 0 },
+    pInvGen: { supply: 0, vat: 0 }, pInvFix: { supply: 0, vat: 0 }, pCardGen: { supply: 0, vat: 0 }, pCardFix: { supply: 0, vat: 0 },
+    greenVat: { supply: 0, vat: 0 }, greenExpense: 0, yellow: { total: 0, count: 0 }, fixed: { amount: 0, count: 0 },
     labor: { total: 0, daily: 0, freelance: 0, withholdDaily: 0, withholdFree: 0, count: 0 },
     salesTotal: 0, salesSupply: 0, salesVat: 0, purchaseTotal: 0, byCat: {}
   };
@@ -524,27 +694,63 @@ function summarize(list) {
     } else if (t.type === 'purchase') {
       S.purchaseTotal += t.total;
       if (t.light === 'green') {
-        var g = t.evid === 'invoice' ? S.purInvoiceGreen : S.purCardGreen;
-        g.supply += t.supply; g.vat += t.vat; g.total += t.total;
-        S.greenAll.supply += t.supply; S.greenAll.vat += t.vat; S.greenAll.total += t.total;
-      } else { S.yellow.total += t.total; S.yellow.count++; }
+        var g = t.evid === 'invoice' ? (t.fixed ? S.pInvFix : S.pInvGen) : (t.fixed ? S.pCardFix : S.pCardGen);
+        g.supply += t.supply; g.vat += t.vat;
+        S.greenVat.supply += t.supply; S.greenVat.vat += t.vat;
+      }
+      if (t.fixed) { S.fixed.amount += t.supply; S.fixed.count++; }
+      else if (t.light === 'green') S.greenExpense += t.supply;
+      else { S.yellow.total += t.total; S.yellow.count++; }
     } else if (t.type === 'labor') {
       S.labor.total += t.total; S.labor.count++;
       if (t.kind === 'freelance') { S.labor.freelance += t.total; S.labor.withholdFree += (t.withholding || 0); }
       else { S.labor.daily += t.total; S.labor.withholdDaily += (t.withholding || 0); }
     }
   });
-  S.vatDue = S.salesVat - S.greenAll.vat;
-  S.net = S.salesSupply - (S.greenAll.supply + S.yellow.total) - S.labor.total;
+  S.vatBase = S.salesVat - S.greenVat.vat;
+  S.net = S.salesSupply - S.greenExpense - S.yellow.total - S.labor.total;
   S.expenseTotal = S.purchaseTotal + S.labor.total;
   return S;
 }
 
-// ---------- 렌더: 대시보드 ----------
-function renderYearSel() {
+// 반기 부가세 최종 계산 (공제·예정고지 반영)
+function vatCalc(y, half) {
+  var st = S_();
+  var S = summarize(myTx().filter(function (t) { return inRange(t, y, half); }));
+  var rule = cardRule(y);
+  var used = half === 'H2' ? vatCalc(y, 'H1').cardCredit : 0;
+  var remain = Math.max(0, rule.limit - used);
+  var raw = st.under10eok ? S.saleCardCash.total * rule.rate : 0;
+  var cardCredit = Math.floor(Math.max(0, Math.min(raw, remain, Math.max(0, S.vatBase))));
+  var afterCard = S.vatBase - cardCredit;
+  var eCredit = afterCard > 0 ? Math.min(10000, afterCard) : 0;
+  var prepaid = Number(st.prepaid[y + '-' + half]) || 0;
+  return { S: S, base: S.vatBase, cardCredit: cardCredit, cardRaw: raw, rule: rule, eCredit: eCredit, prepaid: prepaid, final: S.vatBase - cardCredit - eCredit - prepaid };
+}
+
+// 종합소득세 예상
+function incomeCalc(y) {
+  var st = S_();
+  var S = summarize(myTx().filter(function (t) { return inRange(t, y, 'ALL'); }));
+  var income = S.net;
+  var personal = 1500000 * (1 + st.dependents);
+  var umbLimit = income <= 40000000 ? 6000000 : income <= 100000000 ? 4000000 : 2000000;
+  var umbrella = Math.min(st.umbrella, umbLimit);
+  var pension = st.pension;
+  var base = Math.max(0, income - personal - pension - umbrella);
+  var r = incomeTaxOf(base);
+  var stdCredit = Math.min(70000, r.tax);
+  var tax = r.tax - stdCredit;
+  var local = floor10(tax * 0.1);
+  return { S: S, income: income, personal: personal, umbrella: umbrella, umbLimit: umbLimit, pension: pension, base: base, rate: r.rate, calc: r.tax, stdCredit: stdCredit, tax: tax, local: local, total: tax + local };
+}
+
+// ---------- 렌더: 헤더 ----------
+function renderHeader() {
+  $('bizSel').innerHTML = meta.bizList.map(function (b) { return '<option class="text-slate-800" value="' + esc(b.id) + '"' + (b.id === meta.curBiz ? ' selected' : '') + '>' + esc(b.name) + ' 세무장부</option>'; }).join('');
   var years = {}; var cy = new Date().getFullYear();
   years[cy] = 1; years[cy - 1] = 1; years[view.year] = 1;
-  txs.forEach(function (t) { var y = parseInt((t.date || '').slice(0, 4), 10); if (y) years[y] = 1; });
+  txs.forEach(function (t) { var y = yearOf(t); if (y) years[y] = 1; });
   var arr = Object.keys(years).map(Number).sort(function (a, b) { return b - a; });
   $('yearSel').innerHTML = arr.map(function (y) { return '<option class="text-slate-800" value="' + y + '"' + (y === view.year ? ' selected' : '') + '>' + y + '년</option>'; }).join('');
 }
@@ -554,83 +760,203 @@ function renderDashboard() {
     var on = b.dataset.k === view.period;
     b.className = 'periodbtn rounded-xl py-2 text-sm font-bold ' + (on ? 'bg-white text-teal-800 shadow' : 'text-white');
   });
-  var S = summarize(txs.filter(inPeriod));
-  var vatEl = $('cardVat');
-  if (S.vatDue >= 0) { vatEl.textContent = won(S.vatDue); vatEl.className = 'text-3xl font-extrabold num mt-1 text-slate-900'; }
-  else { vatEl.textContent = '환급 ' + won(-S.vatDue); vatEl.className = 'text-3xl font-extrabold num mt-1 text-green-600'; }
-  $('cardVatSub').textContent = '매출세액 ' + comma(S.salesVat) + ' − 매입세액(초록불) ' + comma(S.greenAll.vat);
+  var y = view.year, vatEl = $('cardVat'), S, finalVat, sub;
+  if (view.period === 'ALL') {
+    var a = vatCalc(y, 'H1'), b = vatCalc(y, 'H2');
+    S = summarize(myTx().filter(inPeriod));
+    finalVat = a.final + a.prepaid + b.final + b.prepaid;
+    $('cardVatTitle').textContent = '🧾 올해 부가세 합계 (1기+2기)';
+    sub = '매출세액 ' + comma(S.salesVat) + ' − 매입세액 ' + comma(S.greenVat.vat) + ' − 공제 ' + comma(a.cardCredit + a.eCredit + b.cardCredit + b.eCredit);
+  } else {
+    var v = vatCalc(y, view.period); S = v.S; finalVat = v.final;
+    $('cardVatTitle').textContent = '🧾 예상 납부 부가세';
+    sub = '매출세액 ' + comma(S.salesVat) + ' − 매입세액 ' + comma(S.greenVat.vat) + (v.cardCredit ? ' − 카드공제 ' + comma(v.cardCredit) : '') + (v.eCredit ? ' − 전자신고 ' + comma(v.eCredit) : '') + (v.prepaid ? ' − 예정고지 ' + comma(v.prepaid) : '');
+  }
+  if (finalVat >= 0) { vatEl.textContent = won(finalVat); vatEl.className = 'text-3xl font-extrabold num mt-1 text-slate-900'; }
+  else { vatEl.textContent = '환급 ' + won(-finalVat); vatEl.className = 'text-3xl font-extrabold num mt-1 text-green-600'; }
+  $('cardVatSub').textContent = sub;
   var netEl = $('cardNet'); netEl.textContent = won(S.net);
   netEl.className = 'text-xl font-extrabold num mt-1 ' + (S.net >= 0 ? 'text-teal-700' : 'text-red-600');
+  if (view.period === 'ALL') { var ic = incomeCalc(y); $('cardNetSub').textContent = '예상 종소세+지방세 ' + won(ic.total); }
+  else $('cardNetSub').textContent = '매출공급가 − 경비 − 인건비';
   $('cardSales').textContent = won(S.salesTotal);
   $('cardExpense').textContent = won(S.expenseTotal);
   $('cardFlowTitle').textContent = view.period === 'ALL' ? '📊 올해 전체' : '📊 이번 반기';
-  var y = view.year;
-  $('deadlineTxt').textContent = view.period === 'H1' ? '신고 ~' + y + '.7.25' : view.period === 'H2' ? '신고 ~' + (y + 1) + '.1.25' : '연간 합계(참고)';
+  $('deadlineTxt').textContent = view.period === 'H1' ? '신고 ~' + y + '.7.25' : view.period === 'H2' ? '신고 ~' + (y + 1) + '.1.25' : '종소세 ~' + (y + 1) + '.5.31';
 }
 
-// ---------- 렌더: 홈택스 요약 ----------
+// ---------- 렌더: 신고표 ----------
 function cell(n, strong) {
-  return '<td class="copyable text-right px-2 py-2.5 num ' + (strong ? 'font-extrabold' : 'font-bold') + '" data-copy="' + Math.round(n) + '">' + comma(n) + '</td>';
+  return '<td class="copyable text-right px-2 py-2.5 num text-teal-800 ' + (strong ? 'font-extrabold' : 'font-bold') + '" data-copy="' + Math.round(n) + '">' + comma(n) + '</td>';
 }
-function renderHometax() {
-  $('htPeriodTitle').textContent = periodName();
-  var S = summarize(txs.filter(inPeriod));
-  var cardCredit = Math.min(S.saleCardCash.total * 0.013, 10000000);
-  var vatSection =
-    '<div class="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">' +
-      '<div class="bg-blue-600 text-white px-4 py-2.5 font-extrabold">① 매출 칸 <span class="text-xs font-medium opacity-80">(부가세 신고서 · 과세표준 및 매출세액)</span></div>' +
-      '<table class="w-full text-sm"><thead class="bg-slate-50 text-slate-500 text-xs"><tr><th class="text-left px-3 py-2">구분</th><th class="text-right px-2">공급가액</th><th class="text-right px-2">세액</th></tr></thead><tbody class="divide-y divide-slate-100">' +
-        '<tr><td class="px-3 py-2.5">세금계산서 발급분<div class="text-[11px] text-slate-400">신고서 (1)번</div></td>' + cell(S.saleInvoice.supply) + cell(S.saleInvoice.vat) + '</tr>' +
-        '<tr><td class="px-3 py-2.5">신용카드·현금영수증 발행분<div class="text-[11px] text-slate-400">신고서 (3)번 · 카드 ' + comma(S.saleCard.total) + ' / 현영 ' + comma(S.saleCashReceipt.total) + '</div></td>' + cell(S.saleCardCash.supply) + cell(S.saleCardCash.vat) + '</tr>' +
-        '<tr><td class="px-3 py-2.5">기타(정규영수증 외) 매출<div class="text-[11px] text-slate-400">신고서 (4)번 · 순수현금</div></td>' + cell(S.saleCash.supply) + cell(S.saleCash.vat) + '</tr>' +
-        '<tr class="bg-blue-50"><td class="px-3 py-2.5 font-extrabold">매출 합계 (9)</td>' + cell(S.salesSupply, true) + cell(S.salesVat, true) + '</tr>' +
-      '</tbody></table></div>' +
+function head3() { return '<thead class="bg-slate-50 text-slate-500 text-xs"><tr><th class="text-left px-3 py-2">홈택스 칸</th><th class="text-right px-2">공급가액</th><th class="text-right px-2">세액</th></tr></thead>'; }
+function lbl(main, sub) { return '<td class="px-3 py-2.5">' + main + (sub ? '<div class="text-[11px] text-slate-400">' + sub + '</div>' : '') + '</td>'; }
+function card(color, title, sub, inner) {
+  return '<div class="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden"><div class="' + color + ' text-white px-4 py-2.5 font-extrabold">' + title + (sub ? ' <span class="text-xs font-medium opacity-80">' + sub + '</span>' : '') + '</div>' + inner + '</div>';
+}
+function steps(title, arr) {
+  return '<details class="bg-white rounded-2xl shadow-sm border border-slate-200 p-4" open><summary class="font-extrabold text-sm">' + title + ' ▾</summary><ol class="mt-3 space-y-2 text-[13px] leading-snug">' +
+    arr.map(function (s, i) { return '<li class="flex gap-2"><span class="shrink-0 w-6 h-6 rounded-full bg-teal-700 text-white text-xs font-bold flex items-center justify-center">' + (i + 1) + '</span><span>' + s + '</span></li>'; }).join('') + '</ol></details>';
+}
 
-    '<div class="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">' +
-      '<div class="bg-red-600 text-white px-4 py-2.5 font-extrabold">② 매입 칸 <span class="text-xs font-medium opacity-80">(공제받을 매입세액 · 초록불만)</span></div>' +
-      '<table class="w-full text-sm"><thead class="bg-slate-50 text-slate-500 text-xs"><tr><th class="text-left px-3 py-2">구분</th><th class="text-right px-2">공급가액</th><th class="text-right px-2">세액</th></tr></thead><tbody class="divide-y divide-slate-100">' +
-        '<tr><td class="px-3 py-2.5">세금계산서 수취분 (일반매입)<div class="text-[11px] text-slate-400">신고서 (10)번</div></td>' + cell(S.purInvoiceGreen.supply) + cell(S.purInvoiceGreen.vat) + '</tr>' +
-        '<tr><td class="px-3 py-2.5">신용카드·현금영수증 일반매입<div class="text-[11px] text-slate-400">신고서 (14)번 그 밖의 공제매입세액 → (41)번</div></td>' + cell(S.purCardGreen.supply) + cell(S.purCardGreen.vat) + '</tr>' +
-        '<tr class="bg-red-50"><td class="px-3 py-2.5 font-extrabold">공제 매입세액 합계</td>' + cell(S.greenAll.supply, true) + cell(S.greenAll.vat, true) + '</tr>' +
-      '</tbody></table></div>' +
+function vatSectionHTML(y, half) {
+  var v = vatCalc(y, half), S = v.S;
+  var key = y + '-' + half;
+  var prepMonth = half === 'H1' ? '4월' : '10월';
+  var html = '';
+  html += card('bg-blue-600', '① 매출 (과세표준 및 매출세액)', '',
+    '<table class="w-full text-sm">' + head3() + '<tbody class="divide-y divide-slate-100">' +
+      '<tr>' + lbl('(1) 세금계산서 발급분', '전자세금계산서는 홈택스가 자동으로 불러와요') + cell(S.saleInvoice.supply) + cell(S.saleInvoice.vat) + '</tr>' +
+      '<tr>' + lbl('(3) 신용카드·현금영수증 발행분', '카드 ' + comma(S.saleCard.total) + ' / 현금영수증 ' + comma(S.saleCashReceipt.total) + ' (부가세 포함)') + cell(S.saleCardCash.supply) + cell(S.saleCardCash.vat) + '</tr>' +
+      '<tr>' + lbl('(4) 기타(정규영수증 외 매출분)', '영수증 안 끊은 현금·계좌이체 — 직접 입력해야 해요!') + cell(S.saleCash.supply) + cell(S.saleCash.vat) + '</tr>' +
+      '<tr class="bg-blue-50">' + lbl('<b>(9) 매출 합계</b>') + cell(S.salesSupply, true) + cell(S.salesVat, true) + '</tr>' +
+    '</tbody></table>');
 
-    '<div class="bg-slate-900 text-white rounded-2xl p-4 shadow">' +
-      '<div class="flex justify-between text-sm"><span class="opacity-70">매출세액</span><span class="num font-bold">' + comma(S.salesVat) + '</span></div>' +
-      '<div class="flex justify-between text-sm"><span class="opacity-70">− 매입세액(초록불)</span><span class="num font-bold">' + comma(S.greenAll.vat) + '</span></div>' +
-      '<div class="border-t border-white/20 my-2"></div>' +
-      '<div class="flex justify-between items-end"><span class="font-bold">' + (S.vatDue >= 0 ? '예상 납부세액' : '예상 환급세액') + '</span><span class="copyable num text-2xl font-extrabold ' + (S.vatDue >= 0 ? 'text-teal-300' : 'text-green-300') + '" data-copy="' + Math.abs(Math.round(S.vatDue)) + '">' + won(Math.abs(S.vatDue)) + '</span></div>' +
-      '<div class="text-[11px] opacity-60 mt-2 leading-snug">참고 공제(요건 확인 필요): 신용카드매출전표 등 발행세액공제 약 ' + won(cardCredit) + ' (카드·현영 매출 총액 × 1.3%, 연 1,000만원 한도, 직전연도 공급가액 10억 이하 개인사업자) · 홈택스 직접 전자신고 시 전자신고세액공제 1만원. 4월·10월 예정고지로 이미 낸 세액이 있으면 빼고 납부하세요.</div>' +
-    '</div>';
+  html += card('bg-red-600', '② 매입 (공제받는 매입세액 · 초록불만)', '',
+    '<table class="w-full text-sm">' + head3() + '<tbody class="divide-y divide-slate-100">' +
+      '<tr>' + lbl('(10) 세금계산서 수취분 · 일반매입') + cell(S.pInvGen.supply) + cell(S.pInvGen.vat) + '</tr>' +
+      '<tr>' + lbl('(11) 세금계산서 수취분 · 고정자산매입', '차량·장비 구입') + cell(S.pInvFix.supply) + cell(S.pInvFix.vat) + '</tr>' +
+      '<tr>' + lbl('(14)→(41) 신용카드·현금영수증 · 일반매입', '그 밖의 공제매입세액 명세') + cell(S.pCardGen.supply) + cell(S.pCardGen.vat) + '</tr>' +
+      '<tr>' + lbl('(14)→(42) 신용카드·현금영수증 · 고정자산매입') + cell(S.pCardFix.supply) + cell(S.pCardFix.vat) + '</tr>' +
+      '<tr class="bg-red-50">' + lbl('<b>공제받을 매입세액 합계</b>') + cell(S.greenVat.supply, true) + cell(S.greenVat.vat, true) + '</tr>' +
+    '</tbody></table>' +
+    '<div class="px-4 py-2 text-[11px] text-slate-500 bg-slate-50">노란불 매입(' + comma(S.yellow.total) + '원)은 부가세 신고에 넣지 않아요. 홈택스에서 불러온 카드 내역 중 노란불 건은 "불공제"로 바꿔 주세요.</div>');
 
-  var incomeSection =
-    '<div class="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">' +
-      '<div class="bg-violet-600 text-white px-4 py-2.5 font-extrabold">③ 소득세 경비 칸 <span class="text-xs font-medium opacity-80">(5월 종합소득세 · 간편장부)</span></div>' +
-      '<table class="w-full text-sm"><tbody class="divide-y divide-slate-100">' +
-        '<tr><td class="px-3 py-2.5">총 매출 (공급가액 기준 수입금액)</td>' + cell(S.salesSupply) + '</tr>' +
-        '<tr><td class="px-3 py-2.5">초록불 매입 (공급가액)</td>' + cell(S.greenAll.supply) + '</tr>' +
-        '<tr><td class="px-3 py-2.5">부가세 불공제 경비 합계 (노란불 총액)<div class="text-[11px] text-slate-400">' + S.yellow.count + '건</div></td>' + cell(S.yellow.total) + '</tr>' +
-        '<tr><td class="px-3 py-2.5">인건비 지급 총액<div class="text-[11px] text-slate-400">일용직 ' + comma(S.labor.daily) + ' · 3.3% ' + comma(S.labor.freelance) + '</div></td>' + cell(S.labor.total) + '</tr>' +
-        '<tr><td class="px-3 py-2.5">원천징수한 세액 (원천세 신고용)<div class="text-[11px] text-slate-400">일용 ' + comma(S.labor.withholdDaily) + ' · 3.3% ' + comma(S.labor.withholdFree) + '</div></td>' + cell(S.labor.withholdDaily + S.labor.withholdFree) + '</tr>' +
-        '<tr class="bg-violet-50"><td class="px-3 py-2.5 font-extrabold">순수익 (소득금액 예상)</td>' + cell(S.net, true) + '</tr>' +
-      '</tbody></table>' +
-      '<div class="px-4 py-3 text-[11px] text-slate-500 leading-snug bg-slate-50">※ 종합소득세는 1월~12월 연간 합계로 신고해요. 상단에서 <b>연간 전체</b>를 선택하면 정확한 숫자가 나와요. 인건비는 지급명세서(일용직: 매월, 3.3%: 간이지급명세서 매월) 제출분과 금액이 맞아야 경비로 인정돼요. 감가상각·이자·보험료 등 장부 외 항목은 홈택스에서 추가 입력하세요.</div>' +
-    '</div>';
+  html += '<div class="bg-slate-900 text-white rounded-2xl p-4 shadow space-y-1 text-sm">' +
+    '<div class="flex justify-between"><span class="opacity-70">매출세액</span><span class="num font-bold">' + comma(S.salesVat) + '</span></div>' +
+    '<div class="flex justify-between"><span class="opacity-70">− 매입세액 (초록불)</span><span class="num font-bold">' + comma(S.greenVat.vat) + '</span></div>' +
+    '<div class="flex justify-between border-t border-white/20 pt-1"><span>= 납부(환급)세액</span><span class="num font-bold">' + comma(v.base) + '</span></div>' +
+    '<div class="flex justify-between"><span class="opacity-70">− (19) 신용카드 발행세액공제</span><span class="copyable num font-bold text-teal-300" data-copy="' + v.cardCredit + '">' + comma(v.cardCredit) + '</span></div>' +
+    '<div class="flex justify-between"><span class="opacity-70">− (18) 전자신고세액공제</span><span class="num font-bold">' + comma(v.eCredit) + '</span></div>' +
+    '<div class="flex justify-between items-center"><span class="opacity-70">− (22) ' + prepMonth + ' 예정고지로 낸 세금</span>' +
+      '<input id="prepaidInp" data-key="' + key + '" type="text" inputmode="numeric" value="' + (v.prepaid ? comma(v.prepaid) : '') + '" placeholder="0" class="w-32 bg-white/10 border border-white/30 rounded-lg px-2 py-1 text-right num font-bold text-white outline-none"></div>' +
+    '<div class="border-t border-white/20 my-2"></div>' +
+    '<div class="flex justify-between items-end"><span class="font-bold">' + (v.final >= 0 ? '최종 납부할 세금' : '최종 환급받을 세금') + '</span><span class="copyable num text-2xl font-extrabold ' + (v.final >= 0 ? 'text-teal-300' : 'text-green-300') + '" data-copy="' + Math.abs(Math.round(v.final)) + '">' + won(Math.abs(v.final)) + '</span></div>' +
+    '<div class="text-[11px] opacity-60 mt-2 leading-snug">카드공제: ' + (S_().under10eok ? v.rule.note + ' · 계산상 ' + comma(v.cardRaw) + '원 중 납부세액·연간한도 안에서 적용' : '설정에서 "작년 공급가액 10억원 이하"가 꺼져 있어 적용 안 함') + '. 예정고지서가 안 왔다면 0으로 두세요. 홈택스 최종 금액과 몇 원 차이는 반올림 때문이에요.</div>' +
+  '</div>';
 
-  var cats = Object.keys(S.byCat);
-  var catSection = cats.length ? '<div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-4"><div class="font-extrabold text-sm mb-2">작업 종류별 매출</div>' +
+  html += steps('📱 홈택스 부가세 신고 따라하기', [
+    '<b>홈택스</b>(또는 손택스 앱) 로그인 → <b>세금신고 → 부가가치세 신고 → 일반과세자 정기신고(확정)</b>',
+    '사업자번호 <b>확인</b> → "신고서 작성 중 해당 항목 선택"에서 <b>신용카드매출전표등 수령명세서</b>, <b>신용카드매출전표등 발행금액 집계표</b> 체크 → 저장 후 다음',
+    '<b>매출</b>: 세금계산서·카드·현금영수증 금액은 홈택스가 대부분 자동으로 채워줘요. 위 ①표 숫자와 비교하고, <b>(4) 기타 매출</b>은 앱 숫자를 직접 붙여넣으세요.',
+    '<b>매입</b>: 전자세금계산서는 자동, 사업용카드 내역은 "조회하기"로 불러온 뒤 노란불 건(식대·승용차 등)을 <b>불공제</b>로 바꾸세요. 합계가 ②표와 비슷하면 OK.',
+    '<b>(19) 신용카드 발행공제</b>는 집계표 금액을 넣으면 자동 계산, 전자신고공제·예정고지세액도 자동이에요. 최종 금액이 위 검은 칸과 비슷한지 확인 → <b>제출</b>',
+    '제출 후 나오는 <b>납부서(가상계좌)</b>로 마감일(' + (half === 'H1' ? y + '년 7월 25일' : (y + 1) + '년 1월 25일') + ')까지 납부. 끝!'
+  ]);
+  return html;
+}
+
+function laborMonthlyHTML(y, period) {
+  var months = period === 'H1' ? [1, 2, 3, 4, 5, 6] : period === 'H2' ? [7, 8, 9, 10, 11, 12] : [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12];
+  var half = S_().halfYear;
+  var rows = months.map(function (m) {
+    var L = myTx().filter(function (t) { return t.type === 'labor' && yearOf(t) === y && monthOf(t) === m; });
+    if (!L.length) return '';
+    var d = 0, dw = 0, f = 0, fw = 0, names = {};
+    L.forEach(function (t) { names[t.name] = 1; if (t.kind === 'freelance') { f += t.total; fw += t.withholding || 0; } else { d += t.total; dw += t.withholding || 0; } });
+    var nm = m === 12 ? 1 : m + 1, ny = m === 12 ? y + 1 : y;
+    var due = half ? (m <= 6 ? y + '.7.10' : (y + 1) + '.1.10') : ny + '.' + nm + '.10';
+    return '<tr><td class="px-3 py-2.5 font-bold">' + m + '월<div class="text-[11px] text-slate-400 font-normal">' + Object.keys(names).length + '명</div></td>' +
+      cell(d) + cell(dw) + cell(f) + cell(fw) +
+      '<td class="px-2 py-2.5 text-[11px] text-slate-500 leading-tight">원천세 ' + due + '<br>명세서 ' + ny + '.' + nm + '월말</td></tr>';
+  }).join('');
+  if (!rows) return '';
+  return card('bg-violet-600', '③ 인건비 월별 신고표', '(원천세·지급명세서)',
+    '<div class="overflow-x-auto"><table class="w-full text-sm min-w-[440px]"><thead class="bg-slate-50 text-slate-500 text-[11px]"><tr><th class="text-left px-3 py-2">지급월</th><th class="text-right px-2">일용 지급</th><th class="text-right px-2">일용 원천세</th><th class="text-right px-2">3.3% 지급</th><th class="text-right px-2">3.3% 원천세</th><th class="text-left px-2">마감</th></tr></thead><tbody class="divide-y divide-slate-100">' + rows + '</tbody></table></div>' +
+    '<div class="px-4 py-3 text-[11px] text-slate-500 leading-snug bg-slate-50">홈택스 → <b>원천세 신고</b>(세금 0원이어도 신고)와 <b>일용근로소득 지급명세서 / 간이지급명세서(거주자의 사업소득)</b>를 매달 제출해야 인건비가 경비로 확실히 인정되고 가산세(지급액의 0.25%)도 안 붙어요. 주민등록번호는 앱에 저장하지 말고 홈택스에서 직접 입력하세요.</div>');
+}
+
+function incomeSectionHTML(y) {
+  var ic = incomeCalc(y), S = ic.S, st = S_();
+  var bt = bookType(st.prevRevenue);
+  var btHTML = bt ? '<div class="rounded-2xl p-3 border-2 text-sm ' + (bt.c === 'green' ? 'bg-green-50 border-green-400 text-green-900' : bt.c === 'amber' ? 'bg-amber-50 border-amber-400 text-amber-900' : 'bg-red-50 border-red-400 text-red-900') + '"><b>📏 ' + y + '년 귀속 장부 의무: ' + bt.t + '</b><div class="text-xs mt-1 leading-snug">' + bt.d + '</div></div>'
+    : '<div class="rounded-2xl p-3 border-2 border-dashed border-slate-300 bg-white text-sm"><b>📏 장부 의무 판정 전이에요</b><div class="text-xs mt-1 text-slate-500 leading-snug">⚙️ 설정에서 작년 매출을 넣으면 혼자 신고 가능한지 알려드려요. 청소업은 작년 매출 7,500만원부터 복식부기, 1억5천만원부터 세무사 조정이 필요해요.</div></div>';
+  var html = btHTML;
+  html += card('bg-violet-700', '④ 종합소득세 · 간편장부 소득금액 계산서', '',
+    '<table class="w-full text-sm"><tbody class="divide-y divide-slate-100">' +
+      '<tr>' + lbl('<b>총수입금액</b>', '부가세 뺀 매출 공급가액') + cell(S.salesSupply, true) + '</tr>' +
+      '<tr>' + lbl('필요경비 · 초록불 매입', '공급가액 (부가세 제외)') + cell(S.greenExpense) + '</tr>' +
+      '<tr>' + lbl('필요경비 · 노란불 매입', S.yellow.count + '건 · 낸 돈 전액') + cell(S.yellow.total) + '</tr>' +
+      '<tr>' + lbl('필요경비 · 인건비', '일용 ' + comma(S.labor.daily) + ' · 3.3% ' + comma(S.labor.freelance)) + cell(S.labor.total) + '</tr>' +
+      '<tr class="bg-violet-50">' + lbl('<b>필요경비 합계</b>') + cell(S.greenExpense + S.yellow.total + S.labor.total, true) + '</tr>' +
+      '<tr class="bg-violet-100">' + lbl('<b>사업소득금액</b> (순수익)') + cell(ic.income, true) + '</tr>' +
+      (S.fixed.count ? '<tr>' + lbl('참고 · 고정자산 취득가액', S.fixed.count + '건 — 감가상각비로 나눠 경비 처리(차량·장비 보통 5년)') + cell(S.fixed.amount) + '</tr>' : '') +
+    '</tbody></table>');
+
+  html += '<div class="bg-slate-900 text-white rounded-2xl p-4 shadow space-y-1 text-sm">' +
+    '<div class="font-extrabold mb-1">💸 예상 종합소득세 (대략)</div>' +
+    '<div class="flex justify-between"><span class="opacity-70">사업소득금액</span><span class="num font-bold">' + comma(ic.income) + '</span></div>' +
+    '<div class="flex justify-between"><span class="opacity-70">− 인적공제 (본인+부양 ' + st.dependents + '명)</span><span class="num font-bold">' + comma(ic.personal) + '</span></div>' +
+    '<div class="flex justify-between"><span class="opacity-70">− 국민연금</span><span class="num font-bold">' + comma(ic.pension) + '</span></div>' +
+    '<div class="flex justify-between"><span class="opacity-70">− 노란우산공제 (한도 ' + comma(ic.umbLimit) + ')</span><span class="num font-bold">' + comma(ic.umbrella) + '</span></div>' +
+    '<div class="flex justify-between border-t border-white/20 pt-1"><span>= 과세표준</span><span class="num font-bold">' + comma(ic.base) + '</span></div>' +
+    '<div class="flex justify-between"><span class="opacity-70">산출세액 (세율 ' + Math.round(ic.rate * 100) + '%)</span><span class="num font-bold">' + comma(ic.calc) + '</span></div>' +
+    '<div class="flex justify-between"><span class="opacity-70">− 표준세액공제</span><span class="num font-bold">' + comma(ic.stdCredit) + '</span></div>' +
+    '<div class="flex justify-between"><span class="opacity-70">종합소득세</span><span class="num font-bold">' + comma(ic.tax) + '</span></div>' +
+    '<div class="flex justify-between"><span class="opacity-70">+ 지방소득세 (10%)</span><span class="num font-bold">' + comma(ic.local) + '</span></div>' +
+    '<div class="border-t border-white/20 my-2"></div>' +
+    '<div class="flex justify-between items-end"><span class="font-bold">내년 5월에 낼 돈 (예상)</span><span class="num text-2xl font-extrabold text-teal-300">' + won(ic.total) + '</span></div>' +
+    '<div class="text-[11px] opacity-60 mt-2 leading-snug">11월 중간예납으로 이미 낸 세금은 빼고 내요. 감가상각비·이자비용·건강보험료 등 장부 외 비용과 중소기업특별세액감면 같은 감면은 빠진 대략 계산이에요. 매달 매출의 일부를 세금 통장에 따로 모아 두세요.</div>' +
+  '</div>';
+
+  html += steps('📱 홈택스 종합소득세 신고 따라하기 (간편장부 대상자)', [
+    '<b>홈택스</b> 로그인 → <b>세금신고 → 종합소득세 신고 → 일반신고(정기신고)</b>. 5월에 국세청 안내문의 <b>기장의무</b>가 "간편장부대상자"인지 먼저 확인하세요.',
+    '기본정보 → 소득 종류 <b>사업소득</b> 선택 → 사업장 선택, <b>신고유형: 간편장부</b>',
+    '<b>간편장부 소득금액 계산서</b>: 총수입금액·필요경비에 위 ④표 숫자를 붙여넣으세요. 고정자산이 있으면 감가상각비 칸에 (취득가 ÷ 5년)을 넣으세요.',
+    '<b>소득공제</b>: 인적공제(부양가족), 국민연금, 노란우산공제 입력 → <b>세액공제</b>: 표준세액공제 등 자동 → 중간예납세액 확인',
+    '<b>제출</b> → 바로 이어지는 <b>지방소득세(위택스) 신고</b>까지 꼭 완료 → 납부서로 5월 31일까지 납부'
+  ]);
+  return html;
+}
+
+function catHTML(S) {
+  var cats = Object.keys(S.byCat); if (!cats.length) return '';
+  return '<div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-4"><div class="font-extrabold text-sm mb-2">작업 종류별 매출</div>' +
     cats.sort(function (a, b) { return S.byCat[b] - S.byCat[a]; }).map(function (c) {
       var pct = S.salesTotal ? Math.round(S.byCat[c] / S.salesTotal * 100) : 0;
       return '<div class="mb-2"><div class="flex justify-between text-xs mb-1"><span class="font-bold">' + esc(c) + '</span><span class="num">' + won(S.byCat[c]) + ' · ' + pct + '%</span></div><div class="h-2 bg-slate-100 rounded-full overflow-hidden"><div class="h-full bg-teal-600 rounded-full" style="width:' + pct + '%"></div></div></div>';
-    }).join('') + '</div>' : '';
+    }).join('') + '</div>';
+}
 
-  $('hometaxBody').innerHTML = (view.period === 'ALL' ? incomeSection + vatSection : vatSection + incomeSection) + catSection +
-    '<div class="text-[11px] text-slate-400 leading-snug px-1">이 화면은 장부 기록을 바탕으로 한 예상치예요. 실제 신고 전 홈택스의 신용카드 매입·매출 자료 조회, 세금계산서 합계표와 대조해 보세요.</div>';
+function checklistHTML(period) {
+  var items = period === 'ALL' ? [
+    '홈택스 <b>"종합소득세 신고도움 서비스"</b>에서 기장의무·중간예납세액 확인',
+    '1월·7월 부가세 신고 매출 합계(공급가액)와 이 앱 총수입금액이 같은지 확인',
+    '인건비 지급명세서를 매달 다 냈는지 홈택스 "제출내역"에서 확인',
+    '감가상각할 차량·장비, 대출이자, 사업장 건강보험료 영수증 챙기기'
+  ] : [
+    '홈택스 <b>"사업용 신용카드"</b> 등록 (안 했다면 지금 바로! 등록해야 매입이 자동 조회돼요)',
+    '홈택스 <b>"신용카드 매출자료 조회"</b> 금액 ↔ 이 앱 카드매출 비교 (다르면 빠진 입력 찾기)',
+    '<b>전자세금계산서 발급·수취 목록</b> ↔ 이 앱 세금계산서 건수 비교',
+    '<b>현금영수증 매출·매입 내역</b> 조회 ↔ 이 앱 비교',
+    '영수증 안 끊은 현금·계좌이체 매출을 빠짐없이 입력했는지 통장 입금 내역으로 확인'
+  ];
+  return '<details class="bg-white rounded-2xl shadow-sm border border-slate-200 p-4"><summary class="font-extrabold text-sm">✅ 신고 전 5분 점검 ▾</summary><ul class="mt-2 space-y-1.5 text-[13px] leading-snug">' +
+    items.map(function (x) { return '<li class="flex gap-2"><span>☐</span><span>' + x + '</span></li>'; }).join('') + '</ul></details>';
+}
+
+function renderHometax() {
+  $('htPeriodTitle').textContent = bizName() + ' · ' + periodName();
+  var y = view.year, html = '';
+  var S = summarize(myTx().filter(inPeriod));
+  if (view.period === 'ALL') {
+    html = incomeSectionHTML(y) + laborMonthlyHTML(y, 'ALL') + checklistHTML('ALL') + catHTML(S);
+  } else {
+    html = checklistHTML(view.period) + vatSectionHTML(y, view.period) + laborMonthlyHTML(y, view.period) + catHTML(S);
+  }
+  html += '<div class="text-[11px] text-slate-400 leading-snug px-1">이 화면은 앱 기록을 바탕으로 한 예상치예요. 홈택스 신고서의 칸 번호는 화면 개편에 따라 조금 다를 수 있어요. 최종 금액은 홈택스 계산을 따르세요.</div>';
+  $('hometaxBody').innerHTML = html;
+  var pi = $('prepaidInp');
+  if (pi) {
+    pi.addEventListener('input', function () { var n = numOf(this.value); this.value = n ? comma(n) : ''; });
+    pi.addEventListener('change', function () { S_().prepaid[this.dataset.key] = numOf(this.value); saveMeta(); renderDashboard(); renderHometax(); });
+  }
 }
 
 // ---------- 렌더: 내역 ----------
 function txTitle(t) {
-  if (t.type === 'sale') return SALE_CATS.filter(function (c) { return c.k === t.category; }).map(function (c) { return c.i; })[0] + ' ' + t.category;
-  if (t.type === 'purchase') { var it = itemOf(t.item); return it.i + ' ' + it.l; }
+  if (t.type === 'sale') { var c = SALE_CATS.filter(function (x) { return x.k === t.category; })[0]; return (c ? c.i + ' ' : '') + t.category; }
+  if (t.type === 'purchase') { var it = itemOf(t.item); return it.i + ' ' + it.l + (t.fixed ? ' [고정자산]' : ''); }
   return (t.kind === 'freelance' ? '🧑‍💼 ' : '👷 ') + (t.name || '이름없음') + (t.kind === 'daily' && t.days > 1 ? ' (' + t.days + '일)' : '');
 }
 function txSub(t) {
@@ -643,9 +969,10 @@ function renderList() {
     var on = b.dataset.k === view.listFilter;
     b.className = 'lf choice shrink-0 rounded-full border px-4 py-2 text-sm font-bold ' + (on ? 'bg-teal-700 text-white border-teal-700' : 'bg-white border-slate-300');
   });
-  var list = txs.filter(inPeriod).filter(function (t) { return view.listFilter === 'all' || t.type === view.listFilter; })
+  var list = myTx().filter(inPeriod).filter(function (t) { return view.listFilter === 'all' || t.type === view.listFilter; })
     .sort(function (a, b) { return a.date === b.date ? (b.createdAt || 0) - (a.createdAt || 0) : (a.date < b.date ? 1 : -1); });
-  $('listCount').textContent = periodName().split(' · ')[0] + ' · ' + list.length + '건 (전체 저장 ' + txs.length + '건)';
+  $('listCount').textContent = periodName().split(' · ')[0] + ' · ' + list.length + '건 (' + bizName() + ' 전체 ' + myTx().length + '건)';
+  $('backupInfo').textContent = meta.lastBackup ? '마지막 백업: ' + new Date(meta.lastBackup).toLocaleString('ko-KR') + ' · 백업 파일에는 모든 사업자 데이터와 설정이 함께 들어가요.' : '⚠️ 아직 백업한 적이 없어요. 한 달에 한 번은 백업 파일을 저장해 두세요.';
   if (!list.length) { $('txList').innerHTML = '<div class="text-center text-slate-400 py-12 bg-white rounded-2xl border border-slate-200">이 기간에 입력한 내역이 없어요</div>'; return; }
   $('txList').innerHTML = list.map(function (t) {
     var color = t.type === 'sale' ? 'text-blue-600' : t.type === 'purchase' ? 'text-red-600' : 'text-violet-600';
@@ -658,21 +985,50 @@ function renderList() {
         (t.memo ? '<div class="text-[11px] text-slate-400 truncate">📝 ' + esc(t.memo) + '</div>' : '') +
       '</div>' +
       '<div class="text-right shrink-0"><div class="font-extrabold num ' + color + '">' + sign + comma(t.total) + '</div>' +
-      '<button class="del text-[11px] text-slate-400 border border-slate-200 rounded-md px-2 py-1 mt-1 active:bg-red-50 active:text-red-600" data-id="' + t.id + '">삭제</button></div>' +
+      '<div class="flex gap-1 justify-end mt-1"><button class="edit text-[11px] text-slate-500 border border-slate-200 rounded-md px-2 py-1 active:bg-teal-50" data-id="' + t.id + '">수정</button>' +
+      '<button class="del text-[11px] text-slate-400 border border-slate-200 rounded-md px-2 py-1 active:bg-red-50 active:text-red-600" data-id="' + t.id + '">삭제</button></div></div>' +
     '</div>';
   }).join('');
-  $('backupInfo').textContent = meta.lastBackup ? '마지막 백업: ' + new Date(meta.lastBackup).toLocaleString('ko-KR') : '⚠️ 아직 백업한 적이 없어요. 한 달에 한 번은 백업 파일을 저장해 두세요.';
+}
+
+// ---------- 렌더: 설정 ----------
+function renderSettings() {
+  var st = S_();
+  $('bizList').innerHTML = meta.bizList.map(function (b) {
+    var cnt = txs.filter(function (t) { return t.biz === b.id; }).length;
+    var on = b.id === meta.curBiz;
+    return '<div class="flex items-center gap-2 rounded-xl border-2 p-3 ' + (on ? 'border-teal-600 bg-teal-50' : 'border-slate-200') + '">' +
+      '<button class="bizPick flex-1 text-left" data-id="' + esc(b.id) + '"><div class="font-extrabold text-sm">' + (on ? '✅ ' : '') + esc(b.name) + '</div><div class="text-[11px] text-slate-500">' + cnt + '건</div></button>' +
+      '<button class="bizRen text-xs border border-slate-300 rounded-lg px-2 py-1.5 bg-white" data-id="' + esc(b.id) + '">이름변경</button>' +
+      (meta.bizList.length > 1 && !cnt ? '<button class="bizDel text-xs border border-red-200 text-red-500 rounded-lg px-2 py-1.5 bg-white" data-id="' + esc(b.id) + '">삭제</button>' : '') +
+    '</div>';
+  }).join('');
+  $('setBizName').textContent = '— ' + bizName();
+  $('prevRevLabel').textContent = (view.year - 1) + '년 1년 매출 (부가세 뺀 공급가액) → ' + view.year + '년 장부 의무 판정';
+  if (document.activeElement !== $('prevRevInp')) $('prevRevInp').value = st.prevRevenue === null ? '' : comma(st.prevRevenue);
+  var bt = bookType(st.prevRevenue);
+  // 앱에 작년 기록이 있으면 참고값 표시
+  var lastYearSupply = summarize(myTx().filter(function (t) { return inRange(t, view.year - 1, 'ALL'); })).salesSupply;
+  $('bookTypeBox').innerHTML = (bt ? '<div class="rounded-xl p-3 border-2 text-sm ' + (bt.c === 'green' ? 'bg-green-50 border-green-400 text-green-900' : bt.c === 'amber' ? 'bg-amber-50 border-amber-400 text-amber-900' : 'bg-red-50 border-red-400 text-red-900') + '"><b>' + bt.t + '</b><div class="text-xs mt-1 leading-snug">' + bt.d + '</div></div>' : '<div class="text-xs text-slate-500">금액을 넣으면 판정해 드려요.</div>') +
+    (lastYearSupply ? '<div class="text-[11px] text-slate-500 mt-2">참고: 이 앱에 기록된 ' + (view.year - 1) + '년 매출 공급가액은 ' + won(lastYearSupply) + '이에요.</div>' : '') +
+    '<div class="text-[11px] text-slate-400 mt-2 leading-snug">청소업(사업시설관리·사업지원 서비스업) 기준: 7,500만원 미만 간편장부 / 7,500만원 이상 복식부기 / 1억5천만원 이상 세무사 외부조정 / 5억원 이상 성실신고. 같은 대표자 명의 사업자가 여러 개면 매출을 합산(환산)해서 판정해요.</div>';
+  $('under10Chk').checked = st.under10eok;
+  $('halfYearChk').checked = st.halfYear;
+  $('depInp').value = st.dependents;
+  if (document.activeElement !== $('pensionInp')) $('pensionInp').value = st.pension ? comma(st.pension) : '';
+  if (document.activeElement !== $('umbrellaInp')) $('umbrellaInp').value = st.umbrella ? comma(st.umbrella) : '';
 }
 
 function renderTabs() {
   document.querySelectorAll('.tabbtn').forEach(function (b) { b.classList.toggle('on', b.dataset.tab === view.tab); });
-  ['input', 'hometax', 'list'].forEach(function (k) { $('panel-' + k).classList.toggle('hidden-x', k !== view.tab); });
+  ['input', 'hometax', 'list', 'settings'].forEach(function (k) { $('panel-' + k).classList.toggle('hidden-x', k !== view.tab); });
 }
 
 function renderAll() {
-  renderYearSel(); renderDashboard(); renderTabs();
+  renderHeader(); renderDashboard(); renderTabs();
   if (view.tab === 'hometax') renderHometax();
   if (view.tab === 'list') renderList();
+  if (view.tab === 'settings') renderSettings();
 }
 
 // ---------- 내보내기 / 백업 / 복원 ----------
@@ -685,27 +1041,28 @@ function downloadFile(name, content, mime) {
 }
 function csvCell(v) { v = v == null ? '' : String(v); return /[",\n]/.test(v) ? '"' + v.replace(/"/g, '""') + '"' : v; }
 function exportCSV() {
-  var list = txs.filter(inPeriod).sort(function (a, b) { return a.date < b.date ? -1 : a.date > b.date ? 1 : 0; });
+  var list = myTx().filter(inPeriod).sort(function (a, b) { return a.date < b.date ? -1 : a.date > b.date ? 1 : 0; });
   if (!list.length) { toast('이 기간에 내보낼 내역이 없어요'); return; }
-  var head = ['날짜', '구분', '항목', '결제/증빙', '신호등', '총액', '공급가액', '부가세', '원천징수', '실지급액', '이름', '근무일수', '메모'];
+  var head = ['사업자', '날짜', '구분', '항목', '결제/증빙', '신호등', '고정자산', '총액', '공급가액', '부가세', '원천징수', '실지급액', '이름', '근무일수', '메모'];
   var rows = list.map(function (t) {
     var typ = t.type === 'sale' ? '매출' : t.type === 'purchase' ? '매입' : '인건비';
     var item = t.type === 'sale' ? t.category : t.type === 'purchase' ? itemOf(t.item).l : labelOf(LABOR_KINDS, t.kind);
     var pay = t.type === 'sale' ? labelOf(SALE_PAYS, t.pay) : t.type === 'purchase' ? labelOf(PUR_EVIDS, t.evid) : '';
-    var light = t.type === 'purchase' ? (t.light === 'green' ? '초록불' : '노란불') : '';
-    return [t.date, typ, item, pay, light, t.total, t.supply, t.vat, t.withholding || '', t.net || '', t.name || '', t.days || '', t.memo || ''].map(csvCell).join(',');
+    var light = t.type === 'purchase' ? (t.light === 'green' ? '초록불(공제)' : '노란불(불공제)') : '';
+    return [bizName(t.biz), t.date, typ, item, pay, light, t.fixed ? 'Y' : '', t.total, t.supply, t.vat, t.withholding || '', t.net || '', t.name || '', t.days || '', t.memo || ''].map(csvCell).join(',');
   });
   var S = summarize(list);
   rows.push('');
-  rows.push(['요약', '매출 공급가액', S.salesSupply, '매출세액', S.salesVat, '공제 매입세액', S.greenAll.vat, '예상 부가세', S.vatDue, '순수익', S.net].map(csvCell).join(','));
+  rows.push(['요약', '매출 공급가액', S.salesSupply, '매출세액', S.salesVat, '공제 매입세액', S.greenVat.vat, '경비(초록)', S.greenExpense, '경비(노랑)', S.yellow.total, '인건비', S.labor.total, '소득금액', S.net].map(csvCell).join(','));
   var tag = view.year + (view.period === 'ALL' ? '_연간' : view.period === 'H1' ? '_1기' : '_2기');
-  downloadFile('링크클린_장부_' + tag + '.csv', '﻿' + head.join(',') + '\n' + rows.join('\n'), 'text/csv;charset=utf-8');
+  downloadFile(bizName() + '_장부_' + tag + '.csv', '﻿' + head.join(',') + '\n' + rows.join('\n'), 'text/csv;charset=utf-8');
   toast('📊 엑셀(CSV) 파일을 저장했어요');
 }
 function backupJSON() {
-  var data = { app: 'linkclean-ledger', version: 1, exportedAt: new Date().toISOString(), count: txs.length, transactions: txs };
+  var data = { app: 'linkclean-ledger', version: 2, exportedAt: new Date().toISOString(), count: txs.length, transactions: txs,
+    meta: { bizList: meta.bizList, curBiz: meta.curBiz, settings: meta.settings } };
   var d = new Date();
-  downloadFile('링크클린_장부백업_' + d.getFullYear() + pad(d.getMonth() + 1) + pad(d.getDate()) + '.json', JSON.stringify(data, null, 2), 'application/json');
+  downloadFile('링크장부_백업_' + d.getFullYear() + pad(d.getMonth() + 1) + pad(d.getDate()) + '.json', JSON.stringify(data, null, 2), 'application/json');
   meta.lastBackup = Date.now(); saveMeta(); renderList();
   toast('💾 백업 파일을 저장했어요 (' + txs.length + '건)');
 }
@@ -716,17 +1073,26 @@ function restoreJSON(file) {
       var data = JSON.parse(reader.result);
       var arr = Array.isArray(data) ? data : data.transactions;
       if (!Array.isArray(arr)) throw new Error('형식 오류');
+      var defaultBiz = (data.meta && data.meta.bizList && data.meta.bizList[0] && data.meta.bizList[0].id) || meta.bizList[0].id;
       arr = arr.filter(function (t) { return t && t.id && t.date && (t.type === 'sale' || t.type === 'purchase' || t.type === 'labor') && typeof t.total === 'number'; });
+      arr.forEach(function (t) { if (!t.biz) t.biz = defaultBiz; });
       if (!arr.length) { toast('불러올 내역이 없는 파일이에요'); return; }
       var replace = txs.length ? confirm('백업 파일 ' + arr.length + '건을 찾았어요.\n\n[확인] 지금 데이터를 지우고 백업으로 교체\n[취소] 지금 데이터에 합치기 (중복은 자동 제외)') : true;
-      if (replace) { txs = arr; }
+      if (data.meta && Array.isArray(data.meta.bizList)) {
+        if (replace) { meta.bizList = data.meta.bizList; meta.settings = data.meta.settings || {}; meta.curBiz = data.meta.curBiz; }
+        else data.meta.bizList.forEach(function (b) {
+          if (!meta.bizList.some(function (x) { return x.id === b.id; })) { meta.bizList.push(b); if (data.meta.settings && data.meta.settings[b.id]) meta.settings[b.id] = data.meta.settings[b.id]; }
+        });
+      }
+      arr.forEach(function (t) { if (!meta.bizList.some(function (b) { return b.id === t.biz; })) meta.bizList.push({ id: t.biz, name: '사업자 ' + (meta.bizList.length + 1) }); });
+      normalizeMeta(); saveMeta();
+      if (replace) { txs = arr; toast('✅ ' + arr.length + '건 복원 완료'); }
       else {
         var ids = {}; txs.forEach(function (t) { ids[t.id] = 1; });
         var added = 0; arr.forEach(function (t) { if (!ids[t.id]) { txs.push(t); added++; } });
         toast(added + '건을 합쳤어요');
       }
       persist(); renderAll();
-      if (replace) toast('✅ ' + arr.length + '건 복원 완료');
     } catch (e) { toast('⚠️ 백업 파일을 읽을 수 없어요'); }
   };
   reader.readAsText(file);
@@ -734,22 +1100,27 @@ function restoreJSON(file) {
 
 // ---------- 이벤트 ----------
 document.querySelectorAll('.typebtn').forEach(function (b) { b.onclick = function () { form.type = b.dataset.k; renderForm(); }; });
-document.querySelectorAll('.tabbtn').forEach(function (b) { b.onclick = function () { view.tab = b.dataset.tab; renderAll(); window.scrollTo({ top: 0, behavior: 'smooth' }); }; });
+document.querySelectorAll('.tabbtn').forEach(function (b) { b.onclick = function () { view.tab = b.dataset.tab; renderAll(); }; });
 document.querySelectorAll('.periodbtn').forEach(function (b) { b.onclick = function () { view.period = b.dataset.k; renderAll(); }; });
 document.querySelectorAll('.lf').forEach(function (b) { b.onclick = function () { view.listFilter = b.dataset.k; renderList(); }; });
 document.querySelectorAll('.quick').forEach(function (b) {
   b.onclick = function () { var v = parseInt(b.dataset.v, 10); setAmount(v === 0 ? 0 : getAmount() + v); };
 });
 $('yearSel').onchange = function () { view.year = parseInt(this.value, 10); renderAll(); };
+$('bizSel').onchange = function () { meta.curBiz = this.value; saveMeta(); if (editing) cancelEdit(); renderAll(); toast('🏢 ' + bizName() + '(으)로 전환'); };
 $('amountInp').addEventListener('input', function () { var n = getAmount(); this.value = n ? comma(n) : ''; renderPreview(); });
 $('laborDays').addEventListener('input', renderPreview);
-$('cashVatChk').onchange = function () { form.cashVat = this.checked; renderPreview(); };
+$('cashVatChk').onchange = function () { form.cashVat = this.checked; renderForm(); };
+$('fixedChk').onchange = function () { form.fixed = this.checked; renderPreview(); };
 $('saveBtn').onclick = saveEntry;
+$('cancelEditBtn').onclick = cancelEdit;
 $('csvBtn').onclick = exportCSV;
 $('backupBtn').onclick = backupJSON;
 $('restoreBtn').onclick = function () { $('restoreFile').click(); };
 $('restoreFile').onchange = function () { if (this.files && this.files[0]) restoreJSON(this.files[0]); this.value = ''; };
 $('txList').addEventListener('click', function (ev) {
+  var eb = ev.target.closest('.edit');
+  if (eb) { var te = txs.filter(function (x) { return x.id === eb.dataset.id; })[0]; if (te) startEdit(te); return; }
   var btn = ev.target.closest('.del'); if (!btn) return;
   var t = txs.filter(function (x) { return x.id === btn.dataset.id; })[0]; if (!t) return;
   if (confirm(t.date + ' ' + txTitle(t) + ' ' + won(t.total) + '\n이 내역을 삭제할까요?')) {
@@ -767,9 +1138,33 @@ function fallbackCopy(v) {
   var ta = document.createElement('textarea'); ta.value = v; ta.style.position = 'fixed'; ta.style.opacity = '0';
   document.body.appendChild(ta); ta.select(); try { document.execCommand('copy'); } catch (e) {} document.body.removeChild(ta);
 }
+// 설정 이벤트
+$('bizList').addEventListener('click', function (ev) {
+  var p = ev.target.closest('.bizPick'), r = ev.target.closest('.bizRen'), d = ev.target.closest('.bizDel');
+  if (p) { meta.curBiz = p.dataset.id; saveMeta(); if (editing) cancelEdit(); view.tab = 'settings'; renderAll(); toast('🏢 ' + bizName() + '(으)로 전환'); }
+  if (r) { var b = meta.bizList.filter(function (x) { return x.id === r.dataset.id; })[0]; var n = prompt('사업자 이름', b.name); if (n && n.trim()) { b.name = n.trim().slice(0, 20); saveMeta(); renderAll(); } }
+  if (d) { if (confirm('이 사업자를 삭제할까요?')) { meta.bizList = meta.bizList.filter(function (x) { return x.id !== d.dataset.id; }); delete meta.settings[d.dataset.id]; normalizeMeta(); saveMeta(); renderAll(); } }
+});
+$('addBizBtn').onclick = function () {
+  var n = prompt('추가할 사업자 이름 (예: 이케이클린, 클린앤스카이)');
+  if (!n || !n.trim()) return;
+  var id = 'b' + uid(); meta.bizList.push({ id: id, name: n.trim().slice(0, 20) }); meta.curBiz = id;
+  normalizeMeta(); saveMeta(); renderAll(); toast('🏢 ' + n.trim() + ' 추가 완료');
+};
+function moneyInput(el, key) {
+  el.addEventListener('input', function () { var n = numOf(this.value); this.value = n ? comma(n) : ''; });
+  el.addEventListener('change', function () { var v = this.value.trim() === '' && key === 'prevRevenue' ? null : numOf(this.value); S_()[key] = v; saveMeta(); renderAll(); });
+}
+moneyInput($('prevRevInp'), 'prevRevenue');
+moneyInput($('pensionInp'), 'pension');
+moneyInput($('umbrellaInp'), 'umbrella');
+$('depInp').addEventListener('change', function () { S_().dependents = Math.max(0, parseInt(this.value, 10) || 0); saveMeta(); renderAll(); });
+$('under10Chk').onchange = function () { S_().under10eok = this.checked; saveMeta(); renderAll(); };
+$('halfYearChk').onchange = function () { S_().halfYear = this.checked; saveMeta(); renderAll(); };
 
 // ---------- 시작 ----------
 $('dateInp').value = todayStr();
+saveMeta();
 renderForm();
 renderAll();
 </script>
