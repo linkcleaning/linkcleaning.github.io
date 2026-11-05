@@ -101,7 +101,10 @@
   <div id="autoBox" class="hidden mt-3 rounded-2xl bg-[#E6F2F0] border border-[#0E5A66]/20 px-4 py-3 text-[12.5px] leading-relaxed">
     <div class="flex items-center justify-between gap-2">
       <b class="text-[13.5px] text-[#0E5A66]">링크클린 회원번호 자동 발급</b>
-      <button id="newNumBtn" class="shrink-0 px-3 py-1.5 rounded-full bg-[#0E5A66] text-white text-[12px] font-semibold">다른 번호로</button>
+      <div class="flex gap-1.5 shrink-0">
+        <button id="resetBtn" class="px-3 py-1.5 rounded-full bg-[#F08A3C] text-[#0B2A31] text-[12px] font-bold">새 손님</button>
+        <button id="newNumBtn" class="px-3 py-1.5 rounded-full bg-[#0E5A66] text-white text-[12px] font-semibold">다른 번호로</button>
+      </div>
     </div>
     <div id="autoParts" class="mono mt-2 text-[13px]"></div>
     <p class="mt-1.5 text-[#0B2A31]/60">창립년(2016) · 발급일 · 그날 몇 번째 · 중복방지 2자리 · 검증 1자리. 같은 번호가 다시 나오지 않아요.</p>
@@ -162,6 +165,10 @@
     <svg width="22" height="22" viewBox="0 0 24 24" fill="none"><rect x="3" y="5" width="18" height="14" rx="3" fill="#fff"/><rect x="3" y="7" width="18" height="3" fill="#4AA3DF"/><rect x="3" y="10" width="18" height="2.5" fill="#F5B83D"/><rect x="3" y="12.5" width="18" height="2.5" fill="#6CC04A"/></svg>
     Apple 지갑에 추가
   </button>
+  <div id="doneBox" class="hidden mt-3 rounded-2xl bg-[#E6F2F0] border border-[#0E5A66]/25 p-4">
+    <div class="font-bold text-[14.5px] text-[#0E5A66]" id="doneText">✅ 발급 완료</div>
+    <button id="nextBtn" class="tool w-full mt-3 bg-[#0E5A66] text-white">➕ 다음 손님 발급하기 (새 번호로 초기화)</button>
+  </div>
   <div id="sendBox" class="hidden mt-3 rounded-2xl bg-[#0B2A31] text-white p-4">
     <div class="font-bold text-[15px]">손님에게 회원카드 보내기</div>
     <p class="text-[12.5px] text-white/60 mt-1 leading-relaxed">감사 인사 + 내 회원카드 링크 + 혜택 안내를 보내요. 아이폰 손님은 함께 가는 카드 파일을 누르면 지갑에 들어가요.</p>
@@ -726,6 +733,14 @@ function validate() {
   if (!n) { toast('멤버십 번호를 넣어주세요'); $('#fNumber').focus(); return false; }
   if (!/^[\x20-\x7E]+$/.test(n)) { toast('번호는 영문·숫자만 넣을 수 있어요'); return false; }
   if (form.auto && !form.holder) { toast('회원 이름을 넣어주세요'); $('#fHolder').focus(); return false; }
+  if (form.auto) {
+    const owner = loadH().find(x => cleanNum(x.number) === n && x.holder && x.holder !== form.holder);
+    if (owner) {
+      const isNew = confirm(`이 번호는 이미 '${owner.holder}'님에게 발급한 번호예요.\n\n[확인] 새 손님이에요 → 새 번호로 바꿔서 발급\n[취소] ${owner.holder}님 이름을 고친 거예요 → 이 번호 그대로`);
+      if (isNew) { setNumber(genMemberNo()); syncAuto(); renderPass(); toast('새 번호로 바꿨어요'); }
+      else { saveHistory(true); }
+    }
+  }
   return true;
 }
 async function make() {
@@ -736,7 +751,7 @@ async function make() {
   busy(true);
   try {
     const file = await buildPkpass({ ...form });
-    consumeSeq(form.number); saveHistory();
+    consumeSeq(form.number); saveHistory(); markDone();
     return file;
   } catch (e) { toast('만들기 실패: ' + (e.message || e)); return null; }
   finally { busy(false); }
@@ -763,12 +778,12 @@ $('#sendAllBtn').onclick = async () => {
 $('#sendSmsBtn').onclick = () => {
   if (!validate()) return;
   const msg = customerMsg(false);
-  consumeSeq(form.number); saveHistory();
+  consumeSeq(form.number); saveHistory(); markDone();
   const a = document.createElement('a');
   a.href = (isIOS ? 'sms:&body=' : 'sms:?body=') + encodeURIComponent(msg);
   document.body.appendChild(a); a.click(); a.remove();
 };
-$('#copyMsgBtn').onclick = () => { if (!validate()) return; const msg = customerMsg(false); consumeSeq(form.number); saveHistory(); copyPlain(msg); toast('복사했어요 · 카톡에 붙여넣으세요'); };
+$('#copyMsgBtn').onclick = () => { if (!validate()) return; const msg = customerMsg(false); consumeSeq(form.number); saveHistory(); markDone(); copyPlain(msg); toast('복사했어요 · 카톡에 붙여넣으세요'); };
 async function copyPlain(t) { try { await navigator.clipboard.writeText(t); } catch (e) { const a = document.createElement('textarea'); a.value = t; document.body.appendChild(a); a.select(); document.execCommand('copy'); a.remove(); } }
 
 /* 소개 코드 확인 */
@@ -796,7 +811,8 @@ $('#saveBtn').onclick = async () => {
 /* ===================== 기록 ===================== */
 const HKEY = 'linkpass.history';
 const loadH = () => { try { return JSON.parse(localStorage.getItem(HKEY) || '[]'); } catch (e) { return []; } };
-function saveHistory() {
+function saveHistory(rename) {
+  if (rename === true) { const h0 = loadH().filter(x => cleanNum(x.number) !== cleanNum(form.number)); try { localStorage.setItem(HKEY, JSON.stringify(h0)); } catch (e) {} }
   const h = loadH().filter(x => !(cleanNum(x.number) === cleanNum(form.number) && x.title === form.title));
   h.unshift({ ...form, at: Date.now() });
   try { localStorage.setItem(HKEY, JSON.stringify(h.slice(0, 300))); } catch (e) {}
@@ -868,7 +884,7 @@ $('#presets').innerHTML = PRESETS.map((p, i) => `<button class="chip" data-p="${
 $('#presets').addEventListener('click', e => {
   const b = e.target.closest('[data-p]'); if (!b) return;
   const p = PRESETS[+b.dataset.p];
-  const wasAuto = form.auto; form.cardImg = '';
+  const wasAuto = form.auto; form.cardImg = ''; $('#doneBox').classList.add('hidden');
   form.color = p.c; form.title = p.t === '직접 입력' ? '' : p.t; $('#fTitle').value = form.title;
   if (p.t === LC_CARD) {
     form.auto = true; bumpCount = 0; setNumber(genMemberNo());
@@ -915,6 +931,23 @@ $('#imgPickBtn').onclick = () => {
 $('#imgClearBtn').onclick = () => { form.cardImg = ''; renderPass(); };
 $$('#segTier button').forEach(b => b.onclick = () => { form.tier = b.dataset.v; syncTier(); renderPass(); });
 $('#kbToggle').onclick = () => { toggleAlnum(!alnum); $('#fNumber').blur(); setTimeout(() => $('#fNumber').focus(), 60); };
+function markDone() {
+  if (!isBrand(form)) return;
+  $('#doneText').textContent = `✅ ${form.holder || '손님'}님 ${tierOf(form).name} 카드 발급 완료 · ${fmtNum(form.number, '4')}`;
+  $('#doneBox').classList.remove('hidden');
+}
+function resetForNext() {
+  form.holder = ''; form.memo = ''; form.cardImg = ''; form.tier = 's';
+  $('#fHolder').value = ''; $('#fMemo').value = '';
+  bumpCount = 0; setNumber(genMemberNo());
+  $('#doneBox').classList.add('hidden');
+  syncAuto(); syncUI();
+  scrollTo({ top: 0, behavior: 'smooth' });
+  setTimeout(() => $('#fHolder').focus(), 350);
+  toast('새 손님용 번호로 초기화했어요');
+}
+$('#nextBtn').onclick = resetForNext;
+$('#resetBtn').onclick = resetForNext;
 $('#newNumBtn').onclick = () => { bumpCount++; setNumber(genMemberNo(bumpCount)); syncAuto(); renderPass(); toast('새 번호로 바꿨어요'); };
 $('#fTitle').addEventListener('input', () => { if (form.auto && $('#fTitle').value.trim() !== LC_CARD) { form.auto = false; syncAuto(); } });
 [['#fTitle', 'title'], ['#fHolder', 'holder'], ['#fLevel', 'level'], ['#fMemo', 'memo']]
