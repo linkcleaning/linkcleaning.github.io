@@ -185,10 +185,15 @@
   </div>
   <div id="sendBox" class="hidden mt-3 rounded-2xl bg-[#0B2A31] text-white p-4">
     <div class="font-bold text-[15px]">손님에게 회원카드 보내기</div>
-    <p class="text-[12.5px] text-white/60 mt-1 leading-relaxed">감사 인사 + 내 회원카드 링크 + 혜택 안내를 보내요. 아이폰 손님은 함께 가는 카드 파일을 누르면 지갑에 들어가요.</p>
-    <button id="sendAllBtn" class="tool w-full mt-3 bg-[#F08A3C] text-[#0B2A31]">📤 카드 파일 + 안내 보내기 (아이폰 손님)</button>
-    <button id="sendSmsBtn" class="tool w-full mt-2 bg-white/10 text-white">💬 문자로 안내만 보내기 (안드로이드 손님)</button>
-    <button id="copyMsgBtn" class="w-full mt-2 text-[12.5px] text-white/50 underline">안내 문구 복사 (카톡에 붙여넣기)</button>
+    <p class="text-[12.5px] text-white/60 mt-1 leading-relaxed">짧은 인사 + 링크 하나만 가요. 혜택·소개 코드·전화 버튼은 링크 안 카드 페이지에 다 있어요.</p>
+    <div id="msgPreview" class="mt-3 rounded-xl bg-[#FEE500] text-[#191919] px-3 py-2.5 text-[13px] leading-relaxed whitespace-pre-line break-all"></div>
+    <button id="sendTextBtn" class="tool w-full mt-3 bg-[#F08A3C] text-[#0B2A31]">💬 카톡·문자로 보내기</button>
+    <button id="sendAllBtn" class="tool w-full mt-2 bg-white/10 text-white">🍎 아이폰 지갑 파일 따로 보내기 (선택)</button>
+    <p class="text-[11.5px] text-white/45 mt-1.5 leading-relaxed">아이폰 손님에게만, 위 안내를 보낸 다음 이어서 보내세요. 파일을 누르면 지갑에 바로 들어가요.</p>
+    <div class="flex justify-center gap-4 mt-2">
+      <button id="sendSmsBtn" class="text-[12.5px] text-white/50 underline">문자 앱으로 바로</button>
+      <button id="copyMsgBtn" class="text-[12.5px] text-white/50 underline">문구 복사</button>
+    </div>
     <button id="selfAddBtn" class="w-full mt-1 text-[12.5px] text-white/50 underline">내 아이폰 지갑에 미리 넣어보기</button>
   </div>
   <button id="saveBtn" class="gen mt-2 w-full rounded-2xl bg-white border border-black/10 py-3.5 font-semibold text-[14.5px] active:scale-[.98] transition">지갑에 안 들어가면: 파일로 저장해서 넣기</button>
@@ -739,25 +744,21 @@ async function buildPkpass(d) {
 
 /* ===================== 손님에게 보내기 ===================== */
 const MEMBERS_URL = 'https://linkcleaning.github.io/members/';
-const memberUrl = (n, nm, t) => `${MEMBERS_URL}?n=${cleanNum(n)}&t=${t || 's'}${nm ? '&m=' + encodeURIComponent(nm) : ''}`;
-function customerMsg(withFile) {
+/* 짧은 링크: linkcleaning.github.io/m/?<등급><번호 36진수>.<이름> */
+const b64url = str => btoa(String.fromCharCode(...new TextEncoder().encode(str))).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
+const memberUrl = (n, nm, t) => `https://linkcleaning.github.io/m/?${t || 's'}${BigInt(cleanNum(n)).toString(36)}${nm ? '.' + b64url(nm) : ''}`;
+function customerMsg() {
   const n = cleanNum(form.number), nm = form.holder || '고객';
   const T = tierOf(form), up = form.tier && form.tier !== 's' && loadH().some(x => cleanNum(x.number) === n && x.tier !== form.tier);
-  const head = T.family
-    ? `[링크클린] ${nm}님, 링크클린 패밀리 VIP 카드를 보내드려요 💝\n늘 응원해 줘서 고마워요.`
-    : `[링크클린] ${nm}님, ${up ? `${T.name} 회원으로 등급이 올라갔어요 🎉` : '청소를 맡겨주셔서 감사합니다 😊'}\n${up ? '새 등급 카드를 보내드려요.' : `링크클린 멤버스 ${T.name} 회원카드를 보내드려요.`}`;
-  return `${head}
-
-▶ 내 회원카드·혜택 보기
-${memberUrl(n, form.holder, form.tier)}
-
-[${T.name} 회원 혜택]
-${T.perks.map(x => '· ' + x).join('\n')}
-· 지인 소개 코드: ${fmtNum(n, '4')}
-${withFile ? '· 함께 보낸 카드 파일을 누르면 아이폰 지갑에 들어가요\n' : ''}
-예약·상담 050-6520-0440`;
+  const url = memberUrl(n, form.holder, form.tier);
+  if (T.family) return `[링크클린] ${nm}님, 패밀리 VIP 카드예요 💝\n늘 응원해 줘서 고마워요.\n${url}`;
+  if (up) return `[링크클린] ${nm}님, ${T.name} 회원으로 올라갔어요 🎉\n새 카드와 혜택을 확인하세요.\n${url}`;
+  return `[링크클린] ${nm}님, 감사합니다 😊\n${T.name} 회원카드가 도착했어요.\n${url}`;
 }
-function syncSend() { $('#sendBox').classList.toggle('hidden', !isBrand(form)); }
+function syncSend() {
+  $('#sendBox').classList.toggle('hidden', !isBrand(form));
+  if (isBrand(form) && cleanNum(form.number)) { try { $('#msgPreview').textContent = customerMsg(); } catch (e) {} }
+}
 
 /* ===================== 발급 ===================== */
 function validate() {
@@ -803,25 +804,31 @@ $('#addBtn').onclick = async () => {
   document.body.appendChild(a); a.click(); a.remove();
   setTimeout(() => URL.revokeObjectURL(url), 60000);
 };
+$('#sendTextBtn').onclick = async () => {
+  if (!validate()) return;
+  const text = customerMsg();
+  consumeSeq(form.number); saveHistory(); markDone();
+  if (navigator.share) { try { await navigator.share({ text }); return; } catch (e) { if (e.name === 'AbortError') return; } }
+  copyPlain(text); toast('복사했어요 · 카톡에 붙여넣으세요');
+};
 $('#sendAllBtn').onclick = async () => {
   if (!validate()) return;
-  const text = customerMsg(true);
   const file = await make(); if (!file) return;
-  if (navigator.canShare && navigator.canShare({ files: [file], text })) {
-    try { await navigator.share({ files: [file], text }); return; } catch (e) { if (e.name === 'AbortError') return; }
+  if (navigator.canShare && navigator.canShare({ files: [file] })) {
+    try { await navigator.share({ files: [file] }); return; } catch (e) { if (e.name === 'AbortError') return; }
   }
-  if (navigator.share) { try { await navigator.share({ text }); return; } catch (e) { if (e.name === 'AbortError') return; } }
-  copyPlain(text); toast('안내 문구를 복사했어요');
+  const a = document.createElement('a'); a.href = URL.createObjectURL(file); a.download = file.name;
+  document.body.appendChild(a); a.click(); a.remove(); toast('파일을 저장했어요');
 };
 $('#sendSmsBtn').onclick = () => {
   if (!validate()) return;
-  const msg = customerMsg(false);
+  const msg = customerMsg();
   consumeSeq(form.number); saveHistory(); markDone();
   const a = document.createElement('a');
   a.href = (isIOS ? 'sms:&body=' : 'sms:?body=') + encodeURIComponent(msg);
   document.body.appendChild(a); a.click(); a.remove();
 };
-$('#copyMsgBtn').onclick = () => { if (!validate()) return; const msg = customerMsg(false); consumeSeq(form.number); saveHistory(); markDone(); copyPlain(msg); toast('복사했어요 · 카톡에 붙여넣으세요'); };
+$('#copyMsgBtn').onclick = () => { if (!validate()) return; const msg = customerMsg(); consumeSeq(form.number); saveHistory(); markDone(); copyPlain(msg); toast('복사했어요 · 카톡에 붙여넣으세요'); };
 async function copyPlain(t) { try { await navigator.clipboard.writeText(t); } catch (e) { const a = document.createElement('textarea'); a.value = t; document.body.appendChild(a); a.select(); document.execCommand('copy'); a.remove(); } }
 
 /* 소개 코드 확인 */

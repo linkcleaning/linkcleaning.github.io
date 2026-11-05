@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>링크클린 멤버스</title>
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="링크클린">
+<meta property="og:title" content="링크클린 멤버스 카드가 도착했어요">
+<meta property="og:description" content="눌러서 내 회원카드와 혜택을 확인하세요 · 제주 청소 전문 링크클린">
+<meta property="og:image" content="https://linkcleaning.github.io/members/og.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta name="theme-color" content="#0B2A31">
+<script>location.replace('../members/' + location.search + location.hash);</script>
+<style>body{margin:0;background:#0B2A31;color:#fff;font-family:system-ui,sans-serif;display:grid;place-items:center;min-height:100vh}a{color:#F3A86B}</style>
+</head>
+<body><p>잠시만요… <a id="go" href="../members/">회원카드 열기</a></p>
+<script>document.getElementById('go').href = '../members/' + location.search;</script>
+</body>
+</html>

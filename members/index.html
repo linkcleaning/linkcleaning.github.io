@@ -10,9 +10,11 @@
 <meta name="theme-color" content="#0B2A31">
 <meta name="format-detection" content="telephone=no">
 <title>링크클린 멤버스</title>
-<meta property="og:title" content="링크클린 멤버스 카드">
-<meta property="og:description" content="제주 청소 전문 링크클린 · SINCE 2016 — 회원 혜택과 지인 소개 코드를 확인하세요.">
-<meta property="og:image" content="https://linkcleaning.github.io/pass/lc-logo.png">
+<meta property="og:title" content="링크클린 멤버스 카드가 도착했어요">
+<meta property="og:description" content="눌러서 내 회원카드와 혜택을 확인하세요 · 제주 청소 전문 링크클린">
+<meta property="og:image" content="https://linkcleaning.github.io/members/og.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
 <link rel="apple-touch-icon" href="../pass/lc-logo.png">
 <link rel="icon" href="../pass/lc-logo.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -163,7 +165,18 @@ const mask = nm => { const a = [...String(nm || '')]; if (a.length <= 1) return 
 
 const qs = new URLSearchParams(location.search);
 let num = (qs.get('n') || '').replace(/\D/g, ''), name = (qs.get('m') || '').slice(0, 20), tier = TIERS[qs.get('t')] ? qs.get('t') : 's';
-const ref = (qs.get('ref') || '').replace(/\D/g, ''), refName = (qs.get('r') || '').slice(0, 20);
+let ref = (qs.get('ref') || '').replace(/\D/g, ''), refName = (qs.get('r') || '').slice(0, 20);
+/* 짧은 링크 해석: ?<s|g|v|f|r><번호 36진수>.<이름 base64url> */
+const fromB36 = t => { let v = 0n; for (const ch of t.toLowerCase()) { const d = parseInt(ch, 36); if (isNaN(d)) return ''; v = v * 36n + BigInt(d); } return v.toString(); };
+const unb64 = t => { try { const b = atob(t.replace(/-/g, '+').replace(/_/g, '/')); return new TextDecoder().decode(Uint8Array.from(b, c => c.charCodeAt(0))); } catch (e) { return ''; } };
+const b64url = str => btoa(String.fromCharCode(...new TextEncoder().encode(str))).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
+const shortRaw = decodeURIComponent(location.search.slice(1));
+if (shortRaw && !shortRaw.includes('=')) {
+  const [head, nm] = shortRaw.split('.');
+  const k = head[0], n = fromB36(head.slice(1)), who = nm ? unb64(nm).slice(0, 20) : '';
+  if (k === 'r') { ref = n; refName = who; }
+  else if (TIERS[k]) { num = n; tier = k; name = who; }
+}
 
 /* 내 카드 기억 (홈 화면에 추가했을 때 링크 없이도 열리게) */
 try {
@@ -250,7 +263,7 @@ if (valid(num)) {
   if (isIOS) $('#walletTip').classList.remove('hidden');
   $('#benefits').innerHTML = T.perks.map(b => `<div class="benefit"><div class="ico" style="background:${b.bg}">${b.ico}</div><div><div class="font-bold text-[15px]">${esc(b.t)}</div><div class="text-[13px] text-white/60 mt-0.5 leading-relaxed">${esc(b.d)}</div></div></div>`).join('');
   $('#shareRef').onclick = async () => {
-    const url = `${location.origin}${location.pathname}?ref=${num}${name ? '&r=' + encodeURIComponent(mask(name)) : ''}`;
+    const url = `https://linkcleaning.github.io/m/?r${BigInt(num).toString(36)}${name ? '.' + b64url(mask(name)) : ''}`;
     const text = `제주에서 청소 업체 찾으면 링크클린 추천해요! 예약할 때 소개 코드 ${g4(num)} 말하면 돼요.`;
     if (navigator.share) { try { await navigator.share({ title: '링크클린 소개', text, url }); return; } catch (e) { if (e.name === 'AbortError') return; } }
     copy(text + '\n' + url);
