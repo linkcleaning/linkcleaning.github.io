@@ -131,6 +131,18 @@
   <label class="lbl">카드 색상</label>
   <div id="swatches" class="flex flex-wrap gap-3 items-center"></div>
 
+  <div id="imgBox">
+    <label class="lbl">카드 그림 <span class="font-normal opacity-60">(선택)</span></label>
+    <div class="flex gap-2">
+      <button id="imgPickBtn" class="tool flex-1 bg-white border border-black/10">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><rect x="3" y="4" width="18" height="16" rx="3"/><circle cx="9" cy="10" r="2"/><path d="M21 16l-5-5-9 9"/></svg>
+        실물 카드 사진 넣기
+      </button>
+      <button id="imgClearBtn" class="tool hidden bg-white border border-black/10 px-4">지우기</button>
+    </div>
+    <p class="hint">* 카드 앞면 사진을 넣으면 지갑에 카드 그림이 크게 보여요. 링크클린 회원카드는 로고 그림이 자동으로 들어가요.</p>
+  </div>
+
   <label class="lbl">뒷면 메모</label>
   <textarea id="fMemo" rows="2" class="inp resize-none" placeholder="지갑에서 카드 뒷면(ⓘ)에 보이는 내용 (선택)"></textarea>
 
@@ -283,7 +295,7 @@ const PRESETS = [
 ];
 const COLORS = ['#0E5A66','#F08A3C','#4E9F3D','#1F2A44','#1E1E1E','#FFFFFF','#E3262D','#D6006F','#652F8D','#F39A1E','#A8844E','#2F6FDF'];
 
-const form = { title: '', number: '', space: '4', holder: '', level: '', format: 'PKBarcodeFormatCode128', color: '#0E5A66', memo: '', auto: false };
+const form = { title: '', number: '', space: '4', holder: '', level: '', format: 'PKBarcodeFormatCode128', color: '#0E5A66', memo: '', auto: false, cardImg: '' };
 
 /* ===================== 링크클린 회원번호 자동 발급 =====================
    2016(창립년) + YYMMDD(발급일) + NNN(그날 순번) + RR(중복방지) + C(Luhn 검증 자리) = 16자리 */
@@ -362,26 +374,105 @@ const cleanNum = v => String(v || '').replace(/[\s-]/g, '');
 const fmtNum = (v, sp) => sp === '4' ? cleanNum(v).replace(/(.{4})(?=.)/g, '$1 ') : cleanNum(v);
 
 /* ===================== 미리보기 ===================== */
+/* ===================== 카드 그림 (지갑의 큰 그림 영역 = strip) ===================== */
+const LC_BG = '#0B2A31';
+const isBrand = d => !!d.auto || d.title === LC_CARD;
+const passBg = d => isBrand(d) ? LC_BG : d.color;
+const hasStrip = d => isBrand(d) || !!d.cardImg;
+const lcLogo = new Image(); let lcLogoReady = false;
+lcLogo.onload = () => { lcLogoReady = true; renderPass(); }; lcLogo.src = 'lc-logo.png';
+let cardImgEl = null, cardImgSrc = '';
+function getCardImg(d) {
+  if (!d.cardImg) return null;
+  if (cardImgSrc !== d.cardImg) { cardImgEl = new Image(); cardImgEl.onload = () => renderPass(); cardImgEl.src = d.cardImg; cardImgSrc = d.cardImg; }
+  return cardImgEl.complete && cardImgEl.naturalWidth ? cardImgEl : null;
+}
+function rrect(x, X, Y, W, H, R) { x.beginPath(); x.moveTo(X + R, Y); x.arcTo(X + W, Y, X + W, Y + H, R); x.arcTo(X + W, Y + H, X, Y + H, R); x.arcTo(X, Y + H, X, Y, R); x.arcTo(X, Y, X + W, Y, R); x.closePath(); }
+function spaced(x, t, X, Y, sp) { for (const ch of t) { x.fillText(ch, X, Y); X += x.measureText(ch).width + sp; } }
+function drawStrip(scale, d) {
+  const W = 375, H = 144, c = document.createElement('canvas'); c.width = W * scale; c.height = H * scale;
+  const x = c.getContext('2d'); x.scale(scale, scale);
+  x.fillStyle = passBg(d); x.fillRect(0, 0, W, H);
+  const ch = 128, cw = Math.round(ch * 1.586), cx = (W - cw) / 2, cy = (H - ch) / 2;
+  x.save(); x.shadowColor = 'rgba(0,0,0,.5)'; x.shadowBlur = 14; x.shadowOffsetY = 4; rrect(x, cx, cy, cw, ch, 10); x.fillStyle = '#0E5A66'; x.fill(); x.restore();
+  x.save(); rrect(x, cx, cy, cw, ch, 10); x.clip();
+  const img = getCardImg(d);
+  if (img && !isBrand(d)) {
+    const r = Math.max(cw / img.naturalWidth, ch / img.naturalHeight), iw = img.naturalWidth * r, ih = img.naturalHeight * r;
+    x.drawImage(img, cx + (cw - iw) / 2, cy + (ch - ih) / 2, iw, ih);
+  } else {
+    const g = x.createLinearGradient(cx, cy, cx + cw, cy + ch);
+    g.addColorStop(0, '#16808F'); g.addColorStop(.55, '#0E5A66'); g.addColorStop(1, '#072E35');
+    x.fillStyle = g; x.fillRect(cx, cy, cw, ch);
+    const lx = cx + cw * .735, ly = cy + ch * .5;
+    const rg = x.createRadialGradient(lx, ly, 4, lx, ly, ch * .8);
+    rg.addColorStop(0, 'rgba(240,138,60,.42)'); rg.addColorStop(1, 'rgba(240,138,60,0)');
+    x.fillStyle = rg; x.fillRect(cx, cy, cw, ch);
+    x.strokeStyle = 'rgba(255,255,255,.05)'; x.lineWidth = 1;
+    for (let i = -ch; i < cw; i += 7) { x.beginPath(); x.moveTo(cx + i, cy + ch); x.lineTo(cx + i + ch * .6, cy); x.stroke(); }
+    x.strokeStyle = '#6DBE45'; x.lineWidth = 2.5; x.beginPath(); x.arc(lx, ly, ch * .41, Math.PI * .55, Math.PI * 1.45); x.stroke();
+    if (lcLogoReady) {
+      const sz = ch * .68;
+      x.save(); x.shadowColor = 'rgba(0,0,0,.4)'; x.shadowBlur = 10; x.beginPath(); x.arc(lx, ly, sz / 2, 0, Math.PI * 2); x.fillStyle = '#fff'; x.fill(); x.restore();
+      x.drawImage(lcLogo, lx - sz / 2, ly - sz / 2, sz, sz);
+    }
+    x.textBaseline = 'alphabetic';
+    x.fillStyle = '#fff'; x.font = "700 15px 'JetBrains Mono', ui-monospace, monospace"; x.fillText('LINKCLEAN', cx + 12, cy + 29);
+    x.fillStyle = '#F3A86B'; x.font = "700 7.5px 'JetBrains Mono', ui-monospace, monospace"; spaced(x, 'MEMBERS', cx + 13, cy + 41, 2.2);
+    rrect(x, cx + 12, cy + 55, 21, 16, 3);
+    const cg = x.createLinearGradient(cx + 12, cy + 55, cx + 33, cy + 71); cg.addColorStop(0, '#F8DCA0'); cg.addColorStop(1, '#C3923F');
+    x.fillStyle = cg; x.fill();
+    x.strokeStyle = 'rgba(0,0,0,.25)'; x.lineWidth = .6; x.beginPath(); x.moveTo(cx + 12, cy + 63); x.lineTo(cx + 33, cy + 63); x.moveTo(cx + 22.5, cy + 55); x.lineTo(cx + 22.5, cy + 71); x.stroke();
+    x.fillStyle = 'rgba(255,255,255,.8)'; x.font = "600 7px 'IBM Plex Sans KR', sans-serif"; x.fillText('제주 청소 전문 · SINCE 2016', cx + 12, cy + ch - 13);
+  }
+  x.restore();
+  x.save(); rrect(x, cx, cy, cw, ch, 10); x.clip();
+  const gl = x.createLinearGradient(cx, cy, cx, cy + ch * .55); gl.addColorStop(0, 'rgba(255,255,255,.16)'); gl.addColorStop(1, 'rgba(255,255,255,0)');
+  x.fillStyle = gl; x.fillRect(cx, cy, cw, ch * .55); x.restore();
+  return c;
+}
+function drawLogo(scale) {
+  const c = document.createElement('canvas'); c.width = c.height = 50 * scale;
+  const x = c.getContext('2d'); x.scale(scale, scale);
+  x.beginPath(); x.arc(25, 25, 24.5, 0, Math.PI * 2); x.fillStyle = '#fff'; x.fill();
+  if (lcLogoReady) x.drawImage(lcLogo, .5, .5, 49, 49);
+  return c;
+}
+function drawLcIcon(size) {
+  const c = document.createElement('canvas'); c.width = c.height = size;
+  const x = c.getContext('2d'); x.fillStyle = '#fff'; x.fillRect(0, 0, size, size);
+  if (lcLogoReady) x.drawImage(lcLogo, 0, 0, size, size);
+  return c;
+}
+const canvasPng = c => new Promise(res => c.toBlob(b => b.arrayBuffer().then(a => res(new Uint8Array(a))), 'image/png'));
+
+/* ===================== 미리보기 ===================== */
 function renderPass() {
-  const c = form.color, num = cleanNum(form.number);
+  const d = form, brand = isBrand(d), bg = passBg(d), num = cleanNum(d.number);
   const el = $('#pass');
-  el.style.background = c; el.style.color = fg(c);
-  el.style.border = isLight(c) ? '1px solid rgba(0,0,0,.1)' : 'none';
-  const lab = `style="color:${labelCol(c)}"`;
+  const fgc = brand ? '#FFFFFF' : fg(bg), labc = brand ? '#F3A86B' : labelCol(bg);
+  el.style.background = bg; el.style.color = fgc;
+  el.style.border = isLight(bg) ? '1px solid rgba(0,0,0,.1)' : 'none';
+  const lab = `style="color:${labc}"`;
+  const strip = hasStrip(d) ? drawStrip(2, d).toDataURL('image/png') : '';
   el.innerHTML = `
-    <div class="flex items-start justify-between gap-3">
-      <div class="font-bold text-[19px] leading-tight truncate pt-0.5">${esc(form.title || '카드 이름')}</div>
-      ${form.level ? `<div class="text-right shrink-0"><div class="plabel" ${lab}>LEVEL</div><div class="text-[17px] font-medium leading-tight">${esc(form.level)}</div></div>` : ''}
+    <div class="flex items-center justify-between gap-3">
+      <div class="flex items-center gap-2.5 min-w-0">
+        ${brand ? '<img src="lc-logo.png" alt="" class="w-9 h-9 rounded-full bg-white shrink-0">' : ''}
+        <div class="font-bold text-[18px] leading-tight truncate">${esc(brand ? '링크클린 멤버스' : (d.title || '카드 이름'))}</div>
+      </div>
+      ${d.level ? `<div class="text-right shrink-0"><div class="plabel" ${lab}>LEVEL</div><div class="text-[16px] font-medium leading-tight">${esc(d.level)}</div></div>` : ''}
     </div>
-    <div class="mt-6 flex gap-6">
-      <div class="min-w-0"><div class="plabel" ${lab}>카드번호</div><div class="text-[19px] mono font-medium truncate">${esc(fmtNum(num, form.space) || '0000 0000 0000')}</div></div>
+    ${strip ? `<img src="${strip}" alt="" class="block mt-3 max-w-none" style="width:calc(100% + 36px);margin-left:-18px">` : ''}
+    <div class="${strip ? 'mt-3' : 'mt-6'} flex gap-6">
+      <div class="min-w-0"><div class="plabel" ${lab}>${brand ? '회원번호' : '카드번호'}</div><div class="text-[18px] mono font-medium truncate">${esc(fmtNum(num, d.space) || '0000 0000 0000')}</div></div>
     </div>
-    ${form.holder ? `<div class="mt-3"><div class="plabel" ${lab}>이름</div><div class="text-[15px] font-medium">${esc(form.holder)}</div></div>` : ''}
+    ${d.holder ? `<div class="mt-3"><div class="plabel" ${lab}>${brand ? '회원명' : '이름'}</div><div class="text-[15px] font-medium">${esc(d.holder)}</div></div>` : ''}
     <div class="barbox text-[#111]">
-      ${form.format === 'PKBarcodeFormatCode128'
+      ${d.format === 'PKBarcodeFormatCode128'
         ? '<svg id="pvBar"></svg>'
-        : `<div class="grid place-items-center py-3 text-[12.5px] text-black/50">${form.format.replace('PKBarcodeFormat', '')} 코드는 지갑에서 그려져요</div>`}
-      <div class="text-center mono text-[11.5px] mt-1 text-black/70">${esc(fmtNum(num, form.space))}</div>
+        : `<div class="grid place-items-center py-3 text-[12.5px] text-black/50">${d.format.replace('PKBarcodeFormat', '')} 코드는 지갑에서 그려져요</div>`}
+      <div class="text-center mono text-[11.5px] mt-1 text-black/70">${esc(fmtNum(num, d.space))}</div>
     </div>`;
   const svg = $('#pvBar');
   if (svg && num && typeof JsBarcode !== 'undefined') {
@@ -392,6 +483,7 @@ function renderPass() {
       svg.style.width = '100%'; svg.style.height = '56px';
     } catch (e) {}
   } else if (svg) svg.outerHTML = '<div class="h-[56px] grid place-items-center text-[12px] text-black/40">번호를 넣으면 바코드가 보여요</div>';
+  const ib = $('#imgBox'); if (ib) { ib.classList.toggle('hidden', brand); $('#imgClearBtn').classList.toggle('hidden', !d.cardImg); }
 }
 function syncUI() {
   $$('#segSpace button').forEach(b => b.classList.toggle('on', b.dataset.v === form.space));
@@ -414,7 +506,8 @@ function iconPng(size, color) {
   return new Promise(res => cv.toBlob(b => b.arrayBuffer().then(a => res(new Uint8Array(a))), 'image/png'));
 }
 async function brandIcon() {
-  const u8 = await iconPng(180, '#0E5A66');
+  if (!lcLogoReady) await new Promise(r => { lcLogo.addEventListener('load', r, { once: true }); setTimeout(r, 3000); });
+  const u8 = lcLogoReady ? await canvasPng(drawLcIcon(180)) : await iconPng(180, '#0E5A66');
   $('#appleIcon').href = URL.createObjectURL(new Blob([u8], { type: 'image/png' }));
 }
 
@@ -462,6 +555,13 @@ async function buildPkpass(d) {
   const { cert, passTypeId, teamId } = certInfo();
   if (!passTypeId || !teamId) throw new Error('인증서에서 Pass Type ID를 읽지 못했어요');
   const num = cleanNum(d.number), shown = fmtNum(num, d.space);
+  const brand = isBrand(d), bg = passBg(d);
+  if (brand || d.cardImg) {
+    await document.fonts.ready;
+    if (brand && !lcLogoReady) await new Promise(r => { lcLogo.addEventListener('load', r, { once: true }); setTimeout(r, 4000); });
+    if (d.cardImg) await new Promise(r => { const im = getCardImg(d); if (im) return r(); cardImgEl.addEventListener('load', r, { once: true }); setTimeout(r, 3000); });
+  }
+  const issued = isLcNumber(num) ? `20${num.slice(4, 6)}.${num.slice(6, 8)}.${num.slice(8, 10)}` : '';
   const serial = 'LP-' + Date.now().toString(36) + '-' + Math.random().toString(36).slice(2, 8);
   const pass = {
     formatVersion: 1,
@@ -470,16 +570,24 @@ async function buildPkpass(d) {
     serialNumber: serial,
     organizationName: ORG_NAME,
     description: `${d.title} 멤버십`,
-    logoText: d.title,
-    foregroundColor: rgbStr(hexRgb(fg(d.color))),
-    backgroundColor: rgbStr(hexRgb(d.color)),
-    labelColor: rgbStr(labelRgb(d.color)),
+    logoText: brand ? '링크클린 멤버스' : d.title,
+    foregroundColor: brand ? 'rgb(255,255,255)' : rgbStr(hexRgb(fg(bg))),
+    backgroundColor: rgbStr(hexRgb(bg)),
+    labelColor: brand ? 'rgb(243,168,107)' : rgbStr(labelRgb(bg)),
     storeCard: {
       headerFields: d.level ? [{ key: 'level', label: 'LEVEL', value: d.level }] : [],
       primaryFields: [],
-      secondaryFields: [{ key: 'number', label: '카드번호', value: shown }],
-      auxiliaryFields: d.holder ? [{ key: 'name', label: '이름', value: d.holder }] : [],
+      secondaryFields: [{ key: 'number', label: brand ? '회원번호' : '카드번호', value: shown }],
+      auxiliaryFields: [
+        ...(d.holder ? [{ key: 'name', label: brand ? '회원명' : '이름', value: d.holder }] : []),
+        ...(brand && issued ? [{ key: 'issued', label: '발급일', value: issued }] : [])
+      ],
       backFields: [
+        ...(brand ? [
+          { key: 'hello', label: '링크클린 멤버스', value: '링크클린을 이용해 주셔서 감사합니다. 청소 예약·상담 때 이 카드를 보여주세요.' },
+          { key: 'tel', label: '예약·상담', value: '050-6520-0440' },
+          { key: 'web', label: '홈페이지', value: 'https://linkclean.co.kr' }
+        ] : []),
         ...(d.memo ? [{ key: 'memo', label: '메모', value: d.memo }] : []),
         { key: 'num', label: '멤버십 번호', value: num },
         { key: 'by', label: '만든 곳', value: '링크 패스 · linkcleaning.github.io/pass' }
@@ -491,10 +599,12 @@ async function buildPkpass(d) {
   const enc = new TextEncoder();
   const files = {
     'pass.json': enc.encode(JSON.stringify(pass)),
-    'icon.png': await iconPng(29, d.color),
-    'icon@2x.png': await iconPng(58, d.color),
-    'icon@3x.png': await iconPng(87, d.color)
+    'icon.png': brand ? await canvasPng(drawLcIcon(29)) : await iconPng(29, d.color),
+    'icon@2x.png': brand ? await canvasPng(drawLcIcon(58)) : await iconPng(58, d.color),
+    'icon@3x.png': brand ? await canvasPng(drawLcIcon(87)) : await iconPng(87, d.color)
   };
+  if (brand) for (const [sfx, sc] of [['', 1], ['@2x', 2], ['@3x', 3]]) files[`logo${sfx}.png`] = await canvasPng(drawLogo(sc));
+  if (hasStrip(d)) for (const [sfx, sc] of [['', 1], ['@2x', 2], ['@3x', 3]]) files[`strip${sfx}.png`] = await canvasPng(drawStrip(sc, d));
   const manifest = {};
   for (const [n, b] of Object.entries(files)) manifest[n] = sha1Hex(b);
   const manifestBytes = enc.encode(JSON.stringify(manifest));
@@ -588,7 +698,7 @@ function renderHistory() {
 }
 $('#history').addEventListener('click', e => {
   const l = e.target.closest('[data-load]'), d = e.target.closest('[data-del]'), h = loadH();
-  if (l) { Object.assign(form, { auto: false }, h[+l.dataset.load]); fillInputs(); syncAuto(); syncUI(); scrollTo({ top: 0, behavior: 'smooth' }); toast('불러왔어요 · 다시 추가할 수 있어요'); }
+  if (l) { Object.assign(form, { auto: false, cardImg: '' }, h[+l.dataset.load]); fillInputs(); syncAuto(); syncUI(); scrollTo({ top: 0, behavior: 'smooth' }); toast('불러왔어요 · 다시 추가할 수 있어요'); }
   if (d) { h.splice(+d.dataset.del, 1); try { localStorage.setItem(HKEY, JSON.stringify(h)); } catch (e) {} renderHistory(); }
 });
 function fillInputs() { $('#fTitle').value = form.title; setNumber(form.number); $('#fHolder').value = form.holder; $('#fLevel').value = form.level; $('#fMemo').value = form.memo; }
@@ -642,7 +752,7 @@ $('#presets').innerHTML = PRESETS.map((p, i) => `<button class="chip" data-p="${
 $('#presets').addEventListener('click', e => {
   const b = e.target.closest('[data-p]'); if (!b) return;
   const p = PRESETS[+b.dataset.p];
-  const wasAuto = form.auto;
+  const wasAuto = form.auto; form.cardImg = '';
   form.color = p.c; form.title = p.t === '직접 입력' ? '' : p.t; $('#fTitle').value = form.title;
   if (p.t === LC_CARD) {
     form.auto = true; bumpCount = 0; setNumber(genMemberNo());
@@ -669,6 +779,24 @@ function toggleAlnum(on) {
   $('#numHint').textContent = on ? '* 영문·숫자 모두 넣을 수 있어요. 4자리마다 자동으로 띄워져요.' : '* 숫자만 누르면 4자리마다 자동으로 띄워져요.';
   setNumber(el.value); renderPass();
 }
+$('#imgPickBtn').onclick = () => {
+  const inp = document.createElement('input'); inp.type = 'file'; inp.accept = 'image/*';
+  inp.onchange = async () => {
+    const f = inp.files[0]; if (!f) return;
+    busy(true, '사진 준비 중…');
+    try {
+      const url = URL.createObjectURL(f), im = new Image();
+      await new Promise((ok, no) => { im.onload = ok; im.onerror = no; im.src = url; });
+      const sc = Math.min(1, 1000 / Math.max(im.naturalWidth, im.naturalHeight));
+      const c = document.createElement('canvas'); c.width = Math.round(im.naturalWidth * sc); c.height = Math.round(im.naturalHeight * sc);
+      c.getContext('2d').drawImage(im, 0, 0, c.width, c.height); URL.revokeObjectURL(url);
+      form.cardImg = c.toDataURL('image/jpeg', .85); renderPass(); toast('카드 그림을 넣었어요');
+    } catch (e) { toast('사진을 열 수 없어요'); }
+    busy(false);
+  };
+  inp.click();
+};
+$('#imgClearBtn').onclick = () => { form.cardImg = ''; renderPass(); };
 $('#kbToggle').onclick = () => { toggleAlnum(!alnum); $('#fNumber').blur(); setTimeout(() => $('#fNumber').focus(), 60); };
 $('#newNumBtn').onclick = () => { bumpCount++; setNumber(genMemberNo(bumpCount)); syncAuto(); renderPass(); toast('새 번호로 바꿨어요'); };
 $('#fTitle').addEventListener('input', () => { if (form.auto && $('#fTitle').value.trim() !== LC_CARD) { form.auto = false; syncAuto(); } });
@@ -679,6 +807,7 @@ syncAuto();
 if (!CERT_PEM || !ENC_KEY) $('#setupBanner').classList.remove('hidden');
 if (inApp) $('#safariTip').classList.remove('hidden');
 brandIcon(); renderHistory(); syncUI();
+document.fonts && document.fonts.ready.then(() => renderPass());
 </script>
 </body>
 </html>
