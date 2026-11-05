@@ -143,6 +143,7 @@
 
   <!-- ================= 거래 입력 ================= -->
   <section id="panel-input" class="mt-4 space-y-4">
+    <div id="todoBox"></div>
     <div id="asideBanner" class="hidden-x bg-orange-50 border-2 border-orange-400 rounded-2xl p-3">
       <div class="text-sm font-bold text-orange-900" id="asideText"></div>
       <div class="flex gap-2 mt-2">
@@ -155,6 +156,7 @@
       <button id="cancelEditBtn" class="text-sm font-bold bg-white border border-amber-400 rounded-lg px-3 py-1.5">취소</button>
     </div>
 
+    <div id="quickBox"></div>
     <div class="grid grid-cols-3 gap-2" id="typeGroup">
       <button class="typebtn choice border-2 border-slate-200 bg-white rounded-2xl py-4 text-base font-extrabold" data-k="sale">매출 (+)</button>
       <button class="typebtn choice border-2 border-slate-200 bg-white rounded-2xl py-4 text-base font-extrabold" data-k="purchase">매입 (−)</button>
@@ -198,6 +200,13 @@
           <span class="text-sm leading-snug">
             <b>차량·장비를 새로 산 것 (100만원 넘는 자산)</b><br>
             <span class="text-slate-500 text-xs">부가세 신고 때 '고정자산 매입' 칸에 따로 적어야 해요. 소득세에서는 한 번에 경비가 아니라 몇 년에 나눠(감가상각) 경비 처리돼요.</span>
+          </span>
+        </label>
+        <label id="recurWrap" class="flex items-start gap-3 bg-orange-50 border border-orange-200 rounded-xl p-3">
+          <input type="checkbox" id="recurChk" class="mt-1 w-6 h-6 accent-orange-500">
+          <span class="text-sm leading-snug">
+            <b>📌 매달 나가는 고정비로 등록</b><br>
+            <span class="text-slate-500 text-xs">통신비·임차료·보험료처럼 매달 같은 금액이면 체크하세요. 다음 달부터 같은 날짜에 앱이 알아서 입력해요.</span>
           </span>
         </label>
         <div id="lightBanner" class="rounded-xl p-3 text-sm font-bold"></div>
@@ -347,6 +356,12 @@
   <!-- ================= 설정 ================= -->
   <section id="panel-settings" class="mt-4 space-y-4 hidden-x">
     <div class="bg-white rounded-2xl p-4 shadow-sm border border-slate-200 space-y-3">
+      <div class="text-sm font-extrabold">📌 매달 고정비 <span class="text-xs font-medium text-slate-400" id="recurBizName"></span></div>
+      <div id="recurList" class="space-y-2"></div>
+      <div class="text-[11px] text-slate-500 leading-snug">입력 탭 → 매입에서 <b>"매달 나가는 고정비로 등록"</b>을 체크하고 저장하면 여기에 추가돼요. 자동으로 들어간 내역도 내역 탭에서 고치거나 지울 수 있어요(지운 달은 다시 생기지 않아요).</div>
+    </div>
+
+    <div class="bg-white rounded-2xl p-4 shadow-sm border border-slate-200 space-y-3">
       <div class="text-sm font-extrabold">🏢 사업자 (사업자등록번호마다 따로)</div>
       <div class="text-[11px] text-slate-500 leading-snug">링크클린·이케이클린처럼 사업자등록번호가 다르면 장부와 신고도 따로예요. 사업자를 추가하고 위쪽 이름을 눌러 바꿔 가며 쓰세요.</div>
       <div id="bizList" class="space-y-2"></div>
@@ -490,6 +505,8 @@ function normalizeMeta() {
     if (!s.prepaid || typeof s.prepaid !== 'object') s.prepaid = {};
     s.dependents = Math.max(0, parseInt(s.dependents, 10) || 0);
     if (!Array.isArray(s.bank)) s.bank = [];
+    if (!Array.isArray(s.recur)) s.recur = [];
+    if (!s.doneTodo || typeof s.doneTodo !== 'object') s.doneTodo = {};
     s.margin = (s.margin === undefined || s.margin === null || isNaN(Number(s.margin))) ? 10 : Math.max(0, Math.min(50, Number(s.margin)));
     s.pension = Math.max(0, Number(s.pension) || 0);
     s.umbrella = Math.max(0, Number(s.umbrella) || 0);
@@ -564,8 +581,15 @@ function bookType(rev) {
 }
 
 // ---------- 입력 상태 ----------
-var form = { type: 'sale', saleCat: SALE_CATS[0].k, salePay: 'card', cashVat: true, purItem: 'chem', purEvid: 'bizCard', fixed: false, laborKind: 'daily' };
+var form = { type: 'sale', saleCat: SALE_CATS[0].k, salePay: 'card', cashVat: true, purItem: 'chem', purEvid: 'bizCard', fixed: false, recur: false, laborKind: 'daily' };
 var editing = null; // 수정 중인 거래
+(function () {
+  var lf = meta.lastForm || {};
+  form.salePay = lf.salePay || 'cash';
+  ['saleCat', 'purItem', 'purEvid', 'laborKind', 'type'].forEach(function (k) { if (lf[k]) form[k] = lf[k]; });
+  if (form.type !== 'sale' && form.type !== 'purchase' && form.type !== 'labor') form.type = 'sale';
+})();
+function rememberForm() { meta.lastForm = { type: form.type, saleCat: form.saleCat, salePay: form.salePay, purItem: form.purItem, purEvid: form.purEvid, laborKind: form.laborKind }; saveMeta(); }
 var view = { tab: 'input', year: new Date().getFullYear(), period: (new Date().getMonth() < 6 ? 'H1' : 'H2'), listFilter: 'all' };
 
 function getAmount() { return numOf($('amountInp').value); }
@@ -651,6 +675,8 @@ function renderForm() {
       function (o) { return o.k === 'simple' || o.k === 'transfer'; });
     $('fixedWrap').classList.toggle('hidden-x', !itemOf(form.purItem).asset);
     $('fixedChk').checked = !!form.fixed;
+    $('recurWrap').classList.toggle('hidden-x', !!editing || !!form.fixed);
+    $('recurChk').checked = !!form.recur;
     var L = purLight(); var banner = $('lightBanner');
     if (L === 'green') {
       banner.className = 'rounded-xl p-3 text-sm font-bold bg-green-50 border-2 border-green-500 text-green-800';
@@ -663,7 +689,7 @@ function renderForm() {
     renderChoices('laborKindGroup', LABOR_KINDS, form.laborKind, function (k) { form.laborKind = k; renderForm(); });
     $('daysWrap').classList.toggle('hidden-x', form.laborKind !== 'daily');
     $('laborHint').textContent = form.laborKind === 'daily'
-      ? '하루 단위로 일당을 받는 사람. 같은 사람을 3개월 넘게 계속 쓰면 일용직이 아니라 일반 직원(4대보험)이 돼요. 한 달 8일 이상 일하면 국민연금·건강보험 가입 대상일 수 있어요.'
+      ? '하루 단위로 일당을 주는 사람(외국인 포함). 다음 달 15일까지 근로복지공단 "근로내용확인신고서" 한 장에 국세청 칸까지 채우면 고용·산재보험과 지급명세서가 한 번에 끝나요. 외국인은 외국인등록증의 체류자격·만료일을 꼭 확인하세요. 같은 사람을 3개월 넘게 계속 쓰면 일반 직원이 돼요.'
       : '사업자등록 없는 개인에게 일을 맡기고 3.3%를 떼고 준 경우. 매달 간이지급명세서를 내야 경비로 인정받기 쉬워요.';
   }
   renderPreview();
@@ -709,13 +735,21 @@ function saveEntry() {
     if (photoState.data) { e.hasPhoto = true; photoPut(e.id, photoState.data); }
     else { e.hasPhoto = false; photoDel(e.id); }
   } else if (editing) e.hasPhoto = !!editing.hasPhoto;
+  var newRule = null;
+  if (!editing && e.type === 'purchase' && form.recur && !e.fixed) {
+    newRule = { id: 'r' + uid(), item: e.item, evid: e.evid, amount: e.total, day: parseInt(e.date.slice(8, 10), 10), memo: e.memo, start: e.date.slice(0, 7), done: [e.date.slice(0, 7)], active: true };
+    S_().recur.push(newRule); e.recurId = newRule.id; saveMeta();
+    form.recur = false;
+  }
   if (editing) { txs = txs.map(function (t) { return t.id === e.id ? e : t; }); editing = null; }
   else txs.push(e);
   persist();
   $('amountInp').value = ''; $('memoInp').value = '';
   if (e.type === 'labor') { $('laborName').value = ''; $('laborDays').value = '1'; }
   var y = parseInt(e.date.slice(0, 4), 10); if (y) view.year = y;
-  toast((wasEdit ? '✏️ 수정 완료 ' : '✅ ') + (e.type === 'sale' ? '매출' : e.type === 'purchase' ? '매입' : '인건비') + ' ' + won(e.total));
+  if (!wasEdit) rememberForm();
+  var back = newRule ? runRecurring() : 0;
+  if (newRule) toast('📌 고정비 등록 — 매달 ' + newRule.day + '일에 자동 입력돼요' + (back ? ' (지난 ' + back + '달치도 채웠어요)' : '')); else toast((wasEdit ? '✏️ 수정 완료 ' : '✅ ') + (e.type === 'sale' ? '매출' : e.type === 'purchase' ? '매입' : '인건비') + ' ' + won(e.total));
   if (wasEdit) { view.tab = 'list'; }
   resetPhoto();
   if (!wasEdit && e.type === 'sale') showAside(e); else hideAside();
@@ -934,6 +968,20 @@ function vatSectionHTML(y, half) {
   return html;
 }
 
+function personRows(L) {
+  var P = {};
+  L.forEach(function (t) {
+    var k = (t.kind === 'freelance' ? 'F:' : 'D:') + (t.name || '이름없음');
+    var p = P[k] || (P[k] = { name: t.name || '이름없음', kind: t.kind, days: 0, dates: [], total: 0, it: 0, lt: 0 });
+    p.days += t.days || 1; p.dates.push(parseInt(t.date.slice(8, 10), 10) + (t.days > 1 ? '(' + t.days + '일)' : ''));
+    p.total += t.total; p.it += t.incomeTax || 0; p.lt += t.localTax || 0;
+  });
+  return '<table class="w-full text-[11px] mt-1"><thead class="text-slate-400"><tr><th class="text-left py-1">이름</th><th class="text-left">근무일</th><th class="text-right">지급총액</th><th class="text-right">소득세</th><th class="text-right">지방세</th></tr></thead><tbody>' +
+    Object.keys(P).map(function (k) {
+      var p = P[k];
+      return '<tr class="border-t border-slate-100"><td class="py-1 font-bold">' + esc(p.name) + (p.kind === 'freelance' ? ' <span class="text-slate-400">3.3%</span>' : '') + '</td><td class="text-slate-500">' + p.days + '일 · ' + p.dates.join(', ') + '일</td><td class="text-right num">' + comma(p.total) + '</td><td class="text-right num">' + comma(p.it) + '</td><td class="text-right num">' + comma(p.lt) + '</td></tr>';
+    }).join('') + '</tbody></table><div class="text-[10px] text-slate-400 mt-1">근로내용확인신고서의 근로일자·보수총액·소득세·지방소득세 칸에 그대로 옮겨 적으세요. 외국인등록번호는 신고할 때 직접 입력해요.</div>';
+}
 function laborMonthlyHTML(y, period) {
   var months = period === 'H1' ? [1, 2, 3, 4, 5, 6] : period === 'H2' ? [7, 8, 9, 10, 11, 12] : [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12];
   var half = S_().halfYear;
@@ -946,12 +994,13 @@ function laborMonthlyHTML(y, period) {
     var due = half ? (m <= 6 ? y + '.7.10' : (y + 1) + '.1.10') : ny + '.' + nm + '.10';
     return '<tr><td class="px-3 py-2.5 font-bold">' + m + '월<div class="text-[11px] text-slate-400 font-normal">' + Object.keys(names).length + '명</div></td>' +
       cell(d) + cell(dw) + cell(f) + cell(fw) +
-      '<td class="px-2 py-2.5 text-[11px] text-slate-500 leading-tight">원천세 ' + due + '<br>명세서 ' + ny + '.' + nm + '월말</td></tr>';
+      '<td class="px-2 py-2.5 text-[11px] text-slate-500 leading-tight">' + (d ? '근로내용확인 ' + nm + '.15<br>' : '') + (dw + fw ? '원천세 ' + due + '<br>' : '') + (f ? '간이명세서 ' + nm + '월말' : '') + '</td></tr>' +
+      '<tr><td colspan="6" class="px-3 pb-2"><details><summary class="text-[11px] text-teal-700 font-bold">👤 사람별 신고 내용 보기 ▾</summary>' + personRows(L) + '</details></td></tr>';
   }).join('');
   if (!rows) return '';
   return card('bg-leaf-600', '③ 인건비 월별 신고표', '(원천세·지급명세서)',
     '<div class="overflow-x-auto"><table class="w-full text-sm min-w-[440px]"><thead class="bg-slate-50 text-slate-500 text-[11px]"><tr><th class="text-left px-3 py-2">지급월</th><th class="text-right px-2">일용 지급</th><th class="text-right px-2">일용 원천세</th><th class="text-right px-2">3.3% 지급</th><th class="text-right px-2">3.3% 원천세</th><th class="text-left px-2">마감</th></tr></thead><tbody class="divide-y divide-slate-100">' + rows + '</tbody></table></div>' +
-    '<div class="px-4 py-3 text-[11px] text-slate-500 leading-snug bg-slate-50">홈택스 → <b>원천세 신고</b>(세금 0원이어도 신고)와 <b>일용근로소득 지급명세서 / 간이지급명세서(거주자의 사업소득)</b>를 매달 제출해야 인건비가 경비로 확실히 인정되고 가산세(지급액의 0.25%)도 안 붙어요. 주민등록번호는 앱에 저장하지 말고 홈택스에서 직접 입력하세요.</div>');
+    '<div class="px-4 py-3 text-[11px] text-slate-500 leading-snug bg-slate-50"><b>일용직</b>: 다음 달 15일까지 근로복지공단(고용·산재 토탈서비스) <b>근로내용확인신고서</b>에 국세청 일용근로소득 칸까지 채우면 지급명세서는 따로 안 내도 돼요. <b>3.3%</b>: 홈택스 간이지급명세서(거주자의 사업소득)를 다음 달 말일까지. 뗀 세금이 있으면 <b>원천세 신고</b>(다음 달 10일)도 해야 인건비가 경비로 확실히 인정되고 가산세(지급액의 0.25%)도 안 붙어요. 주민등록번호는 앱에 저장하지 말고 홈택스에서 직접 입력하세요.</div>');
 }
 
 function incomeSectionHTML(y) {
@@ -1045,7 +1094,7 @@ function renderHometax() {
 // ---------- 렌더: 내역 ----------
 function txTitle(t) {
   if (t.type === 'sale') { var c = SALE_CATS.filter(function (x) { return x.k === t.category; })[0]; return (c ? c.i + ' ' : '') + t.category; }
-  if (t.type === 'purchase') { var it = itemOf(t.item); return it.i + ' ' + it.l + (t.fixed ? ' [고정자산]' : ''); }
+  if (t.type === 'purchase') { var it = itemOf(t.item); return it.i + ' ' + it.l + (t.fixed ? ' [고정자산]' : '') + (t.recurId ? ' 📌' : ''); }
   return (t.kind === 'freelance' ? '🧑‍💼 ' : '👷 ') + (t.name || '이름없음') + (t.kind === 'daily' && t.days > 1 ? ' (' + t.days + '일)' : '');
 }
 function txSub(t) {
@@ -1103,6 +1152,7 @@ function renderSettings() {
     (lastYearSupply ? '<div class="text-[11px] text-slate-500 mt-2">참고: 이 앱에 기록된 ' + (view.year - 1) + '년 매출 공급가액은 ' + won(lastYearSupply) + '이에요.</div>' : '') +
     '<div class="text-[11px] text-slate-400 mt-2 leading-snug">청소업(사업시설관리·사업지원 서비스업) 기준: 7,500만원 미만 간편장부 / 7,500만원 이상 복식부기 / 1억5천만원 이상 세무사 외부조정 / 5억원 이상 성실신고. 같은 대표자 명의 사업자가 여러 개면 매출을 합산(환산)해서 판정해요.</div>';
   $('marginInp').value = st.margin;
+  renderRecur();
   $('under10Chk').checked = st.under10eok;
   $('halfYearChk').checked = st.halfYear;
   $('depInp').value = st.dependents;
@@ -1121,6 +1171,7 @@ function renderAll() {
   if (view.tab === 'list') renderList();
   if (view.tab === 'settings') renderSettings();
   if (view.tab === 'bank') renderBank();
+  if (view.tab === 'input') { renderTodo(); renderQuick(); }
 }
 
 // ---------- 내보내기 / 백업 / 복원 ----------
@@ -1407,6 +1458,146 @@ function renderPayKinds() {
   $('payHint').textContent = bankMode === 'pay' ? '기록하면 세금통장 잔액에서 빠져요. 확정신고 납부를 기록하면 그 기간은 모아둘 금액에서 빠지고, 예정고지·중간예납은 남은 세금에서 빠집니다.' : '';
 }
 
+
+// ---------- 매달 고정비 ----------
+function lastDayOf(y, m) { return new Date(y, m, 0).getDate(); }
+function nextYm(ym) { var y = parseInt(ym.slice(0, 4), 10), m = parseInt(ym.slice(5, 7), 10) + 1; if (m > 12) { m = 1; y++; } return y + '-' + pad(m); }
+function makeRecurTx(r, bizId, date) {
+  var it = itemOf(r.item);
+  var light = (r.evid === 'simple' || r.evid === 'transfer') ? 'yellow' : it.light;
+  var e = { id: uid(), biz: bizId, type: 'purchase', date: date, total: r.amount, memo: r.memo || '', createdAt: Date.now(), item: r.item, evid: r.evid, light: light, fixed: false, recurId: r.id, auto: true };
+  if (light === 'green') { var p = splitVat(r.amount); e.supply = p.supply; e.vat = p.vat; } else { e.supply = r.amount; e.vat = 0; }
+  return e;
+}
+function runRecurring() {
+  var today = todayStr(), curYm = today.slice(0, 7), made = 0;
+  meta.bizList.forEach(function (b) {
+    var st = meta.settings[b.id]; if (!st || !Array.isArray(st.recur)) return;
+    st.recur.forEach(function (r) {
+      if (!r.active || !r.start) return;
+      if (!Array.isArray(r.done)) r.done = [];
+      var ym = r.start, guard = 0;
+      while (ym <= curYm && guard++ < 120) {
+        if (r.done.indexOf(ym) < 0) {
+          var y = parseInt(ym.slice(0, 4), 10), m = parseInt(ym.slice(5, 7), 10);
+          var date = ym + '-' + pad(Math.min(r.day, lastDayOf(y, m)));
+          if (date <= today) { txs.push(makeRecurTx(r, b.id, date)); r.done.push(ym); made++; }
+        }
+        ym = nextYm(ym);
+      }
+    });
+  });
+  if (made) { persist(); saveMeta(); }
+  return made;
+}
+function renderRecur() {
+  var list = S_().recur;
+  $('recurBizName').textContent = '— ' + bizName();
+  if (!list.length) { $('recurList').innerHTML = '<div class="text-sm text-slate-400 text-center py-3 bg-slate-50 rounded-xl">등록된 고정비가 없어요</div>'; return; }
+  var sum = list.filter(function (r) { return r.active; }).reduce(function (a, r) { return a + r.amount; }, 0);
+  $('recurList').innerHTML = list.map(function (r) {
+    var it = itemOf(r.item);
+    return '<div class="rounded-xl border-2 p-3 ' + (r.active ? 'border-orange-200 bg-orange-50' : 'border-slate-200 bg-slate-50 opacity-60') + '">' +
+      '<div class="flex items-center justify-between gap-2"><div class="min-w-0"><div class="font-extrabold text-sm truncate">' + it.i + ' ' + esc(it.l) + (r.memo ? ' <span class="text-xs font-medium text-slate-500">' + esc(r.memo) + '</span>' : '') + '</div>' +
+      '<div class="text-[11px] text-slate-500">매달 ' + r.day + '일 · ' + esc(labelOf(PUR_EVIDS, r.evid)) + (r.active ? '' : ' · 중지됨') + '</div></div>' +
+      '<div class="font-extrabold num text-orange-600 shrink-0">' + comma(r.amount) + '</div></div>' +
+      '<div class="flex gap-1.5 mt-2">' +
+        '<button class="recAmt text-xs border border-slate-300 bg-white rounded-lg px-2.5 py-1.5" data-id="' + r.id + '">금액 변경</button>' +
+        '<button class="recToggle text-xs border border-slate-300 bg-white rounded-lg px-2.5 py-1.5" data-id="' + r.id + '">' + (r.active ? '잠시 중지' : '다시 시작') + '</button>' +
+        '<button class="recDel text-xs border border-red-200 text-red-500 bg-white rounded-lg px-2.5 py-1.5 ml-auto" data-id="' + r.id + '">삭제</button>' +
+      '</div></div>';
+  }).join('') + '<div class="text-right text-xs text-slate-600 font-bold num">매달 고정비 합계 ' + won(sum) + '</div>';
+}
+
+
+// ---------- 최근 입력 다시 쓰기 ----------
+function quickItems() {
+  var seen = {}, out = [];
+  myTx().slice().sort(function (a, b) { return (b.createdAt || 0) - (a.createdAt || 0); }).forEach(function (t) {
+    if (out.length >= 4 || t.auto) return;
+    var key = t.type + '|' + (t.category || t.item || t.kind) + '|' + (t.pay || t.evid || '') + '|' + (t.name || '') + '|' + t.total;
+    if (seen[key]) return; seen[key] = 1; out.push(t);
+  });
+  return out;
+}
+function renderQuick() {
+  var q = quickItems();
+  if (!q.length || editing) { $('quickBox').innerHTML = ''; return; }
+  $('quickBox').innerHTML = '<div class="text-xs font-bold text-slate-500 mb-1.5">⚡ 최근 입력 다시 쓰기 <span class="font-medium text-slate-400">— 누르면 오늘 날짜로 채워져요</span></div><div class="flex gap-2 overflow-x-auto pb-1">' +
+    q.map(function (t) {
+      var col = t.type === 'sale' ? 'border-teal-300 bg-teal-50 text-teal-800' : t.type === 'purchase' ? 'border-orange-300 bg-orange-50 text-orange-800' : 'border-leaf-300 bg-leaf-50 text-leaf-700';
+      var nm = t.type === 'sale' ? t.category : t.type === 'purchase' ? itemOf(t.item).l : (t.name || '인건비');
+      return '<button class="qk choice shrink-0 rounded-xl border-2 px-3 py-2 text-left ' + col + '" data-id="' + t.id + '"><div class="text-xs font-extrabold whitespace-nowrap">' + esc(nm) + '</div><div class="text-[11px] num whitespace-nowrap">' + comma(t.type === 'sale' && t.vatIncluded === false ? (t.received || t.supply) : t.total) + '원</div></button>';
+    }).join('') + '</div>';
+}
+function fillFrom(t) {
+  form.type = t.type;
+  if (t.type === 'sale') { form.saleCat = t.category; form.salePay = t.pay; form.cashVat = t.vatIncluded !== false; }
+  if (t.type === 'purchase') { form.purItem = t.item; form.purEvid = t.evid; form.fixed = false; form.recur = false; }
+  if (t.type === 'labor') { form.laborKind = t.kind; $('laborName').value = t.name || ''; $('laborDays').value = t.days || 1; }
+  $('dateInp').value = todayStr();
+  $('amountInp').value = comma(t.type === 'sale' && t.vatIncluded === false ? (t.received || t.supply) : t.total);
+  $('memoInp').value = '';
+  renderForm();
+  setTimeout(function () { $('saveBtn').scrollIntoView({ behavior: 'smooth', block: 'center' }); }, 50);
+  toast('채웠어요 — 금액·날짜 확인 후 저장');
+}
+
+// ---------- 오늘 챙길 일 ----------
+function todoList() {
+  var now = new Date(), y = now.getFullYear(), m = now.getMonth() + 1, d = now.getDate(), st = S_();
+  var done = st.doneTodo || (st.doneTodo = {});
+  var pmD = new Date(y, m - 2, 1), py = pmD.getFullYear(), pm = pmD.getMonth() + 1, pym = py + '-' + pad(pm);
+  var L = [];
+  var mine = myTx();
+  // 입력 공백
+  var lastC = mine.filter(function (t) { return !t.auto; }).reduce(function (a, t) { return Math.max(a, t.createdAt || 0); }, 0);
+  var gapDays = lastC ? Math.floor((Date.now() - lastC) / 86400000) : null;
+  if (gapDays === null || gapDays >= 7) L.push({ k: 'gap-' + ymd(now).slice(0, 7) + '-' + Math.floor(d / 7), ic: '📝', t: gapDays === null ? '첫 입력을 해 보세요' : gapDays + '일째 입력이 없어요', s: '통장 입금 내역과 사업용카드 내역을 보고 매출·지출을 몰아서 입력하세요. 한 번에 5분이면 돼요.' });
+  // 지난달 인건비
+  var LP = mine.filter(function (t) { return t.type === 'labor' && t.date.slice(0, 7) === pym; });
+  var dailyP = LP.filter(function (t) { return t.kind !== 'freelance'; }), freeP = LP.filter(function (t) { return t.kind === 'freelance'; });
+  var whP = LP.reduce(function (a, t) { return a + (t.withholding || 0); }, 0);
+  if (dailyP.length && d <= 15) L.push({ k: 'kunro-' + pym, ic: '👷', t: pm + '월 일용직 근로내용확인신고 · ' + m + '월 15일까지', s: '근로복지공단(고용·산재 토탈서비스). 국세청 칸까지 채우면 지급명세서 끝. 신고표 → 인건비 표의 "사람별 신고 내용"을 보고 적으세요.', go: 'hometax' });
+  if (whP > 0 && !st.halfYear && d <= 10) L.push({ k: 'wh-' + pym, ic: '🏛️', t: pm + '월 원천세 ' + won(whP) + ' 신고·납부 · ' + m + '월 10일까지', s: '홈택스 → 원천세 신고 → 일반신고. 낸 뒤 세금통장에 "세금 냈어요(원천세)"로 기록하세요.' });
+  if (freeP.length) L.push({ k: 'simple-' + pym, ic: '🧾', t: pm + '월 3.3% 간이지급명세서 · ' + m + '월 말일까지', s: '홈택스 → 지급명세서 → 간이지급명세서(거주자의 사업소득).' });
+  // 부가세 신고 기간
+  if (m === 1 && d <= 25) L.push({ k: 'vat-' + (y - 1) + 'H2', ic: '🧾', t: '부가세 2기 확정신고 기간 · 1월 25일까지', s: (y - 1) + '년 7~12월분. 신고표 탭의 숫자대로 홈택스에 입력하세요.', go: 'hometax', gy: y - 1, gp: 'H2' });
+  if (m === 7 && d <= 25) L.push({ k: 'vat-' + y + 'H1', ic: '🧾', t: '부가세 1기 확정신고 기간 · 7월 25일까지', s: y + '년 1~6월분. 신고표 탭의 숫자대로 홈택스에 입력하세요.', go: 'hometax', gy: y, gp: 'H1' });
+  if (m === 12 && d >= 20) L.push({ k: 'vatprep-' + y, ic: '🔎', t: '1월 부가세 신고 전 점검', s: '7~12월 통장 입금 내역과 앱 매출을 맞춰 보세요. 빠진 매출이 가장 흔한 실수예요.' });
+  if (m === 6 && d >= 20) L.push({ k: 'vatprep-' + y + 'H1', ic: '🔎', t: '7월 부가세 신고 전 점검', s: '1~6월 통장 입금 내역과 앱 매출을 맞춰 보세요.' });
+  if ((m === 4 || m === 10) && d <= 25) L.push({ k: 'pre-' + y + '-' + m, ic: '✉️', t: '부가세 예정고지서 받으셨나요? · ' + m + '월 25일까지 납부', s: '고지서가 왔다면 납부하고 세금통장 → "세금 냈어요(예정고지)"로 기록하세요. 그래야 다음 신고 때 자동으로 빠져요.', go: 'bank' });
+  if (m === 5) L.push({ k: 'inc-' + y, ic: '💸', t: '종합소득세 신고 기간 · 5월 31일까지', s: (y - 1) + '년분. 신고표에서 "연간 전체"를 누르고 숫자를 확인하세요.', go: 'hometax', gy: y - 1, gp: 'ALL' });
+  if (m === 11) L.push({ k: 'mid-' + y, ic: '💸', t: '종소세 중간예납 고지서 · 11월 30일까지', s: '납부 후 세금통장 → "세금 냈어요(종소세 중간예납)"로 기록하세요.', go: 'bank' });
+  // 사진 없는 큰 지출
+  var noPhoto = mine.filter(function (t) { return t.type === 'purchase' && !t.auto && t.total > 30000 && (t.evid === 'simple' || t.evid === 'transfer') && !t.hasPhoto && t.date.slice(0, 4) == y; }).length;
+  if (noPhoto) L.push({ k: 'photo-' + y + '-' + m + '-' + noPhoto, ic: '📷', t: '증빙이 약한 3만원 넘는 지출 ' + noPhoto + '건', s: '간이영수증·계좌이체 건은 영수증이나 이체 화면 사진이라도 붙여 두세요(내역 → 수정).', go: 'list' });
+  // 세금통장
+  try { var h = holdCalc(); if (h.gap > 100000) L.push({ k: 'bank-' + ymd(now), ic: '💰', t: '세금통장이 ' + won(h.gap) + ' 부족해요', s: '모아둘 돈보다 통장 잔액이 적어요.', go: 'bank' }); } catch (e) {}
+  // 백업
+  if (!meta.lastBackup || Date.now() - meta.lastBackup > 30 * 86400000) L.push({ k: 'bk-' + ymd(now).slice(0, 7), ic: '💾', t: meta.lastBackup ? '한 달 넘게 백업을 안 했어요' : '아직 백업을 안 했어요', s: '폰을 바꾸거나 앱을 지우면 기록이 사라져요. 백업 파일을 카톡 나에게 보내기나 iCloud에 저장하세요.', act: 'backup' });
+  return L.filter(function (x) { return !done[x.k]; });
+}
+function renderTodo() {
+  var L = todoList();
+  if (!L.length) { $('todoBox').innerHTML = ''; return; }
+  $('todoBox').innerHTML = '<div class="bg-white rounded-2xl border-2 border-orange-300 shadow-sm overflow-hidden"><div class="bg-orange-500 text-white px-4 py-2 font-extrabold text-sm">✅ 오늘 챙길 일 ' + L.length + '</div>' +
+    L.map(function (x) {
+      return '<div class="px-4 py-3 border-t border-orange-100 first:border-0 flex gap-3"><div class="text-xl">' + x.ic + '</div><div class="flex-1 min-w-0"><div class="text-sm font-extrabold">' + esc(x.t) + '</div><div class="text-[11px] text-slate-500 leading-snug mt-0.5">' + esc(x.s) + '</div>' +
+        '<div class="flex gap-1.5 mt-2">' + (x.go || x.act ? '<button class="tdGo text-xs font-bold rounded-lg bg-teal-700 text-white px-3 py-1.5" data-k="' + esc(x.k) + '">' + (x.act === 'backup' ? '지금 백업' : '보러 가기') + '</button>' : '') +
+        '<button class="tdDone text-xs font-bold rounded-lg border border-slate-300 px-3 py-1.5" data-k="' + esc(x.k) + '">' + (x.k.indexOf('gap-') === 0 || x.k.indexOf('bank-') === 0 ? '나중에' : '했어요') + '</button></div></div></div>';
+    }).join('') + '</div>';
+  $('todoBox').onclick = function (ev) {
+    var g = ev.target.closest('.tdGo'), dn = ev.target.closest('.tdDone');
+    var k = (g || dn) && (g || dn).dataset.k; if (!k) return;
+    var x = L.filter(function (i) { return i.k === k; })[0]; if (!x) return;
+    if (dn) { S_().doneTodo[k] = Date.now(); saveMeta(); renderTodo(); return; }
+    if (x.act === 'backup') { backupJSON(); S_().doneTodo[k] = Date.now(); saveMeta(); renderTodo(); return; }
+    if (x.gy) { view.year = x.gy; view.period = x.gp; }
+    view.tab = x.go; renderAll(); window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+}
+
 // ---------- 이벤트 ----------
 document.querySelectorAll('.typebtn').forEach(function (b) { b.onclick = function () { form.type = b.dataset.k; renderForm(); }; });
 document.querySelectorAll('.tabbtn').forEach(function (b) { b.onclick = function () { view.tab = b.dataset.tab; renderAll(); }; });
@@ -1499,11 +1690,32 @@ $('bankHistory').addEventListener('click', function (ev) {
 });
 $('marginInp').addEventListener('change', function () { S_().margin = Math.max(0, Math.min(50, parseInt(this.value, 10) || 0)); saveMeta(); renderAll(); });
 
+
+$('quickBox').addEventListener('click', function (ev) { var b = ev.target.closest('.qk'); if (!b) return; var t = txs.filter(function (x) { return x.id === b.dataset.id; })[0]; if (t) fillFrom(t); });
+$('recurChk').onchange = function () { form.recur = this.checked; };
+$('recurList').addEventListener('click', function (ev) {
+  var a = ev.target.closest('.recAmt'), t = ev.target.closest('.recToggle'), d = ev.target.closest('.recDel');
+  var id = (a || t || d) && (a || t || d).dataset.id; if (!id) return;
+  var r = S_().recur.filter(function (x) { return x.id === id; })[0]; if (!r) return;
+  if (a) { var v = numOf(prompt('새 금액 (다음 달부터 적용, 부가세 포함)', comma(r.amount))); if (v) { r.amount = v; saveMeta(); toast('💰 다음 달부터 ' + won(v)); } }
+  if (t) {
+    r.active = !r.active;
+    if (r.active) { var cur = todayStr().slice(0, 7), ym = r.start; while (ym < cur) { if (r.done.indexOf(ym) < 0) r.done.push(ym); ym = nextYm(ym); } }
+    saveMeta(); toast(r.active ? '▶️ 다시 시작 (이번 달부터)' : '⏸️ 중지했어요');
+    if (r.active && runRecurring()) toast('📌 이번 달 고정비를 입력했어요');
+  }
+  if (d) { if (!confirm('이 고정비 등록을 삭제할까요?\n(이미 들어간 내역은 그대로 남아요)')) return; S_().recur = S_().recur.filter(function (x) { return x.id !== id; }); saveMeta(); toast('🗑️ 고정비 삭제'); }
+  renderAll();
+});
+
 // ---------- 시작 ----------
 $('dateInp').value = todayStr();
 saveMeta();
+var autoMade = runRecurring();
 renderForm();
 renderAll();
+if (autoMade) setTimeout(function () { toast('📌 고정비 ' + autoMade + '건을 자동으로 입력했어요'); }, 400);
+document.addEventListener('visibilitychange', function () { if (!document.hidden && runRecurring()) { renderAll(); toast('📌 고정비를 자동으로 입력했어요'); } });
 </script>
 </body>
 </html>
