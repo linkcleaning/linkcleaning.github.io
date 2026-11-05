@@ -21,6 +21,14 @@
 <style>
   :root { --deep:#0B2A31; --orange:#F08A3C; --paper:#F6F1EA; }
   html, body { background: var(--paper); }
+  /* PC·태블릿에서도 스마트폰 화면 크기로 보이게 */
+  @media (min-width: 600px) {
+    html { background: radial-gradient(120% 80% at 50% 0%, #1E4A52, #0A1F24 70%); min-height: 100vh; }
+    body { position: relative; width: 430px; height: min(932px, calc(100vh - 40px)); margin: 20px auto; overflow: hidden;
+           border-radius: 38px; transform: translateZ(0); box-shadow: 0 0 0 10px #111, 0 0 0 11px #333, 0 30px 80px rgba(0,0,0,.55); }
+    #app { height: 100%; overflow-y: auto; overscroll-behavior: contain; scrollbar-width: none; }
+    #app::-webkit-scrollbar { display: none; }
+  }
   body { font-family:'IBM Plex Sans KR',system-ui,sans-serif; color:#0B2A31; -webkit-tap-highlight-color:transparent; -webkit-font-smoothing:antialiased; }
   .mono { font-family:'JetBrains Mono',ui-monospace,monospace; }
   body.lc .gen { display:none !important; }
@@ -52,6 +60,7 @@
 </style>
 </head>
 <body>
+<div id="app">
 <div id="fileReader" style="position:fixed;left:-9999px;top:0;width:300px;height:300px"></div>
 
 <header class="bg-[#0B2A31] text-white" style="padding-top:calc(env(safe-area-inset-top) + 18px)">
@@ -226,6 +235,7 @@
     <p class="mt-2"><b>내 정보는 어디 저장돼요?</b> 서버로 보내지 않아요. 이 휴대폰 안에서 바로 만들어져요.</p>
   </details>
 </main>
+</div><!-- /#app -->
 
 <!-- 비밀번호 -->
 <div id="lock" class="fixed inset-0 z-50 hidden bg-black/55 flex items-end sm:items-center justify-center">
@@ -351,6 +361,7 @@ const PRESETS = [
 ];
 const COLORS = ['#0E5A66','#F08A3C','#4E9F3D','#1F2A44','#1E1E1E','#FFFFFF','#E3262D','#D6006F','#652F8D','#F39A1E','#A8844E','#2F6FDF'];
 
+const appScrollTop = () => { const a = document.getElementById('app'); (a && a.scrollHeight > a.clientHeight ? a : window).scrollTo({ top: 0, behavior: 'smooth' }); };
 const MODE = new URLSearchParams(location.search).get('mode') === 'my' ? 'my' : 'lc';
 if (MODE === 'lc') document.body.classList.add('lc');
 const form = { title: '', number: '', space: '4', holder: '', level: '', format: 'PKBarcodeFormatCode128', color: '#0E5A66', memo: '', auto: false, cardImg: '', tier: 's' };
@@ -929,7 +940,7 @@ function renderHistory() {
 }
 $('#history').addEventListener('click', e => {
   const l = e.target.closest('[data-load]'), d = e.target.closest('[data-del]'), h = loadH();
-  if (l) { Object.assign(form, { auto: false, cardImg: '', tier: 's' }, h[+l.dataset.load]); fillInputs(); syncAuto(); syncUI(); scrollTo({ top: 0, behavior: 'smooth' }); toast(form.auto ? '불러왔어요 · 등급을 바꿔 다시 보낼 수 있어요' : '불러왔어요 · 다시 추가할 수 있어요'); }
+  if (l) { Object.assign(form, { auto: false, cardImg: '', tier: 's' }, h[+l.dataset.load]); fillInputs(); syncAuto(); syncUI(); appScrollTop(); toast(form.auto ? '불러왔어요 · 등급을 바꿔 다시 보낼 수 있어요' : '불러왔어요 · 다시 추가할 수 있어요'); }
   if (d) { if (MODE === 'lc' && !confirm('발급 대장에서 지울까요? (손님 카드는 그대로예요)')) return; h.splice(+d.dataset.del, 1); try { localStorage.setItem(HKEY, JSON.stringify(h)); } catch (e) {} renderHistory(); }
 });
 function fillInputs() { $('#fTitle').value = form.title; setNumber(form.number); $('#fHolder').value = form.holder; $('#fLevel').value = form.level; $('#fMemo').value = form.memo; }
@@ -1041,7 +1052,7 @@ function resetForNext() {
   bumpCount = 0; setNumber(genMemberNo());
   $('#doneBox').classList.add('hidden');
   syncAuto(); syncUI();
-  scrollTo({ top: 0, behavior: 'smooth' });
+  appScrollTop();
   setTimeout(() => $('#fHolder').focus(), 350);
   toast('새 손님용 번호로 초기화했어요');
 }
