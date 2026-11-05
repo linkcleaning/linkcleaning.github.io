@@ -777,9 +777,9 @@ function customerMsg() {
   const n = cleanNum(form.number), nm = form.holder || '고객';
   const T = tierOf(form), up = form.tier && form.tier !== 's' && loadH().some(x => cleanNum(x.number) === n && x.tier !== form.tier);
   const url = memberUrl(n, form.holder, form.tier);
-  if (T.family) return `[링크클린] ${nm}님, 패밀리 VIP 카드예요 💝\n늘 응원해 줘서 고마워요.\n${url}`;
-  if (up) return `[링크클린] ${nm}님, ${T.name} 회원으로 올라갔어요 🎉\n새 카드와 혜택을 확인하세요.\n${url}`;
-  return `[링크클린] ${nm}님, 감사합니다 😊\n${T.name} 회원카드가 도착했어요.\n${url}`;
+  if (T.family) return `[링크클린] ${nm}님, 패밀리 VIP 카드 💝\n${url}`;
+  if (up) return `[링크클린] ${nm}님, ${T.name} 승급 🎉\n${url}`;
+  return `[링크클린] ${nm}님, ${T.name} 회원카드 😊\n${url}`;
 }
 function syncSend() {
   $('#sendBox').classList.toggle('hidden', !isBrand(form));
