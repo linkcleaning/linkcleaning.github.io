@@ -48,7 +48,7 @@
 
   <!-- 내 회원카드 -->
   <section id="memberView" class="hidden">
-    <h1 class="text-[26px] font-bold leading-tight mt-6"><span id="hiName"></span>님,<br>링크클린 멤버스 회원이에요</h1>
+    <h1 class="text-[26px] font-bold leading-tight mt-6"><span id="hiName"></span>님,<br>링크클린 <span id="hiTier"></span> 회원이에요</h1>
     <div class="mt-6 rise" style="perspective:900px"><canvas id="cardCanvas"></canvas></div>
 
     <div class="mt-4 rounded-2xl bg-white text-[#0B2A31] px-5 pt-4 pb-3">
@@ -63,13 +63,17 @@
       <b class="text-white">아이폰이세요?</b> 문자로 함께 받은 <b>링크클린 카드 파일</b>을 누르면 아이폰 지갑에 쏙 들어가요.
     </div>
 
-    <h2 class="text-[17px] font-bold mt-8 mb-3">회원 혜택</h2>
+    <h2 class="text-[17px] font-bold mt-8 mb-3"><span id="perkTitle">회원</span> 혜택</h2>
     <div class="space-y-2.5" id="benefits"></div>
+
+    <h2 class="text-[17px] font-bold mt-8 mb-3">등급 안내</h2>
+    <div class="grid grid-cols-3 gap-2" id="ladder"></div>
+    <p id="nextTip" class="text-[13px] text-white/60 mt-3 leading-relaxed"></p>
 
     <div class="mt-6 rounded-[22px] bg-gradient-to-br from-[#F08A3C] to-[#E9772E] text-[#0B2A31] p-5">
       <div class="text-[13px] font-bold opacity-70">지인 소개 이벤트</div>
       <div class="text-[20px] font-bold leading-snug mt-1">이사·입주 앞둔 지인에게<br>링크클린을 소개해 주세요</div>
-      <p class="text-[13.5px] mt-2 leading-relaxed opacity-80">소개받은 분이 계약하면 <b>스타벅스 커피 1잔</b>을 드려요. 아래 버튼으로 보내면 내 소개 코드가 자동으로 들어가요.</p>
+      <p class="text-[13.5px] mt-2 leading-relaxed opacity-80">소개받은 분이 계약하면 <b id="refReward">스타벅스 커피 1잔</b>을 드려요. 아래 버튼으로 보내면 내 소개 코드가 자동으로 들어가요.</p>
       <button id="shareRef" class="btn w-full mt-4 bg-[#0B2A31] text-white">💌 카톡·문자로 소개하기</button>
     </div>
   </section>
@@ -116,11 +120,33 @@
 
 <script>
 /* ============ 혜택 문구 (여기만 바꾸면 전체에 반영) ============ */
-const BENEFITS = [
-  { ico: '☕', bg: '#F08A3C', t: '후기 쓰면 스타벅스 1잔', d: '청소 후 네이버 플레이스에 후기를 남겨주시면 커피를 보내드려요.' },
-  { ico: '💌', bg: '#6DBE45', t: '지인 소개하면 스타벅스 1잔', d: '소개 코드로 지인이 계약하면 소개해주신 분께 드려요.' },
-  { ico: '🔁', bg: '#2F8C9B', t: '다시 부를 땐 회원 우선 상담', d: '회원번호만 말씀하시면 지난 작업 내용을 바로 확인하고 상담해 드려요.' }
-];
+/* 등급 (발급기와 같은 내용) */
+const TIERS = {
+  s: { name: '실버', en: 'SILVER', when: '첫 이용 회원', grad: ['#F1F4F6', '#BAC5CB', '#7C8A93'], glow: 'rgba(255,255,255,.55)', arc: '#6DBE45', accent: '#3E4C53', ink: '#1C2A30', sub: 'rgba(28,42,48,.75)', chip: '#C9D3D6',
+       page: ['#26343A', 'rgba(201,211,214,.20)', 'rgba(110,130,140,.45)'],
+       perks: [
+         { ico: '☕', bg: '#F08A3C', t: '후기 쓰면 스타벅스 1잔', d: '청소 후 네이버 플레이스에 후기를 남겨주시면 커피를 보내드려요.' },
+         { ico: '💌', bg: '#6DBE45', t: '지인 소개하면 스타벅스 1잔', d: '소개 코드로 지인이 계약하면 소개해주신 분께 드려요.' },
+         { ico: '🔁', bg: '#2F8C9B', t: '다시 부를 땐 회원 우선 상담', d: '회원번호만 말씀하시면 지난 작업 내용을 바로 확인하고 상담해 드려요.' } ] },
+  g: { name: '골드', en: 'GOLD', when: '2회 이상 이용 또는 지인 소개 1건 계약', grad: ['#F3CF77', '#C08A2E', '#6A450F'], glow: 'rgba(255,240,200,.5)', arc: '#FFF1C9', accent: '#FFF1C9', ink: '#FFFFFF', sub: 'rgba(255,255,255,.88)', chip: '#F3CF77',
+       page: ['#2B1F0C', 'rgba(243,207,119,.22)', 'rgba(150,100,30,.45)'],
+       perks: [
+         { ico: '🌿', bg: '#4E9F3D', t: '오존 살균 탈취 1곳 무료', d: '다음 청소 때 원하시는 공간 한 곳을 오존으로 살균·탈취해 드려요.' },
+         { ico: '☕', bg: '#F08A3C', t: '지인 소개 보상 스타벅스 2잔', d: '소개 코드로 지인이 계약하면 커피 2잔을 드려요.' },
+         { ico: '✨', bg: '#B8913F', t: '실버 혜택 모두 포함', d: '후기 커피, 회원 우선 상담도 그대로 받으세요.' } ] },
+  v: { name: 'VIP', en: 'VIP', when: '3회 이상 이용 또는 지인 소개 2건 계약', grad: ['#3A3A3A', '#161616', '#000000'], glow: 'rgba(229,192,123,.32)', arc: '#E5C07B', accent: '#E5C07B', ink: '#F4E3BC', sub: 'rgba(229,192,123,.88)', chip: '#E5C07B',
+       page: ['#0B0B0B', 'rgba(229,192,123,.16)', 'rgba(60,60,60,.6)'],
+       perks: [
+         { ico: '💎', bg: '#B8913F', t: '청소 비용 5% 할인', d: 'VIP 회원은 모든 청소를 5% 할인해 드려요.' },
+         { ico: '📅', bg: '#3A3A3A', t: '원하는 날짜 우선 배정', d: '이사·입주 날짜가 겹쳐도 VIP 일정부터 잡아드려요.' },
+         { ico: '✨', bg: '#6A450F', t: '골드 혜택 모두 포함', d: '오존 살균 1곳 무료, 소개 커피 2잔, 후기 커피까지 그대로.' } ] },
+  f: { name: '패밀리 VIP', en: 'FAMILY', when: '링크클린 가족 전용', family: true, grad: ['#7A2A3C', '#4A1424', '#1A0509'], glow: 'rgba(242,194,168,.38)', arc: '#F2C2A8', accent: '#F2C2A8', ink: '#FFF4EE', sub: 'rgba(242,194,168,.92)', chip: '#F2C2A8',
+       page: ['#1C0A10', 'rgba(242,194,168,.20)', 'rgba(122,42,60,.55)'],
+       perks: [
+         { ico: '💝', bg: '#7A2A3C', t: '가족 특별가', d: '링크클린 가족에게는 언제나 특별한 가격으로 해드려요.' },
+         { ico: '📅', bg: '#4A1424', t: '언제든 최우선 일정', d: '바쁜 시즌에도 가족 일정부터 먼저 잡아요.' },
+         { ico: '💎', bg: '#B8913F', t: 'VIP 혜택 모두 포함', d: '5% 할인 이상의 혜택, 오존 살균 무료, 소개 커피까지.' } ] }
+};
 const SERVICES = ['🏠 입주·이사청소', '🏢 사무실·상가', '🏗️ 준공청소', '🪟 유리창·외벽', '🗑️ 쓰레기집·특수청소', '📦 유품정리·폐기물', '🌿 오존 살균 탈취', '🏘️ 타운하우스 관리'];
 
 const $ = s => document.querySelector(s);
@@ -135,38 +161,39 @@ const g4 = n => n.replace(/(.{4})(?=.)/g, '$1 ');
 const mask = nm => { const a = [...String(nm || '')]; if (a.length <= 1) return a.join(''); if (a.length === 2) return a[0] + '*'; return a[0] + '*'.repeat(a.length - 2) + a[a.length - 1]; };
 
 const qs = new URLSearchParams(location.search);
-let num = (qs.get('n') || '').replace(/\D/g, ''), name = (qs.get('m') || '').slice(0, 20);
+let num = (qs.get('n') || '').replace(/\D/g, ''), name = (qs.get('m') || '').slice(0, 20), tier = TIERS[qs.get('t')] ? qs.get('t') : 's';
 const ref = (qs.get('ref') || '').replace(/\D/g, ''), refName = (qs.get('r') || '').slice(0, 20);
 
 /* 내 카드 기억 (홈 화면에 추가했을 때 링크 없이도 열리게) */
 try {
-  if (valid(num)) localStorage.setItem('lc.member', JSON.stringify({ num, name }));
-  else if (!ref) { const s = JSON.parse(localStorage.getItem('lc.member') || 'null'); if (s && valid(s.num)) { num = s.num; name = s.name; } }
+  if (valid(num)) localStorage.setItem('lc.member', JSON.stringify({ num, name, tier }));
+  else if (!ref) { const s = JSON.parse(localStorage.getItem('lc.member') || 'null'); if (s && valid(s.num)) { num = s.num; name = s.name; tier = TIERS[s.tier] ? s.tier : 's'; } }
 } catch (e) {}
 
 /* ============ 카드 그림 ============ */
 const logo = new Image(); logo.src = '../pass/lc-logo.png';
 function rr(x, X, Y, W, H, R) { x.beginPath(); x.moveTo(X + R, Y); x.arcTo(X + W, Y, X + W, Y + H, R); x.arcTo(X + W, Y + H, X, Y + H, R); x.arcTo(X, Y + H, X, Y, R); x.arcTo(X, Y, X + W, Y, R); x.closePath(); }
-function drawCard(cv, nm, no) {
+function drawCard(cv, nm, no, tk) {
+  const T = TIERS[tk] || TIERS.s;
   const W = 340, H = Math.round(W / 1.586), S = 3;
   cv.width = W * S; cv.height = H * S; const x = cv.getContext('2d'); x.scale(S, S);
   rr(x, 0, 0, W, H, 16); x.clip();
-  const g = x.createLinearGradient(0, 0, W, H); g.addColorStop(0, '#16808F'); g.addColorStop(.55, '#0E5A66'); g.addColorStop(1, '#072E35');
+  const g = x.createLinearGradient(0, 0, W, H); g.addColorStop(0, T.grad[0]); g.addColorStop(.55, T.grad[1]); g.addColorStop(1, T.grad[2]);
   x.fillStyle = g; x.fillRect(0, 0, W, H);
   const lx = W * .74, ly = H * .44;
-  const rg = x.createRadialGradient(lx, ly, 6, lx, ly, H * .85); rg.addColorStop(0, 'rgba(240,138,60,.42)'); rg.addColorStop(1, 'rgba(240,138,60,0)'); x.fillStyle = rg; x.fillRect(0, 0, W, H);
+  const rg = x.createRadialGradient(lx, ly, 6, lx, ly, H * .85); rg.addColorStop(0, T.glow); rg.addColorStop(1, 'rgba(0,0,0,0)'); x.fillStyle = rg; x.fillRect(0, 0, W, H);
   x.strokeStyle = 'rgba(255,255,255,.05)'; x.lineWidth = 1; for (let i = -H; i < W; i += 9) { x.beginPath(); x.moveTo(i, H); x.lineTo(i + H * .6, 0); x.stroke(); }
-  x.strokeStyle = '#6DBE45'; x.lineWidth = 3.5; x.beginPath(); x.arc(lx, ly, H * .38, Math.PI * .55, Math.PI * 1.45); x.stroke();
+  x.strokeStyle = T.arc; x.lineWidth = 3.5; x.beginPath(); x.arc(lx, ly, H * .38, Math.PI * .55, Math.PI * 1.45); x.stroke();
   if (logo.complete && logo.naturalWidth) {
     const sz = H * .62; x.save(); x.shadowColor = 'rgba(0,0,0,.4)'; x.shadowBlur = 12; x.beginPath(); x.arc(lx, ly, sz / 2, 0, Math.PI * 2); x.fillStyle = '#fff'; x.fill(); x.restore();
     x.drawImage(logo, lx - sz / 2, ly - sz / 2, sz, sz);
   }
-  x.fillStyle = '#fff'; x.font = "700 24px 'JetBrains Mono', monospace"; x.fillText('LINKCLEAN', 20, 42);
-  x.fillStyle = '#F3A86B'; x.font = "700 11px 'JetBrains Mono', monospace"; let px = 21; for (const c of 'MEMBERS') { x.fillText(c, px, 59); px += x.measureText(c).width + 3.4; }
+  x.fillStyle = T.ink; x.font = "700 24px 'JetBrains Mono', monospace"; x.fillText('LINKCLEAN', 20, 42);
+  x.fillStyle = T.accent; x.font = "700 11px 'JetBrains Mono', monospace"; let px = 21; for (const c of T.en + ' MEMBERS') { x.fillText(c, px, 59); px += x.measureText(c).width + 3.4; }
   rr(x, 20, 76, 32, 24, 5); const cg = x.createLinearGradient(20, 76, 52, 100); cg.addColorStop(0, '#F8DCA0'); cg.addColorStop(1, '#C3923F'); x.fillStyle = cg; x.fill();
   x.strokeStyle = 'rgba(0,0,0,.25)'; x.lineWidth = .8; x.beginPath(); x.moveTo(20, 88); x.lineTo(52, 88); x.moveTo(36, 76); x.lineTo(36, 100); x.stroke();
-  if (no) { x.fillStyle = '#fff'; x.font = "500 14.5px 'JetBrains Mono', monospace"; x.fillText(g4(no), 20, H - 34); }
-  x.fillStyle = 'rgba(255,255,255,.82)'; x.font = "600 11.5px 'IBM Plex Sans KR', sans-serif";
+  if (no) { x.fillStyle = T.ink; x.font = "500 14.5px 'JetBrains Mono', monospace"; x.fillText(g4(no), 20, H - 34); }
+  x.fillStyle = T.sub; x.font = "600 11.5px 'IBM Plex Sans KR', sans-serif";
   x.fillText(nm ? `${nm} 님` : '제주 청소 전문 · SINCE 2016', 20, H - 16);
   const gl = x.createLinearGradient(0, 0, 0, H * .55); gl.addColorStop(0, 'rgba(255,255,255,.16)'); gl.addColorStop(1, 'rgba(255,255,255,0)'); x.fillStyle = gl; x.fillRect(0, 0, W, H * .55);
 }
@@ -174,12 +201,31 @@ function drawCard(cv, nm, no) {
 /* ============ 화면 ============ */
 const isIOS = /iphone|ipad|ipod/i.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
 function draw() {
-  if (valid(num)) drawCard($('#cardCanvas'), name, num);
-  else if (!valid(ref)) drawCard($('#cardCanvas2'), '', '');
+  if (valid(num)) drawCard($('#cardCanvas'), name, num, tier);
+  else if (!valid(ref)) drawCard($('#cardCanvas2'), '', '', 's');
 }
 if (valid(num)) {
   $('#memberView').classList.remove('hidden');
   $('#hiName').textContent = name || '회원';
+  const T = TIERS[tier];
+  document.body.style.background = `radial-gradient(120% 50% at 100% 0%, ${T.page[1]}, transparent 60%), radial-gradient(90% 40% at 0% 8%, ${T.page[2]}, transparent 70%), ${T.page[0]}`;
+  document.documentElement.style.background = T.page[0];
+  document.querySelector('meta[name=theme-color]').setAttribute('content', T.page[0]);
+  $('#hiTier').textContent = T.name; $('#hiTier').style.color = T.chip;
+  $('#perkTitle').textContent = T.name + ' 회원';
+  $('#refReward').textContent = tier === 's' ? '스타벅스 커피 1잔' : '스타벅스 커피 2잔';
+  $('#perkTitle').parentElement.style.color = '';
+  $('#ladder').innerHTML = Object.entries(TIERS).filter(([k, t]) => !t.family).map(([k, t]) => `<div class="rounded-2xl px-3 py-3 border ${k === tier ? 'border-transparent' : 'border-white/10 bg-white/[.04]'}" style="${k === tier ? `background:linear-gradient(140deg,${t.grad[0]},${t.grad[2]})` : ''}">
+      <div class="mono text-[11px] font-bold tracking-wider" style="color:${t.chip}">${t.en}</div>
+      <div class="font-bold text-[15px] mt-0.5">${t.name}${k === tier ? ' ✓' : ''}</div>
+      <div class="text-[11.5px] mt-1 leading-snug ${k === tier ? 'text-white/85' : 'text-white/50'}">${t.when}</div></div>`).join('');
+  if (T.family) {
+    $('#ladder').previousElementSibling.textContent = '패밀리 카드';
+    $('#ladder').innerHTML = `<div class="col-span-3 rounded-2xl px-4 py-4" style="background:linear-gradient(140deg,${T.grad[0]},${T.grad[2]})"><div class="mono text-[11px] font-bold tracking-[.2em]" style="color:${T.chip}">LINKCLEAN FAMILY</div><div class="font-bold text-[16px] mt-1">링크클린 가족에게만 드리는 카드예요</div><div class="text-[13px] text-white/75 mt-1">늘 응원해 줘서 고마워요 💝</div></div>`;
+    $('#hiTier').parentElement.innerHTML = `<span id="hiName">${esc(name || '가족')}</span>님은<br>링크클린 <span style="color:${T.chip}">패밀리 VIP</span>예요`;
+  }
+  const nextKey = T.family ? null : { s: 'g', g: 'v' }[tier];
+  $('#nextTip').textContent = T.family ? '' : nextKey ? `${TIERS[nextKey].when}하시면 ${TIERS[nextKey].name} 회원이 돼요. 새 카드를 보내드릴게요!` : '최고 등급이에요. 항상 감사합니다 🙏';
   $('#copyNo').textContent = g4(num);
   $('#copyNo').onclick = () => copy(num);
   try {
@@ -188,14 +234,14 @@ if (valid(num)) {
     s.setAttribute('viewBox', `0 0 ${w} ${h}`); s.setAttribute('preserveAspectRatio', 'none'); s.removeAttribute('width'); s.removeAttribute('height'); s.style.width = '100%'; s.style.height = '64px';
   } catch (e) {}
   if (isIOS) $('#walletTip').classList.remove('hidden');
-  $('#benefits').innerHTML = BENEFITS.map(b => `<div class="benefit"><div class="ico" style="background:${b.bg}">${b.ico}</div><div><div class="font-bold text-[15px]">${esc(b.t)}</div><div class="text-[13px] text-white/60 mt-0.5 leading-relaxed">${esc(b.d)}</div></div></div>`).join('');
+  $('#benefits').innerHTML = T.perks.map(b => `<div class="benefit"><div class="ico" style="background:${b.bg}">${b.ico}</div><div><div class="font-bold text-[15px]">${esc(b.t)}</div><div class="text-[13px] text-white/60 mt-0.5 leading-relaxed">${esc(b.d)}</div></div></div>`).join('');
   $('#shareRef').onclick = async () => {
     const url = `${location.origin}${location.pathname}?ref=${num}${name ? '&r=' + encodeURIComponent(mask(name)) : ''}`;
     const text = `제주에서 청소 업체 찾으면 링크클린 추천해요! 예약할 때 소개 코드 ${g4(num)} 말하면 돼요.`;
     if (navigator.share) { try { await navigator.share({ title: '링크클린 소개', text, url }); return; } catch (e) { if (e.name === 'AbortError') return; } }
     copy(text + '\n' + url);
   };
-  document.title = `${name ? name + '님의 ' : ''}링크클린 멤버스 카드`;
+  document.title = `${name ? name + '님의 ' : ''}링크클린 ${TIERS[tier].name} 카드`;
 } else if (valid(ref)) {
   $('#refView').classList.remove('hidden');
   $('#refName').textContent = refName || '지인';

@@ -116,8 +116,20 @@
   <label class="lbl">이름</label>
   <input id="fHolder" class="inp" maxlength="20" placeholder="예: 한승우 (선택)">
 
-  <label class="lbl">등급</label>
-  <input id="fLevel" class="inp" maxlength="12" placeholder="예: 일반, VIP, GOLD (선택)">
+  <div id="levelBox">
+    <label class="lbl">등급</label>
+    <input id="fLevel" class="inp" maxlength="12" placeholder="예: 일반, VIP, GOLD (선택)">
+  </div>
+  <div id="tierBox" class="hidden">
+    <label class="lbl">회원 등급</label>
+    <div id="segTier" class="seg grid-cols-4">
+      <button data-v="s">실버</button>
+      <button data-v="g">골드</button>
+      <button data-v="v">VIP</button>
+      <button data-v="f">패밀리</button>
+    </div>
+    <div id="tierInfo" class="mt-3 rounded-2xl bg-white border border-black/10 px-4 py-3 text-[13px] leading-relaxed"></div>
+  </div>
 
   <label class="lbl">바코드 종류</label>
   <div id="segCode" class="seg grid-cols-4">
@@ -309,7 +321,7 @@ const PRESETS = [
 ];
 const COLORS = ['#0E5A66','#F08A3C','#4E9F3D','#1F2A44','#1E1E1E','#FFFFFF','#E3262D','#D6006F','#652F8D','#F39A1E','#A8844E','#2F6FDF'];
 
-const form = { title: '', number: '', space: '4', holder: '', level: '', format: 'PKBarcodeFormatCode128', color: '#0E5A66', memo: '', auto: false, cardImg: '' };
+const form = { title: '', number: '', space: '4', holder: '', level: '', format: 'PKBarcodeFormatCode128', color: '#0E5A66', memo: '', auto: false, cardImg: '', tier: 's' };
 
 /* ===================== 링크클린 회원번호 자동 발급 =====================
    2016(창립년) + YYMMDD(발급일) + NNN(그날 순번) + RR(중복방지) + C(Luhn 검증 자리) = 16자리 */
@@ -341,7 +353,19 @@ function consumeSeq(numStr) {
   try { if (s > +(localStorage.getItem(k) || 0)) localStorage.setItem(k, s); } catch (e) {}
 }
 let bumpCount = 0;
+function syncTier() {
+  const on = isBrand(form);
+  $('#tierBox').classList.toggle('hidden', !on);
+  $('#levelBox').classList.toggle('hidden', on);
+  if (!on) return;
+  if (!TIERS[form.tier]) form.tier = 's';
+  form.level = TIERS[form.tier].name;
+  $$('#segTier button').forEach(b => b.classList.toggle('on', b.dataset.v === form.tier));
+  const T = TIERS[form.tier];
+  $('#tierInfo').innerHTML = `<div class="font-bold">${T.name} · <span class="font-normal text-black/50">${T.when}</span></div>` + T.perks.map(x => `<div>· ${x}</div>`).join('');
+}
 function syncAuto() {
+  syncTier();
   const on = !!form.auto, inp = $('#fNumber');
   $('#autoBox').classList.toggle('hidden', !on);
   inp.readOnly = on;
@@ -390,8 +414,24 @@ const fmtNum = (v, sp) => sp === '4' ? cleanNum(v).replace(/(.{4})(?=.)/g, '$1 '
 /* ===================== 미리보기 ===================== */
 /* ===================== 카드 그림 (지갑의 큰 그림 영역 = strip) ===================== */
 const LC_BG = '#0B2A31';
+/* ===== 회원 등급 (조건·혜택은 여기만 고치면 발급기·패스·손님 페이지 문구가 같이 바뀜) ===== */
+const TIERS = {
+  s: { name: '실버', en: 'SILVER', when: '첫 이용 회원',
+       bg: '#26343A', label: [201, 211, 214], grad: ['#F1F4F6', '#BAC5CB', '#7C8A93'], glow: 'rgba(255,255,255,.55)', arc: '#6DBE45', accent: '#3E4C53', ink: '#1C2A30', sub: 'rgba(28,42,48,.72)',
+       perks: ['후기 남기면 스타벅스 1잔', '지인 소개로 계약되면 스타벅스 1잔', '다시 부를 때 회원 우선 상담'] },
+  g: { name: '골드', en: 'GOLD', when: '2회 이상 이용 또는 지인 소개 1건 계약',
+       bg: '#2B1F0C', label: [242, 200, 121], grad: ['#F3CF77', '#C08A2E', '#6A450F'], glow: 'rgba(255,240,200,.5)', arc: '#FFF1C9', accent: '#FFF1C9', ink: '#FFFFFF', sub: 'rgba(255,255,255,.85)',
+       perks: ['실버 혜택 모두', '다음 청소 때 오존 살균 탈취 1곳 무료', '지인 소개 보상 스타벅스 2잔'] },
+  v: { name: 'VIP', en: 'VIP', when: '3회 이상 이용 또는 지인 소개 2건 계약',
+       bg: '#0E0E0E', label: [229, 192, 123], grad: ['#3A3A3A', '#161616', '#000000'], glow: 'rgba(229,192,123,.32)', arc: '#E5C07B', accent: '#E5C07B', ink: '#F4E3BC', sub: 'rgba(229,192,123,.85)',
+       perks: ['골드 혜택 모두', '청소 비용 5% 할인', '원하는 날짜 우선 배정'] },
+  f: { name: '패밀리 VIP', en: 'FAMILY', when: '링크클린 가족 전용 (대표 직접 발급)', family: true,
+       bg: '#1C0A10', label: [242, 194, 168], grad: ['#7A2A3C', '#4A1424', '#1A0509'], glow: 'rgba(242,194,168,.38)', arc: '#F2C2A8', accent: '#F2C2A8', ink: '#FFF4EE', sub: 'rgba(242,194,168,.9)',
+       perks: ['VIP 혜택 모두', '가족 특별가 적용', '언제든 최우선 일정 배정'] }
+};
+const tierOf = d => TIERS[d.tier] || TIERS.s;
 const isBrand = d => !!d.auto || d.title === LC_CARD;
-const passBg = d => isBrand(d) ? LC_BG : d.color;
+const passBg = d => isBrand(d) ? tierOf(d).bg : d.color;
 const hasStrip = d => isBrand(d) || !!d.cardImg;
 const lcLogo = new Image(); let lcLogoReady = false;
 lcLogo.onload = () => { lcLogoReady = true; renderPass(); }; lcLogo.src = 'lc-logo.png';
@@ -415,27 +455,29 @@ function drawStrip(scale, d) {
     const r = Math.max(cw / img.naturalWidth, ch / img.naturalHeight), iw = img.naturalWidth * r, ih = img.naturalHeight * r;
     x.drawImage(img, cx + (cw - iw) / 2, cy + (ch - ih) / 2, iw, ih);
   } else {
+    const T = tierOf(d);
     const g = x.createLinearGradient(cx, cy, cx + cw, cy + ch);
-    g.addColorStop(0, '#16808F'); g.addColorStop(.55, '#0E5A66'); g.addColorStop(1, '#072E35');
+    g.addColorStop(0, T.grad[0]); g.addColorStop(.55, T.grad[1]); g.addColorStop(1, T.grad[2]);
     x.fillStyle = g; x.fillRect(cx, cy, cw, ch);
     const lx = cx + cw * .735, ly = cy + ch * .5;
     const rg = x.createRadialGradient(lx, ly, 4, lx, ly, ch * .8);
-    rg.addColorStop(0, 'rgba(240,138,60,.42)'); rg.addColorStop(1, 'rgba(240,138,60,0)');
+    rg.addColorStop(0, T.glow); rg.addColorStop(1, 'rgba(0,0,0,0)');
     x.fillStyle = rg; x.fillRect(cx, cy, cw, ch);
-    x.strokeStyle = '#6DBE45'; x.lineWidth = 2.5; x.beginPath(); x.arc(lx, ly, ch * .41, Math.PI * .55, Math.PI * 1.45); x.stroke();
+    x.strokeStyle = T.arc; x.lineWidth = 2.5; x.beginPath(); x.arc(lx, ly, ch * .41, Math.PI * .55, Math.PI * 1.45); x.stroke();
     if (lcLogoReady) {
       const sz = ch * .68;
       x.save(); x.shadowColor = 'rgba(0,0,0,.4)'; x.shadowBlur = 10; x.beginPath(); x.arc(lx, ly, sz / 2, 0, Math.PI * 2); x.fillStyle = '#fff'; x.fill(); x.restore();
       x.drawImage(lcLogo, lx - sz / 2, ly - sz / 2, sz, sz);
     }
     x.textBaseline = 'alphabetic';
-    x.fillStyle = '#fff'; x.font = "700 15px 'JetBrains Mono', ui-monospace, monospace"; x.fillText('LINKCLEAN', cx + 12, cy + 29);
-    x.fillStyle = '#F3A86B'; x.font = "700 7.5px 'JetBrains Mono', ui-monospace, monospace"; spaced(x, 'MEMBERS', cx + 13, cy + 41, 2.2);
+    x.fillStyle = T.ink; x.font = "700 15px 'JetBrains Mono', ui-monospace, monospace"; x.fillText('LINKCLEAN', cx + 12, cy + 29);
+    x.fillStyle = T.accent; x.font = `700 ${T.en.length > 4 ? 6.8 : 7.5}px 'JetBrains Mono', ui-monospace, monospace`; spaced(x, T.en + ' MEMBERS', cx + 13, cy + 41, T.en.length > 4 ? 1.1 : 2.2);
     rrect(x, cx + 12, cy + 55, 21, 16, 3);
     const cg = x.createLinearGradient(cx + 12, cy + 55, cx + 33, cy + 71); cg.addColorStop(0, '#F8DCA0'); cg.addColorStop(1, '#C3923F');
     x.fillStyle = cg; x.fill();
     x.strokeStyle = 'rgba(0,0,0,.25)'; x.lineWidth = .6; x.beginPath(); x.moveTo(cx + 12, cy + 63); x.lineTo(cx + 33, cy + 63); x.moveTo(cx + 22.5, cy + 55); x.lineTo(cx + 22.5, cy + 71); x.stroke();
-    x.fillStyle = 'rgba(255,255,255,.8)'; x.font = "600 7px 'IBM Plex Sans KR', sans-serif"; x.fillText('제주 청소 전문 · SINCE 2016', cx + 12, cy + ch - 13);
+    x.fillStyle = T.sub; x.font = "600 7px 'IBM Plex Sans KR', sans-serif"; x.fillText(T.family ? 'LINKCLEAN FAMILY · SINCE 2016' : '제주 청소 전문 · SINCE 2016', cx + 12, cy + ch - 13);
+    if (T.family) { x.fillStyle = T.accent; x.font = "700 9px 'IBM Plex Sans KR', sans-serif"; x.fillText('♥', cx + 40, cy + 67); }
   }
   x.restore();
   x.save(); rrect(x, cx, cy, cw, ch, 10); x.clip();
@@ -462,7 +504,7 @@ const canvasPng = c => new Promise(res => c.toBlob(b => b.arrayBuffer().then(a =
 function renderPass() {
   const d = form, brand = isBrand(d), bg = passBg(d), num = cleanNum(d.number);
   const el = $('#pass');
-  const fgc = brand ? '#FFFFFF' : fg(bg), labc = brand ? '#F3A86B' : labelCol(bg);
+  const fgc = brand ? '#FFFFFF' : fg(bg), labc = brand ? rgbStr(tierOf(d).label) : labelCol(bg);
   el.style.background = bg; el.style.color = fgc;
   el.style.border = isLight(bg) ? '1px solid rgba(0,0,0,.1)' : 'none';
   const lab = `style="color:${labc}"`;
@@ -471,7 +513,7 @@ function renderPass() {
     <div class="flex items-center justify-between gap-3">
       <div class="flex items-center gap-2.5 min-w-0">
         ${brand ? '<img src="lc-logo.png" alt="" class="w-9 h-9 rounded-full bg-white shrink-0">' : ''}
-        <div class="font-bold text-[18px] leading-tight truncate">${esc(brand ? '링크클린 멤버스' : (d.title || '카드 이름'))}</div>
+        <div class="font-bold text-[18px] leading-tight truncate">${esc(brand ? (tierOf(d).family ? '링크클린 패밀리' : '링크클린 멤버스') : (d.title || '카드 이름'))}</div>
       </div>
       ${d.level ? `<div class="text-right shrink-0"><div class="plabel" ${lab}>LEVEL</div><div class="text-[16px] font-medium leading-tight">${esc(d.level)}</div></div>` : ''}
     </div>
@@ -584,10 +626,10 @@ async function buildPkpass(d) {
     serialNumber: serial,
     organizationName: ORG_NAME,
     description: `${d.title} 멤버십`,
-    logoText: brand ? '링크클린 멤버스' : d.title,
+    logoText: brand ? (tierOf(d).family ? '링크클린 패밀리' : '링크클린 멤버스') : d.title,
     foregroundColor: brand ? 'rgb(255,255,255)' : rgbStr(hexRgb(fg(bg))),
     backgroundColor: rgbStr(hexRgb(bg)),
-    labelColor: brand ? 'rgb(243,168,107)' : rgbStr(labelRgb(bg)),
+    labelColor: brand ? rgbStr(tierOf(d).label) : rgbStr(labelRgb(bg)),
     storeCard: {
       headerFields: d.level ? [{ key: 'level', label: 'LEVEL', value: d.level }] : [],
       primaryFields: [],
@@ -599,8 +641,9 @@ async function buildPkpass(d) {
       backFields: [
         ...(brand ? [
           { key: 'hello', label: '링크클린 멤버스', value: '링크클린을 이용해 주셔서 감사합니다. 청소 예약·상담 때 이 카드를 보여주세요.' },
-          { key: 'mine', label: '내 회원카드·혜택', value: memberUrl(num, d.holder) },
-          { key: 'benefit', label: '회원 혜택', value: '· 후기 남기면 스타벅스 1잔\n· 지인 소개로 계약되면 스타벅스 1잔\n· 예약할 때 회원번호를 말하면 지난 작업 기록으로 바로 상담' },
+          { key: 'mine', label: '내 회원카드·혜택', value: memberUrl(num, d.holder, d.tier) },
+          { key: 'benefit', label: `${tierOf(d).name} 회원 혜택`, value: tierOf(d).perks.map(x => '· ' + x).join('\n') },
+          { key: 'tiers', label: '등급 안내', value: Object.values(TIERS).filter(t => !t.family).map(t => `${t.name}: ${t.when}`).join('\n') },
           { key: 'ref', label: '지인 소개 코드', value: shown },
           { key: 'tel', label: '예약·상담', value: '050-6520-0440' },
           { key: 'web', label: '홈페이지', value: 'https://linkclean.co.kr' }
@@ -651,18 +694,21 @@ async function buildPkpass(d) {
 
 /* ===================== 손님에게 보내기 ===================== */
 const MEMBERS_URL = 'https://linkcleaning.github.io/members/';
-const memberUrl = (n, nm) => `${MEMBERS_URL}?n=${cleanNum(n)}${nm ? '&m=' + encodeURIComponent(nm) : ''}`;
+const memberUrl = (n, nm, t) => `${MEMBERS_URL}?n=${cleanNum(n)}&t=${t || 's'}${nm ? '&m=' + encodeURIComponent(nm) : ''}`;
 function customerMsg(withFile) {
   const n = cleanNum(form.number), nm = form.holder || '고객';
-  return `[링크클린] ${nm}님, 청소를 맡겨주셔서 감사합니다 😊
-링크클린 멤버스 회원카드를 보내드려요.
+  const T = tierOf(form), up = form.tier && form.tier !== 's' && loadH().some(x => cleanNum(x.number) === n && x.tier !== form.tier);
+  const head = T.family
+    ? `[링크클린] ${nm}님, 링크클린 패밀리 VIP 카드를 보내드려요 💝\n늘 응원해 줘서 고마워요.`
+    : `[링크클린] ${nm}님, ${up ? `${T.name} 회원으로 등급이 올라갔어요 🎉` : '청소를 맡겨주셔서 감사합니다 😊'}\n${up ? '새 등급 카드를 보내드려요.' : `링크클린 멤버스 ${T.name} 회원카드를 보내드려요.`}`;
+  return `${head}
 
 ▶ 내 회원카드·혜택 보기
-${memberUrl(n, form.holder)}
+${memberUrl(n, form.holder, form.tier)}
 
-· 후기 남기면 스타벅스 1잔
-· 지인 소개로 계약되면 스타벅스 1잔
-  (소개 코드: ${fmtNum(n, '4')})
+[${T.name} 회원 혜택]
+${T.perks.map(x => '· ' + x).join('\n')}
+· 지인 소개 코드: ${fmtNum(n, '4')}
 ${withFile ? '· 함께 보낸 카드 파일을 누르면 아이폰 지갑에 들어가요\n' : ''}
 예약·상담 050-6520-0440`;
 }
@@ -673,7 +719,7 @@ function validate() {
   form.title = $('#fTitle').value.trim();
   form.number = $('#fNumber').value.trim();
   form.holder = $('#fHolder').value.trim();
-  form.level = $('#fLevel').value.trim();
+  form.level = isBrand(form) ? tierOf(form).name : $('#fLevel').value.trim();
   form.memo = $('#fMemo').value.trim();
   if (!form.title) { toast('카드 이름을 넣어주세요'); $('#fTitle').focus(); return false; }
   const n = cleanNum(form.number);
@@ -705,8 +751,9 @@ $('#addBtn').onclick = async () => {
   setTimeout(() => URL.revokeObjectURL(url), 60000);
 };
 $('#sendAllBtn').onclick = async () => {
-  const file = await make(); if (!file) return;
+  if (!validate()) return;
   const text = customerMsg(true);
+  const file = await make(); if (!file) return;
   if (navigator.canShare && navigator.canShare({ files: [file], text })) {
     try { await navigator.share({ files: [file], text }); return; } catch (e) { if (e.name === 'AbortError') return; }
   }
@@ -715,12 +762,13 @@ $('#sendAllBtn').onclick = async () => {
 };
 $('#sendSmsBtn').onclick = () => {
   if (!validate()) return;
+  const msg = customerMsg(false);
   consumeSeq(form.number); saveHistory();
   const a = document.createElement('a');
-  a.href = (isIOS ? 'sms:&body=' : 'sms:?body=') + encodeURIComponent(customerMsg(false));
+  a.href = (isIOS ? 'sms:&body=' : 'sms:?body=') + encodeURIComponent(msg);
   document.body.appendChild(a); a.click(); a.remove();
 };
-$('#copyMsgBtn').onclick = () => { if (!validate()) return; consumeSeq(form.number); saveHistory(); copyPlain(customerMsg(false)); toast('복사했어요 · 카톡에 붙여넣으세요'); };
+$('#copyMsgBtn').onclick = () => { if (!validate()) return; const msg = customerMsg(false); consumeSeq(form.number); saveHistory(); copyPlain(msg); toast('복사했어요 · 카톡에 붙여넣으세요'); };
 async function copyPlain(t) { try { await navigator.clipboard.writeText(t); } catch (e) { const a = document.createElement('textarea'); a.value = t; document.body.appendChild(a); a.select(); document.execCommand('copy'); a.remove(); } }
 
 /* 소개 코드 확인 */
@@ -760,13 +808,13 @@ function renderHistory() {
   $('#history').innerHTML = h.map((x, i) => `
     <div class="flex items-center gap-3 rounded-2xl bg-white border border-black/10 px-3 py-2.5">
       <span class="w-9 h-6 rounded-md shrink-0 border border-black/10" style="background:${esc(x.color)}"></span>
-      <button data-load="${i}" class="flex-1 min-w-0 text-left"><div class="font-semibold text-[14.5px] truncate">${esc(x.title)}${x.holder ? ` <span class="font-normal text-black/50">· ${esc(x.holder)}</span>` : ''}</div><div class="mono text-[12px] text-black/50 truncate">${esc(fmtNum(x.number, '4'))}</div></button>
+      <button data-load="${i}" class="flex-1 min-w-0 text-left"><div class="font-semibold text-[14.5px] truncate">${esc(x.title)}${x.holder ? ` <span class="font-normal text-black/50">· ${esc(x.holder)}</span>` : ''}${x.auto && TIERS[x.tier] ? ` <span class="text-[11px] px-1.5 py-0.5 rounded-md bg-black/5">${TIERS[x.tier].name}</span>` : ''}</div><div class="mono text-[12px] text-black/50 truncate">${esc(fmtNum(x.number, '4'))}</div></button>
       <button data-del="${i}" class="w-9 h-9 rounded-full bg-black/5 text-black/40">✕</button>
     </div>`).join('');
 }
 $('#history').addEventListener('click', e => {
   const l = e.target.closest('[data-load]'), d = e.target.closest('[data-del]'), h = loadH();
-  if (l) { Object.assign(form, { auto: false, cardImg: '' }, h[+l.dataset.load]); fillInputs(); syncAuto(); syncUI(); scrollTo({ top: 0, behavior: 'smooth' }); toast('불러왔어요 · 다시 추가할 수 있어요'); }
+  if (l) { Object.assign(form, { auto: false, cardImg: '', tier: 's' }, h[+l.dataset.load]); fillInputs(); syncAuto(); syncUI(); scrollTo({ top: 0, behavior: 'smooth' }); toast(form.auto ? '불러왔어요 · 등급을 바꿔 다시 보낼 수 있어요' : '불러왔어요 · 다시 추가할 수 있어요'); }
   if (d) { h.splice(+d.dataset.del, 1); try { localStorage.setItem(HKEY, JSON.stringify(h)); } catch (e) {} renderHistory(); }
 });
 function fillInputs() { $('#fTitle').value = form.title; setNumber(form.number); $('#fHolder').value = form.holder; $('#fLevel').value = form.level; $('#fMemo').value = form.memo; }
@@ -824,7 +872,7 @@ $('#presets').addEventListener('click', e => {
   form.color = p.c; form.title = p.t === '직접 입력' ? '' : p.t; $('#fTitle').value = form.title;
   if (p.t === LC_CARD) {
     form.auto = true; bumpCount = 0; setNumber(genMemberNo());
-    if (!form.level) { form.level = '일반'; $('#fLevel').value = '일반'; }
+    form.tier = 's'; form.level = TIERS.s.name;
     form.format = 'PKBarcodeFormatCode128';
     syncAuto(); syncUI(); $('#fHolder').focus(); return;
   }
@@ -865,6 +913,7 @@ $('#imgPickBtn').onclick = () => {
   inp.click();
 };
 $('#imgClearBtn').onclick = () => { form.cardImg = ''; renderPass(); };
+$$('#segTier button').forEach(b => b.onclick = () => { form.tier = b.dataset.v; syncTier(); renderPass(); });
 $('#kbToggle').onclick = () => { toggleAlnum(!alnum); $('#fNumber').blur(); setTimeout(() => $('#fNumber').focus(), 60); };
 $('#newNumBtn').onclick = () => { bumpCount++; setNumber(genMemberNo(bumpCount)); syncAuto(); renderPass(); toast('새 번호로 바꿨어요'); };
 $('#fTitle').addEventListener('input', () => { if (form.auto && $('#fTitle').value.trim() !== LC_CARD) { form.auto = false; syncAuto(); } });
