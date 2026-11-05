@@ -61,9 +61,11 @@
       </div>
     </div>
 
-    <div id="walletTip" class="hidden mt-3 rounded-2xl bg-white/[.06] border border-white/10 px-4 py-3 text-[13px] text-white/75 leading-relaxed">
-      <b class="text-white">아이폰이세요?</b> 문자로 함께 받은 <b>링크클린 카드 파일</b>을 누르면 아이폰 지갑에 쏙 들어가요.
-    </div>
+    <a id="walletBtn" class="hidden mt-3 flex items-center justify-center gap-2.5 rounded-2xl bg-black text-white py-4 font-bold text-[16px] border border-white/15 shadow-[0_10px_24px_rgba(0,0,0,.35)] active:scale-[.98] transition">
+      <svg width="26" height="20" viewBox="0 0 26 20" fill="none"><rect x="1" y="1" width="24" height="18" rx="3.5" fill="#fff"/><rect x="1" y="4" width="24" height="3.4" fill="#4AA3DF"/><rect x="1" y="7.4" width="24" height="3" fill="#F5B83D"/><rect x="1" y="10.4" width="24" height="3" fill="#6CC04A"/><rect x="1" y="13.4" width="24" height="2.4" fill="#E9604E"/></svg>
+      애플 지갑에 추가
+    </a>
+    <p id="walletHint" class="hidden text-center text-[12px] text-white/45 mt-2">한 번 누르면 아이폰 지갑(Wallet)에 카드가 들어가요</p>
 
     <h2 class="text-[17px] font-bold mt-8 mb-3"><span id="perkTitle">회원</span> 혜택</h2>
     <div class="space-y-2.5" id="benefits"></div>
@@ -260,7 +262,17 @@ if (valid(num)) {
     const s = $('#bar'), w = s.getAttribute('width'), h = s.getAttribute('height');
     s.setAttribute('viewBox', `0 0 ${w} ${h}`); s.setAttribute('preserveAspectRatio', 'none'); s.removeAttribute('width'); s.removeAttribute('height'); s.style.width = '100%'; s.style.height = '64px';
   } catch (e) {}
-  if (isIOS) $('#walletTip').classList.remove('hidden');
+  /* 애플 지갑 버튼: 발급기에서 올린 지갑 파일이 있으면 보여줌 (아이폰만) */
+  if (isIOS) {
+    const wurl = `https://linkcleaning.github.io/w/${tier}${BigInt(num).toString(36)}.pkpass`;
+    fetch(`/w/${tier}${BigInt(num).toString(36)}.pkpass`, { method: 'HEAD', cache: 'no-store' }).then(r => {
+      if (!r.ok) return;
+      const a = $('#walletBtn');
+      // 카카오톡 안에서는 지갑이 안 열려서 사파리로 넘겨서 엶
+      a.href = /KAKAOTALK/i.test(navigator.userAgent) ? 'kakaotalk://web/openExternal?url=' + encodeURIComponent(wurl) : wurl;
+      a.classList.remove('hidden'); $('#walletHint').classList.remove('hidden');
+    }).catch(() => {});
+  }
   $('#benefits').innerHTML = T.perks.map(b => `<div class="benefit"><div class="ico" style="background:${b.bg}">${b.ico}</div><div><div class="font-bold text-[15px]">${esc(b.t)}</div><div class="text-[13px] text-white/60 mt-0.5 leading-relaxed">${esc(b.d)}</div></div></div>`).join('');
   $('#shareRef').onclick = async () => {
     const url = `https://linkcleaning.github.io/m/?r${BigInt(num).toString(36)}${name ? '.' + b64url(mask(name)) : ''}`;

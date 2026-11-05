@@ -186,11 +186,11 @@
   <div id="sendBox" class="hidden mt-3 rounded-2xl bg-[#0B2A31] text-white p-4">
     <div class="font-bold text-[15px]">손님에게 회원카드 보내기</div>
     <p class="text-[12.5px] text-white/60 mt-1 leading-relaxed">짧은 인사 + 링크 하나만 가요. 혜택·소개 코드·전화 버튼은 링크 안 카드 페이지에 다 있어요.</p>
+    <div id="walletSetup" class="mt-3 rounded-xl bg-white/[.08] px-3 py-2.5 text-[12.5px] leading-relaxed"></div>
     <div id="msgPreview" class="mt-3 rounded-xl bg-[#FEE500] text-[#191919] px-3 py-2.5 text-[13px] leading-relaxed whitespace-pre-line break-all"></div>
     <button id="sendTextBtn" class="tool w-full mt-3 bg-[#F08A3C] text-[#0B2A31]">💬 카톡·문자로 보내기</button>
-    <button id="sendAllBtn" class="tool w-full mt-2 bg-white/10 text-white">🍎 아이폰 지갑 파일 따로 보내기 (선택)</button>
-    <p class="text-[11.5px] text-white/45 mt-1.5 leading-relaxed">아이폰 손님에게만, 위 안내를 보낸 다음 이어서 보내세요. 파일을 누르면 지갑에 바로 들어가요.</p>
     <div class="flex justify-center gap-4 mt-2">
+      <button id="sendAllBtn" class="text-[12.5px] text-white/50 underline">지갑 파일만 보내기</button>
       <button id="sendSmsBtn" class="text-[12.5px] text-white/50 underline">문자 앱으로 바로</button>
       <button id="copyMsgBtn" class="text-[12.5px] text-white/50 underline">문구 복사</button>
     </div>
@@ -657,7 +657,9 @@ function certInfo() {
   return { cert, passTypeId: uid && uid.value, teamId: ou && ou.value };
 }
 
-async function buildPkpass(d) {
+async function buildPkpass(d, opt) {
+  opt = opt || {};
+  if (opt.hosted) d = { ...d, holder: '', memo: '' };
   const { cert, passTypeId, teamId } = certInfo();
   if (!passTypeId || !teamId) throw new Error('인증서에서 Pass Type ID를 읽지 못했어요');
   const num = cleanNum(d.number), shown = fmtNum(num, d.space);
@@ -803,9 +805,53 @@ $('#addBtn').onclick = async () => {
   document.body.appendChild(a); a.click(); a.remove();
   setTimeout(() => URL.revokeObjectURL(url), 60000);
 };
+/* ===== 손님 카드 페이지의 [애플 지갑에 추가] 버튼용: 지갑 파일을 홈페이지(GitHub)에 올림 ===== */
+const GH_REPO = 'linkcleaning/linkcleaning.github.io';
+const ghToken = () => { try { return localStorage.getItem('linkpass.gh') || ''; } catch (e) { return ''; } };
+const walletPath = (n, t) => `w/${t || 's'}${BigInt(cleanNum(n)).toString(36)}.pkpass`;
+function renderWalletSetup() {
+  const el = $('#walletSetup'); if (!el) return;
+  el.innerHTML = ghToken()
+    ? `🍎 <b>애플 지갑 버튼 연결됨</b> · 손님 카드 페이지에 [애플 지갑에 추가] 버튼이 생겨요. <button id="ghChange" class="underline text-white/60">변경</button>`
+    : `🍎 <b>애플 지갑 버튼 연결 전</b> · 한 번만 연결하면 손님이 카드 페이지에서 버튼 한 번으로 지갑에 넣어요.
+       <div class="flex gap-2 mt-2"><input id="ghInput" class="flex-1 min-w-0 rounded-lg px-2.5 py-2 text-[#0B2A31] text-[13px]" placeholder="GitHub 토큰 붙여넣기 (github_pat_…)" autocomplete="off" autocapitalize="none" spellcheck="false"><button id="ghSave" class="px-3 rounded-lg bg-[#F08A3C] text-[#0B2A31] font-bold">연결</button></div>`;
+  const ch = $('#ghChange'); if (ch) ch.onclick = () => { if (confirm('지갑 버튼 연결을 해제하고 토큰을 다시 넣을까요?')) { try { localStorage.removeItem('linkpass.gh'); } catch (e) {} renderWalletSetup(); } };
+  const sv = $('#ghSave'); if (sv) sv.onclick = async () => {
+    const t = $('#ghInput').value.trim(); if (!t) return;
+    busy(true, '연결 확인 중…');
+    try {
+      const r = await fetch(`https://api.github.com/repos/${GH_REPO}`, { headers: { Authorization: `Bearer ${t}` } });
+      const j = await r.json();
+      if (!r.ok || !(j.permissions && j.permissions.push)) throw new Error('권한');
+      localStorage.setItem('linkpass.gh', t); toast('연결됐어요 ✅'); renderWalletSetup();
+    } catch (e) { toast('토큰을 확인해 주세요 (저장소 쓰기 권한 필요)'); }
+    busy(false);
+  };
+}
+async function uploadWallet(file, path) {
+  const tok = ghToken(); if (!tok) return false;
+  const api = `https://api.github.com/repos/${GH_REPO}/contents/${path}`;
+  const h = { Authorization: `Bearer ${tok}`, Accept: 'application/vnd.github+json' };
+  let sha;
+  try { const g = await fetch(api, { headers: h }); if (g.ok) sha = (await g.json()).sha; } catch (e) {}
+  const buf = new Uint8Array(await file.arrayBuffer());
+  const r = await fetch(api, { method: 'PUT', headers: h, body: JSON.stringify({ message: `회원카드 지갑 파일 ${path}`, content: btoa(u8ToBin(buf)), ...(sha ? { sha } : {}) }) });
+  return r.ok;
+}
+
 $('#sendTextBtn').onclick = async () => {
   if (!validate()) return;
   const text = customerMsg();
+  if (ghToken()) {
+    if (!CERT_PEM || !ENC_KEY || typeof forge === 'undefined') { toast('인터넷 연결을 확인해 주세요'); return; }
+    if (!(await unlock())) return;
+    busy(true, '지갑 버튼 준비 중…');
+    try {
+      const file = await buildPkpass({ ...form }, { hosted: true });
+      if (!(await uploadWallet(file, walletPath(form.number, form.tier)))) toast('지갑 파일 올리기 실패 · 안내는 그대로 보내요');
+    } catch (e) { toast('지갑 파일 만들기 실패 · 안내는 그대로 보내요'); }
+    busy(false);
+  }
   consumeSeq(form.number); saveHistory(); markDone();
   if (navigator.share) { try { await navigator.share({ text }); return; } catch (e) { if (e.name === 'AbortError') return; } }
   copyPlain(text); toast('복사했어요 · 카톡에 붙여넣으세요');
@@ -1016,6 +1062,7 @@ if (MODE === 'lc') {
   $('#fTitle').value = LC_CARD; setNumber(genMemberNo()); syncAuto();
   document.title = '링크클린 회원카드 발급기';
 }
+renderWalletSetup();
 brandIcon(); renderHistory(); syncUI();
 document.fonts && document.fonts.ready.then(() => renderPass());
 </script>
