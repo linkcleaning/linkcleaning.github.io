@@ -23,6 +23,8 @@
   html, body { background: var(--paper); }
   body { font-family:'IBM Plex Sans KR',system-ui,sans-serif; color:#0B2A31; -webkit-tap-highlight-color:transparent; -webkit-font-smoothing:antialiased; }
   .mono { font-family:'JetBrains Mono',ui-monospace,monospace; }
+  body.lc .gen { display:none !important; }
+  body:not(.lc) .lconly { display:none !important; }
   input, select, textarea { font-size:16px; }
   .inp { width:100%; border-radius:14px; background:#fff; border:1.5px solid rgba(11,42,49,.12); padding:12px 14px; outline:none; transition:border-color .2s; }
   .inp:focus { border-color: var(--orange); }
@@ -54,9 +56,17 @@
 
 <header class="bg-[#0B2A31] text-white" style="padding-top:calc(env(safe-area-inset-top) + 18px)">
   <div class="max-w-[520px] mx-auto px-5 pb-6">
-    <div class="mono text-[11px] tracking-[.28em] text-[#F3A86B] font-bold">LINK PASS</div>
-    <h1 class="text-[26px] font-bold leading-tight mt-1">아이폰 지갑에<br>멤버십 넣기</h1>
-    <p class="text-white/60 text-[13.5px] mt-2 leading-relaxed">번호만 넣으면 아이폰 기본 <b class="text-white">지갑(Wallet) 앱</b>에 바코드 카드로 들어가요.</p>
+    <div class="gen mono text-[11px] tracking-[.28em] text-[#F3A86B] font-bold">LINK PASS</div>
+    <h1 class="gen text-[26px] font-bold leading-tight mt-1">아이폰 지갑에<br>멤버십 넣기</h1>
+    <p class="gen text-white/60 text-[13.5px] mt-2 leading-relaxed">번호만 넣으면 아이폰 기본 <b class="text-white">지갑(Wallet) 앱</b>에 바코드 카드로 들어가요.</p>
+    <div class="lconly flex items-center gap-3">
+      <img src="lc-logo.png" alt="" class="w-12 h-12 rounded-full bg-white">
+      <div>
+        <div class="mono text-[11px] tracking-[.26em] text-[#F3A86B] font-bold">LINKCLEAN MEMBERS</div>
+        <h1 class="text-[22px] font-bold leading-tight mt-0.5">회원카드 발급기</h1>
+      </div>
+    </div>
+    <p class="lconly text-white/60 text-[13px] mt-3 leading-relaxed">등급 고르고 → 손님 이름 넣고 → 보내기. 번호는 자동으로 정해져요.</p>
   </div>
 </header>
 
@@ -74,11 +84,13 @@
   </section>
 
   <!-- 빠른 선택 -->
+  <div class="gen">
   <label class="lbl">어떤 카드인가요?</label>
   <div id="presets" class="flex gap-2 overflow-x-auto pb-1 -mx-5 px-5"></div>
+  </div>
 
   <!-- 스캔 -->
-  <div class="grid grid-cols-2 gap-2 mt-5">
+  <div class="gen grid grid-cols-2 gap-2 mt-5">
     <button id="scanCamBtn" class="tool bg-[#0B2A31] text-white">
       <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M3 8V6a2 2 0 0 1 2-2h2M17 4h2a2 2 0 0 1 2 2v2M21 16v2a2 2 0 0 1-2 2h-2M7 20H5a2 2 0 0 1-2-2v-2M7 9v6M10 9v6M13 9v6M17 9v6"/></svg>
       카메라로 스캔
@@ -89,12 +101,12 @@
     </button>
   </div>
 
-  <label class="lbl">카드 이름 *</label>
-  <input id="fTitle" class="inp" maxlength="20" placeholder="예: CJ ONE, 링크클린 회원카드">
+  <label class="lbl gen">카드 이름 *</label>
+  <input id="fTitle" class="inp gen" maxlength="20" placeholder="예: CJ ONE, 링크클린 회원카드">
 
-  <label class="lbl">멤버십 번호 *</label>
+  <label class="lbl"><span class="gen">멤버십 번호 *</span><span class="lconly">회원번호 (자동)</span></label>
   <input id="fNumber" class="inp mono tracking-[.12em] text-[18px]" inputmode="numeric" pattern="[0-9 ]*" autocomplete="off" autocapitalize="characters" spellcheck="false" placeholder="0000 0000 0000 0000">
-  <div class="flex items-start justify-between gap-3">
+  <div class="gen flex items-start justify-between gap-3">
     <p id="numHint" class="hint">* 숫자만 누르면 4자리마다 자동으로 띄워져요.</p>
     <button id="kbToggle" class="shrink-0 text-[12px] text-[#0B2A31]/50 underline mt-1.5">영문 섞인 번호예요</button>
   </div>
@@ -110,14 +122,14 @@
     <p class="mt-1.5 text-[#0B2A31]/60">창립년(2016) · 발급일 · 그날 몇 번째 · 중복방지 2자리 · 검증 1자리. 같은 번호가 다시 나오지 않아요.</p>
   </div>
 
-  <label class="lbl">번호 표기 방법</label>
-  <div id="segSpace" class="seg grid-cols-2">
+  <label class="lbl gen">번호 표기 방법</label>
+  <div id="segSpace" class="gen seg grid-cols-2">
     <button data-v="4">네 자리마다 띄어쓰기</button>
     <button data-v="0">모두 붙여쓰기</button>
   </div>
 
-  <label class="lbl">이름</label>
-  <input id="fHolder" class="inp" maxlength="20" placeholder="예: 한승우 (선택)">
+  <label class="lbl"><span class="gen">이름</span><span class="lconly">손님 이름 *</span></label>
+  <input id="fHolder" class="inp" maxlength="20" placeholder="예: 한승우">
 
   <div id="levelBox">
     <label class="lbl">등급</label>
@@ -134,6 +146,7 @@
     <div id="tierInfo" class="mt-3 rounded-2xl bg-white border border-black/10 px-4 py-3 text-[13px] leading-relaxed"></div>
   </div>
 
+  <div class="gen">
   <label class="lbl">바코드 종류</label>
   <div id="segCode" class="seg grid-cols-4">
     <button data-v="PKBarcodeFormatCode128">바코드</button>
@@ -145,8 +158,9 @@
 
   <label class="lbl">카드 색상</label>
   <div id="swatches" class="flex flex-wrap gap-3 items-center"></div>
+  </div>
 
-  <div id="imgBox">
+  <div id="imgBox" class="gen">
     <label class="lbl">카드 그림 <span class="font-normal opacity-60">(선택)</span></label>
     <div class="flex gap-2">
       <button id="imgPickBtn" class="tool flex-1 bg-white border border-black/10">
@@ -158,10 +172,10 @@
     <p class="hint">* 카드 앞면 사진을 넣으면 지갑에 카드 그림이 크게 보여요. 링크클린 회원카드는 로고 그림이 자동으로 들어가요.</p>
   </div>
 
-  <label class="lbl">뒷면 메모</label>
-  <textarea id="fMemo" rows="2" class="inp resize-none" placeholder="지갑에서 카드 뒷면(ⓘ)에 보이는 내용 (선택)"></textarea>
+  <label class="lbl"><span class="gen">뒷면 메모</span><span class="lconly">카드 뒷면 메모 <span class="font-normal opacity-60">(선택 · 손님에게 보여요)</span></span></label>
+  <textarea id="fMemo" rows="2" class="inp resize-none" placeholder="예: 2026.11 입주청소 24평"></textarea>
 
-  <button id="addBtn" class="mt-7 w-full rounded-2xl bg-black text-white py-4 font-bold text-[16px] flex items-center justify-center gap-2 active:scale-[.98] transition shadow-[0_10px_24px_rgba(0,0,0,.25)]">
+  <button id="addBtn" class="gen mt-7 w-full rounded-2xl bg-black text-white py-4 font-bold text-[16px] flex items-center justify-center gap-2 active:scale-[.98] transition shadow-[0_10px_24px_rgba(0,0,0,.25)]">
     <svg width="22" height="22" viewBox="0 0 24 24" fill="none"><rect x="3" y="5" width="18" height="14" rx="3" fill="#fff"/><rect x="3" y="7" width="18" height="3" fill="#4AA3DF"/><rect x="3" y="10" width="18" height="2.5" fill="#F5B83D"/><rect x="3" y="12.5" width="18" height="2.5" fill="#6CC04A"/></svg>
     Apple 지갑에 추가
   </button>
@@ -175,10 +189,11 @@
     <button id="sendAllBtn" class="tool w-full mt-3 bg-[#F08A3C] text-[#0B2A31]">📤 카드 파일 + 안내 보내기 (아이폰 손님)</button>
     <button id="sendSmsBtn" class="tool w-full mt-2 bg-white/10 text-white">💬 문자로 안내만 보내기 (안드로이드 손님)</button>
     <button id="copyMsgBtn" class="w-full mt-2 text-[12.5px] text-white/50 underline">안내 문구 복사 (카톡에 붙여넣기)</button>
+    <button id="selfAddBtn" class="w-full mt-1 text-[12.5px] text-white/50 underline">내 아이폰 지갑에 미리 넣어보기</button>
   </div>
-  <button id="saveBtn" class="mt-2 w-full rounded-2xl bg-white border border-black/10 py-3.5 font-semibold text-[14.5px] active:scale-[.98] transition">지갑에 안 들어가면: 파일로 저장해서 넣기</button>
+  <button id="saveBtn" class="gen mt-2 w-full rounded-2xl bg-white border border-black/10 py-3.5 font-semibold text-[14.5px] active:scale-[.98] transition">지갑에 안 들어가면: 파일로 저장해서 넣기</button>
 
-  <section class="mt-10 rounded-2xl bg-white border border-black/10 p-4">
+  <section class="lconly mt-10 rounded-2xl bg-white border border-black/10 p-4">
     <h2 class="font-bold text-[16px]">소개 코드 확인</h2>
     <p class="text-[12.5px] text-black/50 mt-1">새 손님이 말한 소개 코드(회원번호)를 넣으면 누가 소개했는지 알려줘요.</p>
     <input id="refCheck" class="inp mono tracking-[.12em] mt-3" inputmode="numeric" pattern="[0-9 ]*" placeholder="2016 ···· ···· ····">
@@ -186,11 +201,14 @@
   </section>
 
   <section id="historySec" class="hidden mt-10">
-    <h2 class="font-bold text-[16px] mb-3">내가 만든 패스</h2>
+    <h2 class="font-bold text-[16px] mb-3 flex items-center justify-between"><span><span class="gen">내가 만든 패스</span><span class="lconly">발급 대장</span></span><span id="histCount" class="lconly text-[13px] font-normal text-black/40"></span></h2>
+    <input id="histSearch" class="lconly inp mb-3 !py-2.5" placeholder="이름이나 번호로 찾기">
     <div id="history" class="space-y-2"></div>
   </section>
 
-  <details class="mt-10 rounded-2xl bg-white border border-black/10 px-4 py-3 text-[13.5px] leading-relaxed">
+  <a href="?mode=my" class="lconly block mt-10 text-center text-[13px] text-[#0B2A31]/50 underline">내 멤버십 카드(CJ ONE 등)를 내 지갑에 넣기 →</a>
+  <a href="./" class="gen block mt-10 text-center text-[13px] text-[#0B2A31]/60 underline">← 링크클린 회원카드 발급기로</a>
+  <details class="gen mt-6 rounded-2xl bg-white border border-black/10 px-4 py-3 text-[13.5px] leading-relaxed">
     <summary class="font-semibold cursor-pointer">사용 방법 · 자주 묻는 질문</summary>
     <ol class="list-decimal pl-5 mt-3 space-y-1.5">
       <li>카드 이름과 번호를 넣고 <b>Apple 지갑에 추가</b>를 누르세요.</li>
@@ -328,6 +346,8 @@ const PRESETS = [
 ];
 const COLORS = ['#0E5A66','#F08A3C','#4E9F3D','#1F2A44','#1E1E1E','#FFFFFF','#E3262D','#D6006F','#652F8D','#F39A1E','#A8844E','#2F6FDF'];
 
+const MODE = new URLSearchParams(location.search).get('mode') === 'my' ? 'my' : 'lc';
+if (MODE === 'lc') document.body.classList.add('lc');
 const form = { title: '', number: '', space: '4', holder: '', level: '', format: 'PKBarcodeFormatCode128', color: '#0E5A66', memo: '', auto: false, cardImg: '', tier: 's' };
 
 /* ===================== 링크클린 회원번호 자동 발급 =====================
@@ -820,8 +840,17 @@ function saveHistory(rename) {
 }
 function renderHistory() {
   const h = loadH();
-  $('#historySec').classList.toggle('hidden', !h.length);
-  $('#history').innerHTML = h.map((x, i) => `
+  const show = x => MODE === 'lc' ? (x.auto || x.title === LC_CARD) : !(x.auto || x.title === LC_CARD);
+  const q = ($('#histSearch')?.value || '').trim().replace(/\s/g, '');
+  const match = x => !q || (x.holder || '').includes(q) || cleanNum(x.number).includes(q) || (x.title || '').includes(q);
+  $('#historySec').classList.toggle('hidden', !h.some(show));
+  const cnt = h.filter(show).length; if ($('#histCount')) $('#histCount').textContent = cnt ? `${cnt}명` : '';
+  $('#history').innerHTML = h.map((x, i) => !show(x) || !match(x) ? '' : MODE === 'lc' ? `
+    <div class="flex items-center gap-3 rounded-2xl bg-white border border-black/10 px-3 py-2.5">
+      <span class="w-9 h-6 rounded-md shrink-0" style="background:linear-gradient(140deg,${(TIERS[x.tier] || TIERS.s).grad[0]},${(TIERS[x.tier] || TIERS.s).grad[2]})"></span>
+      <button data-load="${i}" class="flex-1 min-w-0 text-left"><div class="font-semibold text-[14.5px] truncate">${esc(x.holder || '이름 없음')} <span class="text-[11px] px-1.5 py-0.5 rounded-md bg-black/5 font-medium">${(TIERS[x.tier] || TIERS.s).name}</span></div><div class="mono text-[12px] text-black/50 truncate">${esc(fmtNum(x.number, '4'))}${x.at ? ' · ' + new Date(x.at).toLocaleDateString('ko-KR') : ''}</div></button>
+      <button data-del="${i}" class="w-9 h-9 rounded-full bg-black/5 text-black/40">✕</button>
+    </div>` : `
     <div class="flex items-center gap-3 rounded-2xl bg-white border border-black/10 px-3 py-2.5">
       <span class="w-9 h-6 rounded-md shrink-0 border border-black/10" style="background:${esc(x.color)}"></span>
       <button data-load="${i}" class="flex-1 min-w-0 text-left"><div class="font-semibold text-[14.5px] truncate">${esc(x.title)}${x.holder ? ` <span class="font-normal text-black/50">· ${esc(x.holder)}</span>` : ''}${x.auto && TIERS[x.tier] ? ` <span class="text-[11px] px-1.5 py-0.5 rounded-md bg-black/5">${TIERS[x.tier].name}</span>` : ''}</div><div class="mono text-[12px] text-black/50 truncate">${esc(fmtNum(x.number, '4'))}</div></button>
@@ -831,7 +860,7 @@ function renderHistory() {
 $('#history').addEventListener('click', e => {
   const l = e.target.closest('[data-load]'), d = e.target.closest('[data-del]'), h = loadH();
   if (l) { Object.assign(form, { auto: false, cardImg: '', tier: 's' }, h[+l.dataset.load]); fillInputs(); syncAuto(); syncUI(); scrollTo({ top: 0, behavior: 'smooth' }); toast(form.auto ? '불러왔어요 · 등급을 바꿔 다시 보낼 수 있어요' : '불러왔어요 · 다시 추가할 수 있어요'); }
-  if (d) { h.splice(+d.dataset.del, 1); try { localStorage.setItem(HKEY, JSON.stringify(h)); } catch (e) {} renderHistory(); }
+  if (d) { if (MODE === 'lc' && !confirm('발급 대장에서 지울까요? (손님 카드는 그대로예요)')) return; h.splice(+d.dataset.del, 1); try { localStorage.setItem(HKEY, JSON.stringify(h)); } catch (e) {} renderHistory(); }
 });
 function fillInputs() { $('#fTitle').value = form.title; setNumber(form.number); $('#fHolder').value = form.holder; $('#fLevel').value = form.level; $('#fMemo').value = form.memo; }
 
@@ -880,7 +909,7 @@ $('#scanPhotoBtn').onclick = () => {
 };
 
 /* ===================== 입력 이벤트 ===================== */
-$('#presets').innerHTML = PRESETS.map((p, i) => `<button class="chip" data-p="${i}" style="background:${p.c};color:${fg(p.c)};${isLight(p.c) ? 'border-color:rgba(0,0,0,.15)' : ''}">${esc(p.t)}</button>`).join('');
+$('#presets').innerHTML = PRESETS.map((p, i) => p.t === LC_CARD ? '' : `<button class="chip" data-p="${i}" style="background:${p.c};color:${fg(p.c)};${isLight(p.c) ? 'border-color:rgba(0,0,0,.15)' : ''}">${esc(p.t)}</button>`).join('');
 $('#presets').addEventListener('click', e => {
   const b = e.target.closest('[data-p]'); if (!b) return;
   const p = PRESETS[+b.dataset.p];
@@ -956,6 +985,13 @@ syncAuto();
 
 if (!CERT_PEM || !ENC_KEY) $('#setupBanner').classList.remove('hidden');
 if (inApp) $('#safariTip').classList.remove('hidden');
+$('#histSearch').addEventListener('input', renderHistory);
+$('#selfAddBtn').onclick = () => $('#addBtn').onclick();
+if (MODE === 'lc') {
+  form.auto = true; form.title = LC_CARD; form.color = '#0E5A66'; form.tier = 's'; form.level = TIERS.s.name; form.format = 'PKBarcodeFormatCode128';
+  $('#fTitle').value = LC_CARD; setNumber(genMemberNo()); syncAuto();
+  document.title = '링크클린 회원카드 발급기';
+}
 brandIcon(); renderHistory(); syncUI();
 document.fonts && document.fonts.ready.then(() => renderPass());
 </script>
