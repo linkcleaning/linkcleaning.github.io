@@ -67,6 +67,11 @@
       애플 지갑에 추가
     </a>
     <p id="walletHint" class="hidden text-center text-[12px] text-white/45 mt-2">한 번 누르면 아이폰 지갑(Wallet)에 카드가 들어가요</p>
+    <a id="gwalletBtn" class="hidden mt-3 flex items-center justify-center gap-2.5 rounded-2xl bg-black text-white py-4 font-bold text-[16px] border border-white/15 shadow-[0_10px_24px_rgba(0,0,0,.35)] active:scale-[.98] transition">
+      <svg width="26" height="20" viewBox="0 0 26 20" fill="none"><rect x="1" y="1" width="24" height="18" rx="3.5" fill="#fff"/><rect x="1" y="4" width="24" height="3.4" fill="#4285F4"/><rect x="1" y="7.4" width="24" height="3" fill="#34A853"/><rect x="1" y="10.4" width="24" height="3" fill="#FBBC04"/><rect x="1" y="13.4" width="24" height="2.4" fill="#EA4335"/></svg>
+      Google 지갑에 추가
+    </a>
+    <p id="gwalletHint" class="hidden text-center text-[12px] text-white/45 mt-2">한 번 누르면 구글 지갑에 카드가 들어가요</p>
 
     <h2 class="text-[17px] font-bold mt-8 mb-3"><span id="perkTitle">회원</span> 혜택</h2>
     <div class="space-y-2.5" id="benefits"></div>
@@ -272,6 +277,15 @@ if (valid(num)) {
       // 카카오톡 안에서는 지갑이 안 열려서 사파리로 넘겨서 엶
       a.href = /KAKAOTALK/i.test(navigator.userAgent) ? 'kakaotalk://web/openExternal?url=' + encodeURIComponent(wurl) : wurl;
       a.classList.remove('hidden'); $('#walletHint').classList.remove('hidden');
+    }).catch(() => {});
+  }
+  /* 구글 지갑 버튼 (안드로이드) */
+  if (!isIOS && /android/i.test(navigator.userAgent)) {
+    fetch(`/w/${tier}${BigInt(num).toString(36)}.gw`, { cache: 'no-store' }).then(r => r.ok ? r.text() : '').then(u => {
+      u = (u || '').trim(); if (!u.startsWith('https://pay.google.com/')) return;
+      const a = $('#gwalletBtn');
+      a.href = /KAKAOTALK/i.test(navigator.userAgent) ? 'kakaotalk://web/openExternal?url=' + encodeURIComponent(u) : u;
+      a.classList.remove('hidden'); $('#gwalletHint').classList.remove('hidden');
     }).catch(() => {});
   }
   $('#benefits').innerHTML = T.perks.map(b => `<div class="benefit"><div class="ico" style="background:${b.bg}">${b.ico}</div><div><div class="font-bold text-[15px]">${esc(b.t)}</div><div class="text-[13px] text-white/60 mt-0.5 leading-relaxed">${esc(b.d)}</div></div></div>`).join('');
