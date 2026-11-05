@@ -1,5 +1,5 @@
 // 간단한 오프라인 캐시 서비스워커 (앱 셸 캐시 + 네트워크 우선 페이지)
-const CACHE = 'field-manager-v1';
+const CACHE = 'field-manager-v2';
 const SHELL = ['./', './index.html', './manifest.webmanifest', './icon-192.png', './icon-512.png'];
 
 self.addEventListener('install', (e) => {
