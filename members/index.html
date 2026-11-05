@@ -1,0 +1,214 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="링크클린">
+<meta name="theme-color" content="#0B2A31">
+<meta name="format-detection" content="telephone=no">
+<title>링크클린 멤버스</title>
+<meta property="og:title" content="링크클린 멤버스 카드">
+<meta property="og:description" content="제주 청소 전문 링크클린 · SINCE 2016 — 회원 혜택과 지인 소개 코드를 확인하세요.">
+<meta property="og:image" content="https://linkcleaning.github.io/pass/lc-logo.png">
+<link rel="apple-touch-icon" href="../pass/lc-logo.png">
+<link rel="icon" href="../pass/lc-logo.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+KR:wght@400;500;600;700&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="https://cdn.jsdelivr.net/npm/jsbarcode@3.11.6/dist/JsBarcode.all.min.js"></script>
+<style>
+  html, body { background:#0B2A31; }
+  body { font-family:'IBM Plex Sans KR',system-ui,sans-serif; color:#fff; -webkit-tap-highlight-color:transparent; -webkit-font-smoothing:antialiased;
+    background: radial-gradient(120% 50% at 100% 0%, rgba(240,138,60,.18), transparent 60%), radial-gradient(90% 40% at 0% 8%, rgba(17,96,109,.6), transparent 70%), #0B2A31; min-height:100dvh; }
+  .mono { font-family:'JetBrains Mono',ui-monospace,monospace; }
+  .btn { display:flex; align-items:center; justify-content:center; gap:8px; border-radius:16px; padding:15px 12px; font-weight:700; font-size:15px; transition:transform .15s; }
+  .btn:active { transform:scale(.97); }
+  .benefit { border-radius:18px; background:rgba(255,255,255,.06); border:1px solid rgba(255,255,255,.1); padding:14px 16px; display:flex; gap:12px; align-items:flex-start; }
+  .benefit .ico { width:40px; height:40px; border-radius:12px; display:grid; place-items:center; flex-shrink:0; font-size:20px; }
+  #cardCanvas { width:100%; height:auto; display:block; border-radius:18px; box-shadow:0 22px 50px rgba(0,0,0,.45); }
+  .rise { animation:rise .7s cubic-bezier(.2,.85,.25,1) both; }
+  @keyframes rise { from { opacity:0; transform:translateY(24px) rotateX(18deg); } }
+  #toast { transform:translate(-50%,20px); opacity:0; transition:all .35s cubic-bezier(.2,.85,.25,1); pointer-events:none; }
+  #toast.show { transform:translate(-50%,0); opacity:1; }
+</style>
+</head>
+<body>
+<main class="max-w-[480px] mx-auto px-5" style="padding-top:calc(env(safe-area-inset-top) + 18px);padding-bottom:calc(env(safe-area-inset-bottom) + 40px)">
+  <header class="flex items-center gap-3">
+    <img src="../pass/lc-logo.png" alt="링크클린" class="w-11 h-11 rounded-full bg-white">
+    <div>
+      <div class="mono text-[11px] tracking-[.26em] text-[#F3A86B] font-bold">LINKCLEAN MEMBERS</div>
+      <div class="text-[13px] text-white/60">제주 청소 전문 · SINCE 2016</div>
+    </div>
+  </header>
+
+  <!-- 내 회원카드 -->
+  <section id="memberView" class="hidden">
+    <h1 class="text-[26px] font-bold leading-tight mt-6"><span id="hiName"></span>님,<br>링크클린 멤버스 회원이에요</h1>
+    <div class="mt-6 rise" style="perspective:900px"><canvas id="cardCanvas"></canvas></div>
+
+    <div class="mt-4 rounded-2xl bg-white text-[#0B2A31] px-5 pt-4 pb-3">
+      <svg id="bar"></svg>
+      <div class="flex items-center justify-between mt-1">
+        <span class="text-[12px] text-black/50">회원번호 = 소개 코드</span>
+        <button id="copyNo" class="mono text-[14px] font-bold tracking-wider"></button>
+      </div>
+    </div>
+
+    <div id="walletTip" class="hidden mt-3 rounded-2xl bg-white/[.06] border border-white/10 px-4 py-3 text-[13px] text-white/75 leading-relaxed">
+      <b class="text-white">아이폰이세요?</b> 문자로 함께 받은 <b>링크클린 카드 파일</b>을 누르면 아이폰 지갑에 쏙 들어가요.
+    </div>
+
+    <h2 class="text-[17px] font-bold mt-8 mb-3">회원 혜택</h2>
+    <div class="space-y-2.5" id="benefits"></div>
+
+    <div class="mt-6 rounded-[22px] bg-gradient-to-br from-[#F08A3C] to-[#E9772E] text-[#0B2A31] p-5">
+      <div class="text-[13px] font-bold opacity-70">지인 소개 이벤트</div>
+      <div class="text-[20px] font-bold leading-snug mt-1">이사·입주 앞둔 지인에게<br>링크클린을 소개해 주세요</div>
+      <p class="text-[13.5px] mt-2 leading-relaxed opacity-80">소개받은 분이 계약하면 <b>스타벅스 커피 1잔</b>을 드려요. 아래 버튼으로 보내면 내 소개 코드가 자동으로 들어가요.</p>
+      <button id="shareRef" class="btn w-full mt-4 bg-[#0B2A31] text-white">💌 카톡·문자로 소개하기</button>
+    </div>
+  </section>
+
+  <!-- 친구 초대 -->
+  <section id="refView" class="hidden">
+    <div class="mt-7 rounded-[24px] bg-white text-[#0B2A31] p-6 rise">
+      <div class="text-[13px] font-bold text-[#E9772E]">초대장이 도착했어요</div>
+      <h1 class="text-[24px] font-bold leading-snug mt-1"><span id="refName">지인</span>님이<br>링크클린을 추천했어요</h1>
+      <p class="text-[14px] text-black/60 mt-3 leading-relaxed">제주에서 2016년부터 입주·이사청소, 유품정리, 특수청소, 외벽청소까지 맡아온 청소 전문 업체예요.</p>
+      <div class="mt-5 rounded-2xl bg-[#F6F1EA] px-4 py-3 flex items-center justify-between">
+        <div><div class="text-[12px] text-black/50">예약할 때 이 코드를 말씀해 주세요</div><div id="refCode" class="mono text-[17px] font-bold tracking-wider mt-0.5"></div></div>
+        <button id="copyRef" class="px-3 py-2 rounded-xl bg-[#0B2A31] text-white text-[13px] font-semibold">복사</button>
+      </div>
+    </div>
+    <h2 class="text-[17px] font-bold mt-8 mb-3">링크클린이 하는 일</h2>
+    <div class="grid grid-cols-2 gap-2 text-[14px]" id="services"></div>
+  </section>
+
+  <!-- 코드 없음 -->
+  <section id="plainView" class="hidden">
+    <h1 class="text-[26px] font-bold leading-tight mt-6">링크클린 멤버스</h1>
+    <p class="text-white/65 mt-2 leading-relaxed">청소를 맡겨주신 손님께 드리는 회원카드예요. 문자로 받은 링크로 들어오시면 내 카드가 보여요.</p>
+    <div class="mt-6 rise"><canvas id="cardCanvas2" style="width:100%;border-radius:18px;box-shadow:0 22px 50px rgba(0,0,0,.45)"></canvas></div>
+  </section>
+
+  <!-- 공통: 연락 -->
+  <section class="mt-8">
+    <div class="grid grid-cols-2 gap-2">
+      <a href="tel:050-6520-0440" class="btn bg-[#F08A3C] text-[#0B2A31]">📞 전화 예약·상담</a>
+      <a href="https://pf.kakao.com/_xfxdrxmM" class="btn bg-[#FEE500] text-[#191919]">💬 카카오톡 상담</a>
+    </div>
+    <a href="https://pf.kakao.com/_xfxdrxmM/friend" class="btn w-full mt-2 bg-white/[.08] border border-white/10 text-white text-[14px]">카카오톡 채널 추가하고 시즌 소식 받기</a>
+    <div class="grid grid-cols-3 gap-2 mt-2 text-[13px]">
+      <a href="https://www.linkclean.co.kr" class="btn bg-white/[.06] text-white/85 font-semibold py-3">홈페이지</a>
+      <a href="https://m.blog.naver.com/linkcleaning" class="btn bg-white/[.06] text-white/85 font-semibold py-3">블로그</a>
+      <a href="https://instagram.com/linkcleaning" class="btn bg-white/[.06] text-white/85 font-semibold py-3">인스타</a>
+    </div>
+    <p class="text-center text-[12px] text-white/40 mt-6 leading-relaxed">연중무휴 08:30~20:00 · 제주 전지역 무료견적<br>링크클린 · 제주청소협동조합(JCC) 조합원</p>
+  </section>
+</main>
+
+<div id="toast" class="fixed left-1/2 z-50 px-5 py-3 rounded-full bg-[#F08A3C] text-[#0B2A31] font-bold text-[15px] shadow-[0_10px_30px_rgba(0,0,0,.35)] whitespace-nowrap" style="bottom:calc(env(safe-area-inset-bottom) + 30px)"><span id="toastText"></span></div>
+
+<script>
+/* ============ 혜택 문구 (여기만 바꾸면 전체에 반영) ============ */
+const BENEFITS = [
+  { ico: '☕', bg: '#F08A3C', t: '후기 쓰면 스타벅스 1잔', d: '청소 후 네이버 플레이스에 후기를 남겨주시면 커피를 보내드려요.' },
+  { ico: '💌', bg: '#6DBE45', t: '지인 소개하면 스타벅스 1잔', d: '소개 코드로 지인이 계약하면 소개해주신 분께 드려요.' },
+  { ico: '🔁', bg: '#2F8C9B', t: '다시 부를 땐 회원 우선 상담', d: '회원번호만 말씀하시면 지난 작업 내용을 바로 확인하고 상담해 드려요.' }
+];
+const SERVICES = ['🏠 입주·이사청소', '🏢 사무실·상가', '🏗️ 준공청소', '🪟 유리창·외벽', '🗑️ 쓰레기집·특수청소', '📦 유품정리·폐기물', '🌿 오존 살균 탈취', '🏘️ 타운하우스 관리'];
+
+const $ = s => document.querySelector(s);
+const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' }[c]));
+let tt; function toast(m) { $('#toastText').textContent = m; $('#toast').classList.add('show'); clearTimeout(tt); tt = setTimeout(() => $('#toast').classList.remove('show'), 1700); }
+async function copy(t) { try { await navigator.clipboard.writeText(t); } catch (e) { const a = document.createElement('textarea'); a.value = t; document.body.appendChild(a); a.select(); document.execCommand('copy'); a.remove(); } toast('복사되었습니다'); }
+
+/* 회원번호 검증 (2016 + YYMMDD + 순번 + 중복방지 + Luhn) */
+function luhnDigit(body) { let s = 0; for (let i = 0; i < body.length; i++) { let n = +body[body.length - 1 - i]; if (i % 2 === 0) { n *= 2; if (n > 9) n -= 9; } s += n; } return (10 - s % 10) % 10; }
+const valid = n => /^2016\d{12}$/.test(n) && luhnDigit(n.slice(0, 15)) === +n[15];
+const g4 = n => n.replace(/(.{4})(?=.)/g, '$1 ');
+const mask = nm => { const a = [...String(nm || '')]; if (a.length <= 1) return a.join(''); if (a.length === 2) return a[0] + '*'; return a[0] + '*'.repeat(a.length - 2) + a[a.length - 1]; };
+
+const qs = new URLSearchParams(location.search);
+let num = (qs.get('n') || '').replace(/\D/g, ''), name = (qs.get('m') || '').slice(0, 20);
+const ref = (qs.get('ref') || '').replace(/\D/g, ''), refName = (qs.get('r') || '').slice(0, 20);
+
+/* 내 카드 기억 (홈 화면에 추가했을 때 링크 없이도 열리게) */
+try {
+  if (valid(num)) localStorage.setItem('lc.member', JSON.stringify({ num, name }));
+  else if (!ref) { const s = JSON.parse(localStorage.getItem('lc.member') || 'null'); if (s && valid(s.num)) { num = s.num; name = s.name; } }
+} catch (e) {}
+
+/* ============ 카드 그림 ============ */
+const logo = new Image(); logo.src = '../pass/lc-logo.png';
+function rr(x, X, Y, W, H, R) { x.beginPath(); x.moveTo(X + R, Y); x.arcTo(X + W, Y, X + W, Y + H, R); x.arcTo(X + W, Y + H, X, Y + H, R); x.arcTo(X, Y + H, X, Y, R); x.arcTo(X, Y, X + W, Y, R); x.closePath(); }
+function drawCard(cv, nm, no) {
+  const W = 340, H = Math.round(W / 1.586), S = 3;
+  cv.width = W * S; cv.height = H * S; const x = cv.getContext('2d'); x.scale(S, S);
+  rr(x, 0, 0, W, H, 16); x.clip();
+  const g = x.createLinearGradient(0, 0, W, H); g.addColorStop(0, '#16808F'); g.addColorStop(.55, '#0E5A66'); g.addColorStop(1, '#072E35');
+  x.fillStyle = g; x.fillRect(0, 0, W, H);
+  const lx = W * .74, ly = H * .44;
+  const rg = x.createRadialGradient(lx, ly, 6, lx, ly, H * .85); rg.addColorStop(0, 'rgba(240,138,60,.42)'); rg.addColorStop(1, 'rgba(240,138,60,0)'); x.fillStyle = rg; x.fillRect(0, 0, W, H);
+  x.strokeStyle = 'rgba(255,255,255,.05)'; x.lineWidth = 1; for (let i = -H; i < W; i += 9) { x.beginPath(); x.moveTo(i, H); x.lineTo(i + H * .6, 0); x.stroke(); }
+  x.strokeStyle = '#6DBE45'; x.lineWidth = 3.5; x.beginPath(); x.arc(lx, ly, H * .38, Math.PI * .55, Math.PI * 1.45); x.stroke();
+  if (logo.complete && logo.naturalWidth) {
+    const sz = H * .62; x.save(); x.shadowColor = 'rgba(0,0,0,.4)'; x.shadowBlur = 12; x.beginPath(); x.arc(lx, ly, sz / 2, 0, Math.PI * 2); x.fillStyle = '#fff'; x.fill(); x.restore();
+    x.drawImage(logo, lx - sz / 2, ly - sz / 2, sz, sz);
+  }
+  x.fillStyle = '#fff'; x.font = "700 24px 'JetBrains Mono', monospace"; x.fillText('LINKCLEAN', 20, 42);
+  x.fillStyle = '#F3A86B'; x.font = "700 11px 'JetBrains Mono', monospace"; let px = 21; for (const c of 'MEMBERS') { x.fillText(c, px, 59); px += x.measureText(c).width + 3.4; }
+  rr(x, 20, 76, 32, 24, 5); const cg = x.createLinearGradient(20, 76, 52, 100); cg.addColorStop(0, '#F8DCA0'); cg.addColorStop(1, '#C3923F'); x.fillStyle = cg; x.fill();
+  x.strokeStyle = 'rgba(0,0,0,.25)'; x.lineWidth = .8; x.beginPath(); x.moveTo(20, 88); x.lineTo(52, 88); x.moveTo(36, 76); x.lineTo(36, 100); x.stroke();
+  if (no) { x.fillStyle = '#fff'; x.font = "500 14.5px 'JetBrains Mono', monospace"; x.fillText(g4(no), 20, H - 34); }
+  x.fillStyle = 'rgba(255,255,255,.82)'; x.font = "600 11.5px 'IBM Plex Sans KR', sans-serif";
+  x.fillText(nm ? `${nm} 님` : '제주 청소 전문 · SINCE 2016', 20, H - 16);
+  const gl = x.createLinearGradient(0, 0, 0, H * .55); gl.addColorStop(0, 'rgba(255,255,255,.16)'); gl.addColorStop(1, 'rgba(255,255,255,0)'); x.fillStyle = gl; x.fillRect(0, 0, W, H * .55);
+}
+
+/* ============ 화면 ============ */
+const isIOS = /iphone|ipad|ipod/i.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+function draw() {
+  if (valid(num)) drawCard($('#cardCanvas'), name, num);
+  else if (!valid(ref)) drawCard($('#cardCanvas2'), '', '');
+}
+if (valid(num)) {
+  $('#memberView').classList.remove('hidden');
+  $('#hiName').textContent = name || '회원';
+  $('#copyNo').textContent = g4(num);
+  $('#copyNo').onclick = () => copy(num);
+  try {
+    JsBarcode('#bar', num, { format: 'CODE128', displayValue: false, margin: 0, height: 64, width: 2 });
+    const s = $('#bar'), w = s.getAttribute('width'), h = s.getAttribute('height');
+    s.setAttribute('viewBox', `0 0 ${w} ${h}`); s.setAttribute('preserveAspectRatio', 'none'); s.removeAttribute('width'); s.removeAttribute('height'); s.style.width = '100%'; s.style.height = '64px';
+  } catch (e) {}
+  if (isIOS) $('#walletTip').classList.remove('hidden');
+  $('#benefits').innerHTML = BENEFITS.map(b => `<div class="benefit"><div class="ico" style="background:${b.bg}">${b.ico}</div><div><div class="font-bold text-[15px]">${esc(b.t)}</div><div class="text-[13px] text-white/60 mt-0.5 leading-relaxed">${esc(b.d)}</div></div></div>`).join('');
+  $('#shareRef').onclick = async () => {
+    const url = `${location.origin}${location.pathname}?ref=${num}${name ? '&r=' + encodeURIComponent(mask(name)) : ''}`;
+    const text = `제주에서 청소 업체 찾으면 링크클린 추천해요! 예약할 때 소개 코드 ${g4(num)} 말하면 돼요.`;
+    if (navigator.share) { try { await navigator.share({ title: '링크클린 소개', text, url }); return; } catch (e) { if (e.name === 'AbortError') return; } }
+    copy(text + '\n' + url);
+  };
+  document.title = `${name ? name + '님의 ' : ''}링크클린 멤버스 카드`;
+} else if (valid(ref)) {
+  $('#refView').classList.remove('hidden');
+  $('#refName').textContent = refName || '지인';
+  $('#refCode').textContent = g4(ref);
+  $('#copyRef').onclick = () => copy(ref);
+  $('#services').innerHTML = SERVICES.map(s => `<div class="rounded-2xl bg-white/[.06] border border-white/10 px-3 py-3 font-semibold">${s}</div>`).join('');
+  document.title = '링크클린 초대장';
+} else {
+  $('#plainView').classList.remove('hidden');
+}
+logo.onload = draw;
+draw();
+document.fonts && document.fonts.ready.then(draw);
+</script>
+</body>
+</html>

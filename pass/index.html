@@ -150,7 +150,21 @@
     <svg width="22" height="22" viewBox="0 0 24 24" fill="none"><rect x="3" y="5" width="18" height="14" rx="3" fill="#fff"/><rect x="3" y="7" width="18" height="3" fill="#4AA3DF"/><rect x="3" y="10" width="18" height="2.5" fill="#F5B83D"/><rect x="3" y="12.5" width="18" height="2.5" fill="#6CC04A"/></svg>
     Apple 지갑에 추가
   </button>
+  <div id="sendBox" class="hidden mt-3 rounded-2xl bg-[#0B2A31] text-white p-4">
+    <div class="font-bold text-[15px]">손님에게 회원카드 보내기</div>
+    <p class="text-[12.5px] text-white/60 mt-1 leading-relaxed">감사 인사 + 내 회원카드 링크 + 혜택 안내를 보내요. 아이폰 손님은 함께 가는 카드 파일을 누르면 지갑에 들어가요.</p>
+    <button id="sendAllBtn" class="tool w-full mt-3 bg-[#F08A3C] text-[#0B2A31]">📤 카드 파일 + 안내 보내기 (아이폰 손님)</button>
+    <button id="sendSmsBtn" class="tool w-full mt-2 bg-white/10 text-white">💬 문자로 안내만 보내기 (안드로이드 손님)</button>
+    <button id="copyMsgBtn" class="w-full mt-2 text-[12.5px] text-white/50 underline">안내 문구 복사 (카톡에 붙여넣기)</button>
+  </div>
   <button id="saveBtn" class="mt-2 w-full rounded-2xl bg-white border border-black/10 py-3.5 font-semibold text-[14.5px] active:scale-[.98] transition">지갑에 안 들어가면: 파일로 저장해서 넣기</button>
+
+  <section class="mt-10 rounded-2xl bg-white border border-black/10 p-4">
+    <h2 class="font-bold text-[16px]">소개 코드 확인</h2>
+    <p class="text-[12.5px] text-black/50 mt-1">새 손님이 말한 소개 코드(회원번호)를 넣으면 누가 소개했는지 알려줘요.</p>
+    <input id="refCheck" class="inp mono tracking-[.12em] mt-3" inputmode="numeric" pattern="[0-9 ]*" placeholder="2016 ···· ···· ····">
+    <div id="refResult" class="mt-2 text-[14px] leading-relaxed"></div>
+  </section>
 
   <section id="historySec" class="hidden mt-10">
     <h2 class="font-bold text-[16px] mb-3">내가 만든 패스</h2>
@@ -408,8 +422,6 @@ function drawStrip(scale, d) {
     const rg = x.createRadialGradient(lx, ly, 4, lx, ly, ch * .8);
     rg.addColorStop(0, 'rgba(240,138,60,.42)'); rg.addColorStop(1, 'rgba(240,138,60,0)');
     x.fillStyle = rg; x.fillRect(cx, cy, cw, ch);
-    x.strokeStyle = 'rgba(255,255,255,.05)'; x.lineWidth = 1;
-    for (let i = -ch; i < cw; i += 7) { x.beginPath(); x.moveTo(cx + i, cy + ch); x.lineTo(cx + i + ch * .6, cy); x.stroke(); }
     x.strokeStyle = '#6DBE45'; x.lineWidth = 2.5; x.beginPath(); x.arc(lx, ly, ch * .41, Math.PI * .55, Math.PI * 1.45); x.stroke();
     if (lcLogoReady) {
       const sz = ch * .68;
@@ -483,9 +495,11 @@ function renderPass() {
       svg.style.width = '100%'; svg.style.height = '56px';
     } catch (e) {}
   } else if (svg) svg.outerHTML = '<div class="h-[56px] grid place-items-center text-[12px] text-black/40">번호를 넣으면 바코드가 보여요</div>';
+  syncSend();
   const ib = $('#imgBox'); if (ib) { ib.classList.toggle('hidden', brand); $('#imgClearBtn').classList.toggle('hidden', !d.cardImg); }
 }
 function syncUI() {
+  syncSend();
   $$('#segSpace button').forEach(b => b.classList.toggle('on', b.dataset.v === form.space));
   $$('#segCode button').forEach(b => b.classList.toggle('on', b.dataset.v === form.format));
   $$('.swatch').forEach(s => s.classList.toggle('on', (s.dataset.c || '').toLowerCase() === form.color.toLowerCase()));
@@ -585,6 +599,9 @@ async function buildPkpass(d) {
       backFields: [
         ...(brand ? [
           { key: 'hello', label: '링크클린 멤버스', value: '링크클린을 이용해 주셔서 감사합니다. 청소 예약·상담 때 이 카드를 보여주세요.' },
+          { key: 'mine', label: '내 회원카드·혜택', value: memberUrl(num, d.holder) },
+          { key: 'benefit', label: '회원 혜택', value: '· 후기 남기면 스타벅스 1잔\n· 지인 소개로 계약되면 스타벅스 1잔\n· 예약할 때 회원번호를 말하면 지난 작업 기록으로 바로 상담' },
+          { key: 'ref', label: '지인 소개 코드', value: shown },
           { key: 'tel', label: '예약·상담', value: '050-6520-0440' },
           { key: 'web', label: '홈페이지', value: 'https://linkclean.co.kr' }
         ] : []),
@@ -604,7 +621,8 @@ async function buildPkpass(d) {
     'icon@3x.png': brand ? await canvasPng(drawLcIcon(87)) : await iconPng(87, d.color)
   };
   if (brand) for (const [sfx, sc] of [['', 1], ['@2x', 2], ['@3x', 3]]) files[`logo${sfx}.png`] = await canvasPng(drawLogo(sc));
-  if (hasStrip(d)) for (const [sfx, sc] of [['', 1], ['@2x', 2], ['@3x', 3]]) files[`strip${sfx}.png`] = await canvasPng(drawStrip(sc, d));
+  // 카드 그림은 @2x 한 장만 넣어 용량을 줄임 (아이폰이 알아서 맞춰 보여줌)
+  if (hasStrip(d)) files['strip@2x.png'] = await canvasPng(drawStrip(2, d));
   const manifest = {};
   for (const [n, b] of Object.entries(files)) manifest[n] = sha1Hex(b);
   const manifestBytes = enc.encode(JSON.stringify(manifest));
@@ -630,6 +648,25 @@ async function buildPkpass(d) {
   const name = (d.title.replace(/[\\/:*?"<>|]/g, '').trim() || 'pass') + '.pkpass';
   return new File([zip], name, { type: 'application/vnd.apple.pkpass' });
 }
+
+/* ===================== 손님에게 보내기 ===================== */
+const MEMBERS_URL = 'https://linkcleaning.github.io/members/';
+const memberUrl = (n, nm) => `${MEMBERS_URL}?n=${cleanNum(n)}${nm ? '&m=' + encodeURIComponent(nm) : ''}`;
+function customerMsg(withFile) {
+  const n = cleanNum(form.number), nm = form.holder || '고객';
+  return `[링크클린] ${nm}님, 청소를 맡겨주셔서 감사합니다 😊
+링크클린 멤버스 회원카드를 보내드려요.
+
+▶ 내 회원카드·혜택 보기
+${memberUrl(n, form.holder)}
+
+· 후기 남기면 스타벅스 1잔
+· 지인 소개로 계약되면 스타벅스 1잔
+  (소개 코드: ${fmtNum(n, '4')})
+${withFile ? '· 함께 보낸 카드 파일을 누르면 아이폰 지갑에 들어가요\n' : ''}
+예약·상담 050-6520-0440`;
+}
+function syncSend() { $('#sendBox').classList.toggle('hidden', !isBrand(form)); }
 
 /* ===================== 발급 ===================== */
 function validate() {
@@ -667,6 +704,37 @@ $('#addBtn').onclick = async () => {
   document.body.appendChild(a); a.click(); a.remove();
   setTimeout(() => URL.revokeObjectURL(url), 60000);
 };
+$('#sendAllBtn').onclick = async () => {
+  const file = await make(); if (!file) return;
+  const text = customerMsg(true);
+  if (navigator.canShare && navigator.canShare({ files: [file], text })) {
+    try { await navigator.share({ files: [file], text }); return; } catch (e) { if (e.name === 'AbortError') return; }
+  }
+  if (navigator.share) { try { await navigator.share({ text }); return; } catch (e) { if (e.name === 'AbortError') return; } }
+  copyPlain(text); toast('안내 문구를 복사했어요');
+};
+$('#sendSmsBtn').onclick = () => {
+  if (!validate()) return;
+  consumeSeq(form.number); saveHistory();
+  const a = document.createElement('a');
+  a.href = (isIOS ? 'sms:&body=' : 'sms:?body=') + encodeURIComponent(customerMsg(false));
+  document.body.appendChild(a); a.click(); a.remove();
+};
+$('#copyMsgBtn').onclick = () => { if (!validate()) return; consumeSeq(form.number); saveHistory(); copyPlain(customerMsg(false)); toast('복사했어요 · 카톡에 붙여넣으세요'); };
+async function copyPlain(t) { try { await navigator.clipboard.writeText(t); } catch (e) { const a = document.createElement('textarea'); a.value = t; document.body.appendChild(a); a.select(); document.execCommand('copy'); a.remove(); } }
+
+/* 소개 코드 확인 */
+$('#refCheck').addEventListener('input', e => {
+  const raw = e.target.value.replace(/\D/g, '').slice(0, 16);
+  e.target.value = raw.replace(/(.{4})(?=.)/g, '$1 ');
+  const out = $('#refResult');
+  if (raw.length < 16) { out.innerHTML = raw ? '<span class="text-black/40">16자리를 모두 넣어주세요</span>' : ''; return; }
+  if (!isLcNumber(raw)) { out.innerHTML = '<span class="text-[#C2410C] font-semibold">❌ 링크클린 회원번호가 아니에요 (번호를 다시 확인해 주세요)</span>'; return; }
+  const who = loadH().find(x => cleanNum(x.number) === raw);
+  const day = `20${raw.slice(4, 6)}년 ${+raw.slice(6, 8)}월 ${+raw.slice(8, 10)}일 · ${+raw.slice(10, 13)}번째 발급`;
+  out.innerHTML = `<span class="text-[#0E5A66] font-bold">✅ 진짜 링크클린 회원번호예요</span><br>${who ? `소개한 분: <b>${esc(who.holder || '이름 없음')}</b>${who.level ? ' · ' + esc(who.level) : ''}<br>` : '<span class="text-black/50">이 휴대폰 발급 기록에는 없어요 (다른 폰에서 발급했을 수 있어요)</span><br>'}<span class="text-black/50">${day}</span>`;
+});
+
 $('#saveBtn').onclick = async () => {
   const file = await make(); if (!file) return;
   if (navigator.canShare && navigator.canShare({ files: [file] })) {
