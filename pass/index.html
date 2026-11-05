@@ -703,8 +703,7 @@ async function buildPkpass(d) {
         { key: 'by', label: '만든 곳', value: '링크 패스 · linkcleaning.github.io/pass' }
       ]
     },
-    barcodes: [{ format: d.format, message: num, messageEncoding: 'iso-8859-1', altText: shown }],
-    barcode: { format: d.format, message: num, messageEncoding: 'iso-8859-1', altText: shown }
+    barcodes: [{ format: d.format, message: num, messageEncoding: 'iso-8859-1', altText: shown }]
   };
   const enc = new TextEncoder();
   const files = {
@@ -715,7 +714,7 @@ async function buildPkpass(d) {
   };
   if (brand) for (const [sfx, sc] of [['', 1], ['@2x', 2], ['@3x', 3]]) files[`logo${sfx}.png`] = await canvasPng(drawLogo(sc));
   // 카드 그림은 @2x 한 장만 넣어 용량을 줄임 (아이폰이 알아서 맞춰 보여줌)
-  if (hasStrip(d)) files['strip@2x.png'] = await canvasPng(drawStrip(2, d));
+  if (hasStrip(d)) { files['strip.png'] = await canvasPng(drawStrip(1, d)); files['strip@2x.png'] = await canvasPng(drawStrip(2, d)); }
   const manifest = {};
   for (const [n, b] of Object.entries(files)) manifest[n] = sha1Hex(b);
   const manifestBytes = enc.encode(JSON.stringify(manifest));
