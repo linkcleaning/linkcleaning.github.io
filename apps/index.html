@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>링크 앱 현황판</title>
+<meta name="theme-color" content="#0d4f57">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="앱 현황판">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Do+Hyeon&family=IBM+Plex+Sans+KR:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root {
+  /* 링크클린 브랜드: 진한 청록 바탕 + 따뜻한 주황 강조 + 로고 초록 포인트. 상태별 세로 띠가 있는 한 줄 카드 목록 */
+  --teal: #0d4f57;
+  --teal-soft: #e3eeee;
+  --orange: #e8792b;
+  --green: #3fa34d;
+  --ink: #17282b;
+  --muted: #5d7275;
+  --bg: #f4f6f4;
+  --card: #ffffff;
+  --line: #d6e0df;
+  --plan: #8d9a9b;
+  --font-display: "Do Hyeon", "IBM Plex Sans KR", sans-serif;
+  --font-body: "IBM Plex Sans KR", -apple-system, "Apple SD Gothic Neo", sans-serif;
+  color-scheme: light;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --teal: #5fb3b8; --teal-soft: #173337; --orange: #f2954f; --green: #6cc276;
+    --ink: #e6eeee; --muted: #9db0b2; --bg: #0f1a1c; --card: #16252a; --line: #24393d; --plan: #7b8b8d;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --teal: #5fb3b8; --teal-soft: #173337; --orange: #f2954f; --green: #6cc276;
+  --ink: #e6eeee; --muted: #9db0b2; --bg: #0f1a1c; --card: #16252a; --line: #24393d; --plan: #7b8b8d;
+  color-scheme: dark;
+}
+* { box-sizing: border-box; }
+body { margin: 0; background: var(--bg); color: var(--ink); font-family: var(--font-body); font-size: 15px; line-height: 1.5; }
+.wrap { max-width: 760px; margin: 0 auto; padding: 20px 16px 48px; display: grid; gap: 22px; }
+header { display: grid; gap: 4px; }
+h1 { font-family: var(--font-display); font-weight: 400; font-size: 30px; margin: 0; color: var(--teal); text-wrap: balance; }
+h1 span { color: var(--orange); }
+.sub { color: var(--muted); font-size: 13px; margin: 0; }
+
+.tiles { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; }
+.tile { appearance: none; border: 1px solid var(--line); background: var(--card); border-radius: 10px; padding: 10px 8px; text-align: left; cursor: pointer; font: inherit; color: inherit; display: grid; gap: 2px; border-top: 4px solid var(--c); }
+.tile b { font-family: var(--font-display); font-weight: 400; font-size: 26px; line-height: 1; font-variant-numeric: tabular-nums; color: var(--c); }
+.tile small { font-size: 12px; color: var(--muted); }
+.tile[aria-pressed="true"] { background: var(--teal-soft); border-color: var(--c); }
+.tile:focus-visible, .chip:focus-visible, input:focus-visible, a:focus-visible { outline: 2px solid var(--orange); outline-offset: 2px; }
+
+.search { width: 100%; padding: 11px 14px; border-radius: 10px; border: 1px solid var(--line); background: var(--card); color: var(--ink); font: inherit; }
+
+section { display: grid; gap: 8px; }
+h2 { font-family: var(--font-display); font-weight: 400; font-size: 20px; margin: 0; display: flex; align-items: baseline; gap: 8px; }
+h2 em { font-style: normal; font-family: var(--font-body); font-size: 12px; color: var(--muted); }
+
+.row { background: var(--card); border: 1px solid var(--line); border-left: 5px solid var(--c); border-radius: 10px; padding: 11px 12px; display: grid; gap: 6px; }
+.row.merged { opacity: .62; }
+.top { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.name { font-weight: 600; font-size: 16px; }
+.pill { font-size: 11px; font-weight: 600; padding: 2px 8px; border-radius: 99px; color: var(--c); border: 1px solid var(--c); white-space: nowrap; }
+.desc { margin: 0; color: var(--muted); font-size: 13.5px; }
+.note { margin: 0; font-size: 13px; }
+.note::before { content: "지금 "; color: var(--orange); font-weight: 600; }
+.links { display: grid; gap: 6px; }
+.lk { display: flex; align-items: center; gap: 8px; text-decoration: none; color: var(--ink); background: var(--teal-soft); border-radius: 8px; padding: 7px 10px; min-width: 0; }
+.lk b { flex: none; font-size: 11px; font-weight: 600; color: var(--bg); background: var(--teal); padding: 2px 7px; border-radius: 6px; }
+.lk.store b { background: var(--orange); }
+.lk span { font-size: 13px; overflow-wrap: anywhere; font-variant-numeric: tabular-nums; }
+.lk.text { background: none; border: 1px dashed var(--line); color: var(--muted); }
+.lk.text b { background: var(--plan); }
+.empty { color: var(--muted); text-align: center; padding: 24px 0; }
+footer { color: var(--muted); font-size: 12px; }
+@media (max-width: 420px) { .tiles { grid-template-columns: repeat(2, 1fr); } }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <h1>링크 앱 <span>현황판</span></h1>
+    <p class="sub">한승우 대표가 Claude와 만든 앱 전체 · 2026년 11월 6일 기준</p>
+  </header>
+
+  <div class="tiles" id="tiles"></div>
+  <label for="q" class="sub" style="display:none">앱 이름 검색</label>
+  <input id="q" class="search" type="search" placeholder="앱 이름으로 찾기 (예: 영수증, 화장실)">
+  <main id="list" style="display:grid; gap:22px;"></main>
+
+  <footer>PWA는 주소를 눌러 열고, 사파리 공유 → 홈 화면에 추가로 설치해요. 스토어 앱은 주황색 버튼으로 열려요. 상태가 바뀌면 Claude에게 “현황판 업데이트해줘”라고 말해 주세요.</footer>
+</div>
+
+<script>
+const S = {
+  live:   { label: "사용 중",   c: "var(--green)" },
+  store:  { label: "스토어",    c: "var(--orange)" },
+  dev:    { label: "개발 중",   c: "var(--teal)" },
+  plan:   { label: "기획",      c: "var(--plan)" },
+  merged: { label: "통합됨",    c: "var(--plan)" }
+};
+const G = "https://linkcleaning.github.io/";
+const P = "https://play.google.com/store/apps/details?id=";
+// l: [종류, 주소] — 종류: web(PWA 주소), store(스토어 링크), text(링크 없는 안내)
+const apps = [
+  { cat: "링크클린 업무용", name: "콜백문자", s: "live", d: "통화 직후 감사 인사·홍보 사진 문자 보내기", l: [["web", G+"callback/"], ["web", G+"android-app/", "안드로이드"], ["web", G+"callback-app/", "자동콜백 설치"]] },
+  { cat: "링크클린 업무용", name: "간이영수증·견적서", s: "live", d: "영수증·견적서 작성 후 카톡 전송, 링크클린 도장 내장", l: [["web", G+"receipt/"]] },
+  { cat: "링크클린 업무용", name: "순위노트", s: "live", d: "네이버 플레이스 키워드 순위 기록 + 세팅 체크리스트", l: [["web", G+"rank/"]] },
+  { cat: "링크클린 업무용", name: "후기부스터", s: "live", d: "플레이스·구글 후기 요청과 관리, 직원 공용", l: [["web", G+"review/"]] },
+  { cat: "링크클린 업무용", name: "인스타 영업 비서", s: "live", d: "제주 사장님·부동산·인테리어 잠재 고객 찾기, 영업장부", n: "공공데이터로 신규 타겟 자동 수집 연결", l: [["web", G+"insta/"]] },
+  { cat: "링크클린 업무용", name: "모바일 명함", s: "live", d: "콜백 문자에 넣는 링크클린 명함 페이지", l: [["web", G+"card/"]] },
+  { cat: "링크클린 업무용", name: "링크 패스", s: "live", d: "아이폰 지갑에 넣는 링크클린 회원카드 발급 (실버·골드·VIP·패밀리)", n: "구글 월렛 발급자 가입 진행", l: [["web", G+"pass/"]] },
+  { cat: "링크클린 업무용", name: "링크클린 멤버스", s: "live", d: "손님용 회원 페이지, 지인 소개 코드", l: [["web", G+"members/"]] },
+  { cat: "링크클린 업무용", name: "통합 현장관리", s: "live", d: "별장·계단·건물 입퇴실·청소 일정, 현장 리포트, 대납 정산", l: [["web", G+"field/"]] },
+  { cat: "링크클린 업무용", name: "AI 비서실", s: "live", d: "대표용 하루 일과·마케팅 브리핑, 시리 음성 연동", l: [["web", G+"ai-secretary/"]] },
+  { cat: "링크클린 업무용", name: "문앞비움", s: "dev", d: "서귀포 문 앞 쓰레기 수거 서비스 (위미~모슬포)", n: "카카오 로그인 작동, Cloudflare 배포 예정", l: [["text", "GitHub · linkclean-pickup"]] },
+  { cat: "링크클린 업무용", name: "블로그 자동 작성", s: "dev", d: "현장 사진 + 키워드로 Claude가 네이버 블로그 후기 작성", n: "Claude API 연동 단계, 워드프레스 연결 예정" },
+  { cat: "링크클린 업무용", name: "현장보고", s: "dev", d: "구역 버튼 → 사진 → 카톡으로 고객에게 진행상황·하자 보고" },
+  { cat: "링크클린 업무용", name: "현장홍보", s: "dev", d: "비포/애프터 인스타 문구, 견적 문자, 크리머스 케이크 모드", n: "블로그·포트폴리오 탭을 문자·체크리스트 탭으로 교체 중" },
+
+  { cat: "세무", name: "링크클린 세무장부", s: "live", d: "매출·매입 신호등 분류, 홈택스 신고용 요약표", n: "세금통장 합치기, 고정비 자동 입력 추가 예정", l: [["web", G+"ledger/"]] },
+  { cat: "세무", name: "세금통장", s: "merged", d: "세금 적립 대시보드·간편장부", n: "세무장부로 합치기로 함" },
+  { cat: "세무", name: "부가세 셀프신고", s: "plan", d: "세무대리인 없이 홈택스 데이터로 부가세 신고, 무료 방식 우선" },
+
+  { cat: "출시·공개용 앱", name: "기억지도", s: "store", d: "전국 장례식장·화장시설 안내", n: "iOS 출시 (11월 3일 승인), 안드로이드 Play 검토 중", l: [["text", "App Store에서 ‘기억지도’ 검색"], ["store", P+"com.linkclean.memorialmap", "Google Play"], ["web", G+"memorial-map/", "고객 지원"]] },
+  { cat: "출시·공개용 앱", name: "Ddong 전국 공중화장실", s: "store", d: "전국 공중화장실 지도, 길안내, 이용자 사진", n: "Play 프로덕션 검토 제출, 아이폰판은 ‘빼기’로 준비", l: [["store", P+"com.linkdole.ddong", "Google Play"], ["text", "GitHub · ddong-korea"]] },
+  { cat: "출시·공개용 앱", name: "제주·서울경기·부산 화장실", s: "merged", d: "지역별 Ddong 앱 3종", n: "전국판 하나로 합침" },
+  { cat: "출시·공개용 앱", name: "띠링", s: "store", d: "로또 추첨기식 오늘의 운세 (일진·당사주·주역)", n: "iOS·구글 플레이 출시 준비", l: [["web", "https://ttiring.han0829.workers.dev"]] },
+  { cat: "출시·공개용 앱", name: "행운로또 생성기", s: "store", d: "가족 생일·차량 번호 가중치로 5게임 추첨, 당첨 확인", n: "iOS 먼저 출시 예정, 이후 구글 플레이", l: [["text", "GitHub · lucky-lotto (주소 알려주세요)"]] },
+  { cat: "출시·공개용 앱", name: "픽컷", s: "live", d: "베스트 컷 고르기, 비슷한 사진 묶기, 로고 자동 삽입", l: [["web", G+"pickcut/"]] },
+  { cat: "출시·공개용 앱", name: "찍어찍어!", s: "dev", d: "사진으로 감정 이모티콘 12종 스티커 팩 만들기", n: "하루 2팩 무료, 추가는 입금 후 풀어주는 방식" },
+  { cat: "출시·공개용 앱", name: "한몽 통역", s: "dev", d: "한국어 ↔ 몽골어 실시간 대화 통역, 누구나 사용", l: [["text", "GitHub · mongol-interpreter"]] },
+  { cat: "출시·공개용 앱", name: "단골노트", s: "dev", d: "단골 재방문 주기 관리와 원클릭 알림", l: [["text", "GitHub · dangol-note"]] },
+  { cat: "출시·공개용 앱", name: "약챙김", s: "dev", d: "부모님 원터치 복약 체크, 자녀 안심 알림" },
+  { cat: "출시·공개용 앱", name: "혈당코치", s: "plan", d: "혈당·식단 관리, AI 푸드 카메라, 신호등 코칭" },
+  { cat: "출시·공개용 앱", name: "온라인현수막", s: "plan", d: "광고 수익 방향 잡는 중" },
+
+  { cat: "개인용 도구", name: "오늘 뭐먹지?", s: "live", d: "제주 단골 식당·카페 기록", l: [["web", G+"mwomeokji/"]] },
+  { cat: "개인용 도구", name: "스마트 차계부", s: "live", d: "주유·정비 기록, 연비, 위치로 주유소 선택", l: [["web", G+"car-ledger/"]] },
+  { cat: "개인용 도구", name: "어디서 먹고 자지?", s: "dev", d: "전국 출장 맛집·숙소·휴게소 기록", l: [["text", "GitHub · chuljang-note"]] },
+  { cat: "개인용 도구", name: "스마트 카드지갑", s: "merged", d: "바코드·계좌번호 카드지갑 웹앱", n: "아이폰 지갑 연동 ‘링크 패스’로 이어짐", l: [["web", G+"wallet/"]] },
+
+  { cat: "게임", name: "RETRO ARCADE 1990", s: "live", d: "90년대 오락실 게임 5종 통합", l: [["web", G+"arcade/"]] },
+  { cat: "게임", name: "링크 더비", s: "live", d: "아케이드 경마, 가족·직원 크레딧 순위, 스타벅스 경품", l: [["web", G+"derby/"]] },
+  { cat: "게임", name: "체리마스터", s: "live", d: "8라인 슬롯머신 (아케이드에도 들어 있음)", l: [["web", G+"cherry/"]] },
+
+  { cat: "크리머스", name: "크리머스 홈페이지", s: "live", d: "광안리 케이크 가게 모바일 홈페이지, 예약 안내, 홍보 이미지" }
+];
+const cats = [...new Set(apps.map(a => a.cat))];
+let filter = null;
+const order = ["live", "store", "dev", "plan", "merged"];
+
+function esc(t){ return String(t).replace(/[&<>"]/g, c => ({ "&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;" }[c])); }
+
+function tiles(){
+  const el = document.getElementById("tiles");
+  el.innerHTML = ["live","store","dev","plan"].map(k => {
+    const n = apps.filter(a => a.s === k).length;
+    return `<button class="tile" style="--c:${S[k].c}" aria-pressed="${filter===k}" data-k="${k}"><b>${n}</b><small>${S[k].label}</small></button>`;
+  }).join("");
+  el.querySelectorAll(".tile").forEach(b => b.onclick = () => { filter = filter === b.dataset.k ? null : b.dataset.k; tiles(); render(); });
+}
+
+function card(a){
+  const st = S[a.s];
+  const short = u => u.replace(/^https?:\/\//, "").replace(/\/$/, "");
+  const links = (a.l || []).map(([k, u, lab]) => {
+    if (k === "text") return `<div class="lk text"><b>메모</b><span>${esc(u)}</span></div>`;
+    const tag = k === "store" ? (lab || "스토어") : (lab || "PWA");
+    const txt = k === "store" ? (lab === "Google Play" ? "play.google.com · " + u.split("id=")[1] : short(u)) : short(u);
+    return `<a class="lk ${k}" href="${u}" target="_blank" rel="noopener"><b>${esc(tag)}</b><span>${esc(txt)}</span></a>`;
+  });
+  return `<div class="row ${a.s==="merged"?"merged":""}" style="--c:${st.c}">
+    <div class="top"><span class="name">${esc(a.name)}</span><span class="pill">${st.label}</span></div>
+    <p class="desc">${esc(a.d)}</p>
+    ${a.n ? `<p class="note">${esc(a.n)}</p>` : ""}
+    ${links.length ? `<div class="links">${links.join("")}</div>` : ""}
+  </div>`;
+}
+
+function render(){
+  const q = document.getElementById("q").value.trim().toLowerCase();
+  const html = cats.map(c => {
+    const list = apps.filter(a => a.cat === c)
+      .filter(a => !filter || a.s === filter)
+      .filter(a => !q || (a.name + a.d + (a.n||"") + (a.repo||"")).toLowerCase().includes(q))
+      .sort((x, y) => order.indexOf(x.s) - order.indexOf(y.s));
+    if (!list.length) return "";
+    return `<section><h2>${esc(c)}<em>${list.length}개</em></h2>${list.map(card).join("")}</section>`;
+  }).join("");
+  document.getElementById("list").innerHTML = html || `<p class="empty">찾는 앱이 없어요. 다른 이름으로 검색해 보세요.</p>`;
+}
+document.getElementById("q").addEventListener("input", render);
+tiles(); render();
+</script>
+</body>
+</html>
