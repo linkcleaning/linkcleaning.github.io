@@ -1,13 +1,169 @@
 {
-"updated": "2026-11-05 10:36",
+"updated": "2026-11-06 10:43",
 "stats": {
-"cafe": 64,
-"restaurant": 119,
-"minbak": 63,
+"restaurant": 128,
+"minbak": 66,
+"cafe": 65,
 "build_done": 139,
 "build_start": 109
 },
 "items": [
+{
+"id": "restaurant:6510000-101-2026-00738",
+"src": "restaurant",
+"name": "아일로우",
+"type": "외국음식전문점(인도,태국등)",
+"addr": "제주특별자치도 제주시 한림읍 협재1길 54, 1층",
+"date": "2026-11-04",
+"area": "52.36",
+"tel": "",
+"franchise": false,
+"firstSeen": "2026-11-06 10:43"
+},
+{
+"id": "restaurant:6510000-101-2026-00737",
+"src": "restaurant",
+"name": "콰입(kwaip)",
+"type": "한식",
+"addr": "제주특별자치도 제주시 도령로 18, 1층 (노형동)",
+"date": "2026-11-04",
+"area": "45.10",
+"tel": "",
+"franchise": false,
+"firstSeen": "2026-11-06 10:43"
+},
+{
+"id": "restaurant:6510000-101-2026-00736",
+"src": "restaurant",
+"name": "맥주썸",
+"type": "호프/통닭",
+"addr": "제주특별자치도 제주시 노연로 116, 늘품 타워 1층 (연동)",
+"date": "2026-11-04",
+"area": "93.00",
+"tel": "",
+"franchise": false,
+"firstSeen": "2026-11-06 10:43"
+},
+{
+"id": "restaurant:6510000-101-2026-00735",
+"src": "restaurant",
+"name": "처갓집양념치킨월정점",
+"type": "한식",
+"addr": "제주특별자치도 제주시 구좌읍 월정1길 70-6, 1층",
+"date": "2026-11-04",
+"area": "86.22",
+"tel": "",
+"franchise": false,
+"firstSeen": "2026-11-06 10:43"
+},
+{
+"id": "restaurant:6510000-101-2026-00734",
+"src": "restaurant",
+"name": "선룸(SunRoom)",
+"type": "기타",
+"addr": "제주특별자치도 제주시 진동로1길 11, 1층 가형 101-1호 (화북일동, 화북베스트빌라)",
+"date": "2026-11-04",
+"area": "26.40",
+"tel": "",
+"franchise": false,
+"firstSeen": "2026-11-06 10:43"
+},
+{
+"id": "restaurant:6520000-101-2026-00394",
+"src": "restaurant",
+"name": "규영이네",
+"type": "한식",
+"addr": "제주특별자치도 서귀포시 법환동 914",
+"date": "2026-11-04",
+"area": "500.00",
+"tel": "",
+"franchise": false,
+"firstSeen": "2026-11-06 10:43"
+},
+{
+"id": "minbak:AGCV065100002026000368",
+"src": "minbak",
+"name": "오름달스테이",
+"type": "",
+"addr": "제주특별자치도 제주시 애월읍 금성천남길 151-11",
+"date": "2026-11-04",
+"area": "",
+"tel": "",
+"franchise": false,
+"firstSeen": "2026-11-06 10:43"
+},
+{
+"id": "cafe:6510000-104-2026-00401",
+"src": "cafe",
+"name": "네꼬야티하우스",
+"type": "커피숍",
+"addr": "제주특별자치도 제주시 조천읍 함덕리 4190",
+"date": "2026-11-03",
+"area": "25.00",
+"tel": "",
+"franchise": false,
+"firstSeen": "2026-11-06 10:43"
+},
+{
+"id": "restaurant:6510000-101-2026-00733",
+"src": "restaurant",
+"name": "카페1739",
+"type": "한식",
+"addr": "제주특별자치도 제주시 만덕로3길 17-1, 5층 (건입동)",
+"date": "2026-11-03",
+"area": "95.95",
+"tel": "",
+"franchise": false,
+"firstSeen": "2026-11-06 10:43"
+},
+{
+"id": "restaurant:6510000-101-2026-00732",
+"src": "restaurant",
+"name": "장터옛날통닭제주본점",
+"type": "호프/통닭",
+"addr": "제주특별자치도 제주시 은남길 27, 1층 (연동)",
+"date": "2026-11-03",
+"area": "51.71",
+"tel": "",
+"franchise": false,
+"firstSeen": "2026-11-06 10:43"
+},
+{
+"id": "restaurant:6520000-101-2026-00393",
+"src": "restaurant",
+"name": "청마식당",
+"type": "한식",
+"addr": "제주특별자치도 서귀포시 쇠소깍로 203, 청마식당 (하효동)",
+"date": "2026-11-03",
+"area": "48.32",
+"tel": "",
+"franchise": false,
+"firstSeen": "2026-11-06 10:43"
+},
+{
+"id": "minbak:AGCV065100002026000367",
+"src": "minbak",
+"name": "평화의상징",
+"type": "",
+"addr": "제주특별자치도 제주시 조천읍 중산간동로 857",
+"date": "2026-11-03",
+"area": "583",
+"tel": "",
+"franchise": false,
+"firstSeen": "2026-11-06 10:43"
+},
+{
+"id": "minbak:AGCV065100002026000366",
+"src": "minbak",
+"name": "쉴로 제주스테이",
+"type": "",
+"addr": "제주특별자치도 제주시 조천읍 선교로 159-22",
+"date": "2026-11-03",
+"area": "1650",
+"tel": "",
+"franchise": false,
+"firstSeen": "2026-11-06 10:43"
+},
 {
 "id": "cafe:6510000-104-2026-00400",
 "src": "cafe",
@@ -983,7 +1139,7 @@
 {
 "id": "restaurant:6510000-101-2026-00685",
 "src": "restaurant",
-"name": "뽕이네각제기직영점",
+"name": "뽕이네각재기봉개직영점",
 "type": "한식",
 "addr": "제주특별자치도 제주시 번영로 546, 1층 (봉개동)",
 "date": "2026-10-21",
@@ -1031,7 +1187,7 @@
 {
 "id": "restaurant:6520000-101-2026-00381",
 "src": "restaurant",
-"name": "고치가보게",
+"name": "소맥연구소",
 "type": "정종/대포집/소주방",
 "addr": "제주특별자치도 서귀포시 대정읍 하모이삼로52번길 13, 1층",
 "date": "2026-10-21",
@@ -2637,32 +2793,6 @@
 "firstSeen": "2026-10-31 23:36"
 },
 {
-"id": "build_done:1000000000000000862230",
-"src": "build_done",
-"name": "제2종근린생활시설 (선흘리)",
-"type": "제2종근린생활시설",
-"addr": "제주특별자치도 제주시 조천읍 선흘리 1840-3번지",
-"date": "2026-09-29",
-"area": 195.15,
-"hhld": "",
-"permitDate": "2025-12-18",
-"franchise": false,
-"firstSeen": "2026-10-31 23:36"
-},
-{
-"id": "build_start:1000000000000000969380",
-"src": "build_start",
-"name": "조천읍 선흘리 3381-1",
-"type": "제1종근린생활시설",
-"addr": "제주특별자치도 제주시 조천읍 선흘리 3381-1번지",
-"date": "2026-09-29",
-"area": 121.65,
-"hhld": "",
-"permitDate": "2026-06-12",
-"franchise": false,
-"firstSeen": "2026-10-31 23:36"
-},
-{
 "id": "build_start:1000000000000000849147",
 "src": "build_start",
 "name": "추자정수장",
@@ -2722,6 +2852,32 @@
 "addr": "제주특별자치도 서귀포시 표선면 가시리 329-16번지",
 "date": "2026-09-29",
 "area": 132.6,
+"hhld": "",
+"permitDate": "2026-06-12",
+"franchise": false,
+"firstSeen": "2026-10-31 23:36"
+},
+{
+"id": "build_done:1000000000000000862230",
+"src": "build_done",
+"name": "제2종근린생활시설 (선흘리)",
+"type": "제2종근린생활시설",
+"addr": "제주특별자치도 제주시 조천읍 선흘리 1840-3번지",
+"date": "2026-09-29",
+"area": 195.15,
+"hhld": "",
+"permitDate": "2025-12-18",
+"franchise": false,
+"firstSeen": "2026-10-31 23:36"
+},
+{
+"id": "build_start:1000000000000000969380",
+"src": "build_start",
+"name": "조천읍 선흘리 3381-1",
+"type": "제1종근린생활시설",
+"addr": "제주특별자치도 제주시 조천읍 선흘리 3381-1번지",
+"date": "2026-09-29",
+"area": 121.65,
 "hhld": "",
 "permitDate": "2026-06-12",
 "franchise": false,
@@ -3306,19 +3462,6 @@
 "firstSeen": "2026-10-31 23:36"
 },
 {
-"id": "build_done:1276100197002",
-"src": "build_done",
-"name": "제2종근린생활시설 (선흘리)",
-"type": "제2종근린생활시설",
-"addr": "제주특별자치도 제주시 조천읍 선흘리 산65-7번지",
-"date": "2026-09-23",
-"area": 276.66,
-"hhld": "",
-"permitDate": "2016-08-19",
-"franchise": false,
-"firstSeen": "2026-10-31 23:36"
-},
-{
 "id": "build_done:1000000000000000565204",
 "src": "build_done",
 "name": "단독주택 (호근동)",
@@ -3341,6 +3484,19 @@
 "area": 97.42,
 "hhld": "",
 "permitDate": "2026-05-29",
+"franchise": false,
+"firstSeen": "2026-10-31 23:36"
+},
+{
+"id": "build_done:1276100197002",
+"src": "build_done",
+"name": "제2종근린생활시설 (선흘리)",
+"type": "제2종근린생활시설",
+"addr": "제주특별자치도 제주시 조천읍 선흘리 산65-7번지",
+"date": "2026-09-23",
+"area": 276.66,
+"hhld": "",
+"permitDate": "2016-08-19",
 "franchise": false,
 "firstSeen": "2026-10-31 23:36"
 },
@@ -3568,19 +3724,6 @@
 "firstSeen": "2026-10-31 23:36"
 },
 {
-"id": "build_start:1000000000000001030827",
-"src": "build_start",
-"name": "볼튼호텔",
-"type": "숙박시설",
-"addr": "제주특별자치도 제주시 연동 253-41번지",
-"date": "2026-09-22",
-"area": 13394.76,
-"hhld": "",
-"permitDate": "2026-09-15",
-"franchise": false,
-"firstSeen": "2026-10-31 23:36"
-},
-{
 "id": "build_done:1000000000000000493818",
 "src": "build_done",
 "name": "단독주택 (동명리)",
@@ -3698,6 +3841,19 @@
 "firstSeen": "2026-10-31 23:36"
 },
 {
+"id": "build_start:1000000000000001030827",
+"src": "build_start",
+"name": "볼튼호텔",
+"type": "숙박시설",
+"addr": "제주특별자치도 제주시 연동 253-41번지",
+"date": "2026-09-22",
+"area": 13394.76,
+"hhld": "",
+"permitDate": "2026-09-15",
+"franchise": false,
+"firstSeen": "2026-10-31 23:36"
+},
+{
 "id": "build_done:1277100230461",
 "src": "build_done",
 "name": "사계리 3178-9 소매점",
@@ -3709,6 +3865,19 @@
 "permitDate": "2020-09-29",
 "franchise": false,
 "firstSeen": "2026-10-31 23:36"
+},
+{
+"id": "build_done:1000000000000001006282",
+"src": "build_done",
+"name": "구좌읍 월정리 902-1",
+"type": "제2종근린생활시설",
+"addr": "제주특별자치도 제주시 구좌읍 월정리 902-1번지",
+"date": "2026-09-21",
+"area": 600.75,
+"hhld": "",
+"permitDate": "2026-08-03",
+"franchise": false,
+"firstSeen": "2026-11-01 01:58"
 },
 {
 "id": "cafe:6510000-104-2026-00320",
@@ -3767,19 +3936,6 @@
 "date": "2026-09-21",
 "area": "420",
 "tel": "",
-"franchise": false,
-"firstSeen": "2026-11-01 01:58"
-},
-{
-"id": "build_done:1000000000000001006282",
-"src": "build_done",
-"name": "구좌읍 월정리 902-1",
-"type": "제2종근린생활시설",
-"addr": "제주특별자치도 제주시 구좌읍 월정리 902-1번지",
-"date": "2026-09-21",
-"area": 600.75,
-"hhld": "",
-"permitDate": "2026-08-03",
 "franchise": false,
 "firstSeen": "2026-11-01 01:58"
 },
@@ -3849,19 +4005,6 @@
 "firstSeen": "2026-10-31 23:36"
 },
 {
-"id": "build_start:1000000000000001025250",
-"src": "build_start",
-"name": "구좌읍 동복리 1639 번지  제1종근린생활시설(휴게음식점)",
-"type": "제1종근린생활시설",
-"addr": "제주특별자치도 제주시 구좌읍 동복리 1639번지",
-"date": "2026-09-21",
-"area": 47.78,
-"hhld": "",
-"permitDate": "2026-09-04",
-"franchise": false,
-"firstSeen": "2026-10-31 23:36"
-},
-{
 "id": "build_start:1000000000000000997856",
 "src": "build_start",
 "name": "조천읍 함덕리 3754",
@@ -3875,19 +4018,6 @@
 "firstSeen": "2026-10-31 23:36"
 },
 {
-"id": "build_start:1000000000000001026002",
-"src": "build_start",
-"name": "한경면 청수리 1725-9",
-"type": "제2종근린생활시설",
-"addr": "제주특별자치도 제주시 한경면 청수리 1725-9번지",
-"date": "2026-09-21",
-"area": 71.04,
-"hhld": 1,
-"permitDate": "2026-09-07",
-"franchise": false,
-"firstSeen": "2026-10-31 23:36"
-},
-{
 "id": "build_start:1000000000000001028235",
 "src": "build_start",
 "name": "단독주택 (덕수리)",
@@ -3897,6 +4027,32 @@
 "area": 97.92,
 "hhld": "",
 "permitDate": "2026-09-10",
+"franchise": false,
+"firstSeen": "2026-10-31 23:36"
+},
+{
+"id": "build_start:1000000000000001025250",
+"src": "build_start",
+"name": "구좌읍 동복리 1639 번지  제1종근린생활시설(휴게음식점)",
+"type": "제1종근린생활시설",
+"addr": "제주특별자치도 제주시 구좌읍 동복리 1639번지",
+"date": "2026-09-21",
+"area": 47.78,
+"hhld": "",
+"permitDate": "2026-09-04",
+"franchise": false,
+"firstSeen": "2026-10-31 23:36"
+},
+{
+"id": "build_start:1000000000000001026002",
+"src": "build_start",
+"name": "한경면 청수리 1725-9",
+"type": "제2종근린생활시설",
+"addr": "제주특별자치도 제주시 한경면 청수리 1725-9번지",
+"date": "2026-09-21",
+"area": 71.04,
+"hhld": 1,
+"permitDate": "2026-09-07",
 "franchise": false,
 "firstSeen": "2026-10-31 23:36"
 },
@@ -4034,19 +4190,6 @@
 "firstSeen": "2026-10-31 23:36"
 },
 {
-"id": "build_done:1000000000000001021938",
-"src": "build_done",
-"name": "제2종근린생활시설 (연동)",
-"type": "제2종근린생활시설",
-"addr": "제주특별자치도 제주시 연동 273-7번지",
-"date": "2026-09-18",
-"area": 956.56,
-"hhld": "",
-"permitDate": "2026-08-31",
-"franchise": false,
-"firstSeen": "2026-10-31 23:36"
-},
-{
 "id": "build_start:1000000000000001028471",
 "src": "build_start",
 "name": "단독주택 (상귀리)",
@@ -4095,6 +4238,19 @@
 "area": 105.12,
 "hhld": "",
 "permitDate": "2026-09-11",
+"franchise": false,
+"firstSeen": "2026-10-31 23:36"
+},
+{
+"id": "build_done:1000000000000001021938",
+"src": "build_done",
+"name": "제2종근린생활시설 (연동)",
+"type": "제2종근린생활시설",
+"addr": "제주특별자치도 제주시 연동 273-7번지",
+"date": "2026-09-18",
+"area": 956.56,
+"hhld": "",
+"permitDate": "2026-08-31",
 "franchise": false,
 "firstSeen": "2026-10-31 23:36"
 },
@@ -4231,19 +4387,6 @@
 "area": 185.24,
 "hhld": 1,
 "permitDate": "2022-07-27",
-"franchise": false,
-"firstSeen": "2026-10-31 23:36"
-},
-{
-"id": "build_start:1000000000000000932873",
-"src": "build_start",
-"name": "연동 321-8",
-"type": "교육연구시설",
-"addr": "제주특별자치도 제주시 연동 321-8번지",
-"date": "2026-09-17",
-"area": 3631.15,
-"hhld": "",
-"permitDate": "2026-04-21",
 "franchise": false,
 "firstSeen": "2026-10-31 23:36"
 },
@@ -4391,6 +4534,19 @@
 "firstSeen": "2026-10-31 23:36"
 },
 {
+"id": "build_start:1000000000000000932873",
+"src": "build_start",
+"name": "연동 321-8",
+"type": "교육연구시설",
+"addr": "제주특별자치도 제주시 연동 321-8번지",
+"date": "2026-09-17",
+"area": 3631.15,
+"hhld": "",
+"permitDate": "2026-04-21",
+"franchise": false,
+"firstSeen": "2026-10-31 23:36"
+},
+{
 "id": "build_start:1000000000000001014736",
 "src": "build_start",
 "name": "단독주택 (협재리)",
@@ -4456,19 +4612,6 @@
 "firstSeen": "2026-10-31 23:36"
 },
 {
-"id": "build_done:1000000000000001008150",
-"src": "build_done",
-"name": "KB손해보험 제주빌딩",
-"type": "업무시설",
-"addr": "제주특별자치도 제주시 연동 2331-4번지",
-"date": "2026-09-16",
-"area": 11865.59,
-"hhld": "",
-"permitDate": "2026-08-05",
-"franchise": false,
-"firstSeen": "2026-10-31 23:36"
-},
-{
 "id": "build_start:1000000000000000961242",
 "src": "build_start",
 "name": "조천읍 신촌리 1687  단독주택",
@@ -4504,6 +4647,19 @@
 "area": 140.58,
 "hhld": 1,
 "permitDate": "2026-05-21",
+"franchise": false,
+"firstSeen": "2026-10-31 23:36"
+},
+{
+"id": "build_done:1000000000000001008150",
+"src": "build_done",
+"name": "KB손해보험 제주빌딩",
+"type": "업무시설",
+"addr": "제주특별자치도 제주시 연동 2331-4번지",
+"date": "2026-09-16",
+"area": 11865.59,
+"hhld": "",
+"permitDate": "2026-08-05",
 "franchise": false,
 "firstSeen": "2026-10-31 23:36"
 },
@@ -4556,19 +4712,6 @@
 "area": 25.56,
 "hhld": "",
 "permitDate": "2026-09-14",
-"franchise": false,
-"firstSeen": "2026-10-31 23:36"
-},
-{
-"id": "build_start:1000000000000001027429",
-"src": "build_start",
-"name": "운수시설 (용담이동)",
-"type": "운수시설",
-"addr": "제주특별자치도 제주시 용담이동 2002번지",
-"date": "2026-09-15",
-"area": 209728.28,
-"hhld": "",
-"permitDate": "2026-09-09",
 "franchise": false,
 "firstSeen": "2026-10-31 23:36"
 },
@@ -4703,6 +4846,19 @@
 "firstSeen": "2026-10-31 23:36"
 },
 {
+"id": "build_start:1000000000000001027429",
+"src": "build_start",
+"name": "운수시설 (용담이동)",
+"type": "운수시설",
+"addr": "제주특별자치도 제주시 용담이동 2002번지",
+"date": "2026-09-15",
+"area": 209728.28,
+"hhld": "",
+"permitDate": "2026-09-09",
+"franchise": false,
+"firstSeen": "2026-10-31 23:36"
+},
+{
 "id": "build_done:1000000000000000964979",
 "src": "build_done",
 "name": "아라일동 2547-3",
@@ -4816,19 +4972,6 @@
 "area": 898.51,
 "hhld": "",
 "permitDate": "2026-02-13",
-"franchise": false,
-"firstSeen": "2026-10-31 23:36"
-},
-{
-"id": "build_done:1000000000000000828000",
-"src": "build_done",
-"name": "용담이동 626-2",
-"type": "단독주택",
-"addr": "제주특별자치도 제주시 용담이동 626-2번지",
-"date": "2026-09-11",
-"area": 161.48,
-"hhld": 2,
-"permitDate": "2025-10-24",
 "franchise": false,
 "firstSeen": "2026-10-31 23:36"
 },
@@ -4976,6 +5119,19 @@
 "firstSeen": "2026-10-31 23:36"
 },
 {
+"id": "build_done:1000000000000000828000",
+"src": "build_done",
+"name": "용담이동 626-2",
+"type": "단독주택",
+"addr": "제주특별자치도 제주시 용담이동 626-2번지",
+"date": "2026-09-11",
+"area": 161.48,
+"hhld": 2,
+"permitDate": "2025-10-24",
+"franchise": false,
+"firstSeen": "2026-10-31 23:36"
+},
+{
 "id": "build_done:1000000000000000947139",
 "src": "build_done",
 "name": "구좌읍 행원리 3433-18",
@@ -5041,32 +5197,6 @@
 "firstSeen": "2026-10-31 23:36"
 },
 {
-"id": "build_done:1000000000000000961340",
-"src": "build_done",
-"name": "제2종근린생활시설 (연동)",
-"type": "제2종근린생활시설",
-"addr": "제주특별자치도 제주시 연동 283-7번지",
-"date": "2026-09-10",
-"area": 325.44,
-"hhld": 6,
-"permitDate": "2026-06-02",
-"franchise": false,
-"firstSeen": "2026-10-31 23:36"
-},
-{
-"id": "build_done:1000000000000000954600",
-"src": "build_done",
-"name": "연동 1416-3",
-"type": "단독주택",
-"addr": "제주특별자치도 제주시 연동 1416-3번지",
-"date": "2026-09-10",
-"area": 216.74,
-"hhld": "",
-"permitDate": "2026-05-21",
-"franchise": false,
-"firstSeen": "2026-10-31 23:36"
-},
-{
 "id": "build_done:1000000000000000506415",
 "src": "build_done",
 "name": "애월읍 애월리 2581",
@@ -5076,19 +5206,6 @@
 "area": 374.7,
 "hhld": "",
 "permitDate": "2024-04-29",
-"franchise": false,
-"firstSeen": "2026-10-31 23:36"
-},
-{
-"id": "build_done:1000000000000000841982",
-"src": "build_done",
-"name": "조천읍 교래리 612",
-"type": "제1종근린생활시설",
-"addr": "제주특별자치도 제주시 조천읍 교래리 612번지",
-"date": "2026-09-10",
-"area": 198,
-"hhld": "",
-"permitDate": "2025-11-17",
 "franchise": false,
 "firstSeen": "2026-10-31 23:36"
 },
@@ -5145,6 +5262,58 @@
 "firstSeen": "2026-10-31 23:36"
 },
 {
+"id": "build_done:1000000000000000872234",
+"src": "build_done",
+"name": "389주택",
+"type": "단독주택",
+"addr": "제주특별자치도 서귀포시 안덕면 서광리 75-11번지",
+"date": "2026-09-10",
+"area": 110.77,
+"hhld": "",
+"permitDate": "2026-01-08",
+"franchise": false,
+"firstSeen": "2026-10-31 23:36"
+},
+{
+"id": "build_done:1000000000000000961340",
+"src": "build_done",
+"name": "제2종근린생활시설 (연동)",
+"type": "제2종근린생활시설",
+"addr": "제주특별자치도 제주시 연동 283-7번지",
+"date": "2026-09-10",
+"area": 325.44,
+"hhld": 6,
+"permitDate": "2026-06-02",
+"franchise": false,
+"firstSeen": "2026-10-31 23:36"
+},
+{
+"id": "build_done:1000000000000000954600",
+"src": "build_done",
+"name": "연동 1416-3",
+"type": "단독주택",
+"addr": "제주특별자치도 제주시 연동 1416-3번지",
+"date": "2026-09-10",
+"area": 216.74,
+"hhld": "",
+"permitDate": "2026-05-21",
+"franchise": false,
+"firstSeen": "2026-10-31 23:36"
+},
+{
+"id": "build_done:1000000000000000841982",
+"src": "build_done",
+"name": "조천읍 교래리 612",
+"type": "제1종근린생활시설",
+"addr": "제주특별자치도 제주시 조천읍 교래리 612번지",
+"date": "2026-09-10",
+"area": 198,
+"hhld": "",
+"permitDate": "2025-11-17",
+"franchise": false,
+"firstSeen": "2026-10-31 23:36"
+},
+{
 "id": "build_start:1000000000000000350638",
 "src": "build_start",
 "name": "안덕면 사계리 192-2  근린생활시설",
@@ -5171,19 +5340,6 @@
 "firstSeen": "2026-10-31 23:36"
 },
 {
-"id": "build_done:1000000000000000872234",
-"src": "build_done",
-"name": "389주택",
-"type": "단독주택",
-"addr": "제주특별자치도 서귀포시 안덕면 서광리 75-11번지",
-"date": "2026-09-10",
-"area": 110.77,
-"hhld": "",
-"permitDate": "2026-01-08",
-"franchise": false,
-"firstSeen": "2026-10-31 23:36"
-},
-{
 "id": "build_start:1000000000000001018684",
 "src": "build_start",
 "name": "주식회사 연우개발 사무소",
@@ -5193,19 +5349,6 @@
 "area": 70.56,
 "hhld": "",
 "permitDate": "2026-08-25",
-"franchise": false,
-"firstSeen": "2026-10-31 23:36"
-},
-{
-"id": "build_done:1000000000000000998031",
-"src": "build_done",
-"name": "해안동 23-38  단독주택",
-"type": "단독주택",
-"addr": "제주특별자치도 제주시 해안동 23-38번지",
-"date": "2026-09-09",
-"area": 202.89,
-"hhld": "",
-"permitDate": "2026-07-21",
 "franchise": false,
 "firstSeen": "2026-10-31 23:36"
 },
@@ -5258,6 +5401,19 @@
 "area": 3740.67,
 "hhld": "",
 "permitDate": "2024-12-03",
+"franchise": false,
+"firstSeen": "2026-10-31 23:36"
+},
+{
+"id": "build_done:1000000000000000998031",
+"src": "build_done",
+"name": "해안동 23-38  단독주택",
+"type": "단독주택",
+"addr": "제주특별자치도 제주시 해안동 23-38번지",
+"date": "2026-09-09",
+"area": 202.89,
+"hhld": "",
+"permitDate": "2026-07-21",
 "franchise": false,
 "firstSeen": "2026-10-31 23:36"
 },
@@ -5353,19 +5509,6 @@
 "firstSeen": "2026-10-31 23:36"
 },
 {
-"id": "build_done:1000000000000000994380",
-"src": "build_done",
-"name": "한경면 청수리 2061-3",
-"type": "제1종근린생활시설",
-"addr": "제주특별자치도 제주시 한경면 청수리 2081-3번지",
-"date": "2026-09-08",
-"area": 173.48,
-"hhld": "",
-"permitDate": "2026-07-14",
-"franchise": false,
-"firstSeen": "2026-10-31 23:36"
-},
-{
 "id": "build_start:1000000000000001024105",
 "src": "build_start",
 "name": "단독주택 (금등리)",
@@ -5401,6 +5544,19 @@
 "area": 102.6,
 "hhld": "",
 "permitDate": "2026-03-05",
+"franchise": false,
+"firstSeen": "2026-10-31 23:36"
+},
+{
+"id": "build_done:1000000000000000994380",
+"src": "build_done",
+"name": "한경면 청수리 2061-3",
+"type": "제1종근린생활시설",
+"addr": "제주특별자치도 제주시 한경면 청수리 2081-3번지",
+"date": "2026-09-08",
+"area": 173.48,
+"hhld": "",
+"permitDate": "2026-07-14",
 "franchise": false,
 "firstSeen": "2026-10-31 23:36"
 },
@@ -6186,33 +6342,38 @@
 }
 ],
 "debug": {
-"errors": [],
-"calls": 236,
+"errors": [
+"build 제주시 용담이동 p1: HTTP Error 503: Service Unavailable",
+"build 제주시 연동 p1: no element found: line 1, column 0",
+"build 제주시 해안동 p1: no element found: line 1, column 0",
+"build 제주시 구좌읍 동복리 p1: HTTP Error 503: Service Unavailable",
+"build 제주시 조천읍 교래리 p1: no element found: line 1, column 0"
+],
+"calls": 271,
 "notes": [
 "cafe path=rest_cafes",
-"cafe 6510000 total=395",
-"cafe 6520000 total=150",
+"cafe 6510000 total=397",
+"cafe 6520000 total=151",
 "cafe 6500000 total=0",
 "cafe collected=59",
 "restaurant path=general_restaurants",
-"restaurant 6510000 total=728",
-"restaurant 6520000 total=391",
+"restaurant 6510000 total=735",
+"restaurant 6520000 total=393",
 "restaurant 6500000 total=0",
-"restaurant collected=105",
+"restaurant collected=111",
 "minbak path=rural_homestays",
-"minbak 6510000 total=363",
+"minbak 6510000 total=366",
 "minbak 6520000 total=157",
 "minbak 6500000 total=0",
-"minbak collected=54",
+"minbak collected=56",
 "build 제주시 일도일동 total=2",
 "build 제주시 일도이동 total=5",
-"build 제주시 이도일동 total=4",
+"build 제주시 이도일동 total=3",
 "build 제주시 이도이동 total=5",
 "build 제주시 삼도일동 total=1",
 "build 제주시 삼도이동 total=2",
 "build 제주시 건입동 total=5",
 "build 제주시 용담일동 total=3",
-"build 제주시 용담이동 total=4",
 "build 제주시 용담삼동 total=2",
 "build 제주시 화북일동 total=2",
 "build 제주시 화북이동 total=1",
@@ -6234,9 +6395,7 @@
 "build 제주시 오등동 total=3",
 "build 제주시 월평동 total=1",
 "build 제주시 영평동 total=4",
-"build 제주시 연동 total=11",
 "build 제주시 도평동 total=3",
-"build 제주시 해안동 total=7",
 "build 제주시 내도동 total=2",
 "build 제주시 한림읍 귀덕리 total=3",
 "build 제주시 한림읍 대림리 total=2",
@@ -6247,7 +6406,7 @@
 "build 제주시 한림읍 옹포리 total=1",
 "build 제주시 한림읍 상대리 total=4",
 "build 제주시 한림읍 상명리 total=3",
-"build 제주시 한림읍 협재리 total=12",
+"build 제주시 한림읍 협재리 total=11",
 "build 제주시 한림읍 월령리 total=1",
 "build 제주시 한림읍 금능리 total=3",
 "build 제주시 애월읍 광령리 total=9",
@@ -6258,7 +6417,7 @@
 "build 제주시 애월읍 장전리 total=3",
 "build 제주시 애월읍 고성리 total=4",
 "build 제주시 애월읍 하가리 total=2",
-"build 제주시 애월읍 애월리 total=9",
+"build 제주시 애월읍 애월리 total=8",
 "build 제주시 애월읍 납읍리 total=2",
 "build 제주시 애월읍 어음리 total=5",
 "build 제주시 애월읍 곽지리 total=4",
@@ -6267,7 +6426,6 @@
 "build 제주시 애월읍 하귀1리 total=1",
 "build 제주시 애월읍 하귀2리 total=2",
 "build 제주시 애월읍 유수암리 total=4",
-"build 제주시 구좌읍 동복리 total=1",
 "build 제주시 구좌읍 덕천리 total=8",
 "build 제주시 구좌읍 송당리 total=6",
 "build 제주시 구좌읍 월정리 total=5",
@@ -6287,12 +6445,8 @@
 "build 제주시 조천읍 대흘리 total=3",
 "build 제주시 조천읍 북촌리 total=5",
 "build 제주시 조천읍 와산리 total=4",
-"build 제주시 조천읍 교래리 total=6",
-"build 제주시 조천읍 선흘리 total=12",
-"build 제주시 한경면 청수리 total=5",
 "build 제주시 한경면 용수리 total=7",
 "build 제주시 한경면 고산리 total=1",
-"build 제주시 한경면 판포리 total=2",
 "build 제주시 한경면 금등리 total=3",
 "build 제주시 한경면 조수리 total=9",
 "build 제주시 한경면 두모리 total=3",
@@ -6310,7 +6464,7 @@
 "build 서귀포시 동홍동 total=4",
 "build 서귀포시 서홍동 total=4",
 "build 서귀포시 상효동 total=3",
-"build 서귀포시 하효동 total=3",
+"build 서귀포시 하효동 total=2",
 "build 서귀포시 신효동 total=1",
 "build 서귀포시 보목동 total=2",
 "build 서귀포시 토평동 total=10",
@@ -6353,7 +6507,6 @@
 "build 서귀포시 안덕면 화순리 total=7",
 "build 서귀포시 안덕면 창천리 total=1",
 "build 서귀포시 안덕면 상창리 total=2",
-"build 서귀포시 안덕면 사계리 total=5",
 "build 서귀포시 안덕면 덕수리 total=3",
 "build 서귀포시 안덕면 서광리 total=6",
 "build 서귀포시 안덕면 동광리 total=3",
@@ -6364,7 +6517,7 @@
 "build 서귀포시 표선면 가시리 total=7",
 "build 서귀포시 표선면 세화리 total=2",
 "build 서귀포시 표선면 토산리 total=2",
-"buildings collected=190"
+"buildings collected=169"
 ]
 }
 }
