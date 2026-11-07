@@ -122,6 +122,10 @@ https://www.instagram.com/linkcleaning
     const val KEY_USE_HOME = "sign_use_home"
     const val KEY_USE_MAG = "sign_use_mag"
     const val KEY_SAFE_TEXT = "safe_text"
+    const val KEY_ACC_BANK = "acc_bank"
+    const val KEY_ACC_NUM = "acc_num"
+    const val KEY_ACC_HOLDER = "acc_holder"
+    const val KEY_ACC_PHONE = "acc_phone"
     const val KEY_LAST_EVENT = "last_event"
     const val KEY_USE_SERVICE = "use_service"
     const val KEY_SEND_OUTGOING = "send_outgoing"
@@ -133,7 +137,7 @@ https://www.instagram.com/linkcleaning
     val BACKUP_KEYS = listOf(
         KEY_BLACKLIST, KEY_SEND_INCOMING, KEY_SEND_MISSED, KEY_MOBILE_ONLY, KEY_COOLDOWN_H, KEY_DAILY_LIMIT,
         KEY_SELECTED, KEY_AUTO_IN, KEY_AUTO_MISS, KEY_AUTO_OUT, KEY_SEND_OUTGOING, KEY_SKIP_CONTACTS, KEY_TITLE_ON, KEY_SIGN_PHONE, KEY_SIGN_KAKAO, KEY_SIGN_HOME,
-        KEY_SIGN_MAG, KEY_USE_PHONE, KEY_USE_KAKAO, KEY_USE_HOME, KEY_USE_MAG, KEY_SAFE_TEXT, KEY_SIGN_TEXT, "templates"
+        KEY_SIGN_MAG, KEY_USE_PHONE, KEY_USE_KAKAO, KEY_USE_HOME, KEY_USE_MAG, KEY_SAFE_TEXT, KEY_SIGN_TEXT, KEY_ACC_BANK, KEY_ACC_NUM, KEY_ACC_HOLDER, KEY_ACC_PHONE, "templates"
     )
     private const val SENT_PREFIX = "sent_"
 
@@ -302,6 +306,13 @@ https://www.instagram.com/linkcleaning
     fun autoMissId(c: Context): String = sp(c).getString(KEY_AUTO_MISS, "t_miss") ?: "t_miss"
     fun autoOutId(c: Context): String = sp(c).getString(KEY_AUTO_OUT, "t_out") ?: "t_out"
     fun selectedId(c: Context): String = sp(c).getString(KEY_SELECTED, "t_in") ?: "t_in"
+    // ---------- 계좌 카드 정보 (설정에서 변경) ----------
+    fun accBank(c: Context) = sp(c).getString(KEY_ACC_BANK, null)?.takeIf { it.isNotBlank() } ?: "토스뱅크"
+    fun accNum(c: Context) = sp(c).getString(KEY_ACC_NUM, null)?.takeIf { it.isNotBlank() } ?: "1000-1626-3066"
+    fun accHolder(c: Context) = sp(c).getString(KEY_ACC_HOLDER, null)?.takeIf { it.isNotBlank() } ?: "링크클린"
+    fun accPhone(c: Context) = sp(c).getString(KEY_ACC_PHONE, null) ?: "050-6520-0440"
+    fun accountText(c: Context) = "[링크클린] 입금 계좌 안내\n${accBank(c)} ${accNum(c)}\n예금주 ${accHolder(c)}"
+
     fun titleOn(c: Context) = sp(c).getBoolean(KEY_TITLE_ON, false)
     /** 아이폰 보정 (이모지 빼고 보내기) – 기본 켜짐 */
     fun safeText(c: Context) = sp(c).getBoolean(KEY_SAFE_TEXT, true)

@@ -744,13 +744,17 @@ class MainActivity : AppCompatActivity() {
         sendImgs.removeAllViews()
         val cardMode = selectedTpl().hasTokens
         draftCard.visibility = if (cardMode) View.GONE else View.VISIBLE
+        val acctMode = selectedTpl().id == "t_account"
+        draftEdit.visibility = if (acctMode) View.GONE else View.VISIBLE
+        charInfo.visibility = if (acctMode) View.GONE else View.VISIBLE
+        if (acctMode) restoreBtn.visibility = View.GONE
         cardOnlyNote.visibility = if (cardMode) View.VISIBLE else View.GONE
         if (cardMode) { cardPreview?.setImageBitmap(ReservationCard.render(this, fields)); return }
         if (selectedTpl().id == "t_account") {
             val bmp = ReservationCard.renderAccount(this)
             val w = resources.displayMetrics.widthPixels - ui.dp(64)
             val col = ui.col()
-            col.addView(ui.text("🏦 계좌 카드 사진 + 아래 글(복사용)이 함께 가요", 13f, Col.B700, true), ui.lp(bottom = 6))
+            col.addView(ui.text("🏦 계좌 카드 사진 + 계좌번호 글(복사용)이 함께 가요\n계좌 변경: 설정 → 🏦 계좌 카드 정보", 13f, Col.B700, true), ui.lp(bottom = 6))
             col.addView(ImageView(this).apply {
                 setImageBitmap(bmp); adjustViewBounds = true; scaleType = ImageView.ScaleType.FIT_CENTER
                 background = ui.rect(Col.S100, 16f, Col.S200, 1f); clipToOutline = true
@@ -970,7 +974,11 @@ class MainActivity : AppCompatActivity() {
             val need = Templates.tokens(t.body).flatMap { if (it == "잔금") listOf("청소비용", "계약금") else listOf(it) }.toSet()
             if (need.any { fields[it].isNullOrBlank() }) { toast("📝 예약 정보를 모두 입력해 주세요", "err"); return }
         }
-        val text = if (t.hasTokens) "" else Compose.finalize(this, draftEdit.text.toString().trim())
+        val text = when {
+            t.hasTokens -> ""
+            t.id == "t_account" -> Prefs.accountText(this)
+            else -> Compose.finalize(this, draftEdit.text.toString().trim())
+        }
         if (!t.hasTokens && text.isEmpty()) { toast("보낼 문자가 비어 있어요", "err"); return }
         if (Templates.TOKEN_RE.containsMatchIn(text)) { toast("📝 예약 정보 빈칸을 채워 주세요", "err"); return }
         val imgs = Prefs.imageFiles(this)
@@ -1450,6 +1458,27 @@ class MainActivity : AppCompatActivity() {
             ec.addView(r)
         }
         b.addView(ec)
+
+        // 🏦 계좌 카드 정보
+        val acc = ui.card()
+        acc.addView(h2("🏦 계좌 카드 정보", 16f, Col.S800))
+        acc.addView(hint("계좌 안내 카드와 예약 카드에 들어가요. 바꾸면 바로 적용돼요."), ui.lp(top = 2, bottom = 10))
+        fun accRow(label: String, key: String, v: String, type: Int = InputType.TYPE_CLASS_TEXT) {
+            acc.addView(ui.text(label, 13f, Col.S500, true), ui.lp(bottom = 4))
+            val e = ui.input(label, type = type).apply { setText(v) }
+            e.addTextChangedListener(watcher { t -> sp.edit().putString(key, t.trim()).apply() })
+            acc.addView(e, ui.lp(bottom = 10))
+        }
+        accRow("은행", Prefs.KEY_ACC_BANK, Prefs.accBank(this))
+        accRow("계좌번호", Prefs.KEY_ACC_NUM, Prefs.accNum(this))
+        accRow("예금주", Prefs.KEY_ACC_HOLDER, Prefs.accHolder(this))
+        accRow("카드 아래 문의 번호 (비우면 안 넣음)", Prefs.KEY_ACC_PHONE, Prefs.accPhone(this), InputType.TYPE_CLASS_PHONE)
+        acc.addView(ui.button("👀 계좌 카드 미리보기", Col.B50, Col.B700, 46, 15f, Col.B200, 12f) {
+            hideKeyboard()
+            val big = ImageView(this).apply { setImageBitmap(ReservationCard.renderAccount(this@MainActivity)); adjustViewBounds = true }
+            AlertDialog.Builder(this).setView(big).setPositiveButton("닫기", null).show()
+        })
+        b.addView(acc)
 
         // 💾 백업
         val bc = ui.card()
