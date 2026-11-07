@@ -26,13 +26,16 @@ create table if not exists public.sb_families (
 create table if not exists public.sb_events (
   id         bigint generated always as identity primary key,
   family_id  uuid not null references public.sb_families(id) on delete cascade,
-  kind       text not null check (kind in ('scan','ping','exit','enter')),
+  kind       text not null check (kind in ('open','scan','ping','exit','enter')),
   lat        double precision,
   lng        double precision,
   accuracy   double precision,
   note       text,
   created_at timestamptz not null default now()
 );
+-- 예전 버전 SQL을 이미 실행했어도 'open'(목걸이 찍힘) 기록이 들어가도록
+alter table public.sb_events drop constraint if exists sb_events_kind_check;
+alter table public.sb_events add constraint sb_events_kind_check check (kind in ('open','scan','ping','exit','enter'));
 create index if not exists sb_events_family_idx on public.sb_events (family_id, id desc);
 
 alter table public.sb_families enable row level security;
@@ -106,6 +109,20 @@ begin
     'safe_number', f.safe_number, 'missing', f.status = 'missing');
 end $$;
 
+-- 목걸이를 찍어 발견자 화면이 열리는 순간 자동 기록 (위치 없음, 같은 표식 1분에 1회)
+create or replace function public.sb_scan_open(p_token text) returns jsonb
+language plpgsql security definer set search_path = public as $$
+declare f public.sb_families;
+begin
+  select * into f from sb_families where tag_token = p_token;
+  if not found then return jsonb_build_object('ok', false); end if;
+  if not exists (select 1 from sb_events where family_id = f.id and kind = 'open'
+                  and created_at > now() - interval '1 minute') then
+    insert into sb_events (family_id, kind) values (f.id, 'open');
+  end if;
+  return jsonb_build_object('ok', true);
+end $$;
+
 -- 발견자 위치 전송 (같은 표식 1분에 5회까지)
 create or replace function public.sb_report_scan(p_token text, p_lat double precision default null,
   p_lng double precision default null, p_acc double precision default null, p_note text default null) returns jsonb
@@ -169,7 +186,7 @@ end $$;
 
 grant execute on function public.sb_create_family(jsonb),
   public.sb_update_family(text, jsonb), public.sb_dashboard(text), public.sb_scan_info(text),
-  public.sb_report_scan(text, double precision, double precision, double precision, text),
+  public.sb_report_scan(text, double precision, double precision, double precision, text), public.sb_scan_open(text),
   public.sb_companion(text, text, double precision, double precision, double precision),
   public.sb_set_missing(text, boolean), public.sb_rotate_tag(text)
   to anon, authenticated;

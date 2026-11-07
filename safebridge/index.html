@@ -66,7 +66,7 @@ input:focus,textarea:focus,select:focus{outline:none;border-color:var(--teal)}
 .ev{display:flex;gap:12px;align-items:flex-start;padding:12px 4px;border-bottom:1px solid var(--line);cursor:pointer}
 .ev:last-child{border-bottom:0}
 .dot{width:12px;height:12px;border-radius:50%;margin-top:7px;flex:none}
-.dot.scan{background:var(--orange)} .dot.ping{background:var(--teal)} .dot.exit{background:var(--red)} .dot.enter{background:var(--green)}
+.dot.open{background:#F2B36B} .dot.scan{background:var(--orange)} .dot.ping{background:var(--teal)} .dot.exit{background:var(--red)} .dot.enter{background:var(--green)}
 .ev b{font-weight:700}
 nav{position:fixed;left:0;right:0;bottom:0;background:#fff;border-top:1px solid var(--line);padding-bottom:env(safe-area-inset-bottom);z-index:1000}
 nav .in{max-width:520px;margin:0 auto;display:flex}
@@ -121,7 +121,7 @@ const store = {
 const BASE = location.origin + location.pathname.replace(/index\.html$/, '');
 const rand = () => { const a = new Uint8Array(16); crypto.getRandomValues(a); return btoa(String.fromCharCode(...a)).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, ''); };
 const FIELDS = ['guardian_name', 'safe_number', 'nickname', 'calming_tips', 'medical_note', 'show_medical', 'zone_name', 'zone_lat', 'zone_lng', 'zone_radius'];
-const KIND = { scan: '발견자가 위치를 보냄', ping: '동행 모드 위치', exit: '안심존을 벗어남', enter: '안심존으로 돌아옴' };
+const KIND = { open: '누군가 목걸이를 찍음', scan: '발견자가 위치를 보냄', ping: '동행 모드 위치', exit: '안심존을 벗어남', enter: '안심존으로 돌아옴' };
 
 function toast(msg, ms = 2600) {
   const t = document.createElement('div'); t.className = 'toast'; t.textContent = msg;
@@ -182,6 +182,13 @@ const localApi = {
     return { ok: true, nickname: f.nickname, calming_tips: f.calming_tips, medical: f.show_medical ? f.medical_note : null,
       safe_number: f.safe_number, missing: f.status === 'missing' };
   },
+  async scanOpen(token) {
+    const d = ldb(), f = d.families.find(x => x.tag_token === token);
+    if (!f) return { ok: false };
+    const recent = d.events.some(e => e.family_id === f.id && e.kind === 'open' && Date.now() - new Date(e.created_at) < 60000);
+    if (!recent) { d.events.push({ id: ++d.seq, family_id: f.id, kind: 'open', lat: null, lng: null, accuracy: null, note: null, created_at: new Date().toISOString() }); store.set(LDB, d); }
+    return { ok: true };
+  },
   async reportScan(token, lat, lng, acc, note) {
     const d = ldb(), f = d.families.find(x => x.tag_token === token);
     if (!f) return { ok: false };
@@ -226,6 +233,7 @@ function cloudApi({ url, key }) {
     updateFamily: (f, p) => rpc('sb_update_family', { p_fkey: f, p }),
     dashboard: f => rpc('sb_dashboard', { p_fkey: f }),
     scanInfo: t => rpc('sb_scan_info', { p_token: t }),
+    scanOpen: t => rpc('sb_scan_open', { p_token: t }),
     reportScan: (t, lat, lng, acc, note) => rpc('sb_report_scan', { p_token: t, p_lat: n(lat), p_lng: n(lng), p_acc: n(acc), p_note: n(note) }),
     companion: (c, k, lat, lng, acc) => rpc('sb_companion', { p_ckey: c, p_kind: k, p_lat: n(lat), p_lng: n(lng), p_acc: n(acc) }),
     setMissing: (f, on) => rpc('sb_set_missing', { p_fkey: f, p_on: on }),
@@ -281,6 +289,7 @@ async function renderFinder(token, conf) {
     <div class="hello">길을 잃으신 어르신을<br>도와주셔서 감사합니다</div>
     <div class="who" id="who">정보를 불러오는 중…</div>
     <div class="msg" id="msg" role="status"></div>
+    <p class="sub" style="margin:4px 0 0">위치는 <b>지금 이 한 번만</b>, 이 어르신의 보호자에게만 보내집니다.</p>
     <button class="btn big b-teal" id="send">📍 보호자에게 현재 위치 보내기</button>
     <a class="btn big b-orange" id="call" href="#">📞 보호자에게 전화하기</a>
     <div id="tips"></div>
@@ -298,7 +307,8 @@ async function renderFinder(token, conf) {
     $('#who').innerHTML = info && info.err ? '서버에 연결하지 못했어요. 112에 신고해 주세요.' : '등록되지 않았거나 사용이 끝난 표식입니다.<br>어르신과 함께 계시면 112에 신고해 주세요.';
     $('#send').disabled = true; $('#call').style.display = 'none'; return;
   }
-  $('#who').innerHTML = `<b>${esc(info.nickname)}</b>의 귀가를 도와주세요.${info.missing ? '<br><span class="chip missing" style="margin:6px 0 0">가족이 찾고 있어요</span>' : ''}`;
+  A.scanOpen && A.scanOpen(token).catch(() => {});
+  $('#who').innerHTML = `<b>${esc(info.nickname)}</b>의 귀가를 도와주세요.<br><span class="tiny">보호자에게 '누군가 목걸이를 찍었다'는 알림이 이미 갔어요.</span>${info.missing ? '<br><span class="chip missing" style="margin:6px 0 0">가족이 찾고 있어요</span>' : ''}`;
   if (info.safe_number) $('#call').href = 'tel:' + info.safe_number.replace(/[^0-9+]/g, '');
   else $('#call').style.display = 'none';
   $('#tips').innerHTML = (info.calming_tips ? `<div class="tips"><b>이렇게 대해 주세요</b><br>${esc(info.calming_tips)}</div>` : '') +
@@ -425,7 +435,7 @@ function renderWelcome() {
       }
     }
     const p = readInfo();
-    if (!p.nickname) return toast('어르신 호칭을 적어 주세요');
+    if (!checkInfo(p)) return;
     const btn = e.submitter || $('#f button[type=submit]'); btn.disabled = true; btn.textContent = '만드는 중…';
     try {
       const r = await api(conf).createFamily(p);
@@ -438,19 +448,29 @@ function renderWelcome() {
     }
   };
 }
-function infoFields(f) {
+function infoFields(f, open) {
   return `
     <label>어르신 호칭 <span class="tiny">(발견자 화면에 보여요)</span></label>
     <input name="nickname" maxlength="40" required value="${esc(f.nickname || '')}" placeholder="예: 김순자 어르신">
+    <label>발견자가 걸 전화번호 <span class="tiny">(050 안심번호 권장)</span></label>
+    <input name="safe_number" type="tel" maxlength="20" required value="${esc(f.safe_number || '')}" placeholder="050-0000-0000">
+    <p class="tiny">010 번호는 처음 보는 사람에게 그대로 보여요. 통신사 050 안심번호(월 1,100원 안팎)를 권장해요.</p>
+    <details ${open ? 'open' : ''} style="margin-top:14px"><summary style="font-weight:500;color:var(--teal);cursor:pointer;padding:6px 0">더 입력하기 (선택 · 나중에 해도 돼요)</summary>
     <label>보호자 이름</label>
     <input name="guardian_name" maxlength="40" value="${esc(f.guardian_name || '')}" placeholder="예: 아들 한승우">
-    <label>발견자가 걸 전화번호 <span class="tiny">(050 안심번호 권장)</span></label>
-    <input name="safe_number" type="tel" maxlength="20" value="${esc(f.safe_number || '')}" placeholder="050-0000-0000">
     <label>이렇게 대해 주세요 <span class="tiny">(발견자에게 보여요)</span></label>
     <textarea name="calming_tips" maxlength="300" placeholder="예: '순자 씨' 하고 이름을 불러 주시면 안심하세요. 큰 소리를 무서워하세요.">${esc(f.calming_tips || '')}</textarea>
     <label>건강 메모 <span class="tiny">(질환·복용약 등)</span></label>
     <textarea name="medical_note" maxlength="300" placeholder="예: 당뇨 — 단 음료를 조금 드리면 좋아요">${esc(f.medical_note || '')}</textarea>
-    <label class="check"><input type="checkbox" name="show_medical" ${f.show_medical ? 'checked' : ''}><span>건강 메모를 발견자에게도 보여주기<br><span class="tiny">끄면 보호자만 볼 수 있어요</span></span></label>`;
+    <label class="check"><input type="checkbox" name="show_medical" ${f.show_medical ? 'checked' : ''}><span>건강 메모를 발견자에게도 보여주기<br><span class="tiny">끄면 보호자만 볼 수 있어요</span></span></label>
+    </details>`;
+}
+function checkInfo(p) {
+  if (!p.nickname) { toast('어르신 호칭을 적어 주세요'); return false; }
+  const digits = p.safe_number.replace(/[^0-9]/g, '');
+  if (digits.length < 8) { toast('발견자가 걸 전화번호를 적어 주세요'); return false; }
+  if (/^01[016789]/.test(digits) && !confirm('휴대폰 번호(010)는 목걸이를 찍은 낯선 사람에게 그대로 보여요.\n050 안심번호를 쓰시는 걸 권장해요.\n\n그래도 이 번호로 할까요?')) return false;
+  return true;
 }
 function readInfo() {
   const fm = $('#f'), g = n => (fm.elements[n].value || '').trim();
@@ -490,8 +510,8 @@ async function refresh(first) {
   }
 }
 function alertEvent(f, e) {
-  const title = e.kind === 'scan' ? `🚨 ${f.nickname} 발견 신고` : e.kind === 'exit' ? `⚠️ ${f.nickname} 안심존 이탈` : `✅ ${f.nickname} 안심존 복귀`;
-  const body = e.kind === 'scan' ? (e.lat != null ? '누군가 어르신을 발견하고 위치를 보냈어요. 눌러서 지도 보기' : '위치 없이 발견 알림이 왔어요') : KIND[e.kind];
+  const title = e.kind === 'open' ? `📳 ${f.nickname} 목걸이가 찍혔어요` : e.kind === 'scan' ? `🚨 ${f.nickname} 발견 신고` : e.kind === 'exit' ? `⚠️ ${f.nickname} 안심존 이탈` : `✅ ${f.nickname} 안심존 복귀`;
+  const body = e.kind === 'open' ? '누군가 어르신을 발견하고 목걸이를 찍었어요. 곧 위치나 전화가 올 수 있어요' : e.kind === 'scan' ? (e.lat != null ? '누군가 어르신을 발견하고 위치를 보냈어요. 눌러서 지도 보기' : '위치 없이 발견 알림이 왔어요') : KIND[e.kind];
   toast(title, 5000);
   if (navigator.vibrate) navigator.vibrate([400, 200, 400]);
   try {
@@ -680,7 +700,7 @@ function drawSet() {
   const standalone = matchMedia('(display-mode: standalone)').matches || navigator.standalone;
   app.innerHTML = `
     <h1>어르신 정보</h1>
-    <form id="f">${infoFields(f)}<button class="btn big b-teal" type="submit" style="margin-top:18px">저장</button></form>
+    <form id="f">${infoFields(f, true)}<button class="btn big b-teal" type="submit" style="margin-top:18px">저장</button></form>
     <h2>알림</h2>
     <div class="card">
       ${perm === 'granted' ? '<p>✓ 알림이 켜져 있어요.</p>' : perm === 'unsupported' ? '<p class="sub">이 브라우저는 알림을 지원하지 않아요.</p>' : '<button class="btn b-teal" id="nperm">알림 켜기</button>'}
@@ -695,7 +715,7 @@ function drawSet() {
     <p class="tiny" style="text-align:center;margin-top:24px">세이프브릿지 시험판 v0.1 · 문의 050-6520-0440</p>`;
   $('#f').onsubmit = async e => {
     e.preventDefault();
-    const p = readInfo(); if (!p.nickname) return toast('어르신 호칭을 적어 주세요');
+    const p = readInfo(); if (!checkInfo(p)) return;
     try { await M.A.updateFamily(M.me.fkey, p); await refresh(); toast('저장했어요'); } catch { toast('저장하지 못했어요'); }
   };
   const np = $('#nperm'); if (np) np.onclick = () => askNotify(true);
