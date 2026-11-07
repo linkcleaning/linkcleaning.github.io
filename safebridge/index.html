@@ -1,0 +1,721 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>세이프브릿지 · 어르신 안심 귀가</title>
+<meta name="description" content="치매 어르신 실종 방지 NFC·QR 목걸이와 보호자 앱 (시험판)">
+<meta name="theme-color" content="#0B5E5E">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="세이프브릿지">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<link rel="icon" href="icon-192.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+KR:wght@400;500;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="vendor/leaflet.css">
+<script src="vendor/leaflet.js" defer></script>
+<script src="vendor/qrcode.js" defer></script>
+<script src="config.js"></script>
+<style>
+:root{
+  --teal:#0B5E5E; --teal-d:#073F40; --teal-l:#E3F0EE; --orange:#E07A2E; --orange-l:#FCEBDD;
+  --green:#5E9E2F; --red:#C0392B; --red-l:#FBE4E1; --ink:#1D2626; --sub:#5A6565; --line:#DCE3E1;
+  --paper:#F7F4EF; --card:#FFFFFF; --r:18px;
+}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;background:var(--paper);color:var(--ink);font:17px/1.55 'IBM Plex Sans KR',system-ui,sans-serif}
+body{min-height:100dvh}
+#app{max-width:520px;margin:0 auto;padding:16px 16px calc(96px + env(safe-area-inset-bottom))}
+h1{font-size:24px;line-height:1.3;margin:8px 0 6px;letter-spacing:-.3px}
+h2{font-size:19px;margin:22px 0 10px}
+p{margin:6px 0}
+.sub{color:var(--sub);font-size:15px}
+.tiny{color:var(--sub);font-size:13px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:var(--r);padding:16px;margin:12px 0}
+.brand{display:flex;align-items:center;gap:10px;margin:4px 0 8px}
+.brand img{width:40px;height:40px;border-radius:11px}
+.brand b{font-size:18px;color:var(--teal-d)}
+.brand span{font-size:12px;color:var(--orange);font-weight:700;border:1.5px solid var(--orange);border-radius:99px;padding:0 8px;margin-left:2px}
+.btn{display:flex;align-items:center;justify-content:center;gap:8px;width:100%;min-height:56px;border:0;border-radius:16px;
+  font:700 18px 'IBM Plex Sans KR',sans-serif;cursor:pointer;text-decoration:none;margin:8px 0;padding:10px 16px;text-align:center}
+.btn.big{min-height:76px;font-size:22px}
+.b-teal{background:var(--teal);color:#fff}
+.b-orange{background:var(--orange);color:#fff}
+.b-red{background:var(--red);color:#fff}
+.b-ghost{background:#fff;color:var(--teal-d);border:1.5px solid var(--line)}
+.b-soft{background:var(--teal-l);color:var(--teal-d)}
+.btn:disabled{opacity:.5}
+.row{display:flex;gap:8px}.row>*{flex:1}
+label{display:block;font-weight:500;margin:14px 0 6px}
+input,textarea,select{width:100%;font:17px 'IBM Plex Sans KR',sans-serif;padding:13px 14px;border:1.5px solid var(--line);border-radius:12px;background:#fff;color:var(--ink)}
+textarea{min-height:84px;resize:vertical}
+input:focus,textarea:focus,select:focus{outline:none;border-color:var(--teal)}
+.check{display:flex;gap:10px;align-items:flex-start;font-weight:400;margin-top:10px}
+.check input{width:24px;height:24px;flex:none;margin-top:2px;accent-color:var(--teal)}
+.status{border-radius:var(--r);padding:16px 18px;margin:8px 0 12px;border:1.5px solid}
+.status.ok{background:var(--teal-l);border-color:#BFDAD5}
+.status.missing{background:var(--red-l);border-color:#F0B5AD}
+.status .name{font-size:23px;font-weight:700}
+.chip{display:inline-block;font-size:13px;font-weight:700;border-radius:99px;padding:2px 10px;vertical-align:middle;margin-left:6px}
+.chip.ok{background:#fff;color:var(--teal)}
+.chip.missing{background:var(--red);color:#fff}
+#map,#zmap{height:300px;border-radius:var(--r);border:1px solid var(--line);overflow:hidden;background:#e9eceb}
+.ev{display:flex;gap:12px;align-items:flex-start;padding:12px 4px;border-bottom:1px solid var(--line);cursor:pointer}
+.ev:last-child{border-bottom:0}
+.dot{width:12px;height:12px;border-radius:50%;margin-top:7px;flex:none}
+.dot.scan{background:var(--orange)} .dot.ping{background:var(--teal)} .dot.exit{background:var(--red)} .dot.enter{background:var(--green)}
+.ev b{font-weight:700}
+nav{position:fixed;left:0;right:0;bottom:0;background:#fff;border-top:1px solid var(--line);padding-bottom:env(safe-area-inset-bottom);z-index:1000}
+nav .in{max-width:520px;margin:0 auto;display:flex}
+nav button{flex:1;border:0;background:none;padding:10px 0 12px;font:500 14px 'IBM Plex Sans KR',sans-serif;color:var(--sub);display:flex;flex-direction:column;align-items:center;gap:2px}
+nav button svg{width:24px;height:24px}
+nav button.on{color:var(--teal);font-weight:700}
+.qr{background:#fff;border-radius:var(--r);padding:16px;text-align:center;border:1px solid var(--line)}
+.qr svg{width:220px;height:220px}
+.url{word-break:break-all;font-size:13px;color:var(--sub);background:#fff;border:1px dashed var(--line);border-radius:10px;padding:8px 10px;margin:8px 0}
+.toast{position:fixed;left:50%;top:16px;transform:translateX(-50%);background:var(--ink);color:#fff;padding:12px 18px;border-radius:14px;z-index:2000;
+  font-weight:500;max-width:92vw;box-shadow:0 6px 24px rgba(0,0,0,.2);transition:opacity .3s}
+.alert{background:var(--orange-l);border:1.5px solid #F2C29C;border-radius:var(--r);padding:14px 16px;margin:12px 0}
+.alert b{color:#9A4A0F}
+.seg{display:flex;background:#fff;border:1.5px solid var(--line);border-radius:14px;padding:4px;gap:4px}
+.seg button{flex:1;border:0;background:none;border-radius:10px;padding:10px 4px;font:500 15px 'IBM Plex Sans KR',sans-serif;color:var(--sub)}
+.seg button.on{background:var(--teal);color:#fff;font-weight:700}
+.finder{padding-top:8px}
+.finder .hello{font-size:26px;font-weight:700;line-height:1.35;margin:10px 0}
+.finder .who{font-size:21px;margin:8px 0 16px}
+.finder .tips{background:#fff;border-left:5px solid var(--orange);border-radius:12px;padding:14px 16px;font-size:18px;margin:16px 0}
+.finder .msg{font-size:19px;font-weight:700;padding:14px 16px;border-radius:14px;margin:12px 0;display:none}
+.finder .msg.ok{display:block;background:var(--teal-l);color:var(--teal-d)}
+.finder .msg.err{display:block;background:var(--red-l);color:var(--red)}
+.comp-state{font-size:28px;font-weight:700;text-align:center;padding:28px 12px;border-radius:var(--r);margin:16px 0}
+.empty{text-align:center;color:var(--sub);padding:24px 8px}
+.steps{padding-left:22px;margin:6px 0}.steps li{margin:6px 0}
+hr{border:0;border-top:1px solid var(--line);margin:20px 0}
+.leaflet-container{font:14px 'IBM Plex Sans KR',sans-serif}
+</style>
+</head>
+<body>
+<div id="app"></div>
+<nav id="nav" hidden><div class="in">
+  <button data-tab="home"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 21s-7-6.2-7-11.5A7 7 0 0 1 19 9.5C19 14.8 12 21 12 21z"/><circle cx="12" cy="9.5" r="2.5"/></svg>위치</button>
+  <button data-tab="tag"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="4" y="4" width="6" height="6"/><rect x="14" y="4" width="6" height="6"/><rect x="4" y="14" width="6" height="6"/><path d="M14 14h3v3M20 14v6h-6"/></svg>목걸이</button>
+  <button data-tab="zone"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="8"/><circle cx="12" cy="12" r="2.5"/></svg>안심존</button>
+  <button data-tab="set"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="8" r="4"/><path d="M4 21c1.5-4 4.5-6 8-6s6.5 2 8 6"/></svg>정보</button>
+</div></nav>
+
+<script>
+'use strict';
+/* ============ 기본 도구 ============ */
+const CFG = window.SB_CONFIG || { url: '', key: '' };
+const $ = s => document.querySelector(s);
+const app = $('#app');
+const esc = t => String(t ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+const store = {
+  get(k, d) { try { const v = JSON.parse(localStorage.getItem(k)); return v ?? d; } catch { return d; } },
+  set(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch {} },
+  del(k) { try { localStorage.removeItem(k); } catch {} }
+};
+const BASE = location.origin + location.pathname.replace(/index\.html$/, '');
+const rand = () => { const a = new Uint8Array(16); crypto.getRandomValues(a); return btoa(String.fromCharCode(...a)).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, ''); };
+const FIELDS = ['guardian_name', 'safe_number', 'nickname', 'calming_tips', 'medical_note', 'show_medical', 'zone_name', 'zone_lat', 'zone_lng', 'zone_radius'];
+const KIND = { scan: '발견자가 위치를 보냄', ping: '동행 모드 위치', exit: '안심존을 벗어남', enter: '안심존으로 돌아옴' };
+
+function toast(msg, ms = 2600) {
+  const t = document.createElement('div'); t.className = 'toast'; t.textContent = msg;
+  document.body.appendChild(t); setTimeout(() => { t.style.opacity = 0; setTimeout(() => t.remove(), 400); }, ms);
+}
+function fmtTime(iso) {
+  const d = new Date(iso), diff = (Date.now() - d) / 60000;
+  if (diff < 1) return '방금 전';
+  if (diff < 60) return `${Math.floor(diff)}분 전`;
+  if (diff < 1440) return `${Math.floor(diff / 60)}시간 전`;
+  return d.toLocaleString('ko-KR', { month: 'numeric', day: 'numeric', hour: 'numeric', minute: '2-digit' });
+}
+function meters(a, b) {
+  const R = 6371000, r = x => x * Math.PI / 180;
+  const dLat = r(b.lat - a.lat), dLng = r(b.lng - a.lng);
+  const h = Math.sin(dLat / 2) ** 2 + Math.cos(r(a.lat)) * Math.cos(r(b.lat)) * Math.sin(dLng / 2) ** 2;
+  return 2 * R * Math.asin(Math.sqrt(h));
+}
+async function copy(text, label = '복사했어요') {
+  try { await navigator.clipboard.writeText(text); toast(label); }
+  catch { prompt('아래 주소를 길게 눌러 복사하세요', text); }
+}
+async function share(title, text, url) {
+  if (navigator.share) { try { await navigator.share({ title, text, url }); return; } catch (e) { if (e.name === 'AbortError') return; } }
+  copy(url, '주소를 복사했어요. 카톡에 붙여넣어 보내세요');
+}
+const waitFor = (test, ms = 6000) => new Promise(res => {
+  const t0 = Date.now(); (function loop() { if (test()) return res(true); if (Date.now() - t0 > ms) return res(false); setTimeout(loop, 80); })();
+});
+
+/* ============ 서버 연결: 체험(이 폰) / 클라우드(Supabase) ============ */
+const LDB = 'sb_localdb';
+const ldb = () => store.get(LDB, { families: [], events: [], seq: 0 });
+const pick = p => Object.fromEntries(Object.entries(p || {}).filter(([k]) => FIELDS.includes(k)));
+const localApi = {
+  async createFamily(p) {
+    const d = ldb();
+    const f = { id: rand(), family_key: rand() + rand(), companion_key: rand(), tag_token: rand(), status: 'normal',
+      missing_since: null, nickname: '어르신', show_medical: false, ...pick(p), created_at: new Date().toISOString() };
+    if (!f.nickname) f.nickname = '어르신';
+    d.families.push(f); store.set(LDB, d);
+    return { family_key: f.family_key, companion_key: f.companion_key, tag_token: f.tag_token };
+  },
+  async updateFamily(fkey, p) {
+    const d = ldb(), f = d.families.find(x => x.family_key === fkey);
+    if (!f) throw new Error('family not found');
+    Object.assign(f, pick(p)); store.set(LDB, d); return { ok: true };
+  },
+  async dashboard(fkey) {
+    const d = ldb(), f = d.families.find(x => x.family_key === fkey);
+    if (!f) throw new Error('family not found');
+    const events = d.events.filter(e => e.family_id === f.id).sort((a, b) => b.id - a.id).slice(0, 200);
+    const { id, family_key, ...family } = f; return { family, events };
+  },
+  async scanInfo(token) {
+    const f = ldb().families.find(x => x.tag_token === token);
+    if (!f) return { ok: false };
+    return { ok: true, nickname: f.nickname, calming_tips: f.calming_tips, medical: f.show_medical ? f.medical_note : null,
+      safe_number: f.safe_number, missing: f.status === 'missing' };
+  },
+  async reportScan(token, lat, lng, acc, note) {
+    const d = ldb(), f = d.families.find(x => x.tag_token === token);
+    if (!f) return { ok: false };
+    d.events.push({ id: ++d.seq, family_id: f.id, kind: 'scan', lat, lng, accuracy: acc, note: note || null, created_at: new Date().toISOString() });
+    store.set(LDB, d); return { ok: true };
+  },
+  async companion(ckey, kind, lat, lng, acc) {
+    const d = ldb(), f = d.families.find(x => x.companion_key === ckey);
+    if (!f) return { ok: false };
+    if (['ping', 'exit', 'enter'].includes(kind) && lat != null) {
+      d.events.push({ id: ++d.seq, family_id: f.id, kind, lat, lng, accuracy: acc, note: null, created_at: new Date().toISOString() });
+      store.set(LDB, d);
+    }
+    return { ok: true, nickname: f.nickname, missing: f.status === 'missing',
+      zone: f.zone_lat != null ? { name: f.zone_name, lat: f.zone_lat, lng: f.zone_lng, radius: f.zone_radius } : null };
+  },
+  async setMissing(fkey, on) {
+    const d = ldb(), f = d.families.find(x => x.family_key === fkey);
+    if (!f) throw new Error('family not found');
+    f.status = on ? 'missing' : 'normal'; f.missing_since = on ? new Date().toISOString() : null;
+    store.set(LDB, d); return { ok: true };
+  },
+  async rotateTag(fkey) {
+    const d = ldb(), f = d.families.find(x => x.family_key === fkey);
+    if (!f) throw new Error('family not found');
+    f.tag_token = rand(); store.set(LDB, d); return { tag_token: f.tag_token };
+  }
+};
+function cloudApi({ url, key }) {
+  const base = url.replace(/\/+$/, '');
+  const rpc = async (fn, args) => {
+    const h = { 'Content-Type': 'application/json', apikey: key };
+    if (key.startsWith('eyJ')) h.Authorization = 'Bearer ' + key;
+    const r = await fetch(`${base}/rest/v1/rpc/${fn}`, { method: 'POST', headers: h, body: JSON.stringify(args) });
+    const t = await r.text();
+    if (!r.ok) { let m = t; try { m = JSON.parse(t).message || t; } catch {} throw new Error(m); }
+    return t ? JSON.parse(t) : null;
+  };
+  const n = v => (v === undefined ? null : v);
+  return {
+    createFamily: p => rpc('sb_create_family', { p }),
+    updateFamily: (f, p) => rpc('sb_update_family', { p_fkey: f, p }),
+    dashboard: f => rpc('sb_dashboard', { p_fkey: f }),
+    scanInfo: t => rpc('sb_scan_info', { p_token: t }),
+    reportScan: (t, lat, lng, acc, note) => rpc('sb_report_scan', { p_token: t, p_lat: n(lat), p_lng: n(lng), p_acc: n(acc), p_note: n(note) }),
+    companion: (c, k, lat, lng, acc) => rpc('sb_companion', { p_ckey: c, p_kind: k, p_lat: n(lat), p_lng: n(lng), p_acc: n(acc) }),
+    setMissing: (f, on) => rpc('sb_set_missing', { p_fkey: f, p_on: on }),
+    rotateTag: f => rpc('sb_rotate_tag', { p_fkey: f })
+  };
+}
+const api = conf => (conf && conf.mode === 'cloud' ? cloudApi(conf) : localApi);
+const defaultConf = () => (CFG.url && CFG.key ? { mode: 'cloud', url: CFG.url, key: CFG.key } : { mode: 'local' });
+function confFromQuery(q) {
+  const u = q.get('u'), k = q.get('k');
+  if (u && k) return { mode: 'cloud', url: u.includes('.') ? 'https://' + u.replace(/^https?:\/\//, '') : `https://${u}.supabase.co`, key: k };
+  return defaultConf();
+}
+function shareQuery(conf) {
+  if (!conf || conf.mode !== 'cloud') return '';
+  if (CFG.url && CFG.key && CFG.url === conf.url && CFG.key === conf.key) return '';
+  const ref = conf.url.replace(/^https?:\/\//, '').replace(/\/+$/, '').replace(/\.supabase\.co$/, '');
+  return `?u=${encodeURIComponent(ref)}&k=${encodeURIComponent(conf.key)}`;
+}
+
+/* ============ 라우터 ============ */
+function parseRoute() {
+  const h = location.hash.replace(/^#/, '') || '/';
+  const [path, query = ''] = h.split('?');
+  return { parts: path.split('/').filter(Boolean), q: new URLSearchParams(query) };
+}
+let pollTimer = null, compWatch = null, wakeLock = null;
+function stopAll() {
+  clearInterval(pollTimer); pollTimer = null;
+  if (compWatch != null) { navigator.geolocation.clearWatch(compWatch); compWatch = null; }
+  if (wakeLock) { try { wakeLock.release(); } catch {} wakeLock = null; }
+}
+function router() {
+  stopAll();
+  const { parts, q } = parseRoute();
+  $('#nav').hidden = true;
+  if (parts[0] === 't' && parts[1]) return renderFinder(parts[1], confFromQuery(q));
+  if (parts[0] === 'c' && parts[1]) return renderCompanion(parts[1], confFromQuery(q));
+  if (parts[0] === 'join' && parts[1]) return joinFamily(parts[1], confFromQuery(q));
+  const me = store.get('sb_me', null);
+  if (!me) return renderWelcome();
+  return renderMain(me);
+}
+window.addEventListener('hashchange', router);
+
+/* ============ 발견자 화면 (앱 설치 없이) ============ */
+async function renderFinder(token, conf) {
+  document.title = '어르신 귀가를 도와주세요 · 세이프브릿지';
+  app.innerHTML = `<div class="finder">
+    <div class="brand"><img src="icon-192.png" alt=""><b>세이프브릿지</b></div>
+    <div class="hello">길을 잃으신 어르신을<br>도와주셔서 감사합니다</div>
+    <div class="who" id="who">정보를 불러오는 중…</div>
+    <div class="msg" id="msg" role="status"></div>
+    <button class="btn big b-teal" id="send">📍 보호자에게 현재 위치 보내기</button>
+    <a class="btn big b-orange" id="call" href="#">📞 보호자에게 전화하기</a>
+    <div id="tips"></div>
+    <label for="note" style="font-size:16px">보호자에게 남길 말 (선택)</label>
+    <input id="note" maxlength="200" placeholder="예: ○○편의점 앞에 함께 있어요">
+    <a class="btn b-ghost" href="tel:112">급하면 112에 신고하기</a>
+    <p class="tiny" style="margin-top:14px">위치 보내기 버튼을 누르면 지금 계신 곳의 위치가 이 어르신의 보호자에게만 한 번 전달되며, 귀가를 돕는 데만 쓰입니다. 앱 설치나 로그인은 필요 없습니다.</p>
+    ${conf.mode === 'local' ? '<p class="tiny">※ 시험판 체험 모드입니다. 보호자 앱과 같은 폰에서만 전달됩니다.</p>' : ''}
+  </div>`;
+  const A = api(conf), msg = $('#msg');
+  const show = (t, ok) => { msg.className = 'msg ' + (ok ? 'ok' : 'err'); msg.textContent = t; };
+  let info;
+  try { info = await A.scanInfo(token); } catch (e) { info = { ok: false, err: e.message }; }
+  if (!info || !info.ok) {
+    $('#who').innerHTML = info && info.err ? '서버에 연결하지 못했어요. 112에 신고해 주세요.' : '등록되지 않았거나 사용이 끝난 표식입니다.<br>어르신과 함께 계시면 112에 신고해 주세요.';
+    $('#send').disabled = true; $('#call').style.display = 'none'; return;
+  }
+  $('#who').innerHTML = `<b>${esc(info.nickname)}</b>의 귀가를 도와주세요.${info.missing ? '<br><span class="chip missing" style="margin:6px 0 0">가족이 찾고 있어요</span>' : ''}`;
+  if (info.safe_number) $('#call').href = 'tel:' + info.safe_number.replace(/[^0-9+]/g, '');
+  else $('#call').style.display = 'none';
+  $('#tips').innerHTML = (info.calming_tips ? `<div class="tips"><b>이렇게 대해 주세요</b><br>${esc(info.calming_tips)}</div>` : '') +
+    (info.medical ? `<div class="tips" style="border-color:var(--red)"><b>건강 참고</b><br>${esc(info.medical)}</div>` : '');
+  let sent = false;
+  $('#send').onclick = () => {
+    const btn = $('#send'); btn.disabled = true; btn.textContent = '위치를 확인하는 중…';
+    const go = async pos => {
+      try {
+        const c = pos && pos.coords;
+        const r = await A.reportScan(token, c ? c.latitude : null, c ? c.longitude : null, c ? Math.round(c.accuracy) : null, $('#note').value.trim() || null);
+        if (!r || !r.ok) throw new Error('fail');
+        sent = true;
+        show(c ? '보호자에게 위치를 보냈습니다. 가능하시면 어르신 곁에 잠시 머물러 주세요.' : '위치 없이 발견 알림을 보냈습니다. 전화 버튼으로 보호자와 통화해 주세요.', true);
+        btn.textContent = '✓ 한 번 더 보내기'; btn.disabled = false;
+      } catch (e) {
+        show(/too many/.test(e.message) ? '방금 보냈어요. 잠시 뒤 다시 눌러 주세요.' : '전송에 실패했어요. 전화 버튼이나 112를 이용해 주세요.', false);
+        btn.textContent = '📍 다시 보내기'; btn.disabled = false;
+      }
+    };
+    if (!navigator.geolocation) return go(null);
+    navigator.geolocation.getCurrentPosition(go, () => go(null), { enableHighAccuracy: true, timeout: 9000, maximumAge: 0 });
+  };
+}
+
+/* ============ 어르신 폰: 동행 모드 ============ */
+async function renderCompanion(ckey, conf) {
+  document.title = '동행 모드 · 세이프브릿지';
+  const A = api(conf);
+  app.innerHTML = `<div class="brand"><img src="icon-192.png" alt=""><b>세이프브릿지</b><span>동행 모드</span></div><div id="cbody"><p class="empty">불러오는 중…</p></div>`;
+  let info;
+  try { info = await A.companion(ckey, 'info'); } catch (e) { info = { ok: false }; }
+  if (!info || !info.ok) { $('#cbody').innerHTML = '<div class="alert">연결 주소가 맞지 않아요. 보호자 앱의 [목걸이] 탭에서 동행 모드 링크를 다시 보내 주세요.</div>'; return; }
+  store.set('sb_companion', { ckey, conf });
+  $('#cbody').innerHTML = `
+    <h1>${esc(info.nickname)}의 폰</h1>
+    <p class="sub">이 화면을 켜 두면 위치를 가족에게 알리고, 안심존을 벗어나면 바로 알려 줍니다.</p>
+    <div class="comp-state" id="cstate" style="background:#fff;border:1.5px solid var(--line)">꺼져 있음</div>
+    <button class="btn big b-teal" id="cstart">동행 모드 켜기</button>
+    <p class="tiny" id="cinfo">${info.zone ? `안심존: ${esc(info.zone.name || '안심존')} (반경 ${info.zone.radius}m)` : '아직 안심존이 없어요. 보호자 앱에서 만들 수 있어요.'}</p>
+    <div class="alert"><b>시험판 안내</b><br>웹앱은 화면이 꺼지거나 다른 앱으로 넘어가면 위치를 보내지 못합니다. 정식 앱에서는 꺼진 상태에서도 동작하도록 만들 예정이에요.</div>`;
+  let zone = info.zone, inside = null, lastSent = 0, lastPos = null;
+  const state = (t, bg) => { const s = $('#cstate'); s.textContent = t; s.style.background = bg; s.style.borderColor = 'transparent'; };
+  const send = async (kind, c) => {
+    try {
+      const r = await A.companion(ckey, kind, c.latitude, c.longitude, Math.round(c.accuracy));
+      if (r && r.ok) { zone = r.zone; lastSent = Date.now(); lastPos = { lat: c.latitude, lng: c.longitude }; }
+      $('#cinfo').textContent = `마지막 전송 ${new Date().toLocaleTimeString('ko-KR', { hour: 'numeric', minute: '2-digit' })}` +
+        (zone ? ` · 안심존 ${zone.name || ''} 반경 ${zone.radius}m` : '');
+    } catch { $('#cinfo').textContent = '전송 실패 — 인터넷 연결을 확인해 주세요'; }
+  };
+  $('#cstart').onclick = async () => {
+    if (!navigator.geolocation) return toast('이 폰은 위치를 쓸 수 없어요');
+    try { if ('wakeLock' in navigator) wakeLock = await navigator.wakeLock.request('screen'); } catch {}
+    $('#cstart').style.display = 'none'; state('위치 확인 중…', 'var(--teal-l)');
+    compWatch = navigator.geolocation.watchPosition(p => {
+      const c = p.coords, here = { lat: c.latitude, lng: c.longitude };
+      if (zone) {
+        const now = meters(here, { lat: zone.lat, lng: zone.lng }) <= zone.radius + Math.min(c.accuracy, 80) / 2;
+        if (inside === null) { inside = now; if (!now) send('exit', c); }
+        else if (now !== inside) { inside = now; return send(now ? 'enter' : 'exit', c).then(() => state(now ? '안심존 안 · 동행 중' : '안심존 밖 · 가족에게 알림', now ? 'var(--teal-l)' : 'var(--red-l)')); }
+        state(inside ? '안심존 안 · 동행 중' : '안심존 밖 · 가족에게 알림', inside ? 'var(--teal-l)' : 'var(--red-l)');
+      } else state('동행 중', 'var(--teal-l)');
+      const gap = Date.now() - lastSent, moved = lastPos ? meters(here, lastPos) : Infinity;
+      const every = zone && inside === false ? 60000 : 300000;
+      if (gap > every || (moved > 100 && gap > 30000)) send('ping', c);
+    }, e => state(e.code === 1 ? '위치 권한을 허용해 주세요' : '위치를 찾는 중…', 'var(--orange-l)'),
+    { enableHighAccuracy: true, maximumAge: 15000, timeout: 30000 });
+  };
+}
+
+/* ============ 가족 초대 링크로 합류 ============ */
+async function joinFamily(fkey, conf) {
+  app.innerHTML = '<p class="empty">가족 정보를 확인하는 중…</p>';
+  try {
+    const d = await api(conf).dashboard(fkey);
+    store.set('sb_me', { conf, fkey });
+    toast(`${d.family.nickname} 보호자로 함께하게 됐어요`);
+  } catch { toast('초대 링크가 맞지 않아요'); }
+  location.hash = '#/';
+}
+
+/* ============ 처음 화면 ============ */
+function renderWelcome() {
+  const hasCfg = !!(CFG.url && CFG.key);
+  app.innerHTML = `
+    <div class="brand"><img src="icon-192.png" alt=""><b>세이프브릿지</b><span>시험판</span></div>
+    <h1>어르신이 길을 잃으셔도,<br>목걸이 한 번이면 집으로.</h1>
+    <p class="sub">누군가 어르신 목걸이(NFC·QR)를 휴대폰으로 찍으면, 앱 설치 없이 보호자에게 위치가 바로 전달됩니다.</p>
+    <div class="card">
+      <b>어떻게 쓸까요?</b>
+      <div class="seg" style="margin-top:10px" id="modeSeg">
+        <button data-m="cloud" class="${hasCfg ? 'on' : ''}">여러 폰 실제 테스트</button>
+        <button data-m="local" class="${hasCfg ? '' : 'on'}">이 폰에서만 체험</button>
+      </div>
+      <div id="modeBox"></div>
+    </div>
+    <h2>어르신 정보</h2>
+    <form id="f">
+      ${infoFields({})}
+      <button class="btn big b-teal" type="submit" style="margin-top:18px">시작하기</button>
+    </form>`;
+  let mode = hasCfg ? 'cloud' : 'local';
+  const box = () => {
+    $('#modeBox').innerHTML = mode === 'local'
+      ? '<p class="tiny" style="margin-top:10px">서버 없이 이 폰 안에서만 동작해요. 발견자 화면도 같은 폰에서 열어 보며 흐름을 확인할 수 있어요.</p>'
+      : hasCfg ? '<p class="tiny" style="margin-top:10px">공용 서버에 연결됩니다. 다른 폰으로 목걸이 QR을 찍으면 이 폰에 알림이 와요.</p>'
+      : `<p class="tiny" style="margin-top:10px">Supabase 프로젝트 주소와 공개 키(anon/publishable)를 넣어 주세요. 처음 한 번만 <a href="supabase-setup.sql" target="_blank">설치 SQL</a>을 실행하면 됩니다.</p>
+         <label>프로젝트 주소</label><input id="cu" placeholder="https://xxxx.supabase.co" autocapitalize="off">
+         <label>공개 키</label><input id="ck" placeholder="sb_publishable_… 또는 eyJ…" autocapitalize="off">`;
+    document.querySelectorAll('#modeSeg button').forEach(b => b.classList.toggle('on', b.dataset.m === mode));
+  };
+  document.querySelectorAll('#modeSeg button').forEach(b => b.onclick = () => { mode = b.dataset.m; box(); });
+  box();
+  $('#f').onsubmit = async e => {
+    e.preventDefault();
+    let conf = { mode: 'local' };
+    if (mode === 'cloud') {
+      if (hasCfg) conf = defaultConf();
+      else {
+        const url = ($('#cu').value || '').trim().replace(/\/+$/, ''), key = ($('#ck').value || '').trim();
+        if (!/^https:\/\/.+/.test(url) || key.length < 20) return toast('서버 주소와 키를 확인해 주세요');
+        conf = { mode: 'cloud', url, key };
+      }
+    }
+    const p = readInfo();
+    if (!p.nickname) return toast('어르신 호칭을 적어 주세요');
+    const btn = e.submitter || $('#f button[type=submit]'); btn.disabled = true; btn.textContent = '만드는 중…';
+    try {
+      const r = await api(conf).createFamily(p);
+      store.set('sb_me', { conf, fkey: r.family_key });
+      location.hash = '#/'; router();
+      toast('등록됐어요. [목걸이] 탭에서 QR을 확인하세요');
+    } catch (err) {
+      btn.disabled = false; btn.textContent = '시작하기';
+      toast(/function|schema|404|PGRST/.test(err.message) ? '서버에 설치 SQL이 아직 없어요' : '서버에 연결하지 못했어요');
+    }
+  };
+}
+function infoFields(f) {
+  return `
+    <label>어르신 호칭 <span class="tiny">(발견자 화면에 보여요)</span></label>
+    <input name="nickname" maxlength="40" required value="${esc(f.nickname || '')}" placeholder="예: 김순자 어르신">
+    <label>보호자 이름</label>
+    <input name="guardian_name" maxlength="40" value="${esc(f.guardian_name || '')}" placeholder="예: 아들 한승우">
+    <label>발견자가 걸 전화번호 <span class="tiny">(050 안심번호 권장)</span></label>
+    <input name="safe_number" type="tel" maxlength="20" value="${esc(f.safe_number || '')}" placeholder="050-0000-0000">
+    <label>이렇게 대해 주세요 <span class="tiny">(발견자에게 보여요)</span></label>
+    <textarea name="calming_tips" maxlength="300" placeholder="예: '순자 씨' 하고 이름을 불러 주시면 안심하세요. 큰 소리를 무서워하세요.">${esc(f.calming_tips || '')}</textarea>
+    <label>건강 메모 <span class="tiny">(질환·복용약 등)</span></label>
+    <textarea name="medical_note" maxlength="300" placeholder="예: 당뇨 — 단 음료를 조금 드리면 좋아요">${esc(f.medical_note || '')}</textarea>
+    <label class="check"><input type="checkbox" name="show_medical" ${f.show_medical ? 'checked' : ''}><span>건강 메모를 발견자에게도 보여주기<br><span class="tiny">끄면 보호자만 볼 수 있어요</span></span></label>`;
+}
+function readInfo() {
+  const fm = $('#f'), g = n => (fm.elements[n].value || '').trim();
+  return { nickname: g('nickname'), guardian_name: g('guardian_name'), safe_number: g('safe_number'),
+    calming_tips: g('calming_tips'), medical_note: g('medical_note'), show_medical: fm.elements.show_medical.checked };
+}
+
+/* ============ 보호자 앱 ============ */
+let M = null; // { me, A, dash, tab, map, zmap }
+function renderMain(me) {
+  M = { me, A: api(me.conf), dash: null, tab: store.get('sb_tab', 'home'), map: null, zmap: null };
+  $('#nav').hidden = false;
+  document.querySelectorAll('#nav button').forEach(b => b.onclick = () => go(b.dataset.tab));
+  go(M.tab);
+  pollTimer = setInterval(() => { if (document.visibilityState === 'visible') refresh(); }, 10000);
+}
+document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible' && M && pollTimer) refresh(); });
+
+async function refresh(first) {
+  try {
+    const d = await M.A.dashboard(M.me.fkey);
+    const prevTop = store.get('sb_seen', 0);
+    const top = d.events.length ? d.events[0].id : 0;
+    if (!first && M.dash && top > prevTop) {
+      const fresh = d.events.filter(e => e.id > prevTop && e.kind !== 'ping');
+      for (const e of fresh.reverse()) alertEvent(d.family, e);
+    }
+    store.set('sb_seen', top);
+    const changed = !M.dash || JSON.stringify(M.dash) !== JSON.stringify(d);
+    M.dash = d;
+    if (changed && (M.tab === 'home')) drawHome();
+    return d;
+  } catch (e) {
+    if (/family not found/.test(e.message)) { store.del('sb_me'); toast('등록 정보가 없어 처음 화면으로 갑니다'); location.hash = '#/'; router(); }
+    else if (first) toast('서버에 연결하지 못했어요');
+    return null;
+  }
+}
+function alertEvent(f, e) {
+  const title = e.kind === 'scan' ? `🚨 ${f.nickname} 발견 신고` : e.kind === 'exit' ? `⚠️ ${f.nickname} 안심존 이탈` : `✅ ${f.nickname} 안심존 복귀`;
+  const body = e.kind === 'scan' ? (e.lat != null ? '누군가 어르신을 발견하고 위치를 보냈어요. 눌러서 지도 보기' : '위치 없이 발견 알림이 왔어요') : KIND[e.kind];
+  toast(title, 5000);
+  if (navigator.vibrate) navigator.vibrate([400, 200, 400]);
+  try {
+    if ('Notification' in window && Notification.permission === 'granted' && navigator.serviceWorker) {
+      navigator.serviceWorker.ready.then(r => r.showNotification(title, { body, icon: 'icon-192.png', badge: 'icon-192.png', tag: 'sb-' + e.id, renotify: true, data: { url: BASE } }));
+    }
+  } catch {}
+}
+
+function go(tab) {
+  M.tab = tab; store.set('sb_tab', tab);
+  document.querySelectorAll('#nav button').forEach(b => b.classList.toggle('on', b.dataset.tab === tab));
+  if (M.map) { M.map.remove(); M.map = null; }
+  if (M.zmap) { M.zmap.remove(); M.zmap = null; }
+  window.scrollTo(0, 0);
+  if (!M.dash) { app.innerHTML = '<p class="empty">불러오는 중…</p>'; refresh(true).then(d => d && go(tab)); return; }
+  ({ home: drawHome, tag: drawTag, zone: drawZone, set: drawSet })[tab]();
+}
+
+/* ---- 위치(홈) ---- */
+function drawHome() {
+  const { family: f, events } = M.dash, missing = f.status === 'missing';
+  const located = events.filter(e => e.lat != null);
+  const last = located[0];
+  const keepScroll = window.scrollY;
+  if (M.map) { M.map.remove(); M.map = null; }
+  app.innerHTML = `
+    <div class="brand"><img src="icon-192.png" alt=""><b>세이프브릿지</b>${M.me.conf.mode === 'local' ? '<span>체험 모드</span>' : ''}</div>
+    <div class="status ${missing ? 'missing' : 'ok'}">
+      <div class="name">${esc(f.nickname)}<span class="chip ${missing ? 'missing' : 'ok'}">${missing ? '실종 모드' : '평상시'}</span></div>
+      <p class="sub">${last ? `마지막 위치 · ${fmtTime(last.created_at)} · ${KIND[last.kind]}` : '아직 받은 위치가 없어요'}</p>
+      ${missing && f.missing_since ? `<p class="sub">실종 신고 ${fmtTime(f.missing_since)}부터 · 발견 알림을 크게 울려요</p>` : ''}
+    </div>
+    <div id="map"></div>
+    ${last ? `<div class="row"><a class="btn b-soft" target="_blank" href="https://map.kakao.com/link/map/${encodeURIComponent(f.nickname)},${last.lat},${last.lng}">카카오맵으로 보기</a>
+      <a class="btn b-soft" target="_blank" href="https://map.kakao.com/link/to/${encodeURIComponent(f.nickname)},${last.lat},${last.lng}">길찾기</a></div>` : ''}
+    <button class="btn big ${missing ? 'b-ghost' : 'b-red'}" id="missBtn">${missing ? '찾았어요 (실종 모드 끄기)' : '실종 모드 켜기'}</button>
+    ${missing ? '<p class="tiny">실종 모드에서는 목걸이를 찍은 사람 화면에 "가족이 찾고 있어요"가 표시됩니다. 112 신고도 함께 해 주세요. <a href="tel:112">112 전화</a></p>' : ''}
+    <h2>최근 기록</h2>
+    <div class="card" style="padding:4px 12px">${events.length ? events.slice(0, 30).map(e => `
+      <div class="ev" data-id="${e.id}"><span class="dot ${e.kind}"></span><div>
+        <b>${KIND[e.kind]}</b><div class="tiny">${fmtTime(e.created_at)}${e.lat == null ? ' · 위치 없음' : e.accuracy ? ` · 오차 약 ${Math.round(e.accuracy)}m` : ''}</div>
+        ${e.note ? `<div class="sub">“${esc(e.note)}”</div>` : ''}</div></div>`).join('')
+      : '<p class="empty">아직 기록이 없어요.<br>[목걸이] 탭의 "발견자 화면 미리보기"로 시험해 보세요.</p>'}</div>`;
+  window.scrollTo(0, keepScroll);
+  $('#missBtn').onclick = async () => {
+    const on = !missing;
+    if (on && !confirm('실종 모드를 켤까요?\n목걸이를 찍은 사람에게 "가족이 찾고 있어요"가 표시됩니다.')) return;
+    try { await M.A.setMissing(M.me.fkey, on); await refresh(); drawHome(); askNotify(); } catch { toast('변경하지 못했어요'); }
+  };
+  document.querySelectorAll('.ev').forEach(el => el.onclick = () => {
+    const e = events.find(x => String(x.id) === el.dataset.id);
+    if (e && e.lat != null && M.map) { M.map.setView([e.lat, e.lng], 17); window.scrollTo({ top: 0, behavior: 'smooth' }); }
+  });
+  drawMap('map', f, located);
+}
+async function drawMap(id, f, located) {
+  if (!(await waitFor(() => window.L))) { $('#' + id).innerHTML = '<p class="empty">지도를 불러오지 못했어요</p>'; return; }
+  const center = located[0] ? [located[0].lat, located[0].lng] : f.zone_lat != null ? [f.zone_lat, f.zone_lng] : [37.5665, 126.978];
+  const map = L.map(id, { zoomControl: false, attributionControl: true }).setView(center, located[0] ? 16 : 13);
+  M.map = map;
+  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 19, attribution: '© OpenStreetMap' }).addTo(map);
+  if (f.zone_lat != null) L.circle([f.zone_lat, f.zone_lng], { radius: f.zone_radius || 300, color: '#0B5E5E', weight: 2, fillOpacity: .1 }).addTo(map);
+  const trail = located.filter(e => Date.now() - new Date(e.created_at) < 86400000).slice().reverse();
+  if (trail.length > 1) L.polyline(trail.map(e => [e.lat, e.lng]), { color: '#E07A2E', weight: 4, opacity: .7 }).addTo(map);
+  const col = { scan: '#E07A2E', ping: '#0B5E5E', exit: '#C0392B', enter: '#5E9E2F' };
+  trail.forEach(e => L.circleMarker([e.lat, e.lng], { radius: e.kind === 'ping' ? 4 : 7, color: '#fff', weight: 2, fillColor: col[e.kind], fillOpacity: 1 })
+    .bindPopup(`${KIND[e.kind]}<br>${fmtTime(e.created_at)}`).addTo(map));
+  if (located[0]) L.circleMarker([located[0].lat, located[0].lng], { radius: 12, color: '#E07A2E', weight: 4, fillColor: '#fff', fillOpacity: 1 }).bindPopup('마지막 위치').addTo(map);
+}
+
+/* ---- 목걸이(표식) ---- */
+function tagUrl() { return `${BASE}#/t/${M.dash.family.tag_token}${shareQuery(M.me.conf)}`; }
+function drawTag() {
+  const f = M.dash.family, url = tagUrl();
+  const compUrl = `${BASE}#/c/${f.companion_key}${shareQuery(M.me.conf)}`;
+  const joinUrl = `${BASE}#/join/${M.me.fkey}${shareQuery(M.me.conf)}`;
+  const nfc = 'NDEFReader' in window;
+  app.innerHTML = `
+    <h1>목걸이 표식</h1>
+    <p class="sub">이 QR을 인쇄하거나 NFC 스티커에 주소를 넣어 목걸이에 붙이세요.</p>
+    <div class="qr"><div id="qr">QR 만드는 중…</div><div style="font-weight:700;margin-top:6px">${esc(f.nickname)} · 휴대폰으로 찍어 주세요</div></div>
+    <div class="url">${esc(url)}</div>
+    <div class="row"><button class="btn b-soft" id="cp">주소 복사</button><button class="btn b-soft" id="png">QR 이미지 저장</button></div>
+    <a class="btn b-orange" href="${esc(url)}" target="_blank">발견자 화면 미리보기</a>
+    <p class="tiny">미리보기에서 "위치 보내기"를 누르면 [위치] 탭에 기록이 생겨요.${M.me.conf.mode === 'cloud' ? ' 다른 사람 폰으로 QR을 찍어 보면 실제 상황과 같아요.' : ''}</p>
+    <h2>NFC 스티커에 쓰기</h2>
+    ${nfc ? '<button class="btn b-teal" id="nfcw">NFC 스티커에 지금 쓰기</button><p class="tiny">버튼을 누른 뒤 폰 뒷면에 NFC 스티커(NTAG213/215)를 대세요.</p>'
+      : '<p class="sub">아이폰은 웹에서 NFC를 쓸 수 없어요. <b>NFC Tools</b> 앱(무료) → 쓰기 → 기록 추가 → URL에 위 주소를 붙여넣고 스티커에 대면 됩니다. 안드로이드 크롬에서는 이 화면에서 바로 쓸 수 있어요.</p>'}
+    <h2>어르신 폰 동행 모드</h2>
+    <p class="sub">어르신이 휴대폰을 갖고 다니시면, 이 링크를 어르신 폰에서 열고 "동행 모드 켜기"를 눌러 두세요. 안심존을 벗어나면 알려 드려요.</p>
+    <button class="btn b-ghost" id="shareComp">어르신 폰으로 링크 보내기</button>
+    <h2>가족 함께 보기</h2>
+    <p class="sub">이 링크를 연 가족도 같은 알림과 위치를 볼 수 있어요. 가족에게만 보내세요.</p>
+    <button class="btn b-ghost" id="shareJoin">가족 초대 링크 보내기</button>
+    <hr>
+    <button class="btn b-ghost" id="rotate" style="color:var(--red)">목걸이를 잃어버렸어요 (표식 새로 만들기)</button>
+    <p class="tiny">예전 QR·NFC는 바로 쓸 수 없게 되고, 새 QR이 만들어집니다.</p>`;
+  (async () => {
+    if (!(await waitFor(() => window.qrcode))) { $('#qr').textContent = 'QR 도구를 불러오지 못했어요'; return; }
+    const qr = qrcode(0, 'M'); qr.addData(url); qr.make();
+    $('#qr').innerHTML = qr.createSvgTag({ cellSize: 6, margin: 2, scalable: true });
+  })();
+  $('#cp').onclick = () => copy(url, '표식 주소를 복사했어요');
+  $('#png').onclick = () => qrPng(url, f.nickname);
+  $('#shareComp').onclick = () => share('세이프브릿지 동행 모드', '이 링크를 열고 "동행 모드 켜기"를 눌러 주세요.', compUrl);
+  $('#shareJoin').onclick = () => share('세이프브릿지 가족 초대', `${f.nickname} 안심 귀가 알림을 함께 받아요.`, joinUrl);
+  $('#rotate').onclick = async () => {
+    if (!confirm('표식을 새로 만들까요?\n지금 목걸이의 QR·NFC는 더 이상 작동하지 않습니다.')) return;
+    try { await M.A.rotateTag(M.me.fkey); await refresh(); drawTag(); toast('새 표식을 만들었어요. 새로 인쇄해 주세요'); } catch { toast('실패했어요'); }
+  };
+  if (nfc) $('#nfcw').onclick = async () => {
+    try { const w = new NDEFReader(); toast('스티커를 폰 뒷면에 대 주세요', 4000); await w.write({ records: [{ recordType: 'url', data: url }] }); toast('NFC 스티커에 썼어요 ✓'); }
+    catch (e) { toast('쓰지 못했어요: ' + (e.message || e.name)); }
+  };
+}
+async function qrPng(url, name) {
+  if (!window.qrcode) return;
+  const qr = qrcode(0, 'M'); qr.addData(url); qr.make();
+  const n = qr.getModuleCount(), cell = 14, pad = 40, size = n * cell + pad * 2;
+  const c = document.createElement('canvas'); c.width = size; c.height = size + 90;
+  const g = c.getContext('2d'); g.fillStyle = '#fff'; g.fillRect(0, 0, c.width, c.height);
+  g.fillStyle = '#111';
+  for (let r = 0; r < n; r++) for (let k = 0; k < n; k++) if (qr.isDark(r, k)) g.fillRect(pad + k * cell, pad + r * cell, cell, cell);
+  g.fillStyle = '#0B5E5E'; g.font = '700 30px "IBM Plex Sans KR", sans-serif'; g.textAlign = 'center';
+  g.fillText('휴대폰으로 찍어 주세요', size / 2, size + 20);
+  g.fillStyle = '#555'; g.font = '22px "IBM Plex Sans KR", sans-serif'; g.fillText(`세이프브릿지 · ${name}`, size / 2, size + 60);
+  const a = document.createElement('a'); a.href = c.toDataURL('image/png'); a.download = 'safebridge-qr.png'; a.click();
+}
+
+/* ---- 안심존 ---- */
+function drawZone() {
+  const f = M.dash.family;
+  let center = f.zone_lat != null ? { lat: f.zone_lat, lng: f.zone_lng } : null;
+  let radius = f.zone_radius || 300;
+  app.innerHTML = `
+    <h1>안심존</h1>
+    <p class="sub">집이나 자주 가시는 곳을 중심으로 정해 두세요. 어르신 폰의 동행 모드가 켜져 있으면 벗어날 때 알려 드려요.</p>
+    <div id="zmap"></div>
+    <p class="tiny">지도를 눌러 중심을 옮길 수 있어요.</p>
+    <button class="btn b-soft" id="here">지금 내 위치를 중심으로</button>
+    <label>이름</label><input id="zname" maxlength="20" value="${esc(f.zone_name || '집')}">
+    <label>반경</label>
+    <select id="zr">${[100, 200, 300, 500, 1000, 2000].map(r => `<option value="${r}" ${r === radius ? 'selected' : ''}>${r >= 1000 ? r / 1000 + 'km' : r + 'm'}</option>`).join('')}</select>
+    <button class="btn big b-teal" id="zsave">안심존 저장</button>
+    ${f.zone_lat != null ? '<button class="btn b-ghost" id="zdel">안심존 지우기</button>' : ''}`;
+  let marker = null, circle = null;
+  const paint = () => {
+    if (!M.zmap || !center) return;
+    if (!marker) { marker = L.marker([center.lat, center.lng]).addTo(M.zmap); circle = L.circle([center.lat, center.lng], { radius, color: '#0B5E5E', weight: 2, fillOpacity: .12 }).addTo(M.zmap); }
+    marker.setLatLng([center.lat, center.lng]); circle.setLatLng([center.lat, center.lng]); circle.setRadius(radius);
+  };
+  (async () => {
+    if (!(await waitFor(() => window.L))) { $('#zmap').innerHTML = '<p class="empty">지도를 불러오지 못했어요</p>'; return; }
+    M.zmap = L.map('zmap', { zoomControl: false }).setView(center ? [center.lat, center.lng] : [37.5665, 126.978], center ? 15 : 12);
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 19, attribution: '© OpenStreetMap' }).addTo(M.zmap);
+    M.zmap.on('click', e => { center = { lat: e.latlng.lat, lng: e.latlng.lng }; paint(); });
+    paint();
+  })();
+  $('#zr').onchange = e => { radius = +e.target.value; paint(); if (M.zmap && circle) M.zmap.fitBounds(circle.getBounds(), { padding: [20, 20] }); };
+  $('#here').onclick = () => {
+    if (!navigator.geolocation) return toast('위치를 쓸 수 없어요');
+    toast('현재 위치를 찾는 중…');
+    navigator.geolocation.getCurrentPosition(p => {
+      center = { lat: p.coords.latitude, lng: p.coords.longitude }; paint();
+      if (M.zmap) M.zmap.setView([center.lat, center.lng], 16);
+    }, () => toast('위치 권한을 허용해 주세요'), { enableHighAccuracy: true, timeout: 10000 });
+  };
+  $('#zsave').onclick = async () => {
+    if (!center) return toast('지도를 눌러 중심을 먼저 정해 주세요');
+    try {
+      await M.A.updateFamily(M.me.fkey, { zone_name: $('#zname').value.trim() || '안심존', zone_lat: center.lat, zone_lng: center.lng, zone_radius: radius });
+      await refresh(); toast('안심존을 저장했어요');
+    } catch { toast('저장하지 못했어요'); }
+  };
+  const del = $('#zdel');
+  if (del) del.onclick = async () => {
+    try { await M.A.updateFamily(M.me.fkey, { zone_name: null, zone_lat: null, zone_lng: null, zone_radius: null }); await refresh(); drawZone(); toast('안심존을 지웠어요'); } catch { toast('실패했어요'); }
+  };
+}
+
+/* ---- 정보·설정 ---- */
+function drawSet() {
+  const f = M.dash.family, c = M.me.conf;
+  const perm = 'Notification' in window ? Notification.permission : 'unsupported';
+  const standalone = matchMedia('(display-mode: standalone)').matches || navigator.standalone;
+  app.innerHTML = `
+    <h1>어르신 정보</h1>
+    <form id="f">${infoFields(f)}<button class="btn big b-teal" type="submit" style="margin-top:18px">저장</button></form>
+    <h2>알림</h2>
+    <div class="card">
+      ${perm === 'granted' ? '<p>✓ 알림이 켜져 있어요.</p>' : perm === 'unsupported' ? '<p class="sub">이 브라우저는 알림을 지원하지 않아요.</p>' : '<button class="btn b-teal" id="nperm">알림 켜기</button>'}
+      ${!standalone ? '<p class="tiny">아이폰은 Safari 공유 버튼 → <b>홈 화면에 추가</b>로 설치해야 알림을 받을 수 있어요.</p>' : ''}
+      <p class="tiny">시험판은 앱이 열려 있거나 최근에 열었을 때 10초마다 새 기록을 확인해요. 앱이 완전히 닫혀 있을 때 오는 푸시 알림은 정식 앱에서 지원합니다.</p>
+    </div>
+    <h2>연결 상태</h2>
+    <div class="card"><p>${c.mode === 'cloud' ? `서버 연결: <b>${esc(c.url.replace(/^https:\/\//, ''))}</b>` : '<b>체험 모드</b> — 이 폰 안에만 저장돼요'}</p>
+      <p class="tiny">개인정보: 위치는 귀가 확인에만 쓰고, 동행 모드 위치는 30일 뒤 지워져요. 시험판이므로 실제 실종 상황에서는 반드시 112에 먼저 신고하세요.</p></div>
+    <button class="btn b-ghost" id="leave" style="color:var(--red)">이 폰에서 나가기</button>
+    <p class="tiny">${c.mode === 'local' ? '체험 모드 데이터가 모두 지워져요.' : '서버 기록은 남고, 가족 초대 링크로 다시 들어올 수 있어요.'}</p>
+    <p class="tiny" style="text-align:center;margin-top:24px">세이프브릿지 시험판 v0.1 · 문의 050-6520-0440</p>`;
+  $('#f').onsubmit = async e => {
+    e.preventDefault();
+    const p = readInfo(); if (!p.nickname) return toast('어르신 호칭을 적어 주세요');
+    try { await M.A.updateFamily(M.me.fkey, p); await refresh(); toast('저장했어요'); } catch { toast('저장하지 못했어요'); }
+  };
+  const np = $('#nperm'); if (np) np.onclick = () => askNotify(true);
+  $('#leave').onclick = () => {
+    if (!confirm('이 폰에서 세이프브릿지 등록을 지울까요?')) return;
+    if (c.mode === 'local') store.del(LDB);
+    ['sb_me', 'sb_seen', 'sb_tab'].forEach(store.del);
+    location.hash = '#/'; router();
+  };
+}
+async function askNotify(explicit) {
+  if (!('Notification' in window)) { if (explicit) toast('홈 화면에 추가한 뒤 다시 눌러 주세요'); return; }
+  if (Notification.permission === 'default') {
+    const r = await Notification.requestPermission();
+    if (r === 'granted') toast('알림을 켰어요');
+    if (M && M.tab === 'set') drawSet();
+  } else if (explicit) toast(Notification.permission === 'granted' ? '이미 켜져 있어요' : '설정에서 알림을 허용해 주세요');
+}
+
+/* ============ 시작 ============ */
+if ('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js').catch(() => {});
+router();
+</script>
+</body>
+</html>
