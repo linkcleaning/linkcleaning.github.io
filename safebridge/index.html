@@ -274,7 +274,9 @@ window.addEventListener('hashchange', router);
 /* ============ 발견자 화면 (앱 설치 없이) ============ */
 async function renderFinder(token, conf) {
   document.title = '어르신 귀가를 도와주세요 · 세이프브릿지';
+  const mine = store.get('sb_me', null);
   app.innerHTML = `<div class="finder">
+    ${mine ? '<a class="btn b-soft" href="#/" onclick="localStorage.setItem(\'sb_tab\',\'&quot;home&quot;\')" style="min-height:48px;font-size:16px;margin:0 0 10px">← 보호자 화면으로 돌아가기 <span class="tiny">(이 폰에서만 보여요)</span></a>' : ''}
     <div class="brand"><img src="icon-192.png" alt=""><b>세이프브릿지</b></div>
     <div class="hello">길을 잃으신 어르신을<br>도와주셔서 감사합니다</div>
     <div class="who" id="who">정보를 불러오는 중…</div>
@@ -326,7 +328,7 @@ async function renderFinder(token, conf) {
 async function renderCompanion(ckey, conf) {
   document.title = '동행 모드 · 세이프브릿지';
   const A = api(conf);
-  app.innerHTML = `<div class="brand"><img src="icon-192.png" alt=""><b>세이프브릿지</b><span>동행 모드</span></div><div id="cbody"><p class="empty">불러오는 중…</p></div>`;
+  app.innerHTML = `${store.get('sb_me', null) ? '<a class="btn b-soft" href="#/" style="min-height:48px;font-size:16px;margin:0 0 10px">← 보호자 화면으로 돌아가기</a>' : ''}<div class="brand"><img src="icon-192.png" alt=""><b>세이프브릿지</b><span>동행 모드</span></div><div id="cbody"><p class="empty">불러오는 중…</p></div>`;
   let info;
   try { info = await A.companion(ckey, 'info'); } catch (e) { info = { ok: false }; }
   if (!info || !info.ok) { $('#cbody').innerHTML = '<div class="alert">연결 주소가 맞지 않아요. 보호자 앱의 [목걸이] 탭에서 동행 모드 링크를 다시 보내 주세요.</div>'; return; }
@@ -574,7 +576,7 @@ function drawTag() {
     <div class="qr"><div id="qr">QR 만드는 중…</div><div style="font-weight:700;margin-top:6px">${esc(f.nickname)} · 휴대폰으로 찍어 주세요</div></div>
     <div class="url">${esc(url)}</div>
     <div class="row"><button class="btn b-soft" id="cp">주소 복사</button><button class="btn b-soft" id="png">QR 이미지 저장</button></div>
-    <a class="btn b-orange" href="${esc(url)}" target="_blank">발견자 화면 미리보기</a>
+    <a class="btn b-orange" href="${esc(url.slice(url.indexOf('#')))}">발견자 화면 미리보기</a>
     <p class="tiny">미리보기에서 "위치 보내기"를 누르면 [위치] 탭에 기록이 생겨요.${M.me.conf.mode === 'cloud' ? ' 다른 사람 폰으로 QR을 찍어 보면 실제 상황과 같아요.' : ''}</p>
     <h2>NFC 스티커에 쓰기</h2>
     ${nfc ? '<button class="btn b-teal" id="nfcw">NFC 스티커에 지금 쓰기</button><p class="tiny">버튼을 누른 뒤 폰 뒷면에 NFC 스티커(NTAG213/215)를 대세요.</p>'
