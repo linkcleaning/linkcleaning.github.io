@@ -3,8 +3,8 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<title>세이프브릿지 · 어르신 안심 귀가</title>
-<meta name="description" content="치매 어르신 실종 방지 NFC·QR 목걸이와 보호자 앱 (시험판)">
+<title>세이프브릿지 · 어르신 안심 팔찌</title>
+<meta name="description" content="70세 이상 어르신 누구나 차는 NFC·QR 안심 팔찌·목걸이와 보호자 앱 (시험판)">
 <meta name="theme-color" content="#0B5E5E">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
@@ -66,7 +66,7 @@ input:focus,textarea:focus,select:focus{outline:none;border-color:var(--teal)}
 .ev{display:flex;gap:12px;align-items:flex-start;padding:12px 4px;border-bottom:1px solid var(--line);cursor:pointer}
 .ev:last-child{border-bottom:0}
 .dot{width:12px;height:12px;border-radius:50%;margin-top:7px;flex:none}
-.dot.open{background:#F2B36B} .dot.scan{background:var(--orange)} .dot.ping{background:var(--teal)} .dot.exit{background:var(--red)} .dot.enter{background:var(--green)}
+.dot.open{background:#F2B36B} .dot.sos{background:#8E1B12;box-shadow:0 0 0 3px #F6C9C3} .dot.scan{background:var(--orange)} .dot.ping{background:var(--teal)} .dot.exit{background:var(--red)} .dot.enter{background:var(--green)}
 .ev b{font-weight:700}
 nav{position:fixed;left:0;right:0;bottom:0;background:#fff;border-top:1px solid var(--line);padding-bottom:env(safe-area-inset-bottom);z-index:1000}
 nav .in{max-width:520px;margin:0 auto;display:flex}
@@ -101,7 +101,7 @@ hr{border:0;border-top:1px solid var(--line);margin:20px 0}
 <div id="app"></div>
 <nav id="nav" hidden><div class="in">
   <button data-tab="home"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 21s-7-6.2-7-11.5A7 7 0 0 1 19 9.5C19 14.8 12 21 12 21z"/><circle cx="12" cy="9.5" r="2.5"/></svg>위치</button>
-  <button data-tab="tag"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="4" y="4" width="6" height="6"/><rect x="14" y="4" width="6" height="6"/><rect x="4" y="14" width="6" height="6"/><path d="M14 14h3v3M20 14v6h-6"/></svg>목걸이</button>
+  <button data-tab="tag"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="4" y="4" width="6" height="6"/><rect x="14" y="4" width="6" height="6"/><rect x="4" y="14" width="6" height="6"/><path d="M14 14h3v3M20 14v6h-6"/></svg>표식</button>
   <button data-tab="zone"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="8"/><circle cx="12" cy="12" r="2.5"/></svg>안심존</button>
   <button data-tab="set"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="8" r="4"/><path d="M4 21c1.5-4 4.5-6 8-6s6.5 2 8 6"/></svg>정보</button>
 </div></nav>
@@ -120,8 +120,8 @@ const store = {
 };
 const BASE = location.origin + location.pathname.replace(/index\.html$/, '');
 const rand = () => { const a = new Uint8Array(16); crypto.getRandomValues(a); return btoa(String.fromCharCode(...a)).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, ''); };
-const FIELDS = ['guardian_name', 'safe_number', 'nickname', 'calming_tips', 'medical_note', 'show_medical', 'zone_name', 'zone_lat', 'zone_lng', 'zone_radius'];
-const KIND = { open: '누군가 목걸이를 찍음', scan: '발견자가 위치를 보냄', ping: '동행 모드 위치', exit: '안심존을 벗어남', enter: '안심존으로 돌아옴' };
+const FIELDS = ['blood_type', 'conditions', 'medications', 'allergies', 'pub_blood', 'pub_conditions', 'pub_meds', 'pub_allergies', 'guardian_name', 'safe_number', 'nickname', 'calming_tips', 'medical_note', 'show_medical', 'zone_name', 'zone_lat', 'zone_lng', 'zone_radius'];
+const KIND = { open: '누군가 표식을 찍음', sos: '🚑 응급 상황 신고 (쓰러짐·아픔)', scan: '발견자가 위치를 보냄', ping: '동행 모드 위치', exit: '안심존을 벗어남', enter: '안심존으로 돌아옴' };
 
 function toast(msg, ms = 2600) {
   const t = document.createElement('div'); t.className = 'toast'; t.textContent = msg;
@@ -179,7 +179,9 @@ const localApi = {
   async scanInfo(token) {
     const f = ldb().families.find(x => x.tag_token === token);
     if (!f) return { ok: false };
+    const pub = (k, v) => (f[k] !== false && v ? v : undefined);
     return { ok: true, nickname: f.nickname, calming_tips: f.calming_tips, medical: f.show_medical ? f.medical_note : null,
+      emergency: { blood_type: pub('pub_blood', f.blood_type), conditions: pub('pub_conditions', f.conditions), medications: pub('pub_meds', f.medications), allergies: pub('pub_allergies', f.allergies) },
       safe_number: f.safe_number, missing: f.status === 'missing' };
   },
   async scanOpen(token) {
@@ -189,10 +191,10 @@ const localApi = {
     if (!recent) { d.events.push({ id: ++d.seq, family_id: f.id, kind: 'open', lat: null, lng: null, accuracy: null, note: null, created_at: new Date().toISOString() }); store.set(LDB, d); }
     return { ok: true };
   },
-  async reportScan(token, lat, lng, acc, note) {
+  async reportScan(token, lat, lng, acc, note, sos) {
     const d = ldb(), f = d.families.find(x => x.tag_token === token);
     if (!f) return { ok: false };
-    d.events.push({ id: ++d.seq, family_id: f.id, kind: 'scan', lat, lng, accuracy: acc, note: note || null, created_at: new Date().toISOString() });
+    d.events.push({ id: ++d.seq, family_id: f.id, kind: sos ? 'sos' : 'scan', lat, lng, accuracy: acc, note: note || null, created_at: new Date().toISOString() });
     store.set(LDB, d); return { ok: true };
   },
   async companion(ckey, kind, lat, lng, acc) {
@@ -234,7 +236,7 @@ function cloudApi({ url, key }) {
     dashboard: f => rpc('sb_dashboard', { p_fkey: f }),
     scanInfo: t => rpc('sb_scan_info', { p_token: t }),
     scanOpen: t => rpc('sb_scan_open', { p_token: t }),
-    reportScan: (t, lat, lng, acc, note) => rpc('sb_report_scan', { p_token: t, p_lat: n(lat), p_lng: n(lng), p_acc: n(acc), p_note: n(note) }),
+    reportScan: (t, lat, lng, acc, note, sos) => rpc('sb_report_scan', { p_token: t, p_lat: n(lat), p_lng: n(lng), p_acc: n(acc), p_note: n(note), p_sos: !!sos }),
     companion: (c, k, lat, lng, acc) => rpc('sb_companion', { p_ckey: c, p_kind: k, p_lat: n(lat), p_lng: n(lng), p_acc: n(acc) }),
     setMissing: (f, on) => rpc('sb_set_missing', { p_fkey: f, p_on: on }),
     rotateTag: f => rpc('sb_rotate_tag', { p_fkey: f })
@@ -281,57 +283,91 @@ window.addEventListener('hashchange', router);
 
 /* ============ 발견자 화면 (앱 설치 없이) ============ */
 async function renderFinder(token, conf) {
-  document.title = '어르신 귀가를 도와주세요 · 세이프브릿지';
+  document.title = '어르신을 도와주세요 · 세이프브릿지';
   const mine = store.get('sb_me', null);
   app.innerHTML = `<div class="finder">
     ${mine ? '<a class="btn b-soft" href="#/" onclick="localStorage.setItem(\'sb_tab\',\'&quot;home&quot;\')" style="min-height:48px;font-size:16px;margin:0 0 10px">← 보호자 화면으로 돌아가기 <span class="tiny">(이 폰에서만 보여요)</span></a>' : ''}
     <div class="brand"><img src="icon-192.png" alt=""><b>세이프브릿지</b></div>
-    <div class="hello">길을 잃으신 어르신을<br>도와주셔서 감사합니다</div>
+    <div class="hello">어르신을 도와주셔서<br>감사합니다</div>
     <div class="who" id="who">정보를 불러오는 중…</div>
-    <div class="msg" id="msg" role="status"></div>
-    <p class="sub" style="margin:4px 0 0">위치는 <b>지금 이 한 번만</b>, 이 어르신의 보호자에게만 보내집니다.</p>
-    <button class="btn big b-teal" id="send">📍 보호자에게 현재 위치 보내기</button>
-    <a class="btn big b-orange" id="call" href="#">📞 보호자에게 전화하기</a>
-    <div id="tips"></div>
-    <label for="note" style="font-size:16px">보호자에게 남길 말 (선택)</label>
-    <input id="note" maxlength="200" placeholder="예: ○○편의점 앞에 함께 있어요">
-    <a class="btn b-ghost" href="tel:112">급하면 112에 신고하기</a>
-    <p class="tiny" style="margin-top:14px">위치 보내기 버튼을 누르면 지금 계신 곳의 위치가 이 어르신의 보호자에게만 한 번 전달되며, 귀가를 돕는 데만 쓰입니다. 앱 설치나 로그인은 필요 없습니다.</p>
+    <div id="stage"></div>
+    <p class="tiny" style="margin-top:18px">위치는 버튼을 누를 때 한 번만, 이 어르신의 보호자에게만 전달되며 어르신을 돕는 데만 쓰입니다. 앱 설치나 로그인은 필요 없습니다.</p>
     ${conf.mode === 'local' ? '<p class="tiny">※ 시험판 체험 모드입니다. 보호자 앱과 같은 폰에서만 전달됩니다.</p>' : ''}
   </div>`;
-  const A = api(conf), msg = $('#msg');
-  const show = (t, ok) => { msg.className = 'msg ' + (ok ? 'ok' : 'err'); msg.textContent = t; };
+  const A = api(conf), stage = $('#stage');
   let info;
   try { info = await A.scanInfo(token); } catch (e) { info = { ok: false, err: e.message }; }
   if (!info || !info.ok) {
-    $('#who').innerHTML = info && info.err ? '서버에 연결하지 못했어요. 112에 신고해 주세요.' : '등록되지 않았거나 사용이 끝난 표식입니다.<br>어르신과 함께 계시면 112에 신고해 주세요.';
-    $('#send').disabled = true; $('#call').style.display = 'none'; return;
+    $('#who').innerHTML = (info && info.err ? '서버에 연결하지 못했어요.' : '등록되지 않았거나 사용이 끝난 표식입니다.') +
+      '<br>쓰러지셨거나 아프시면 119, 길을 잃으셨으면 112에 신고해 주세요.';
+    stage.innerHTML = '<a class="btn big b-red" href="tel:119">🚑 119에 전화하기</a><a class="btn b-ghost" href="tel:112">112에 신고하기</a>';
+    return;
   }
   A.scanOpen && A.scanOpen(token).catch(() => {});
-  $('#who').innerHTML = `<b>${esc(info.nickname)}</b>의 귀가를 도와주세요.<br><span class="tiny">보호자에게 '누군가 목걸이를 찍었다'는 알림이 이미 갔어요.</span>${info.missing ? '<br><span class="chip missing" style="margin:6px 0 0">가족이 찾고 있어요</span>' : ''}`;
-  if (info.safe_number) $('#call').href = 'tel:' + info.safe_number.replace(/[^0-9+]/g, '');
-  else $('#call').style.display = 'none';
-  $('#tips').innerHTML = (info.calming_tips ? `<div class="tips"><b>이렇게 대해 주세요</b><br>${esc(info.calming_tips)}</div>` : '') +
-    (info.medical ? `<div class="tips" style="border-color:var(--red)"><b>건강 참고</b><br>${esc(info.medical)}</div>` : '');
-  let sent = false;
-  $('#send').onclick = () => {
-    const btn = $('#send'); btn.disabled = true; btn.textContent = '위치를 확인하는 중…';
+  $('#who').innerHTML = `<b>${esc(info.nickname)}</b>이세요.<br><span class="tiny">보호자에게 '누군가 표식을 찍었다'는 알림이 이미 갔어요.</span>${info.missing ? '<br><span class="chip missing" style="margin:6px 0 0">가족이 찾고 있어요</span>' : ''}`;
+  const tel = info.safe_number ? 'tel:' + info.safe_number.replace(/[^0-9+]/g, '') : '';
+  const callBtn = tel ? `<a class="btn big b-orange" href="${tel}">📞 보호자에게 전화하기</a>` : '';
+  const em = info.emergency || {};
+  const rows = [['혈액형', em.blood_type], ['지병', em.conditions], ['복용 중인 약', em.medications], ['알레르기', em.allergies], ['기타', info.medical]].filter(r => r[1]);
+
+  // 보호자에게 알림 + 위치 (sos = 응급)
+  const send = (sos, btn) => {
+    const msg = $('#msg');
+    const show = (t, ok) => { msg.className = 'msg ' + (ok ? 'ok' : 'err'); msg.textContent = t; };
+    if (btn) { btn.disabled = true; btn.textContent = '위치를 확인하는 중…'; }
     const go = async pos => {
+      const c = pos && pos.coords, noteEl = $('#note');
       try {
-        const c = pos && pos.coords;
-        const r = await A.reportScan(token, c ? c.latitude : null, c ? c.longitude : null, c ? Math.round(c.accuracy) : null, $('#note').value.trim() || null);
+        const r = await A.reportScan(token, c ? c.latitude : null, c ? c.longitude : null, c ? Math.round(c.accuracy) : null, (noteEl && noteEl.value.trim()) || null, sos);
         if (!r || !r.ok) throw new Error('fail');
-        sent = true;
-        show(c ? '보호자에게 위치를 보냈습니다. 가능하시면 어르신 곁에 잠시 머물러 주세요.' : '위치 없이 발견 알림을 보냈습니다. 전화 버튼으로 보호자와 통화해 주세요.', true);
-        btn.textContent = '✓ 한 번 더 보내기'; btn.disabled = false;
+        show(sos ? (c ? '보호자에게 응급 알림과 위치를 보냈습니다.' : '보호자에게 응급 알림을 보냈습니다. (위치는 보내지 못했어요)')
+                 : (c ? '보호자에게 위치를 보냈습니다. 가능하시면 어르신 곁에 잠시 머물러 주세요.' : '위치 없이 발견 알림을 보냈습니다. 전화 버튼으로 보호자와 통화해 주세요.'), true);
       } catch (e) {
-        show(/too many/.test(e.message) ? '방금 보냈어요. 잠시 뒤 다시 눌러 주세요.' : '전송에 실패했어요. 전화 버튼이나 112를 이용해 주세요.', false);
-        btn.textContent = '📍 다시 보내기'; btn.disabled = false;
+        show(/too many/.test(e.message) ? '방금 보냈어요. 잠시 뒤 다시 눌러 주세요.' : '전송에 실패했어요. 전화 버튼을 이용해 주세요.', false);
       }
+      if (btn) { btn.disabled = false; btn.textContent = sos ? '📍 보호자에게 위치 다시 보내기' : '✓ 한 번 더 보내기'; }
     };
     if (!navigator.geolocation) return go(null);
     navigator.geolocation.getCurrentPosition(go, () => go(null), { enableHighAccuracy: true, timeout: 9000, maximumAge: 0 });
   };
+
+  const choose = () => {
+    stage.innerHTML = `
+      <p style="font-size:19px;font-weight:700;margin:14px 0 6px">어떤 상황인가요?</p>
+      <button class="btn big b-red" id="goSos">🚑 쓰러지셨어요 · 아프세요</button>
+      <button class="btn big b-teal" id="goLost">🧭 길을 잃으셨어요</button>
+      ${callBtn}`;
+    $('#goSos').onclick = sosView; $('#goLost').onclick = lostView;
+  };
+  const back = '<button class="btn b-ghost" id="back" style="min-height:48px;font-size:16px">← 다른 상황 고르기</button>';
+  const sosView = () => {
+    stage.innerHTML = `
+      <a class="btn big b-red" href="tel:119">🚑 119에 전화하기</a>
+      <div class="msg ok" id="msg" role="status">보호자에게 응급 알림을 보내는 중…</div>
+      ${callBtn}
+      <div class="tips" style="border-color:var(--red)"><b>구급대원에게 보여주세요</b>
+        ${rows.length ? rows.map(r => `<div style="margin-top:8px"><span class="tiny">${r[0]}</span><br><b style="font-size:20px">${esc(r[1])}</b></div>`).join('')
+          : '<div class="sub" style="margin-top:6px">보호자가 공개한 응급 정보가 없어요.</div>'}
+      </div>
+      <button class="btn b-soft" id="resend">📍 보호자에게 위치 다시 보내기</button>
+      ${back}`;
+    $('#back').onclick = choose; $('#resend').onclick = e => send(true, e.currentTarget);
+    send(true, null);   // 고르는 순간 바로 보호자에게 응급 알림
+  };
+  const lostView = () => {
+    stage.innerHTML = `
+      <div class="msg" id="msg" role="status"></div>
+      <p class="sub" style="margin:4px 0 0">위치는 <b>지금 이 한 번만</b>, 이 어르신의 보호자에게만 보내집니다.</p>
+      <button class="btn big b-teal" id="send">📍 보호자에게 현재 위치 보내기</button>
+      ${callBtn}
+      ${info.calming_tips ? `<div class="tips"><b>이렇게 대해 주세요</b><br>${esc(info.calming_tips)}</div>` : ''}
+      <label for="note" style="font-size:16px">보호자에게 남길 말 (선택)</label>
+      <input id="note" maxlength="200" placeholder="예: ○○편의점 앞에 함께 있어요">
+      <a class="btn b-ghost" href="tel:112">급하면 112에 신고하기</a>
+      ${back}`;
+    $('#back').onclick = choose; $('#send').onclick = e => send(false, e.currentTarget);
+  };
+  choose();
 }
 
 /* ============ 어르신 폰: 동행 모드 ============ */
@@ -341,7 +377,7 @@ async function renderCompanion(ckey, conf) {
   app.innerHTML = `${store.get('sb_me', null) ? '<a class="btn b-soft" href="#/" style="min-height:48px;font-size:16px;margin:0 0 10px">← 보호자 화면으로 돌아가기</a>' : ''}<div class="brand"><img src="icon-192.png" alt=""><b>세이프브릿지</b><span>동행 모드</span></div><div id="cbody"><p class="empty">불러오는 중…</p></div>`;
   let info;
   try { info = await A.companion(ckey, 'info'); } catch (e) { info = { ok: false }; }
-  if (!info || !info.ok) { $('#cbody').innerHTML = '<div class="alert">연결 주소가 맞지 않아요. 보호자 앱의 [목걸이] 탭에서 동행 모드 링크를 다시 보내 주세요.</div>'; return; }
+  if (!info || !info.ok) { $('#cbody').innerHTML = '<div class="alert">연결 주소가 맞지 않아요. 보호자 앱의 [표식] 탭에서 동행 모드 링크를 다시 보내 주세요.</div>'; return; }
   store.set('sb_companion', { ckey, conf });
   $('#cbody').innerHTML = `
     <h1>${esc(info.nickname)}의 폰</h1>
@@ -396,8 +432,8 @@ function renderWelcome() {
   const hasCfg = !!(CFG.url && CFG.key);
   app.innerHTML = `
     <div class="brand"><img src="icon-192.png" alt=""><b>세이프브릿지</b><span>시험판</span></div>
-    <h1>어르신이 길을 잃으셔도,<br>목걸이 한 번이면 집으로.</h1>
-    <p class="sub">누군가 어르신 목걸이(NFC·QR)를 휴대폰으로 찍으면, 앱 설치 없이 보호자에게 위치가 바로 전달됩니다.</p>
+    <h1>쓰러지셔도, 길을 잃으셔도<br>팔찌 한 번이면 가족에게.</h1>
+    <p class="sub">밭일하시다 쓰러지시거나 길을 잃으셨을 때, 지나가던 분이 어르신 팔찌·목걸이(NFC·QR)를 휴대폰으로 찍으면 119 안내와 응급 정보가 뜨고 보호자에게 위치가 바로 전달됩니다.</p>
     <div class="card">
       <b>어떻게 쓸까요?</b>
       <div class="seg" style="margin-top:10px" id="modeSeg">
@@ -415,7 +451,7 @@ function renderWelcome() {
   const box = () => {
     $('#modeBox').innerHTML = mode === 'local'
       ? '<p class="tiny" style="margin-top:10px">서버 없이 이 폰 안에서만 동작해요. 발견자 화면도 같은 폰에서 열어 보며 흐름을 확인할 수 있어요.</p>'
-      : hasCfg ? '<p class="tiny" style="margin-top:10px">공용 서버에 연결됩니다. 다른 폰으로 목걸이 QR을 찍으면 이 폰에 알림이 와요.</p>'
+      : hasCfg ? '<p class="tiny" style="margin-top:10px">공용 서버에 연결됩니다. 다른 폰으로 팔찌·목걸이 QR을 찍으면 이 폰에 알림이 와요.</p>'
       : `<p class="tiny" style="margin-top:10px">Supabase 프로젝트 주소와 공개 키(anon/publishable)를 넣어 주세요. 처음 한 번만 <a href="supabase-setup.sql" target="_blank">설치 SQL</a>을 실행하면 됩니다.</p>
          <label>프로젝트 주소</label><input id="cu" placeholder="https://xxxx.supabase.co" autocapitalize="off">
          <label>공개 키</label><input id="ck" placeholder="sb_publishable_… 또는 eyJ…" autocapitalize="off">`;
@@ -441,7 +477,7 @@ function renderWelcome() {
       const r = await api(conf).createFamily(p);
       store.set('sb_me', { conf, fkey: r.family_key });
       location.hash = '#/'; router();
-      toast('등록됐어요. [목걸이] 탭에서 QR을 확인하세요');
+      toast('등록됐어요. [표식] 탭에서 QR을 확인하세요');
     } catch (err) {
       btn.disabled = false; btn.textContent = '시작하기';
       toast(/function|schema|404|PGRST/.test(err.message) ? '서버에 설치 SQL이 아직 없어요' : '서버에 연결하지 못했어요');
@@ -455,27 +491,42 @@ function infoFields(f, open) {
     <label>발견자가 걸 전화번호 <span class="tiny">(050 안심번호 권장)</span></label>
     <input name="safe_number" type="tel" maxlength="20" required value="${esc(f.safe_number || '')}" placeholder="050-0000-0000">
     <p class="tiny">010 번호는 처음 보는 사람에게 그대로 보여요. 통신사 050 안심번호(월 1,100원 안팎)를 권장해요.</p>
-    <details ${open ? 'open' : ''} style="margin-top:14px"><summary style="font-weight:500;color:var(--teal);cursor:pointer;padding:6px 0">더 입력하기 (선택 · 나중에 해도 돼요)</summary>
+    <details ${open ? 'open' : ''} style="margin-top:14px"><summary style="font-weight:500;color:var(--red);cursor:pointer;padding:6px 0">🚑 응급 정보 (쓰러지셨을 때 구급대원에게 보여줘요 · 권장)</summary>
+    <p class="tiny">체크한 항목만 표식을 찍은 사람에게 보여요. 체크를 끄면 보호자만 볼 수 있어요.</p>
+    ${emgField('blood_type', 'pub_blood', '혈액형', '예: A형 Rh+', f, 'input')}
+    ${emgField('conditions', 'pub_conditions', '지병', '예: 고혈압, 당뇨, 심장 스텐트 시술', f)}
+    ${emgField('medications', 'pub_meds', '복용 중인 약', '예: 혈압약(아침), 아스피린', f)}
+    ${emgField('allergies', 'pub_allergies', '알레르기', '예: 페니실린', f, 'input')}
+    </details>
+    <details ${open ? 'open' : ''} style="margin-top:6px"><summary style="font-weight:500;color:var(--teal);cursor:pointer;padding:6px 0">더 입력하기 (선택 · 나중에 해도 돼요)</summary>
     <label>보호자 이름</label>
     <input name="guardian_name" maxlength="40" value="${esc(f.guardian_name || '')}" placeholder="예: 아들 한승우">
     <label>이렇게 대해 주세요 <span class="tiny">(발견자에게 보여요)</span></label>
     <textarea name="calming_tips" maxlength="300" placeholder="예: '순자 씨' 하고 이름을 불러 주시면 안심하세요. 큰 소리를 무서워하세요.">${esc(f.calming_tips || '')}</textarea>
-    <label>건강 메모 <span class="tiny">(질환·복용약 등)</span></label>
+    <label>기타 건강 메모</label>
     <textarea name="medical_note" maxlength="300" placeholder="예: 당뇨 — 단 음료를 조금 드리면 좋아요">${esc(f.medical_note || '')}</textarea>
-    <label class="check"><input type="checkbox" name="show_medical" ${f.show_medical ? 'checked' : ''}><span>건강 메모를 발견자에게도 보여주기<br><span class="tiny">끄면 보호자만 볼 수 있어요</span></span></label>
+    <label class="check"><input type="checkbox" name="show_medical" ${f.show_medical ? 'checked' : ''}><span>기타 건강 메모를 발견자에게도 보여주기<br><span class="tiny">끄면 보호자만 볼 수 있어요</span></span></label>
     </details>`;
+}
+function emgField(k, pk, label, ph, f, tag) {
+  const v = esc(f[k] || ''), on = f[pk] !== false;
+  const box = tag === 'input' ? `<input name="${k}" maxlength="100" value="${v}" placeholder="${ph}">` : `<textarea name="${k}" maxlength="200" style="min-height:64px" placeholder="${ph}">${v}</textarea>`;
+  return `<div style="display:flex;justify-content:space-between;align-items:center;margin:14px 0 6px"><b style="font-weight:500">${label}</b>
+    <label class="check" style="margin:0;font-size:14px;gap:6px;align-items:center"><input type="checkbox" name="${pk}" ${on ? 'checked' : ''} style="width:20px;height:20px;margin:0">공개</label></div>${box}`;
 }
 function checkInfo(p) {
   if (!p.nickname) { toast('어르신 호칭을 적어 주세요'); return false; }
   const digits = p.safe_number.replace(/[^0-9]/g, '');
   if (digits.length < 8) { toast('발견자가 걸 전화번호를 적어 주세요'); return false; }
-  if (/^01[016789]/.test(digits) && !confirm('휴대폰 번호(010)는 목걸이를 찍은 낯선 사람에게 그대로 보여요.\n050 안심번호를 쓰시는 걸 권장해요.\n\n그래도 이 번호로 할까요?')) return false;
+  if (/^01[016789]/.test(digits) && !confirm('휴대폰 번호(010)는 팔찌·목걸이를 찍은 낯선 사람에게 그대로 보여요.\n050 안심번호를 쓰시는 걸 권장해요.\n\n그래도 이 번호로 할까요?')) return false;
   return true;
 }
 function readInfo() {
-  const fm = $('#f'), g = n => (fm.elements[n].value || '').trim();
+  const fm = $('#f'), g = n => (fm.elements[n].value || '').trim(), c = n => fm.elements[n].checked;
   return { nickname: g('nickname'), guardian_name: g('guardian_name'), safe_number: g('safe_number'),
-    calming_tips: g('calming_tips'), medical_note: g('medical_note'), show_medical: fm.elements.show_medical.checked };
+    calming_tips: g('calming_tips'), medical_note: g('medical_note'), show_medical: c('show_medical'),
+    blood_type: g('blood_type'), conditions: g('conditions'), medications: g('medications'), allergies: g('allergies'),
+    pub_blood: c('pub_blood'), pub_conditions: c('pub_conditions'), pub_meds: c('pub_meds'), pub_allergies: c('pub_allergies') };
 }
 
 /* ============ 보호자 앱 ============ */
@@ -510,10 +561,10 @@ async function refresh(first) {
   }
 }
 function alertEvent(f, e) {
-  const title = e.kind === 'open' ? `📳 ${f.nickname} 목걸이가 찍혔어요` : e.kind === 'scan' ? `🚨 ${f.nickname} 발견 신고` : e.kind === 'exit' ? `⚠️ ${f.nickname} 안심존 이탈` : `✅ ${f.nickname} 안심존 복귀`;
-  const body = e.kind === 'open' ? '누군가 어르신을 발견하고 목걸이를 찍었어요. 곧 위치나 전화가 올 수 있어요' : e.kind === 'scan' ? (e.lat != null ? '누군가 어르신을 발견하고 위치를 보냈어요. 눌러서 지도 보기' : '위치 없이 발견 알림이 왔어요') : KIND[e.kind];
+  const title = e.kind === 'sos' ? `🚑 ${f.nickname} 응급 상황 신고` : e.kind === 'open' ? `📳 ${f.nickname} 표식이 찍혔어요` : e.kind === 'scan' ? `🚨 ${f.nickname} 발견 신고` : e.kind === 'exit' ? `⚠️ ${f.nickname} 안심존 이탈` : `✅ ${f.nickname} 안심존 복귀`;
+  const body = e.kind === 'sos' ? '누군가 어르신이 쓰러지셨거나 아프시다고 알렸어요. 지금 바로 확인하세요' : e.kind === 'open' ? '누군가 어르신을 발견하고 표식(팔찌·목걸이)을 찍었어요. 곧 위치나 전화가 올 수 있어요' : e.kind === 'scan' ? (e.lat != null ? '누군가 어르신을 발견하고 위치를 보냈어요. 눌러서 지도 보기' : '위치 없이 발견 알림이 왔어요') : KIND[e.kind];
   toast(title, 5000);
-  if (navigator.vibrate) navigator.vibrate([400, 200, 400]);
+  if (navigator.vibrate) navigator.vibrate(e.kind === 'sos' ? [800, 200, 800, 200, 800] : [400, 200, 400]);
   try {
     if ('Notification' in window && Notification.permission === 'granted' && navigator.serviceWorker) {
       navigator.serviceWorker.ready.then(r => r.showNotification(title, { body, icon: 'icon-192.png', badge: 'icon-192.png', tag: 'sb-' + e.id, renotify: true, data: { url: BASE } }));
@@ -549,17 +600,17 @@ function drawHome() {
     ${last ? `<div class="row"><a class="btn b-soft" target="_blank" href="https://map.kakao.com/link/map/${encodeURIComponent(f.nickname)},${last.lat},${last.lng}">카카오맵으로 보기</a>
       <a class="btn b-soft" target="_blank" href="https://map.kakao.com/link/to/${encodeURIComponent(f.nickname)},${last.lat},${last.lng}">길찾기</a></div>` : ''}
     <button class="btn big ${missing ? 'b-ghost' : 'b-red'}" id="missBtn">${missing ? '찾았어요 (실종 모드 끄기)' : '실종 모드 켜기'}</button>
-    ${missing ? '<p class="tiny">실종 모드에서는 목걸이를 찍은 사람 화면에 "가족이 찾고 있어요"가 표시됩니다. 112 신고도 함께 해 주세요. <a href="tel:112">112 전화</a></p>' : ''}
+    ${missing ? '<p class="tiny">실종 모드에서는 팔찌·목걸이를 찍은 사람 화면에 "가족이 찾고 있어요"가 표시됩니다. 112 신고도 함께 해 주세요. <a href="tel:112">112 전화</a></p>' : ''}
     <h2>최근 기록</h2>
     <div class="card" style="padding:4px 12px">${events.length ? events.slice(0, 30).map(e => `
       <div class="ev" data-id="${e.id}"><span class="dot ${e.kind}"></span><div>
         <b>${KIND[e.kind]}</b><div class="tiny">${fmtTime(e.created_at)}${e.lat == null ? ' · 위치 없음' : e.accuracy ? ` · 오차 약 ${Math.round(e.accuracy)}m` : ''}</div>
         ${e.note ? `<div class="sub">“${esc(e.note)}”</div>` : ''}</div></div>`).join('')
-      : '<p class="empty">아직 기록이 없어요.<br>[목걸이] 탭의 "발견자 화면 미리보기"로 시험해 보세요.</p>'}</div>`;
+      : '<p class="empty">아직 기록이 없어요.<br>[표식] 탭의 "발견자 화면 미리보기"로 시험해 보세요.</p>'}</div>`;
   window.scrollTo(0, keepScroll);
   $('#missBtn').onclick = async () => {
     const on = !missing;
-    if (on && !confirm('실종 모드를 켤까요?\n목걸이를 찍은 사람에게 "가족이 찾고 있어요"가 표시됩니다.')) return;
+    if (on && !confirm('실종 모드를 켤까요?\n팔찌·목걸이를 찍은 사람에게 "가족이 찾고 있어요"가 표시됩니다.')) return;
     try { await M.A.setMissing(M.me.fkey, on); await refresh(); drawHome(); askNotify(); } catch { toast('변경하지 못했어요'); }
   };
   document.querySelectorAll('.ev').forEach(el => el.onclick = () => {
@@ -577,13 +628,13 @@ async function drawMap(id, f, located) {
   if (f.zone_lat != null) L.circle([f.zone_lat, f.zone_lng], { radius: f.zone_radius || 300, color: '#0B5E5E', weight: 2, fillOpacity: .1 }).addTo(map);
   const trail = located.filter(e => Date.now() - new Date(e.created_at) < 86400000).slice().reverse();
   if (trail.length > 1) L.polyline(trail.map(e => [e.lat, e.lng]), { color: '#E07A2E', weight: 4, opacity: .7 }).addTo(map);
-  const col = { scan: '#E07A2E', ping: '#0B5E5E', exit: '#C0392B', enter: '#5E9E2F' };
-  trail.forEach(e => L.circleMarker([e.lat, e.lng], { radius: e.kind === 'ping' ? 4 : 7, color: '#fff', weight: 2, fillColor: col[e.kind], fillOpacity: 1 })
+  const col = { sos: '#8E1B12', scan: '#E07A2E', ping: '#0B5E5E', exit: '#C0392B', enter: '#5E9E2F' };
+  trail.forEach(e => L.circleMarker([e.lat, e.lng], { radius: e.kind === 'ping' ? 4 : e.kind === 'sos' ? 10 : 7, color: '#fff', weight: 2, fillColor: col[e.kind], fillOpacity: 1 })
     .bindPopup(`${KIND[e.kind]}<br>${fmtTime(e.created_at)}`).addTo(map));
   if (located[0]) L.circleMarker([located[0].lat, located[0].lng], { radius: 12, color: '#E07A2E', weight: 4, fillColor: '#fff', fillOpacity: 1 }).bindPopup('마지막 위치').addTo(map);
 }
 
-/* ---- 목걸이(표식) ---- */
+/* ---- 팔찌·목걸이(표식) ---- */
 function tagUrl() { return `${BASE}#/t/${M.dash.family.tag_token}${shareQuery(M.me.conf)}`; }
 function drawTag() {
   const f = M.dash.family, url = tagUrl();
@@ -591,8 +642,8 @@ function drawTag() {
   const joinUrl = `${BASE}#/join/${M.me.fkey}${shareQuery(M.me.conf)}`;
   const nfc = 'NDEFReader' in window;
   app.innerHTML = `
-    <h1>목걸이 표식</h1>
-    <p class="sub">이 QR을 인쇄하거나 NFC 스티커에 주소를 넣어 목걸이에 붙이세요.</p>
+    <h1>팔찌·목걸이 표식</h1>
+    <p class="sub">이 QR을 인쇄하거나 NFC 칩에 주소를 넣어 팔찌·목걸이에 붙이세요.</p>
     <div class="qr"><div id="qr">QR 만드는 중…</div><div style="font-weight:700;margin-top:6px">${esc(f.nickname)} · 휴대폰으로 찍어 주세요</div></div>
     <div class="url">${esc(url)}</div>
     <div class="row"><button class="btn b-soft" id="cp">주소 복사</button><button class="btn b-soft" id="png">QR 이미지 저장</button></div>
@@ -608,7 +659,7 @@ function drawTag() {
     <p class="sub">이 링크를 연 가족도 같은 알림과 위치를 볼 수 있어요. 가족에게만 보내세요.</p>
     <button class="btn b-ghost" id="shareJoin">가족 초대 링크 보내기</button>
     <hr>
-    <button class="btn b-ghost" id="rotate" style="color:var(--red)">목걸이를 잃어버렸어요 (표식 새로 만들기)</button>
+    <button class="btn b-ghost" id="rotate" style="color:var(--red)">팔찌·목걸이를 잃어버렸어요 (표식 새로 만들기)</button>
     <p class="tiny">예전 QR·NFC는 바로 쓸 수 없게 되고, 새 QR이 만들어집니다.</p>`;
   (async () => {
     if (!(await waitFor(() => window.qrcode))) { $('#qr').textContent = 'QR 도구를 불러오지 못했어요'; return; }
@@ -620,7 +671,7 @@ function drawTag() {
   $('#shareComp').onclick = () => share('세이프브릿지 동행 모드', '이 링크를 열고 "동행 모드 켜기"를 눌러 주세요.', compUrl);
   $('#shareJoin').onclick = () => share('세이프브릿지 가족 초대', `${f.nickname} 안심 귀가 알림을 함께 받아요.`, joinUrl);
   $('#rotate').onclick = async () => {
-    if (!confirm('표식을 새로 만들까요?\n지금 목걸이의 QR·NFC는 더 이상 작동하지 않습니다.')) return;
+    if (!confirm('표식을 새로 만들까요?\n지금 팔찌·목걸이의 QR·NFC는 더 이상 작동하지 않습니다.')) return;
     try { await M.A.rotateTag(M.me.fkey); await refresh(); drawTag(); toast('새 표식을 만들었어요. 새로 인쇄해 주세요'); } catch { toast('실패했어요'); }
   };
   if (nfc) $('#nfcw').onclick = async () => {

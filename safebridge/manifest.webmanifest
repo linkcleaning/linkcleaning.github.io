@@ -1,7 +1,7 @@
 {
-  "name": "세이프브릿지 · 어르신 안심 귀가",
+  "name": "세이프브릿지 · 어르신 안심 팔찌",
   "short_name": "세이프브릿지",
-  "description": "치매 어르신 실종 방지 NFC·QR 목걸이와 보호자 앱 (시험판)",
+  "description": "70세 이상 어르신 누구나 차는 NFC·QR 안심 팔찌·목걸이와 보호자 앱 (시험판)",
   "start_url": "./",
   "scope": "./",
   "display": "standalone",
