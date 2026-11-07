@@ -841,9 +841,10 @@ function vatCalc(y, half) {
   var raw = st.under10eok ? S.saleCardCash.total * rule.rate : 0;
   var cardCredit = Math.floor(Math.max(0, Math.min(raw, remain, Math.max(0, S.vatBase))));
   var afterCard = S.vatBase - cardCredit;
-  var eCredit = afterCard > 0 ? Math.min(10000, afterCard) : 0;
+  var late = lateInfo(y, half);
+  var eCredit = (afterCard > 0 && !late) ? Math.min(10000, afterCard) : 0;
   var prepaid = Number(st.prepaid[y + '-' + half]) || paySum('vatPre', y, half);
-  return { S: S, base: S.vatBase, cardCredit: cardCredit, cardRaw: raw, rule: rule, eCredit: eCredit, prepaid: prepaid, final: S.vatBase - cardCredit - eCredit - prepaid };
+  return { late: late, S: S, base: S.vatBase, cardCredit: cardCredit, cardRaw: raw, rule: rule, eCredit: eCredit, prepaid: prepaid, final: S.vatBase - cardCredit - eCredit - prepaid };
 }
 
 // 종합소득세 예상
@@ -921,11 +922,39 @@ function steps(title, arr) {
     arr.map(function (s, i) { return '<li class="flex gap-2"><span class="shrink-0 w-6 h-6 rounded-full bg-orange-500 text-white text-xs font-bold flex items-center justify-center">' + (i + 1) + '</span><span>' + s + '</span></li>'; }).join('') + '</ol></details>';
 }
 
+// 기한 지난 신고 (기한후신고) 판단
+function vatDue(y, half) { return half === 'H1' ? y + '-07-25' : (y + 1) + '-01-25'; }
+function lateInfo(y, half) {
+  var due = vatDue(y, half), today = todayStr();
+  if (today <= due) return null;
+  if (typeof paySum === 'function' && paySum('vatFinal', y, half) > 0) return null;
+  if (S_().filed && S_().filed[y + '-' + half]) return null;
+  var has = myTx().some(function (t) { return inRange(t, y, half); });
+  if (!has) return null;
+  var days = Math.round((new Date(today + 'T00:00:00') - new Date(due + 'T00:00:00')) / 86400000);
+  var red = days <= 31 ? 0.5 : days <= 92 ? 0.3 : days <= 183 ? 0.2 : 0;
+  return { due: due, days: days, red: red };
+}
+function lateHTML(v, y, half) {
+  var L = v.late; if (!L) return '';
+  var tax = Math.max(0, v.final);
+  var pen = Math.floor(tax * 0.2 * (1 - L.red)), delay = Math.floor(tax * 0.00022 * L.days);
+  var key = y + '-' + half;
+  return '<div class="rounded-2xl border-2 border-red-400 bg-red-50 p-4 text-sm text-red-900 space-y-2">' +
+    '<div class="font-extrabold">🚨 신고 기한(' + L.due.slice(5).replace('-', '.') + ')이 ' + L.days + '일 지났어요 → 기한후신고</div>' +
+    '<div class="text-xs leading-snug">지금 신고하면 무신고가산세를 <b>' + Math.round(L.red * 100) + '% 깎아줘요</b>' + (L.red ? ' (늦을수록 감면이 줄어요: 1개월 안 50% → 3개월 안 30% → 6개월 안 20% → 그 뒤 0%)' : ' (6개월이 지나 감면은 없어요)') + '.</div>' +
+    (tax > 0 ? '<div class="bg-white rounded-xl p-3 text-xs num space-y-0.5"><div class="flex justify-between"><span>납부할 부가세</span><b>' + comma(tax) + '</b></div><div class="flex justify-between"><span>+ 무신고가산세 (20% − 감면)</span><b>' + comma(pen) + '</b></div><div class="flex justify-between"><span>+ 납부지연가산세 (하루 0.022%)</span><b>' + comma(delay) + '</b></div><div class="flex justify-between border-t pt-1 mt-1"><span class="font-bold">지금 신고하면 낼 돈 (예상)</span><b class="text-red-700">' + won(tax + pen + delay) + '</b></div></div>'
+      : '<div class="text-xs bg-white rounded-xl p-3">낼 세금이 0원 이하라 <b>가산세가 거의 없어요.</b> 매입이 더 많으면 환급도 받을 수 있으니 꼭 신고하세요.</div>') +
+    '<div class="text-[11px] leading-snug">홈택스 → 세금신고 → 부가가치세 신고 → 일반과세자 → <b>기한후신고</b>. 입력 방법은 아래 "따라하기"와 같아요. 기한후신고는 전자신고세액공제(1만원)가 없어요.</div>' +
+    '<button class="filedBtn w-full rounded-xl bg-red-600 text-white font-extrabold py-2.5" data-key="' + key + '">이 기간 신고 완료했어요</button>' +
+  '</div>';
+}
 function vatSectionHTML(y, half) {
   var v = vatCalc(y, half), S = v.S;
   var key = y + '-' + half;
   var prepMonth = half === 'H1' ? '4월' : '10월';
   var html = '';
+  html += lateHTML(v, y, half);
   html += card('bg-teal-700', '① 매출 (과세표준 및 매출세액)', '',
     '<table class="w-full text-sm">' + head3() + '<tbody class="divide-y divide-slate-100">' +
       '<tr>' + lbl('(1) 세금계산서 발급분', '전자세금계산서는 홈택스가 자동으로 불러와요') + cell(S.saleInvoice.supply) + cell(S.saleInvoice.vat) + '</tr>' +
@@ -1569,6 +1598,11 @@ function todoList() {
   if ((m === 4 || m === 10) && d <= 25) L.push({ k: 'pre-' + y + '-' + m, ic: '✉️', t: '부가세 예정고지서 받으셨나요? · ' + m + '월 25일까지 납부', s: '고지서가 왔다면 납부하고 세금통장 → "세금 냈어요(예정고지)"로 기록하세요. 그래야 다음 신고 때 자동으로 빠져요.', go: 'bank' });
   if (m === 5) L.push({ k: 'inc-' + y, ic: '💸', t: '종합소득세 신고 기간 · 5월 31일까지', s: (y - 1) + '년분. 신고표에서 "연간 전체"를 누르고 숫자를 확인하세요.', go: 'hometax', gy: y - 1, gp: 'ALL' });
   if (m === 11) L.push({ k: 'mid-' + y, ic: '💸', t: '종소세 중간예납 고지서 · 11월 30일까지', s: '납부 후 세금통장 → "세금 냈어요(종소세 중간예납)"로 기록하세요.', go: 'bank' });
+  // 기한 지난 부가세
+  [[y - 1, 'H1'], [y - 1, 'H2'], [y, 'H1']].forEach(function (a) {
+    var li = lateInfo(a[0], a[1]);
+    if (li) L.unshift({ k: 'late-' + a[0] + a[1] + '-' + li.red, ic: '🚨', t: a[0] + '년 ' + (a[1] === 'H1' ? '1기' : '2기') + ' 부가세 미신고 — 기한후신고 하세요', s: '기한이 ' + li.days + '일 지났어요. 지금 신고하면 가산세 ' + Math.round(li.red * 100) + '% 감면. 신고표에서 낼 돈을 확인하세요.', go: 'hometax', gy: a[0], gp: a[1] });
+  });
   // 사진 없는 큰 지출
   var noPhoto = mine.filter(function (t) { return t.type === 'purchase' && !t.auto && t.total > 30000 && (t.evid === 'simple' || t.evid === 'transfer') && !t.hasPhoto && t.date.slice(0, 4) == y; }).length;
   if (noPhoto) L.push({ k: 'photo-' + y + '-' + m + '-' + noPhoto, ic: '📷', t: '증빙이 약한 3만원 넘는 지출 ' + noPhoto + '건', s: '간이영수증·계좌이체 건은 영수증이나 이체 화면 사진이라도 붙여 두세요(내역 → 수정).', go: 'list' });
@@ -1630,6 +1664,8 @@ $('txList').addEventListener('click', function (ev) {
   }
 });
 $('hometaxBody').addEventListener('click', function (ev) {
+  var fb = ev.target.closest('.filedBtn');
+  if (fb) { var st = S_(); st.filed = st.filed || {}; st.filed[fb.dataset.key] = Date.now(); saveMeta(); toast('✅ 신고 완료로 표시했어요. 낸 세금은 세금통장에 기록하세요'); renderAll(); return; }
   var c = ev.target.closest('.copyable'); if (!c) return;
   var v = c.dataset.copy;
   var done = function () { toast('📋 ' + comma(v) + ' 복사됨'); };
