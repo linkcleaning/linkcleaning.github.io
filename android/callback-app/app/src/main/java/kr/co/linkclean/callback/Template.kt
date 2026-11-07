@@ -223,6 +223,17 @@ $CARD_URL
 예금주 링크클린
 """.trim()
 
+    /** 후기 요청 문자 – 청소 다음 날 */
+    val REVIEW = """
+[링크클린] 청소는 만족스러우셨나요?
+
+이용해 주셔서 진심으로 감사드립니다.
+네이버 플레이스에 후기를 남겨 주시면 감사의 마음으로 스타벅스 커피 1잔을 보내드려요.
+
+후기 남기기
+https://m.place.naver.com/place/37742213/review/visitor
+""".trim()
+
     const val OLD_OUT = "안녕하세요, 제주 청소 전문 기업 링크클린입니다. 통화 감사드립니다. 아래 링크에서 작업 사례와 상세 안내를 확인하실 수 있습니다."
 
     const val OLD_MISS = "안녕하세요, 링크클린입니다. 현재 현장 작업 중이라 전화를 받지 못했습니다. 문의주신 내용을 문자로 남겨주시면 작업 종료 후 가장 먼저 연락드리겠습니다. 감사합니다!"
@@ -234,6 +245,7 @@ $CARD_URL
         Tpl("t_miss", "⏳", "부재중 안내", "부재중", "", CARD_MISS, false, true),
         Tpl("t_contract", "🤝", "예약 문자", "기타", "", CONTRACT, false, false),
         Tpl("t_account", "🏦", "계좌 안내", "기타", "", ACCOUNT, false, false),
+        Tpl("t_review", "⭐", "후기 요청", "기타", "", REVIEW, false, false),
     )
 
     fun load(c: Context): MutableList<Tpl> {

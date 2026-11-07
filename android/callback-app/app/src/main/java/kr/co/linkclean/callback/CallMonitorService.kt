@@ -53,7 +53,8 @@ class CallMonitorService : Service() {
     private val updCheck = object : Runnable {
         override fun run() {
             Updater.checkAndNotify(this@CallMonitorService)
-            updHandler.postDelayed(this, 6 * 3600_000L)
+            ReviewReminder.checkAndNotify(this@CallMonitorService)
+            updHandler.postDelayed(this, 3 * 3600_000L)
         }
     }
 

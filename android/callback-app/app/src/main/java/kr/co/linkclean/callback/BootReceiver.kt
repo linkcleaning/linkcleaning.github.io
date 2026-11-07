@@ -12,6 +12,7 @@ class BootReceiver : BroadcastReceiver() {
         }
         if (intent.action == Intent.ACTION_BOOT_COMPLETED) {
             Updater.checkAndNotify(context)
+            ReviewReminder.checkAndNotify(context)
         }
     }
 }

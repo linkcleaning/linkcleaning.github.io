@@ -147,11 +147,53 @@ class MainActivity : AppCompatActivity() {
         selectTab(0)
         setDraftFromTpl()
         handleUpdateIntent(intent)
+        handleReviewIntent(intent)
     }
 
     override fun onNewIntent(intent: Intent) {
         super.onNewIntent(intent)
         handleUpdateIntent(intent)
+        handleReviewIntent(intent)
+    }
+
+    /** '후기 문자' 알림을 눌러서 들어온 경우 → 번호 넣고 후기 문자 선택 */
+    private fun handleReviewIntent(i: Intent?) {
+        val num = i?.getStringExtra(ReviewReminder.EXTRA_NUM) ?: return
+        i.removeExtra(ReviewReminder.EXTRA_NUM)
+        toastView.post { startReview(num) }
+    }
+
+    private fun startReview(num: String) {
+        selectTab(0)
+        phoneEdit.setText(num)
+        if (Templates.find(this, ReviewReminder.TPL_ID) != null) {
+            Prefs.sp(this).edit().putString(Prefs.KEY_SELECTED, ReviewReminder.TPL_ID).apply()
+            renderChips(); renderFields(); renderSendImgs(); setDraftFromTpl()
+        }
+        hideKeyboard()
+        toast("⭐ 후기 요청 문자가 준비됐어요. 아래 보내기를 누르세요")
+    }
+
+    private lateinit var reviewCard: LinearLayout
+    private lateinit var reviewBox: LinearLayout
+
+    private fun renderReviews() {
+        if (!::reviewCard.isInitialized) return
+        val list = ReviewReminder.due(this)
+        reviewCard.visibility = if (list.isEmpty()) View.GONE else View.VISIBLE
+        reviewBox.removeAllViews()
+        list.forEach { r ->
+            val row = ui.row().apply { setPadding(0, ui.dp(8), 0, ui.dp(8)) }
+            val c = ui.col()
+            c.addView(ui.text(PhoneUtil.pretty(r.num), 17f, Col.S800, true))
+            c.addView(ui.text("청소일 ${r.date.replace("-", ".")}", 12f, Col.S500))
+            row.addView(c, ui.lp(0, ui.WRAP, 1f))
+            row.addView(ui.button("후기 문자", Col.AMBER800, Col.WHITE, 40, 14f, radius = 12f) { startReview(r.num) }, ui.lp(ui.WRAP, ui.WRAP, end = 6))
+            row.addView(ui.button("✕", Col.S100, Col.S500, 40, 14f, radius = 12f) {
+                ReviewReminder.mark(this, r.num, "skipped"); renderReviews()
+            }, ui.lp(ui.dp(40), ui.WRAP))
+            reviewBox.addView(row)
+        }
     }
 
     /** '새 버전' 알림을 눌러서 들어온 경우 → 바로 업데이트 시작 */
@@ -165,7 +207,8 @@ class MainActivity : AppCompatActivity() {
         super.onResume()
         Prefs.sp(this).registerOnSharedPreferenceChangeListener(prefListener)
         if (Prefs.enabled(this) && missingCorePerms().isEmpty()) CallMonitorService.start(this)
-        renderAuto(); renderRecent()
+        renderAuto(); renderRecent(); renderReviews()
+        ReviewReminder.checkAndNotify(this)
         if (tab == 3) renderSettings()
         if (pendingUpdate && canInstall()) { pendingUpdate = false; startUpdate() }
         else if (System.currentTimeMillis() - Updater.lastCheck > 30 * 60_000L) checkUpdate(silent = true)
@@ -500,6 +543,14 @@ class MainActivity : AppCompatActivity() {
             background = ui.rect(Col.B50, 16f, Col.B200, 1f); setPadding(ui.dp(14), ui.dp(12), ui.dp(14), ui.dp(12)); visibility = View.GONE
         }
         b.addView(cardOnlyNote, ui.lp(bottom = 14))
+
+        // ⭐ 후기 문자 보낼 손님 (청소 날짜가 지난 예약)
+        reviewCard = ui.card(Col.AMBER300, 2f, Col.AMBER50).apply { visibility = View.GONE }
+        reviewCard.addView(ui.text("⭐ 후기 문자 보낼 손님", 15f, Col.AMBER800, true))
+        reviewCard.addView(ui.text("예약 문자를 보낸 손님 중 청소 날짜가 지난 분이에요", 12f, Col.S500), ui.lp(top = 2, bottom = 4))
+        reviewBox = ui.col()
+        reviewCard.addView(reviewBox)
+        b.addView(reviewCard, 2)
 
         // 🕘 최근 보낸 번호
         val rc = ui.card()
@@ -912,6 +963,7 @@ class MainActivity : AppCompatActivity() {
         hideKeyboard()
         val num = PhoneUtil.normalize(phoneEdit.text.toString())
         if (num.length < 9) { toast("① 고객 전화번호를 입력해 주세요", "err"); phoneEdit.requestFocus(); return }
+
         if (!has(Manifest.permission.SEND_SMS)) { permLauncher.launch(requiredPerms); return }
         val t = selectedTpl()
         if (t.hasTokens) {
@@ -948,6 +1000,8 @@ class MainActivity : AppCompatActivity() {
                 Prefs.markSent(this, num, System.currentTimeMillis())
                 Prefs.addHistory(this, SendRecord(id, System.currentTimeMillis(), num, t.type, "발송중", t.name, false))
                 MmsSender.send(this, num, id, text, t.title, useImg, cardImg)
+                if (t.hasTokens) fields["청소날짜"]?.takeIf { it.isNotBlank() }?.let { ReviewReminder.add(this, num, it) }
+                if (t.id == ReviewReminder.TPL_ID) { ReviewReminder.mark(this, num, "sent"); renderReviews() }
                 toast("✅ 보냈어요 · 결과는 발송내역에서 확인", "ok")
                 phoneEdit.setText("")
                 hideKeyboard()
