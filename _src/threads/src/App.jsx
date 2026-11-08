@@ -4,7 +4,7 @@ import {
   LENGTHS, performanceSummary, fullText, generatePost,
 } from './lib.js'
 
-// v14 — 링크 앱 스타일 가이드(카드로 꽉 채우기·큰 숫자·상태 점) 적용
+// v15 — 링크 앱 스타일 가이드(카드로 꽉 채우기·큰 숫자·상태 점) 적용
 const DEFAULT_PROFILE = `제주에 사는 사장님 (스레드는 회사 계정이 아니라 개인 계정)
 - 직업: 제주에서 청소 일 12년째, 2016년에 청소 회사 '링크클린' 창업 (제주시·서귀포)
 - 별장·세컨하우스 관리, 고소작업·외벽청소도 함
@@ -18,6 +18,7 @@ const DAILY_GOAL = 2 // 아침·저녁 하루 2번
 const load = (k, d) => { try { const v = localStorage.getItem(k); return v === null ? d : JSON.parse(v) } catch { return d } }
 const save = (k, v) => { try { localStorage.setItem(k, JSON.stringify(v)) } catch {} }
 const charCount = s => [...(s || '')].length
+const postText = p => fullText(p) + (p.topic_tag ? `\n\n#${p.topic_tag.replace(/^#/, '')}` : '')
 
 const STAGE_MSG = {
   research: ['오늘 제주 날씨 찾는 중…', '제주 뉴스 살펴보는 중…', '오늘 화제 모으는 중…', '반응 좋을 소재 고르는 중…'],
@@ -104,8 +105,7 @@ export default function App() {
     window.scrollTo({ top: 0, behavior: 'smooth' })
     flash('초기화했어요. 새 글을 만들어 보세요')
   }
-  const pickHook = line => setPost(p => { const l = p.body.split('\n'); l[0] = line; return { ...p, body: l.join('\n') } })
-  async function copy(text, msg) {
+    async function copy(text, msg) {
     try { await navigator.clipboard.writeText(text); flash(msg) } catch { flash('복사가 막혔어요 — 글을 길게 눌러 복사해 주세요') }
   }
 
@@ -115,7 +115,7 @@ export default function App() {
   const withStats = posted.filter(h => h.stats && Number(h.stats.views) > 0)
   const avgReplies = withStats.length ? Math.round(withStats.reduce((s, h) => s + (Number(h.stats.replies) || 0), 0) / withStats.length * 10) / 10 : null
   const lastScore = post?.score || history.find(h => h.post?.score)?.post.score || null
-  const count = post ? charCount(fullText(post)) : 0
+  const count = post ? charCount(postText(post)) : 0
   const T = THEMES[theme]
 
   return (
@@ -125,7 +125,7 @@ export default function App() {
         <header className="flex items-center justify-between px-1 pb-3 pt-1">
           <div>
             <p className="text-[13px] font-medium text-muted">{dateLabel}</p>
-            <h1 className="font-num text-[26px] leading-tight text-deep">오늘의 스레드<span className="text-accent">.</span> <span className="align-middle font-body text-[10px] font-medium text-muted">v14</span></h1>
+            <h1 className="font-num text-[26px] leading-tight text-deep">오늘의 스레드<span className="text-accent">.</span> <span className="align-middle font-body text-[10px] font-medium text-muted">v15</span></h1>
           </div>
           <div className="flex gap-1.5">
             <HeadBtn onClick={reset}>초기화</HeadBtn>
@@ -216,7 +216,7 @@ export default function App() {
                     <p className="text-sm font-semibold">{handle} <span className="font-normal text-muted">· 방금</span></p>
                     {post.title && <p className="mt-1 break-keep text-[15.5px] font-bold leading-[1.6] text-deep">제목: {post.title}</p>}
                     <p className={`${post.title ? 'mt-3' : 'mt-1'} whitespace-pre-line break-keep text-[15.5px] leading-[1.7]`}>{post.body}</p>
-                    {post.topic_tag && <span className="mt-3 inline-block rounded-full bg-tint px-3 py-1 text-xs font-semibold text-deep">{post.topic_tag}</span>}
+                    {post.topic_tag && <p className="mt-3 flex items-center gap-2"><span className="rounded-full bg-tint px-3 py-1 text-[13px] font-bold text-deep">#{post.topic_tag.replace(/^#/, '')}</span><span className="text-[11.5px] text-muted">황금 해시태그 · 복사에 포함</span></p>}
                   </div>
                 </div>
               </article>
@@ -229,16 +229,8 @@ export default function App() {
               </div>
 
               {/* 복사 버튼 */}
-              <button onClick={() => { copy(fullText(post), "복사 완료! 스레드에 붙여넣기 (기록에 '올린 글'로 표시돼요)"); markPosted(post, true) }}
+              <button onClick={() => { copy(postText(post), "복사 완료! 스레드에 붙여넣기 (기록에 '올린 글'로 표시돼요)"); markPosted(post, true) }}
                 className="col-span-2 rounded-full bg-deep py-4 font-num text-[18px] text-white active:scale-[.98]">스레드용 복사</button>
-
-              {/* 제목·첫 줄 바꾸기 */}
-              {(post.title_options?.length > 0 || post.hook_options?.length > 0) && (
-                <div className="col-span-2 space-y-4 rounded-[14px] bg-card p-4">
-                  <Options label="황금제목 바꿔 보기" current={post.title} options={post.title_all || [post.title, ...(post.title_options || [])]} onPick={t => setPost(p => ({ ...p, title: t }))} />
-                  <Options label="본문 첫 줄 바꿔 보기" current={post.body.split('\n')[0].trim()} options={post.hook_all || [post.hook, ...(post.hook_options || [])]} onPick={pickHook} />
-                </div>
-              )}
 
               {/* 사진 팁 */}
               <div className="col-span-2 rounded-[14px] bg-deep p-4 text-white">
@@ -404,26 +396,6 @@ function Counter({ count }) {
       <span className={`font-num text-[17px] ${over ? 'text-danger' : 'text-ink'}`}>{count}<span className="font-body text-xs font-medium text-muted"> / {MAX_CHARS}자</span></span>
       <div className="mt-1 h-1.5 overflow-hidden rounded-full bg-line">
         <div className={`h-full ${over ? 'bg-danger' : count >= 350 ? 'bg-leaf' : 'bg-accent'}`} style={{ width: `${pct}%` }} />
-      </div>
-    </div>
-  )
-}
-
-function Options({ label, current, options, onPick }) {
-  const list = options.filter((o, i, a) => o && a.indexOf(o) === i)
-  if (list.length < 2) return null
-  return (
-    <div>
-      <p className="text-xs font-semibold text-muted">{label} <span className="font-normal">(누르면 교체)</span></p>
-      <div className="mt-1.5 space-y-1.5">
-        {list.map(o => {
-          const on = (current || '').trim() === o.trim()
-          return (
-            <button key={o} onClick={() => onPick(o)} className={`flex w-full items-start gap-2 rounded-[10px] px-3 py-2.5 text-left text-sm leading-snug ${on ? 'bg-deep font-semibold text-white' : 'bg-paper text-ink'}`}>
-              <span className={`dot mt-1.5 ${on ? 'bg-accent' : 'bg-line'}`} />{o}
-            </button>
-          )
-        })}
       </div>
     </div>
   )
