@@ -1,0 +1,30 @@
+@import "tailwindcss";
+
+/* 링크 앱 스타일 가이드 토큰 */
+@theme {
+  --color-paper: #F4F1EA;      /* surface-100 */
+  --color-card: #FFFFFF;       /* surface-card */
+  --color-brand: #0E5A60;
+  --color-deep: #0B3B40;       /* brand-deep */
+  --color-tint: #DCEDEB;       /* brand-tint */
+  --color-accent: #D9691F;
+  --color-accent-soft: #FBE7D8;
+  --color-leaf: #3F8F2E;
+  --color-danger: #C0392B;
+  --color-ink: #14262A;
+  --color-muted: #56676A;
+  --color-line: #E2DBCD;
+  --font-num: "Black Han Sans", "IBM Plex Sans KR", system-ui, sans-serif;
+  --font-body: "IBM Plex Sans KR", "Apple SD Gothic Neo", system-ui, sans-serif;
+}
+
+html, body { background: var(--color-paper); color: var(--color-ink); font-family: var(--font-body); -webkit-tap-highlight-color: transparent; }
+button { cursor: pointer; }
+
+.input { width: 100%; background: var(--color-card); border-radius: 14px; padding: .75rem 1rem; font-size: 16px; outline: none; border: 2px solid transparent; }
+.input:focus { border-color: var(--color-brand); }
+
+.dot { width: 8px; height: 8px; border-radius: 999px; flex: none; display: inline-block; }
+
+@keyframes pulse-ring { 0% { box-shadow: 0 0 0 0 rgba(217,105,31,.45) } to { box-shadow: 0 0 0 16px rgba(217,105,31,0) } }
+.pulse-ring { animation: pulse-ring 1.6s ease-out infinite; }
