@@ -1,10 +1,10 @@
 import { useEffect, useState } from 'react'
 import {
   THEMES, DEFAULT_APPS, pickAutoTheme, todayKey, todayLabel, computeRules,
-  LENGTHS, performanceSummary, fullText, toMarkdown, generatePost,
+  LENGTHS, performanceSummary, fullText, generatePost,
 } from './lib.js'
 
-// v13 — 링크 앱 스타일 가이드(카드로 꽉 채우기·큰 숫자·상태 점) 적용
+// v14 — 링크 앱 스타일 가이드(카드로 꽉 채우기·큰 숫자·상태 점) 적용
 const DEFAULT_PROFILE = `제주에 사는 사장님 (스레드는 회사 계정이 아니라 개인 계정)
 - 직업: 제주에서 청소 일 12년째, 2016년에 청소 회사 '링크클린' 창업 (제주시·서귀포)
 - 별장·세컨하우스 관리, 고소작업·외벽청소도 함
@@ -125,7 +125,7 @@ export default function App() {
         <header className="flex items-center justify-between px-1 pb-3 pt-1">
           <div>
             <p className="text-[13px] font-medium text-muted">{dateLabel}</p>
-            <h1 className="font-num text-[26px] leading-tight text-deep">오늘의 스레드<span className="text-accent">.</span> <span className="align-middle font-body text-[10px] font-medium text-muted">v13</span></h1>
+            <h1 className="font-num text-[26px] leading-tight text-deep">오늘의 스레드<span className="text-accent">.</span> <span className="align-middle font-body text-[10px] font-medium text-muted">v14</span></h1>
           </div>
           <div className="flex gap-1.5">
             <HeadBtn onClick={reset}>초기화</HeadBtn>
@@ -230,9 +230,7 @@ export default function App() {
 
               {/* 복사 버튼 */}
               <button onClick={() => { copy(fullText(post), "복사 완료! 스레드에 붙여넣기 (기록에 '올린 글'로 표시돼요)"); markPosted(post, true) }}
-                className="rounded-full bg-deep py-3.5 font-semibold text-white active:scale-[.98]">스레드용 복사</button>
-              <button onClick={() => copy(toMarkdown(post), '마크다운 복사 완료')}
-                className="rounded-full bg-card py-3.5 font-semibold text-deep active:scale-[.98]">마크다운 복사</button>
+                className="col-span-2 rounded-full bg-deep py-4 font-num text-[18px] text-white active:scale-[.98]">스레드용 복사</button>
 
               {/* 제목·첫 줄 바꾸기 */}
               {(post.title_options?.length > 0 || post.hook_options?.length > 0) && (
