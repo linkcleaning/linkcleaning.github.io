@@ -1,10 +1,10 @@
 import { useEffect, useState } from 'react'
 import {
   THEMES, DEFAULT_APPS, pickAutoTheme, todayKey, todayLabel, computeRules,
-  LENGTHS, performanceSummary, fullText, generatePost,
+  performanceSummary, fullText, generatePost,
 } from './lib.js'
 
-// v15 — 링크 앱 스타일 가이드(카드로 꽉 채우기·큰 숫자·상태 점) 적용
+// v16 — 링크 앱 스타일 가이드(카드로 꽉 채우기·큰 숫자·상태 점) 적용
 const DEFAULT_PROFILE = `제주에 사는 사장님 (스레드는 회사 계정이 아니라 개인 계정)
 - 직업: 제주에서 청소 일 12년째, 2016년에 청소 회사 '링크클린' 창업 (제주시·서귀포)
 - 별장·세컨하우스 관리, 고소작업·외벽청소도 함
@@ -34,7 +34,7 @@ export default function App() {
   const [useSearch, setUseSearch] = useState(() => load('td_search', true))
   const [history, setHistory] = useState(() => load('td_history', []))
   const [themeSel, setThemeSel] = useState('auto')
-  const [length, setLength] = useState(() => load('td_length', 'short'))
+  const length = 'short' // 길이는 '짧게'(80~180자) 하나로 고정
   const [note, setNote] = useState('')
   const [post, setPost] = useState(() => load('td_history', [])[0]?.post || null)
   const [busy, setBusy] = useState(false)
@@ -55,7 +55,6 @@ export default function App() {
   useEffect(() => save('td_profile', profile), [profile])
   useEffect(() => save('td_handle', handle), [handle])
   useEffect(() => save('td_search', useSearch), [useSearch])
-  useEffect(() => save('td_length', length), [length])
   useEffect(() => save('td_apps', apps), [apps])
   useEffect(() => save('td_history', history), [history])
   useEffect(() => {
@@ -125,7 +124,7 @@ export default function App() {
         <header className="flex items-center justify-between px-1 pb-3 pt-1">
           <div>
             <p className="text-[13px] font-medium text-muted">{dateLabel}</p>
-            <h1 className="font-num text-[26px] leading-tight text-deep">오늘의 스레드<span className="text-accent">.</span> <span className="align-middle font-body text-[10px] font-medium text-muted">v15</span></h1>
+            <h1 className="font-num text-[26px] leading-tight text-deep">오늘의 스레드<span className="text-accent">.</span> <span className="align-middle font-body text-[10px] font-medium text-muted">v16</span></h1>
           </div>
           <div className="flex gap-1.5">
             <HeadBtn onClick={reset}>초기화</HeadBtn>
@@ -156,16 +155,6 @@ export default function App() {
           <ThemeTile active={themeSel === 'auto'} onClick={() => setThemeSel('auto')} tag="?" label="오늘의 랜덤" sub={`지금은 ${THEMES[autoTheme].tag}. ${THEMES[autoTheme].label}`} />
           {Object.values(THEMES).map(t => (
             <ThemeTile key={t.id} active={themeSel === t.id} onClick={() => setThemeSel(t.id)} tag={t.tag} label={t.label} sub={t.short} />
-          ))}
-        </div>
-
-        {/* 길이 */}
-        <div className="mt-2 flex items-center gap-2 rounded-[14px] bg-card p-1.5">
-          <span className="px-2.5 text-xs font-semibold text-muted">길이</span>
-          {Object.entries(LENGTHS).map(([k, v]) => (
-            <button key={k} onClick={() => setLength(k)} className={`flex-1 rounded-full py-2 text-sm font-semibold transition ${length === k ? 'bg-deep text-white' : 'text-muted'}`}>
-              {v.label} <span className="text-xs font-normal opacity-75">{v.range}</span>
-            </button>
           ))}
         </div>
 
