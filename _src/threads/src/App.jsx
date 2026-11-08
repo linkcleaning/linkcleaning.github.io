@@ -1,10 +1,10 @@
 import { useEffect, useState } from 'react'
 import {
-  THEMES, DEFAULT_APPS, pickAutoTheme, todayKey, todayLabel, computeRules,
+  THEMES, DEFAULT_APPS, todayKey, todayLabel, computeRules,
   performanceSummary, fullText, generatePost,
 } from './lib.js'
 
-// v16 — 링크 앱 스타일 가이드(카드로 꽉 채우기·큰 숫자·상태 점) 적용
+// v17 — 링크 앱 스타일 가이드(카드로 꽉 채우기·큰 숫자·상태 점) 적용
 const DEFAULT_PROFILE = `제주에 사는 사장님 (스레드는 회사 계정이 아니라 개인 계정)
 - 직업: 제주에서 청소 일 12년째, 2016년에 청소 회사 '링크클린' 창업 (제주시·서귀포)
 - 별장·세컨하우스 관리, 고소작업·외벽청소도 함
@@ -33,7 +33,6 @@ export default function App() {
   const [handle, setHandle] = useState(() => load('td_handle', 'linkclean_jeju'))
   const [useSearch, setUseSearch] = useState(() => load('td_search', true))
   const [history, setHistory] = useState(() => load('td_history', []))
-  const [themeSel, setThemeSel] = useState('auto')
   const length = 'short' // 길이는 '짧게'(80~180자) 하나로 고정
   const [note, setNote] = useState('')
   const [post, setPost] = useState(() => load('td_history', [])[0]?.post || null)
@@ -46,8 +45,6 @@ export default function App() {
   const [sheet, setSheet] = useState(null)
 
   const posted = history.filter(h => h.posted)
-  const autoTheme = pickAutoTheme(new Date(), posted)
-  const theme = themeSel === 'auto' ? autoTheme : themeSel
   const { label: dateLabel } = todayLabel()
   const rules = computeRules(posted)
 
@@ -67,6 +64,10 @@ export default function App() {
 
   async function generate() {
     if (!apiKey) { setSheet('settings'); flash('먼저 Claude API 키를 넣어 주세요'); return }
+    // 누를 때마다 3가지 테마 중 하나를 랜덤으로 (바로 전 글과 같은 테마는 피함)
+    const ids = Object.keys(THEMES)
+    const pool = ids.filter(id => id !== (post?.tone || history[0]?.post?.tone))
+    const theme = pool[Math.floor(Math.random() * pool.length)] || ids[0]
     setBusy(true); setError(''); setRaw(''); setTick(0)
     try {
       const out = await generatePost({
@@ -100,7 +101,7 @@ export default function App() {
   const removeItem = id => { if (confirm('이 글을 기록에서 지울까요?')) setHistory(h => h.filter(x => x.id !== id)) }
   const setStat = (id, k, v) => setHistory(h => h.map(x => x.id === id ? { ...x, stats: { ...x.stats, [k]: v } } : x))
   function reset() {
-    setPost(null); setNote(''); setError(''); setRaw(''); setThemeSel('auto')
+    setPost(null); setNote(''); setError(''); setRaw('')
     window.scrollTo({ top: 0, behavior: 'smooth' })
     flash('초기화했어요. 새 글을 만들어 보세요')
   }
@@ -115,7 +116,6 @@ export default function App() {
   const avgReplies = withStats.length ? Math.round(withStats.reduce((s, h) => s + (Number(h.stats.replies) || 0), 0) / withStats.length * 10) / 10 : null
   const lastScore = post?.score || history.find(h => h.post?.score)?.post.score || null
   const count = post ? charCount(postText(post)) : 0
-  const T = THEMES[theme]
 
   return (
     <div className="min-h-screen">
@@ -124,7 +124,7 @@ export default function App() {
         <header className="flex items-center justify-between px-1 pb-3 pt-1">
           <div>
             <p className="text-[13px] font-medium text-muted">{dateLabel}</p>
-            <h1 className="font-num text-[26px] leading-tight text-deep">오늘의 스레드<span className="text-accent">.</span> <span className="align-middle font-body text-[10px] font-medium text-muted">v16</span></h1>
+            <h1 className="font-num text-[26px] leading-tight text-deep">오늘의 스레드<span className="text-accent">.</span> <span className="align-middle font-body text-[10px] font-medium text-muted">v17</span></h1>
           </div>
           <div className="flex gap-1.5">
             <HeadBtn onClick={reset}>초기화</HeadBtn>
@@ -141,22 +141,13 @@ export default function App() {
               <span className="rounded-full bg-white/15 px-2.5 py-0.5 text-xs font-semibold">{postedToday >= DAILY_GOAL ? '오늘 완료' : postedToday === 0 ? '아침 글 차례' : '저녁 글 차례'}</span>
             </div>
             <p className="mt-2 font-num text-[48px] leading-[52px]">{postedToday}<span className="ml-1 font-body text-[15px] font-medium text-white/80">/ {DAILY_GOAL}편</span></p>
-            <p className="mt-1 text-[13px] text-white/85">지금 추천 테마 · {THEMES[autoTheme].tag}. {THEMES[autoTheme].label}</p>
+            <p className="mt-1 text-[13px] text-white/85">누를 때마다 제주 이야기 · 생활 꿀팁 · AI 앱 이야기 중 하나로 써요</p>
           </div>
           <Stat label="이번 주 청소 글" value={rules.cleaningCount} unit="/ 2편" dot={rules.allowCleaning ? 'ok' : 'today'} dotText={rules.allowCleaning ? '여유' : '이번 주 끝'} />
           <Stat label="올린 글 전체" value={posted.length} unit="편" />
           <Stat label="평균 댓글" value={avgReplies ?? '–'} unit={avgReplies === null ? '' : '개'} sub={avgReplies === null ? '기록에 반응을 적으면 보여요' : `${withStats.length}편 기준`} />
           <Stat label="최근 글 점수" value={lastScore ?? '–'} unit={lastScore ? '점' : ''} accent={!!lastScore} />
         </section>
-
-        {/* 테마 */}
-        <SectionTitle>오늘의 테마</SectionTitle>
-        <div className="grid grid-cols-2 gap-2">
-          <ThemeTile active={themeSel === 'auto'} onClick={() => setThemeSel('auto')} tag="?" label="오늘의 랜덤" sub={`지금은 ${THEMES[autoTheme].tag}. ${THEMES[autoTheme].label}`} />
-          {Object.values(THEMES).map(t => (
-            <ThemeTile key={t.id} active={themeSel === t.id} onClick={() => setThemeSel(t.id)} tag={t.tag} label={t.label} sub={t.short} />
-          ))}
-        </div>
 
         {/* 메모 */}
         <SectionTitle hint="선택">오늘 있었던 일 · 떠오른 생각</SectionTitle>
@@ -269,7 +260,7 @@ export default function App() {
           <button onClick={generate} disabled={busy}
             className={`w-full rounded-full bg-accent py-4 font-num text-[19px] text-ink transition active:scale-[.98] disabled:opacity-90 ${!post && !busy ? 'pulse-ring' : ''}`}>
             {busy ? <span className="font-body text-base font-semibold">{STAGE_MSG[stage][tick % STAGE_MSG[stage].length]}</span>
-              : post ? '다른 글로 다시 생성' : `오늘의 글 생성 · ${T.tag}`}
+              : post ? '다른 글로 다시 생성' : '오늘의 글 생성'}
           </button>
         </div>
       </div>
@@ -362,18 +353,6 @@ function Stat({ label, value, unit, sub, dot, dotText, accent }) {
       {dot && <p className="mt-1.5 flex items-center gap-1.5 text-xs font-semibold text-muted"><span className={`dot ${dot === 'ok' ? 'bg-leaf' : 'bg-accent'}`} />{dotText}</p>}
       {sub && <p className="mt-1 line-clamp-2 break-keep text-[11.5px] leading-snug text-muted">{sub}</p>}
     </div>
-  )
-}
-
-function ThemeTile({ active, onClick, tag, label, sub }) {
-  return (
-    <button onClick={onClick} className={`flex gap-2.5 rounded-[14px] p-3.5 text-left transition active:scale-[.98] ${active ? 'bg-deep text-white' : 'bg-card text-ink'}`}>
-      <span className={`grid h-7 w-7 shrink-0 place-items-center rounded-[8px] font-num text-[15px] ${active ? 'bg-accent text-ink' : 'bg-tint text-deep'}`}>{tag}</span>
-      <span className="min-w-0">
-        <span className="block break-keep text-[14px] font-bold leading-snug">{label}</span>
-        <span className={`mt-0.5 block break-keep text-[11.5px] leading-snug ${active ? 'text-white/75' : 'text-muted'}`}>{sub}</span>
-      </span>
-    </button>
   )
 }
 
