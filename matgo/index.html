@@ -296,6 +296,8 @@ small.zero,.seg small.mn.zero{color:#ff8a80!important}
 .seg.opp.three{grid-template-columns:repeat(3,1fr)}
 .boss .en{display:block;font-size:10px;font-weight:900;letter-spacing:1.5px;color:#ff8a80;margin-top:1px}
 .taunt small{display:block;font-size:14px;font-weight:800;color:#ff8a80;letter-spacing:1px;margin-top:4px}
+.hsay{transition:opacity .18s}
+.hchar{cursor:pointer}
 </style>
 </head>
 <body>
@@ -322,7 +324,7 @@ small.zero,.seg small.mn.zero{color:#ff8a80!important}
   <button id="setBtn" class="corner r" aria-label="설정">⚙️</button>
   <div class="hero" id="hero">
    <div class="hchar"><img id="heroImg" alt="링크클린"><div class="hfan" id="fan"></div></div>
-   <div class="hsay" id="homeSay">한 판 붙어볼까? 복이 굴러온다~</div>
+   <div class="hsay" id="homeSay">오늘 바닥 패, 내가 싹 청소해 줄게~ 🧹</div>
    <div class="title"><span class="t1">길쭈기</span><span class="t2">맞<span>고</span></span></div>
   </div>
   <div class="panel">
@@ -364,7 +366,7 @@ small.zero,.seg small.mn.zero{color:#ff8a80!important}
 
 <script>
 'use strict';
-const VER='v28';
+const VER='v29';
 const $=s=>document.querySelector(s);
 const sleep=ms=>new Promise(r=>setTimeout(r,ms));
 const rnd=n=>Math.floor(Math.random()*n);
@@ -1541,6 +1543,23 @@ async function openComment(){
     }});
   if(v==='sent'){(DB.myReqs=DB.myReqs||[]).push(Date.now());saveDB();SFX.coin();await modal(`<h2>✅ 보냈어요!</h2><p>관리인이 확인하면 ${won(CMT_REWARD)}이 들어가요.</p>`,[{t:'좋아요',v:1}])}
 }
+const HOME_LINES=[
+ '오늘 바닥 패, 내가 싹 청소해 줄게~ 🧹','판돈은 깨끗하게, 패는 화끈하게!','뻑 나면 내가 치워줄게… 유료야 😏',
+ '광 셋 들고 왔다. 덤벼라!','고? 스톱? 인생은 고다! 🔥','피박은 청소로도 안 지워져요~',
+ '어제 잃은 돈, 오늘 싹 쓸어 담자!','점당 100원, 마음은 100억!','쌌으면 치워야지~ 뿌직 💩',
+ '청소 12년차 손맛 보여줄까?','꼴찌는 오늘 설거지 당번!','패는 거짓말 안 해… 내 표정만 해 😎',
+ '흔들까 말까 할 땐 흔들어!','오늘의 운세: 쪽 두 번, 뻑 한 번','투투개구리한테 또 털렸어? 🐸'];
+let hlI=-1,hlT=null;
+function homeLine(){
+  const rk=moneyRank(),me=curP(),mr=rk.findIndex(p=>p.id===me.id),top=rk[0];
+  const dyn=[];
+  if(top&&top.id!==me.id&&moneyOf(top.id)>moneyOf(me.id))dyn.push(`${pName(top)} 지갑이 두둑하던데? 털러 가자! 💰`);
+  if(rk.length>1&&mr===rk.length-1)dyn.push('꼴찌 탈출 작전 개시! 😤');
+  if(mr===0)dyn.push('1등 자리 지키려면 오늘도 한 판!');
+  const pool=HOME_LINES.concat(dyn,dyn);let i;do{i=rnd(pool.length)}while(pool.length>1&&i===hlI);hlI=i;
+  const el=$('#homeSay');if(!el)return;el.style.opacity=0;setTimeout(()=>{el.textContent=pool[i];el.style.opacity=1},180);
+}
+function startHomeLines(){clearInterval(hlT);hlT=setInterval(()=>{if($('#home').classList.contains('on')&&!document.querySelector('.mbg'))homeLine()},7000)}
 function fanArt(){
   $('#heroImg').src=LOGO_URL;
   const pick=[CARDS.find(c=>c.id==='8-0'),CARDS.find(c=>c.id==='1-0'),CARDS.find(c=>c.id==='3-0')];
@@ -1687,6 +1706,7 @@ $('#home').addEventListener('click',async e=>{
   if(e.target.closest('#bestBox')){SFX.init();SFX.select();return openBest('w')}
   if(e.target.closest('#attBtn')){SFX.init();SFX.select();return openAttend()}
   if(e.target.closest('#questBtn')){SFX.init();SFX.select();return openQuest()}
+  if(e.target.closest('.hchar')){SFX.init();SFX.slap(.7);homeLine();return}
   if(e.target.closest('#shopBtn')){SFX.init();SFX.select();return openShop()}
   if(e.target.closest('#top3')){SFX.init();SFX.select();return pickMe()}
   if(e.target.closest('#meBtn')){SFX.init();SFX.select();return pickMe()}
@@ -1751,7 +1771,7 @@ function setupPWA(){
 /* ---------- 시작 ---------- */
 loadDB();
 $('#ver1').textContent=VER;$('#ver2').textContent=VER;
-fanArt();renderHome();setupPWA();renderBestBox();syncPlays().then(renderHome);syncDown().then(async ok=>{if(ok){renderHome();if(DB.meLocked)await checkAwards();renderBestBox()}if(!DB.meLocked)pickMe(true)});
+fanArt();renderHome();setupPWA();homeLine();startHomeLines();renderBestBox();syncPlays().then(renderHome);syncDown().then(async ok=>{if(ok){renderHome();if(DB.meLocked)await checkAwards();renderBestBox()}if(!DB.meLocked)pickMe(true)});
 document.addEventListener('visibilitychange',()=>{if(!document.hidden&&$('#home').classList.contains('on'))syncDown().then(ok=>{if(ok){renderHome();renderBestBox()}})});
 setInterval(()=>{if(document.hidden||!$('#home').classList.contains('on')||document.querySelector('.mbg'))return;syncDown().then(ok=>{if(ok){renderHome();renderBestBox()}})},20000);
 document.addEventListener('gesturestart',e=>e.preventDefault());
