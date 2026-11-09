@@ -214,7 +214,7 @@ small.zero,.seg small.mn.zero{color:#ff8a80!important}
 .hfan{position:absolute;right:-30px;bottom:-14px;width:120px;height:110px}
 .hfan .fc{position:absolute;left:30px;bottom:0;width:52px;height:80px;border-radius:5px;box-shadow:0 6px 14px #000b;transform-origin:50% 115%}
 .hfan .fc svg{width:100%;height:100%;display:block;border-radius:5px}
-.hsay{position:absolute;left:0;top:6px;max-width:150px;background:var(--cream);color:#3a2212;font-weight:800;font-size:13px;padding:8px 11px;border-radius:14px;box-shadow:0 4px 12px #0008;text-align:left}
+.hsay{position:absolute;left:0;top:58px;max-width:150px;background:var(--cream);color:#3a2212;font-weight:800;font-size:13px;padding:8px 11px;border-radius:14px;box-shadow:0 4px 12px #0008;text-align:left}
 .hsay:after{content:'';position:absolute;right:-8px;top:14px;border:8px solid transparent;border-left-color:var(--cream);border-right:0}
 .hero .title{margin-top:14px}
 .hero .title .t2{font-size:50px}
@@ -274,6 +274,19 @@ small.zero,.seg small.mn.zero{color:#ff8a80!important}
 .taunt span{display:block;font-size:46px}
 .seg small.cnt3{font-size:9px;font-weight:800;color:#bfe5df;opacity:1}.seg small.cnt3.full{color:#ff8a80}
 .seg button.on small.cnt3{color:#5a3a00}
+.corner{position:absolute;top:calc(env(safe-area-inset-top) + 10px);z-index:5;width:40px;height:40px;border-radius:50%;border:1px solid #ffffff33;background:#0007;font-size:19px;color:#fff;display:flex;align-items:center;justify-content:center;box-shadow:0 3px 8px #0008}
+.corner.l{left:12px}.corner.r{right:12px}
+.evlbl{width:100%;max-width:400px;margin:12px 0 -4px;font-size:13px;font-weight:900;color:#ffe08a}
+.homebtns{grid-template-columns:repeat(3,1fr)!important}
+.homebtns button{position:relative;display:flex;flex-direction:column;align-items:center;gap:2px;font-size:13.5px;padding:10px 4px}
+.homebtns .ev4{background:linear-gradient(90deg,#1565c0,#42a5f5)}
+.homebtns .ev5{background:linear-gradient(90deg,#c62828,#ff7043)}
+.homebtns button.dot:after{content:'';position:absolute;right:6px;top:6px;width:10px;height:10px;border-radius:50%;background:#ff1744;box-shadow:0 0 0 2px #fff;animation:pulse 1s infinite}
+.stamps{display:grid;grid-template-columns:repeat(7,1fr);gap:4px;margin:10px 0}
+.stamp{aspect-ratio:1;border-radius:10px;background:#ffffff14;display:flex;flex-direction:column;align-items:center;justify-content:center;font-weight:900;font-size:16px;border:1.5px dashed #ffffff33}
+.stamp small{font-size:8px;opacity:.8}.stamp.on{background:#5a1020;border:1.5px solid #ff5c8a;font-size:20px}
+.stamp:last-child{border-color:#f5c24a}
+.qbar{height:6px;border-radius:3px;background:#ffffff18;margin:4px 0 2px;overflow:hidden}.qbar i{display:block;height:100%;background:linear-gradient(90deg,#8cc63f,#f5c24a)}
 </style>
 </head>
 <body>
@@ -296,6 +309,8 @@ small.zero,.seg small.mn.zero{color:#ff8a80!important}
 <div id="app">
  <!-- HOME -->
  <section id="home" class="screen on">
+  <button id="ruleBtn" class="corner l" aria-label="게임 규칙">📖</button>
+  <button id="setBtn" class="corner r" aria-label="설정">⚙️</button>
   <div class="hero" id="hero">
    <div class="hchar"><img id="heroImg" alt="링크클린"><div class="hfan" id="fan"></div></div>
    <div class="hsay" id="homeSay">한 판 붙어볼까? 복이 굴러온다~</div>
@@ -313,15 +328,14 @@ small.zero,.seg small.mn.zero{color:#ff8a80!important}
    <button class="start" id="startBtn">게임 시작 ▶</button>
   </div>
   <div class="bestbox" id="bestBox"></div>
+  <div class="evlbl">🎉 이벤트</div>
   <div class="homebtns">
-   <button id="coffeeBtn" class="ev1">☕ 커피 이벤트<small>30만원 = 커피 1잔</small></button>
+   <button id="attBtn" class="ev4">📅 출석 체크<small id="attSub">매일 +1천원</small></button>
+   <button id="questBtn" class="ev5">🎯 오늘의 미션<small id="qSub">3개 깨면 보상</small></button>
    <button id="spinBtn" class="ev3">🎡 행운 룰렛<small>하루 1번 최대 2만원</small></button>
    <button id="cmtBtn" class="ev2">📝 댓글 이벤트<small>인증하면 +3만원</small></button>
-  </div>
-  <div class="homebtns sub">
-   <button id="shopBtn" class="shop">🏪 링크 편의점<small>드링크·영양제로 활력 UP</small></button>
-   <button id="ruleBtn">📖 게임 규칙</button>
-   <button id="setBtn">⚙️ 설정</button>
+   <button id="coffeeBtn" class="ev1">☕ 커피 이벤트<small>30만원 = 커피 1잔</small></button>
+   <button id="shopBtn" class="shop">🏪 링크 편의점<small>활력 UP 아이템</small></button>
   </div>
   <div class="ver home" id="ver1"></div>
  </section>
@@ -341,7 +355,7 @@ small.zero,.seg small.mn.zero{color:#ff8a80!important}
 
 <script>
 'use strict';
-const VER='v24';
+const VER='v25';
 const $=s=>document.querySelector(s);
 const sleep=ms=>new Promise(r=>setTimeout(r,ms));
 const rnd=n=>Math.floor(Math.random()*n);
@@ -963,11 +977,11 @@ async function playCard(p,card,pick){
     if(same.length===3&&kH===1)bomb=true;
     else if(same.length>=3&&kH===0&&!S.shook[p].includes(H.m)){
       const yes=p===0?await askShake(same):aiShake();
-      if(yes){S.shakes[p]++;S.shook[p].push(H.m);SFX.shake();vib([15,30,15]);speak('흔들어!');if(p===1)say('흔들어 볼까~?');await banner('흔들기!','gold',700);render()}
+      if(yes){if(p===0)qHit('bomb');S.shakes[p]++;S.shook[p].push(H.m);SFX.shake();vib([15,30,15]);speak('흔들어!');if(p===1)say('흔들어 볼까~?');await banner('흔들기!','gold',700);render()}
     }
     if(bomb){
       await act(()=>{same.forEach(c=>{rm(hand,c);S.floor.push(c)});hand.push(dummy(),dummy())},{dur:420,slam:true});same.forEach(c=>impact(c,true));
-      S.shakes[p]++;S.bombs[p]++;SFX.bomb();vib(60);speak('폭탄이다!');await banner('💣 폭탄!','red',800);
+      if(p===0)qHit('bomb');S.shakes[p]++;S.bombs[p]++;SFX.bomb();vib(60);speak('폭탄이다!');await banner('💣 폭탄!','red',800);
     }else{
       await act(()=>{rm(hand,H);S.floor.push(H)},{dur:400,slam:true,wait:400});SFX.slap(kH?1:.75);impact(H,kH>0);vib(12);
     }
@@ -1007,6 +1021,7 @@ async function playCard(p,card,pick){
       else if(FM.length===3){take(F,...FM);const own=S.ppukOwner[F.m]===p;steal+=own?2:1;ev.push(own?'자뻑':'뻑 먹기');delete S.ppukOwner[F.m]}
     }
   }
+  if(p===0){if(ev.includes('뻑 먹기')||ev.includes('자뻑'))qHit('ppukEat');if(ev.includes('쪽')||ev.includes('따닥'))qHit('jjok')}
   for(const e of ev){
     if(e==='뻑'){SFX.ppuk();vib([40,40,40]);speak('뻑!',1.1,1.1);say(p===1?pickT('ppuk'):pickT('ppukMe'))}else{SFX.event();vib(25);speak({'쪽':'쪽!','따닥':'따닥!','자뻑':'자뻑이다!','뻑 먹기':'뻑 먹었다!'}[e]||e)}
     await banner(e+'!',e==='뻑'?'red':'gold',700);
@@ -1023,7 +1038,7 @@ async function playCard(p,card,pick){
     if(p===1&&took.some(c=>c.t==='G'||c.sub==='godori'))say(pickT('big'));
     await afterCaptureEvents(p,took);
   }
-  if(took.length&&S.floor.length===0&&S.deck.length>0){steal++;SFX.event();speak('싹쓸이!');await banner('싹쓸!','gold',700)}
+  if(took.length&&S.floor.length===0&&S.deck.length>0){steal++;SFX.event();speak('싹쓸이!');if(p===0)qHit('ssul');await banner('싹쓸!','gold',700)}
   else if(took.length&&S.floor.length===0&&!S.deck.length){steal++;await banner('막쓸!','gold',700);await instBonus(p,'막쓸',3)}
   if(steal){
     let got=0;await act(()=>{got=stealPi(o,p,steal)},{dur:520,wait:460});
@@ -1067,6 +1082,7 @@ async function afterTurn(p,before0,again){
   render();
   const now=scoreOf(S.caps[p]);
   const had=new Set(before0.d.map(x=>x[0]));
+  if(p===0)for(const [n] of now.d){if(had.has(n))continue;if(n==='고도리')qHit('godori');if(/홍단|청단|초단/.test(n))qHit('dan')}
   for(const [n] of now.d)if(!had.has(n)&&/광|고도리|홍단|청단|초단/.test(n)){SFX.event();await banner(n+'!','gold',800)}
   if(S.ppuk[p]>=3){await banner('3뻑!','red',1000);return endGame(p,{ppuk3:true})}
   const sc=now.total;
@@ -1074,7 +1090,7 @@ async function afterTurn(p,before0,again){
     const canGo=S.hands[p].length>0;
     const go=canGo?(p===0?await askGoStop(sc):aiGo(sc)):false;
     if(go){
-      S.go[p]++;S.lastGo[p]=sc;SFX.go();vib([20,40,20]);speak(['','고!','투 고!','쓰리 고!','포 고!','파이브 고!'][S.go[p]]||'고!',1.4,1.2);
+      S.go[p]++;S.lastGo[p]=sc;if(p===0)qHit('go');SFX.go();vib([20,40,20]);speak(['','고!','투 고!','쓰리 고!','포 고!','파이브 고!'][S.go[p]]||'고!',1.4,1.2);
       if(p===1)say(S.go[1]===1?S.opp.go:pickT('go'));else say(pickT('meGo'));
       await banner(['','원고!','투고!','쓰리고!','포고!','파이브고!'][S.go[p]]||S.go[p]+'고!','go',900);if(S.go[p]>=3){confetti();if(DB.cfg.event&&S.go[p]===3)await instBonus(p,'쓰리고 축하금',3)}render();
     }else{
@@ -1208,6 +1224,7 @@ async function endGame(w,sp={}){
   const total=score*mul.reduce((m,x)=>m*x[1],1);
   DB.nagari=0;DB.first=w;
   const pl=curP(),st=statOf(pl.id);st.g++;
+  qHit('play');if(w===0){qHit('win');if(a.ng>=3)qHit('gwang');if(S.opp.boss)qHit('tutu');if(S.go[0]>=1)qHit('gowin')}
   if(w===0){st.w++;st.net+=total;st.best=Math.max(st.best,total);st.maxGo=Math.max(st.maxGo,S.go[0])}else{st.l++;st.net-=total}
   const d=new Date();
   DB.history.unshift({t:`${d.getMonth()+1}/${d.getDate()} ${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}`,pid:pl.id,name:pName(pl),emoji:pl.roster?'':pl.emoji,lv:S.level,opp:S.opp.id,win:w===0,pts:total,go:S.go[w]});
@@ -1239,7 +1256,7 @@ async function endGame(w,sp={}){
 }
 async function nagari(){
   if(S.over)return;S.over=true;S.busy=true;render();
-  DB.nagari=(DB.nagari||0)+1;useUpBuffs(curP().id);saveDB();BGM.stop();SFX.lose();
+  qHit('play');DB.nagari=(DB.nagari||0)+1;useUpBuffs(curP().id);saveDB();BGM.stop();SFX.lose();
   const nd=S.inst[0]-S.inst[1];let nmsg='';if(nd){const pl=curP();const r=nd>0?await settleMoney(pl.id,S.opp.id,nd):await settleMoney(S.opp.id,pl.id,-nd);nmsg=`<br>🎁 즉시 보너스 정산: ${nd>0?'+':'-'}${won(r.pay)}`}
   await banner('나가리!','red',900);
   const v=await modal(`<div style="width:90px;height:90px;margin:0 auto">${oppSVG(S.opp,'sad')}</div><h2>나가리 😅</h2><p>아무도 나지 못했어요.<br>다음 판은 점수 <b style="color:#f5c24a">×${2**DB.nagari}</b>!${nmsg}</p>`,[{t:'다음 판!',v:'again'},{t:'홈으로',cls:'alt',v:'home'}]);
@@ -1276,6 +1293,9 @@ function renderHome(){
   $('#lvSeg').innerHTML=opps.map(o=>{const r=DB.vs[DB.cur+'|'+o.id];return `<button class="${DB.set.opp===o.id?'on':''} ${moneyOf(o.id)<=0||playsWith(o.id)>=(DB.cfg.dailyMax||3)?'broke':''}" data-op="${o.id}">${top&&o.id===top.id?'<span class="tgt">🎯 최고 부자</span>':''}<span class="mm">${oppSVG(o)}</span>${o.nick}<small>${o.real} · ${LV[o.lv].st}</small><small class="mn ${moneyOf(o.id)<=0?'zero':''}">${moneyOf(o.id)<=0?'파산':won(moneyOf(o.id))}</small>${(()=>{const n=playsWith(o.id),mx=DB.cfg.dailyMax||3;return `<small class="cnt3 ${n>=mx?'full':''}">${n>=mx?'오늘 끝':`오늘 ${n}/${mx}판`}</small>`})()}</button>`}).join('');
   {const B=BOSS,r=DB.vs[DB.cur+'|tutu'];$('#bossBtn').className='boss'+(DB.set.opp==='tutu'?' on':'');$('#bossBtn').innerHTML=`<span class="bm">${oppSVG(B)}</span><span class="bt"><b>👹 투투개구리 <em>보스</em></b><small>${tutu().st} ${tutu().tx}</small><span class="x2">이기면 딴 돈 ×${tutuX()}!</span>${r?`<small>${r.w}승 ${r.l}패</small>`:''}</span>`}
   $('#tgSeg').innerHTML=[3,5,7].map(t=>`<button class="${DB.set.target===t?'on':''}" data-tg="${t}">${t}점<small>${t===3?'빠른 판':t===5?'적당히':'정식 맞고'}</small></button>`).join('');
+  {const a=(DB.att||{})[DB.cur],ok=a&&a.last===dayKey();$('#attSub').textContent=ok?'오늘 출석 완료 ✅':'매일 +1천원 · 7일 +1만';
+   const q=qState(),L=todayQuests(),dn=L.filter(x=>(q.prog[x.id]||0)>=x.goal).length,cl=L.filter(x=>q.claimed[x.id]).length;$('#qSub').textContent=dn>cl?`🎁 보상 받기 ${dn-cl}개!`:`오늘 ${dn}/3 달성`;
+   $('#attBtn').classList.toggle('dot',!ok);$('#questBtn').classList.toggle('dot',dn>cl)}
   $('#ngNote').textContent=(DB.nagari?`🔥 지난 판 나가리! 이번 판 점수 ×${2**DB.nagari} · `:'')+`🏁 7점 나기 · 💰 점당 ${won(DB.cfg.per)} · 보너스패 ${DB.cfg.bonus}장${DB.cfg.event?' · 🎲 이벤트 ON':''}`;
 }
 async function pickMe(first){
@@ -1378,6 +1398,47 @@ async function openShop(msg=''){
   if(it.buff){DB.buff=DB.buff||{};(DB.buff[me.id]=DB.buff[me.id]||{})[it.buff]=true}
   saveDB();SFX.coin();vib(20);speak(it.vit?'꿀꺽! 힘이 난다!':'감사합니다~');
   return openShop(`${it.ic} ${it.n} 구매! ${it.vit?`활력 ${vitOf(me.id)}%`:'다음 판에 효과가 나요'}`);
+}
+/* ---------- 📅 출석 체크 ---------- */
+const ATT_DAY=1000,ATT_7=10000;
+async function openAttend(){
+  const me=curP(),k='matgo/attend/'+me.id;let a=await LG.req(k);if(!a||!a.last)a=(DB.att||{})[me.id]||{last:'',streak:0,days:[]};
+  const t=dayKey(),y=(()=>{const d=new Date();d.setDate(d.getDate()-1);return `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`})();
+  const done=a.last===t,streak=done?a.streak:(a.last===y?a.streak:0);
+  const cells=[1,2,3,4,5,6,7].map(i=>{const got=i<=(done?streak%7||7:streak%7);return `<div class="stamp ${got?'on':''}">${got?'💮':i}<small>${i===7?'+1만':'+1천'}</small></div>`}).join('');
+  const v=await modal(`<h2>📅 출석 체크</h2><p>매일 들어와서 도장 쾅! <b>+${won(ATT_DAY)}</b><br>7일 연속이면 보너스 <b style="color:#f5c24a">+${won(ATT_7)}</b></p><div class="stamps">${cells}</div><p style="font-size:12px">연속 ${done?streak:streak}일째${done?' · 오늘 출석 완료 ✅':''}</p>`,
+    done?[{t:'닫기',v:null}]:[{t:'💮 출석 도장 쾅!',v:'go'},{t:'닫기',cls:'alt',v:null}],{dismiss:null});
+  if(v!=='go')return renderHome();
+  const ns=streak+1,bonus=ns%7===0?ATT_7:0,gain=ATT_DAY+bonus;
+  const na={last:t,streak:ns};(DB.att=DB.att||{})[me.id]=na;saveDB();await LG.req(k,'PUT',na);
+  await syncDown();DB.money[me.id]=moneyOf(me.id)+gain;await pushMoney([me.id]);LG.req('matgo/log','POST',{w:me.id,l:'출석',pts:0,pay:gain,ts:Date.now()});
+  SFX.slap();setTimeout(()=>SFX.coin(),150);vib(30);if(bonus){SFX.win();confetti()}
+  await banner(bonus?`7일 연속! +${won(gain)}`:`출석 +${won(gain)}`,'gold',900);
+  return openAttend();
+}
+/* ---------- 🎯 오늘의 미션 (매일 3개, 모두 같은 미션) ---------- */
+const QUESTS=[
+ {id:'play',n:'오늘 3판 치기',goal:3,rw:3000},{id:'win',n:'1판 이기기',goal:1,rw:3000},{id:'go',n:'고 외치기',goal:1,rw:2000},
+ {id:'gowin',n:'고 하고 이기기',goal:1,rw:5000},{id:'godori',n:'고도리 만들기',goal:1,rw:5000},{id:'dan',n:'홍단·청단·초단 만들기',goal:1,rw:4000},
+ {id:'gwang',n:'3광 이상으로 이기기',goal:1,rw:5000},{id:'ppukEat',n:'뻑 먹기',goal:1,rw:3000},{id:'jjok',n:'쪽 또는 따닥 하기',goal:2,rw:3000},
+ {id:'ssul',n:'싹쓸 하기',goal:1,rw:4000},{id:'bomb',n:'흔들기 또는 폭탄',goal:1,rw:3000},{id:'tutu',n:'👹 투투개구리 이기기',goal:1,rw:15000}];
+const Q_ALL=10000;
+function todayQuests(){const t=dayKey();let h=0;for(const c of t)h=(h*31+c.charCodeAt(0))>>>0;const pool=QUESTS.slice(),out=[];while(out.length<3){h=(h*1103515245+12345)>>>0;out.push(pool.splice(h%pool.length,1)[0])}return out}
+function qState(){const t=dayKey();if(!DB.quest||DB.quest.day!==t||DB.quest.pid!==DB.cur)DB.quest={day:t,pid:DB.cur,prog:{},claimed:{}};return DB.quest}
+function qHit(id){const q=qState();if(!todayQuests().some(x=>x.id===id))return;q.prog[id]=(q.prog[id]||0)+1;saveDB();
+  const Q=QUESTS.find(x=>x.id===id);if(q.prog[id]===Q.goal&&S&&!S.over)say('🎯 미션 달성! '+Q.n)}
+async function openQuest(msg=''){
+  const q=qState(),L=todayQuests(),all=L.every(x=>q.claimed[x.id]);
+  const v=await modal(`<h2>🎯 오늘의 미션</h2><p style="font-size:12px">매일 바뀌어요 · 모두 같은 미션 · 3개 다 깨면 보너스 <b style="color:#f5c24a">+${won(Q_ALL)}</b></p>${msg?`<p style="color:#8cc63f;font-weight:800">${msg}</p>`:''}
+   <div class="rank">${L.map(x=>{const n=Math.min(x.goal,q.prog[x.id]||0),ok=n>=x.goal,c=q.claimed[x.id];return `<div class="rk"><div class="em" style="font-size:24px">${c?'✅':ok?'🎁':'🎯'}</div><div class="nm"><b>${x.n}</b><div class="qbar"><i style="width:${n/x.goal*100}%"></i></div><small>${n}/${x.goal} · 보상 ${won(x.rw)}</small></div>${c?'<span style="font-size:12px">받음</span>':`<button class="btn" style="flex:none;padding:8px 10px;font-size:13px${ok?'':';opacity:.4'}" data-v="${ok?'q:'+x.id:'no'}">받기</button>`}</div>`}).join('')}</div>
+   ${L.every(x=>(q.prog[x.id]||0)>=x.goal)?(q.claimed.all?'<p style="margin-top:8px">🏆 올클리어 보너스 받음!</p>':`<button class="btn" style="width:100%;margin-top:8px" data-v="all">🏆 올클리어 보너스 받기 +${won(Q_ALL)}</button>`):''}`,[{t:'닫기',v:null}],{dismiss:null});
+  if(!v||v==='no')return renderHome();
+  let gain=0,lab='';
+  if(v==='all'){if(q.claimed.all||!all&&!L.every(x=>q.claimed[x.id]))return openQuest('먼저 미션 보상 3개를 받아 주세요');q.claimed.all=true;gain=Q_ALL;lab='올클리어'}
+  else{const id=v.slice(2),x=QUESTS.find(y=>y.id===id);if(q.claimed[id])return openQuest();q.claimed[id]=true;gain=x.rw;lab=x.n}
+  saveDB();const me=curP();await syncDown();DB.money[me.id]=moneyOf(me.id)+gain;await pushMoney([me.id]);LG.req('matgo/log','POST',{w:me.id,l:'미션',pts:0,pay:gain,ts:Date.now()});
+  SFX.bonus();if(v==='all'){SFX.win();confetti()}
+  return openQuest(`${lab} 보상 +${won(gain)} 받았어요!`);
 }
 /* ---------- ☕ 커피 이벤트 ---------- */
 const COFFEE_TIERS=[{cost:300000,cups:1},{cost:500000,cups:2}],COFFEE_MAX=2;
@@ -1503,6 +1564,7 @@ const RULES=`<div class="rules">
 <h3>🐸 투투개구리</h3>가장 센 보스 상대예요. 이기면 딴 돈의 <b>2~5배</b>(관리인이 정함)를 받아요. 배수가 높을수록 투투개구리가 강해져요 (3배부터 뒤집기 운이 붙어요) (지면 보통처럼 내요).
 <h3>💰 돈</h3>모두 같은 돈으로 시작해요. 이기면 <b>점수 × 점당 금액</b>만큼 상대 지갑에서 가져와요. 상대 돈이 모자라면 <b>올인</b>! 지갑이 비면 관리인이 충전해 줘요. 댓글 이벤트로 직접 채울 수도 있어요.
 <h3>🏪 링크 편의점</h3>삼각김밥·링카스 드링크·영양제로 <b>활력</b>을 올리면 패를 뒤집을 때 짝 맞는 패가 더 잘 나와요 (한 판에 활력 20% 소모). 초코바는 다음 판 이기면 +20%, 행운 부적은 지면 절반만 내요.
+<h3>📅 출석 · 🎯 오늘의 미션</h3>매일 출석하면 +1천원, 7일 연속이면 +1만원! 오늘의 미션 3개(매일 바뀜)를 깨면 각각 보상, 3개 모두 깨면 +1만원 보너스.
 <h3>💸 배수</h3><b>피박</b> 피로 났는데 상대 피 5장 이하 ×2 · <b>광박</b> 광으로 났는데 상대 광 0장 ×2 · <b>멍따</b> 열끗 7장 이상 ×2 · <b>고박</b> 고 했는데 상대가 나면 ×2 · <b>나가리</b> 아무도 못 나면 다음 판 ×2
 </div>`;
 const RC_HASH='c74071a4ee0a6f7d4b6f0a72a4d3805b7b1ec4408bd583721f8ce70ca112325f';   // 관리인 복구 코드 확인용 (코드 자체는 관리인만 보관)
@@ -1603,6 +1665,8 @@ $('#game').addEventListener('click',e=>{
 let adminTaps=0,adminT=0;
 $('#home').addEventListener('click',async e=>{
   if(e.target.closest('#bestBox')){SFX.init();SFX.select();return openBest('w')}
+  if(e.target.closest('#attBtn')){SFX.init();SFX.select();return openAttend()}
+  if(e.target.closest('#questBtn')){SFX.init();SFX.select();return openQuest()}
   if(e.target.closest('#shopBtn')){SFX.init();SFX.select();return openShop()}
   if(e.target.closest('#top3')){SFX.init();SFX.select();return pickMe()}
   if(e.target.closest('#meBtn')){SFX.init();SFX.select();return pickMe()}
