@@ -1,0 +1,15 @@
+{
+  "name": "우리 가족 맞고",
+  "short_name": "가족맞고",
+  "description": "우리 가족끼리 즐기는 맞고 · 고스톱",
+  "start_url": "./index.html",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#1b0f07",
+  "theme_color": "#08403e",
+  "icons": [
+    {"src": "icon-192.png", "sizes": "192x192", "type": "image/png"},
+    {"src": "icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any maskable"}
+  ]
+}
