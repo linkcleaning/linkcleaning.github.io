@@ -312,7 +312,7 @@ small.zero,.seg small.mn.zero{color:#ff8a80!important}
 .banner.stop{background-image:linear-gradient(180deg,#f2fffb 0%,#b8fff0 40%,#4fe0c4 70%,#0f9e86 100%);filter:drop-shadow(0 3px 0 #023a33) drop-shadow(3px 0 0 #023a33) drop-shadow(-3px 0 0 #023a33) drop-shadow(0 -3px 0 #023a33) drop-shadow(0 0 16px #1de9b6aa)}
 .taunt,.total,.title .t2,.pscore b,.bb .bt,.boss b{font-family:'Jua',sans-serif}
 .banner .bsub{display:block;font-size:.5em;line-height:1.1;margin-top:2px}
-.banner{text-align:center;line-height:1.05}
+.banner{text-align:center;line-height:1.05;width:-webkit-max-content;width:max-content;max-width:92vw;box-sizing:border-box}
 </style>
 </head>
 <body>
@@ -381,7 +381,7 @@ small.zero,.seg small.mn.zero{color:#ff8a80!important}
 
 <script>
 'use strict';
-const VER='v33';
+const VER='v34';
 const $=s=>document.querySelector(s);
 const sleep=ms=>new Promise(r=>setTimeout(r,ms));
 const rnd=n=>Math.floor(Math.random()*n);
@@ -904,11 +904,12 @@ function capSparkle(p){const el=$('#cap'+p);if(!el)return;const r=el.getBounding
 
 /* ---------- 연출 ---------- */
 function fitBanner(b){ // 화면 폭에 맞게 글씨 크기 자동 조절
-  const max=innerWidth*.9;let fs=parseFloat(getComputedStyle(b).fontSize)||60,i=0;
+  const max=Math.min(innerWidth,document.documentElement.clientWidth||innerWidth)*.8;let fs=parseFloat(getComputedStyle(b).fontSize)||60,i=0;
   while(b.scrollWidth>max&&fs>20&&i++<30){fs*=.9;b.style.fontSize=fs+'px'}
   if(b.scrollWidth>max){b.style.whiteSpace='normal';b.style.width=max+'px';b.style.textAlign='center'}
 }
 async function banner(txt,cls='',ms=750){
+  document.querySelectorAll('.banner').forEach(x=>x.remove());
   const b=document.createElement('div');b.className='banner '+cls;const [m1,m2]=String(txt).split('\n');b.textContent=m1;if(m2){const sm=document.createElement('span');sm.className='bsub';sm.textContent=m2;b.appendChild(sm)}document.body.appendChild(b);fitBanner(b);
   if(cls==='gold'||cls==='go'||cls==='red')burst(cls==='red'?['#ff5252','#ffab91','#fff']:['#ffd23f','#ff8a3d','#fff','#8cc63f']);
   await sleep(ms);b.animate?b.animate([{opacity:1},{opacity:0,transform:'translate(-50%,-70%) scale(1.1)'}],{duration:180}).onfinish=()=>b.remove():b.remove();
@@ -1109,6 +1110,7 @@ async function instBonus(p,name,pts){
 }
 async function luckyRoulette(p){
   const opts=[['피 2장 뺏기','steal'],['이기면 점수 ×2','x2'],['용돈 보너스','cash'],['피 1장 + 용돈','combo']];
+  document.querySelectorAll('.banner').forEach(x=>x.remove());
   const box=document.createElement('div');box.className='banner gold';box.style.fontSize='34px';document.body.appendChild(box);
   SFX.event();
   let k=0;const n=14+rnd(4);
