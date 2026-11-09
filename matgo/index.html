@@ -324,6 +324,14 @@ small.zero,.seg small.mn.zero{color:#ff8a80!important}
 .shopbig .sbi{font-size:34px;flex:none}.shopbig .sbt{flex:1;min-width:0}.shopbig b{font-size:16px;display:block}.shopbig small{display:block;font-size:11px;opacity:.9;margin:1px 0 3px}
 .shopbig .sbgo{flex:none;background:#ffd23f;color:#3a1500;border-radius:10px;padding:6px 10px;font-size:14px;box-shadow:0 3px 0 #8a5a00}
 .shopbig.low{border-color:#ff8a80;background:linear-gradient(100deg,#8a1c2a,#b23c00 60%,#0b8a5c)}
+.hrow{display:flex;align-items:center;justify-content:center;gap:14px;margin-top:44px}
+.htitle{width:142px;height:auto;border-radius:6px;box-shadow:0 10px 26px #000c,0 0 0 1px #00000040;transform:rotate(-2deg);flex:none}
+.hright{display:flex;flex-direction:column;align-items:center;gap:10px;flex:none;width:170px}
+.hero .hchar{width:150px;height:150px;margin:0}
+.hero .hchar img{width:150px;height:150px}
+.hero .hfan{right:-34px;bottom:-16px;transform:scale(.85);transform-origin:right bottom}
+.hero .hsay{position:relative;left:auto;top:auto;max-width:170px;font-size:12.5px;text-align:center}
+.hero .hsay:after{right:auto;left:50%;top:-8px;margin-left:-8px;border:8px solid transparent;border-bottom-color:var(--cream);border-top:0}
 </style>
 </head>
 <body>
@@ -349,9 +357,11 @@ small.zero,.seg small.mn.zero{color:#ff8a80!important}
   <button id="ruleBtn" class="corner l" aria-label="게임 규칙">📖</button>
   <button id="setBtn" class="corner r" aria-label="설정">⚙️</button>
   <div class="hero" id="hero">
-   <div class="hchar"><img id="heroImg" alt="링크클린"><div class="hfan" id="fan"></div></div>
-   <div class="hsay" id="homeSay">오늘 바닥 패, 내가 싹 청소해 줄게~ 🧹</div>
-   <div class="title"><span class="t1">길쭈기</span><span class="t2">맞<span>고</span></span></div>
+   <div class="hrow">
+    <img class="htitle" src="title.webp" alt="花鬪 · 길쭈기 맞고">
+    <div class="hright"><div class="hchar"><img id="heroImg" alt="링크클린"><div class="hfan" id="fan"></div></div>
+     <div class="hsay" id="homeSay">오늘 바닥 패, 내가 싹 청소해 줄게~ 🧹</div></div>
+   </div>
   </div>
   <div class="panel">
    <div class="top3" id="top3"></div>
@@ -393,7 +403,7 @@ small.zero,.seg small.mn.zero{color:#ff8a80!important}
 
 <script>
 'use strict';
-const VER='v38';
+const VER='v39';
 const $=s=>document.querySelector(s);
 const sleep=ms=>new Promise(r=>setTimeout(r,ms));
 const rnd=n=>Math.floor(Math.random()*n);
