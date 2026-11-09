@@ -307,7 +307,7 @@ small.zero,.seg small.mn.zero{color:#ff8a80!important}
 
 <script>
 'use strict';
-const VER='v13';
+const VER='v14';
 const $=s=>document.querySelector(s);
 const sleep=ms=>new Promise(r=>setTimeout(r,ms));
 const rnd=n=>Math.floor(Math.random()*n);
@@ -322,7 +322,7 @@ const KEY='uri-family-matgo';
 let DB;
 function loadDB(){
   const def={players:[],cur:'',stats:{},history:[],
-    set:{sound:true,bgm:true,vib:true,hint:true,level:1,target:3,opp:'link'},vs:{},money:{},cfg:Object.assign({},CFG_DEF),nagari:0,first:0};
+    set:{sound:true,bgm:true,vib:true,hint:true,twoTap:false,level:1,target:3,opp:'link'},vs:{},money:{},cfg:Object.assign({},CFG_DEF),nagari:0,first:0};
   try{const d=JSON.parse(localStorage.getItem(KEY)||'null');if(d){DB=Object.assign(def,d);DB.set=Object.assign(def.set,d.set||{});}else DB=def;}catch(e){DB=def}
   DB.cfg=Object.assign({},CFG_DEF,DB.cfg||{});DB.money=DB.money||{};
   if(DB.cfg.sv!==SEASON_V){DB.cfg.start=30000;DB.money={}}
@@ -731,7 +731,7 @@ function render(){
   renderCaps(0);
   // 나
   const p=curP(),s0=scoreOf(S.caps[0]);
-  const hint=S.over?'게임 종료':myTurn?(S.sel?'한 번 더 누르면 내요 · 빛나는 바닥패를 눌러도 돼요':'내 차례! 낼 패를 고르세요'):S.turn===1?`${S.opp.nick} 생각 중…`:'…';
+  const hint=S.over?'게임 종료':myTurn?(S.sel?'한 번 더 누르면 내요 · 빛나는 바닥패를 눌러도 돼요':DB.set.twoTap?'내 차례! 낼 패를 고르세요':'내 차례! 낼 패를 눌러요 (빛나는 패는 먹을 수 있어요)'):S.turn===1?`${S.opp.nick} 생각 중…`:'…';
   $('#mybar').innerHTML=`<div class="ava">${avaHTML(p)}</div><div class="pinfo"><div class="pname">${esc(pName(p))} <span class="bd money">💰${won(moneyOf(p.id))}</span>${p.roster?` <small style="opacity:.6;font-size:10px">${p.name}</small>`:''} <span class="bd tg">${S.target}점 나기${S.nagari?' · ×'+2**S.nagari:''}</span></div><div class="badges">${badges(0)}<span class="myhint">${hint}</span></div></div><div class="pscore ${S.turn===0&&!S.over?'turn':''}"><b>${s0.total}</b><small>점</small></div><button class="menu" id="menuBtn" aria-label="메뉴">☰</button>`;
   // 손패
   const hand=S.hands[0].slice().sort((a,b)=>(a.m<=0?99:a.m)-(b.m<=0?99:b.m)||TORD[a.t]-TORD[b.t]);
@@ -1035,7 +1035,7 @@ async function aiTurn(){
 /* ---------- 플레이어 입력 ---------- */
 function onHand(id){
   const c=S.hands[0].find(x=>x.id===id);if(!c)return;
-  if(S.sel===id)return tryPlay(c);
+  if(!DB.set.twoTap||S.sel===id){SFX.select();return tryPlay(c)}
   S.sel=id;SFX.select();render();
 }
 function onFloor(id){
@@ -1388,7 +1388,7 @@ async function adminPanel(msg=''){
 async function openRules(){await modal('<h2>📖 맞고 규칙</h2>'+RULES,[{t:'알겠어요!',v:1}],{dismiss:0})}
 async function openSettings(){
   const row=(k,label)=>`<div class="tog"><span>${label}</span><button class="sw ${DB.set[k]?'on':''}" data-k="${k}"></button></div>`;
-  await modal(`<h2>⚙️ 설정</h2>${row('sound','🔊 소리 전체')}${row('bgm','🎵 배경음악')}${row('vib','📳 진동 (안드로이드)')}${row('hint','🔢 카드에 월·종류 표시')}<p style="margin-top:10px;font-size:12px;opacity:.7">소리가 안 나면 아이폰 옆면 볼륨 버튼을 올려 주세요.<br>홈 화면에 추가하면 앱처럼 전체 화면으로 실행돼요.<br>iPhone: 공유 버튼 → '홈 화면에 추가'</p>`,
+  await modal(`<h2>⚙️ 설정</h2>${row('sound','🔊 소리 전체')}${row('bgm','🎵 배경음악')}${row('vib','📳 진동 (안드로이드)')}${row('twoTap','✌️ 두 번 눌러서 내기 (실수 방지)')}${row('hint','🔢 카드에 월·종류 표시')}<p style="margin-top:10px;font-size:12px;opacity:.7">소리가 안 나면 아이폰 옆면 볼륨 버튼을 올려 주세요.<br>홈 화면에 추가하면 앱처럼 전체 화면으로 실행돼요.<br>iPhone: 공유 버튼 → '홈 화면에 추가'</p>`,
     [{t:'닫기',v:1}],{dismiss:0,onOpen:bg=>bg.addEventListener('click',e=>{const b=e.target.closest('.sw');if(!b)return;const k=b.dataset.k;DB.set[k]=!DB.set[k];b.classList.toggle('on',DB.set[k]);saveDB();if(k==='hint'){clearSvgCache();fanArt();S&&render()}if(k==='sound'||k==='bgm'){SFX.init();if(DB.set.sound&&DB.set.bgm&&S)BGM.start();else BGM.stop();if(DB.set.sound)SFX.select()}})});
 }
 async function openMenu(){
@@ -1403,6 +1403,7 @@ async function openMenu(){
 /* ---------- 이벤트 ---------- */
 $('#game').addEventListener('click',e=>{
   if(e.target.closest('#menuBtn'))return openMenu();
+  if(S&&!S.over&&(S.busy||S.turn!==0)&&e.target.closest('#hand .cd')){const b=$('#bub');if(!b.classList.contains('on'))say(S.turn===1?'잠깐! 지금은 상대 차례예요':'패가 움직이는 중이에요~');return}
   if(!S||S.busy||S.turn!==0||S.over)return;
   const cd=e.target.closest('.cd');
   if(!cd){if(S.sel){S.sel=null;render()}return}
