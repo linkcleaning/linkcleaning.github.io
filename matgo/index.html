@@ -195,6 +195,9 @@ button{font-family:inherit;cursor:pointer}
 .seg.opp .mm{width:40px;height:40px}
 .seg .rec{color:#e8661c;font-weight:800;opacity:1}
 .seg.opp button:not(.on) .rec{color:#ffb06b}
+.rk .em svg{width:38px;height:38px}
+.seg button.me{box-shadow:0 0 0 3px #f5c24a88}
+#plist:empty{display:none}
 </style>
 </head>
 <body>
@@ -221,8 +224,9 @@ button{font-family:inherit;cursor:pointer}
   </div>
   <div class="homemascot"><div class="mz" id="homeMz"></div><div class="say" id="homeSay">한 판 붙어볼까? 복이 굴러온다~</div></div>
   <div class="panel">
-   <div class="lbl">🙋 누가 칠까요?</div>
-   <div class="chips" id="plist"></div>
+   <div class="lbl">🙋 나는 누구? <small style="opacity:.6;font-weight:600">(링크 더비 구단주처럼 내 이름 고르기)</small></div>
+   <div class="seg opp" id="meSeg"></div>
+   <div class="chips" id="plist" style="margin-top:6px"></div>
    <div class="lbl">🎯 누구랑 칠까요? <small style="opacity:.6;font-weight:600">(링크 더비 멤버)</small></div>
    <div class="seg opp" id="lvSeg"></div>
    <div class="lbl">🏁 날 점수 (이 점수부터 고/스톱)</div>
@@ -253,7 +257,7 @@ button{font-family:inherit;cursor:pointer}
 
 <script>
 'use strict';
-const VER='v4';
+const VER='v5';
 const $=s=>document.querySelector(s);
 const sleep=ms=>new Promise(r=>setTimeout(r,ms));
 const rnd=n=>Math.floor(Math.random()*n);
@@ -267,14 +271,23 @@ const esc=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;'
 const KEY='uri-family-matgo';
 let DB;
 function loadDB(){
-  const def={players:[{id:'p1',name:'아빠',emoji:'👨'},{id:'p2',name:'엄마',emoji:'👩'}],cur:'p1',stats:{},history:[],
+  const def={players:[],cur:'',stats:{},history:[],
     set:{sound:true,bgm:true,vib:true,hint:true,level:1,target:3,opp:'link'},vs:{},nagari:0,first:0};
   try{const d=JSON.parse(localStorage.getItem(KEY)||'null');if(d){DB=Object.assign(def,d);DB.set=Object.assign(def.set,d.set||{});}else DB=def;}catch(e){DB=def}
-  if(!DB.players.length)DB.players=def.players;
-  if(!DB.players.find(p=>p.id===DB.cur))DB.cur=DB.players[0].id;
+  // 예전 기본 프로필(아빠·엄마)은 기록이 없으면 정리
+  DB.players=DB.players.filter(p=>!((p.id==='p1'||p.id==='p2')&&!(DB.stats[p.id]&&DB.stats[p.id].g)));
+  if(!allPlayers().find(p=>p.id===DB.cur)){
+    // 링크 더비에서 고른 '나(구단주)'가 있으면 그대로 사용
+    let me='link';try{const nm=JSON.parse(localStorage.getItem('sd_me')||'null');const o=OPP.find(x=>x.real===nm);if(o)me=o.id}catch(e){}
+    DB.cur=me;
+  }
+  if(DB.set.opp===DB.cur)DB.set.opp=OPP.find(o=>o.id!==DB.cur).id;
 }
 function saveDB(){try{localStorage.setItem(KEY,JSON.stringify(DB))}catch(e){}}
-const curP=()=>DB.players.find(p=>p.id===DB.cur)||DB.players[0];
+const allPlayers=()=>[...OPP.map(o=>({id:o.id,name:o.real,nick:o.nick,roster:true})),...DB.players];
+const curP=()=>allPlayers().find(p=>p.id===DB.cur)||allPlayers()[0];
+const pName=p=>p.roster?p.nick:p.name;
+const avaHTML=p=>p.roster?oppSVG(oppOf(p.id)):esc(p.emoji||'🙂');
 const statOf=id=>DB.stats[id]||(DB.stats[id]={g:0,w:0,l:0,net:0,best:0,maxGo:0});
 
 /* =====================================================
@@ -601,7 +614,7 @@ function render(){
   // 나
   const p=curP(),s0=scoreOf(S.caps[0]);
   const hint=S.over?'게임 종료':myTurn?(S.sel?'한 번 더 누르면 내요 · 빛나는 바닥패를 눌러도 돼요':'내 차례! 낼 패를 고르세요'):S.turn===1?`${S.opp.nick} 생각 중…`:'…';
-  $('#mybar').innerHTML=`<div class="ava">${esc(p.emoji)}</div><div class="pinfo"><div class="pname">${esc(p.name)} <span class="bd tg">${S.target}점 나기${S.nagari?' · ×'+2**S.nagari:''}</span></div><div class="badges">${badges(0)}<span class="myhint">${hint}</span></div></div><div class="pscore ${S.turn===0&&!S.over?'turn':''}"><b>${s0.total}</b><small>점</small></div><button class="menu" id="menuBtn" aria-label="메뉴">☰</button>`;
+  $('#mybar').innerHTML=`<div class="ava">${avaHTML(p)}</div><div class="pinfo"><div class="pname">${esc(pName(p))}${p.roster?` <small style="opacity:.6;font-size:10px">${p.name}</small>`:''} <span class="bd tg">${S.target}점 나기${S.nagari?' · ×'+2**S.nagari:''}</span></div><div class="badges">${badges(0)}<span class="myhint">${hint}</span></div></div><div class="pscore ${S.turn===0&&!S.over?'turn':''}"><b>${s0.total}</b><small>점</small></div><button class="menu" id="menuBtn" aria-label="메뉴">☰</button>`;
   // 손패
   const hand=S.hands[0].slice().sort((a,b)=>(a.m<=0?99:a.m)-(b.m<=0?99:b.m)||TORD[a.t]-TORD[b.t]);
   $('#hand').innerHTML=hand.map(c=>{
@@ -968,7 +981,7 @@ async function endGame(w,sp={}){
   const pl=curP(),st=statOf(pl.id);st.g++;
   if(w===0){st.w++;st.net+=total;st.best=Math.max(st.best,total);st.maxGo=Math.max(st.maxGo,S.go[0])}else{st.l++;st.net-=total}
   const d=new Date();
-  DB.history.unshift({t:`${d.getMonth()+1}/${d.getDate()} ${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}`,pid:pl.id,name:pl.name,emoji:pl.emoji,lv:S.level,opp:S.opp.id,win:w===0,pts:total,go:S.go[w]});
+  DB.history.unshift({t:`${d.getMonth()+1}/${d.getDate()} ${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}`,pid:pl.id,name:pName(pl),emoji:pl.roster?'':pl.emoji,lv:S.level,opp:S.opp.id,win:w===0,pts:total,go:S.go[w]});
   DB.history=DB.history.slice(0,40);
   {const k=pl.id+'|'+S.opp.id,r=DB.vs[k]||(DB.vs[k]={w:0,l:0});w===0?r.w++:r.l++}
   saveDB();
@@ -976,11 +989,11 @@ async function endGame(w,sp={}){
   BGM.stop();
   if(w===0){SFX.win();confetti();vib([30,50,30,50,80])}else SFX.lose();
   const html=`<div style="width:96px;height:96px;margin:-4px auto 0">${oppSVG(S.opp,w===0?'sad':'happy')}</div>
-   <h2>${w===0?'🎉 '+esc(pl.name)+' 승리!':'😢 '+S.opp.nick+' 승리'}</h2><p style="margin:-4px 0 4px">“${w===0?S.opp.lose:S.opp.win}”</p>
+   <h2>${w===0?'🎉 '+esc(pName(pl))+' 승리!':'😢 '+S.opp.nick+' 승리'}</h2><p style="margin:-4px 0 4px">“${w===0?S.opp.lose:S.opp.win}”</p>
    <div class="res-lines">${lines.map(([n,v])=>`<div><span>${n}</span><b>${typeof v==='number'?v+'점':v}</b></div>`).join('')||'<div><span>기본 점수</span><b>'+base+'점</b></div>'}</div>
    ${mul.length?`<div class="mult">${mul.map(([n,x])=>`<span>${n} ×${x}</span>`).join('')}</div>`:''}
    <div class="total ${w===0?'':'neg'}">${w===0?'+':'-'}${total}점</div>
-   <p style="font-size:12px;opacity:.8">${esc(pl.name)} 누적 ${st.net>=0?'+':''}${st.net}점 · ${st.w}승 ${st.l}패</p>`;
+   <p style="font-size:12px;opacity:.8">${esc(pName(pl))} 누적 ${st.net>=0?'+':''}${st.net}점 · ${st.w}승 ${st.l}패</p>`;
   const v=await modal(html,[{t:'한 판 더!',v:'again'},{t:'홈으로',cls:'alt',v:'home'}]);
   if(v==='again')startGame();else goHome();
 }
@@ -998,8 +1011,10 @@ async function nagari(){
 function show(id){document.querySelectorAll('.screen').forEach(s=>s.classList.toggle('on',s.id===id))}
 function goHome(){if(S)S.gid=-1;S=null;BGM.stop();show('home');renderHome()}
 function renderHome(){
-  $('#plist').innerHTML=DB.players.map(p=>`<button class="chip ${p.id===DB.cur?'on':''}" data-pid="${p.id}">${esc(p.emoji)} ${esc(p.name)}</button>`).join('')+`<button class="chip add" id="addP">＋ 가족 추가</button>`;
-  $('#lvSeg').innerHTML=OPP.map(o=>{const r=DB.vs[DB.cur+'|'+o.id];return `<button class="${DB.set.opp===o.id?'on':''}" data-op="${o.id}"><span class="mm">${oppSVG(o)}</span>${o.nick}<small>${o.real} · ${LV[o.lv].st}</small>${r?`<small class="rec">${r.w}승 ${r.l}패</small>`:''}</button>`}).join('');
+  $('#meSeg').innerHTML=OPP.map(o=>`<button class="${DB.cur===o.id?'on me':''}" data-pid="${o.id}"><span class="mm">${oppSVG(o)}</span>${o.real}<small>${o.nick}</small>${DB.cur===o.id?'<small class="rec">👑 나</small>':''}</button>`).join('');
+  $('#plist').innerHTML=DB.players.map(p=>`<button class="chip ${p.id===DB.cur?'on':''}" data-pid="${p.id}">${esc(p.emoji)} ${esc(p.name)}</button>`).join('')+`<button class="chip add" id="addP">＋ 다른 가족 추가</button>`;
+  if(DB.set.opp===DB.cur)DB.set.opp=OPP.find(o=>o.id!==DB.cur).id;
+  $('#lvSeg').innerHTML=OPP.filter(o=>o.id!==DB.cur).map(o=>{const r=DB.vs[DB.cur+'|'+o.id];return `<button class="${DB.set.opp===o.id?'on':''}" data-op="${o.id}"><span class="mm">${oppSVG(o)}</span>${o.nick}<small>${o.real} · ${LV[o.lv].st}</small>${r?`<small class="rec">${r.w}승 ${r.l}패</small>`:''}</button>`}).join('');
   $('#tgSeg').innerHTML=[3,5,7].map(t=>`<button class="${DB.set.target===t?'on':''}" data-tg="${t}">${t}점<small>${t===3?'빠른 판':t===5?'적당히':'정식 맞고'}</small></button>`).join('');
   $('#ngNote').textContent=DB.nagari?`🔥 지난 판 나가리! 이번 판 점수 ×${2**DB.nagari}`:'';
 }
@@ -1012,21 +1027,21 @@ async function editPlayer(p){
   const emos=['👨','👩','👴','👵','👧','👦','🧒','👶','🧑','🐶','🐱','🐯'];
   let sel=p?p.emoji:emos[rnd(6)];
   const v=await modal(`<h2>${p?'가족 정보 수정':'가족 추가'}</h2><input class="inp" id="pn" maxlength="8" placeholder="이름 (예: 할머니)" value="${p?esc(p.name):''}"><div class="emos" id="emos">${emos.map(e=>`<button class="${e===sel?'on':''}" data-e="${e}">${e}</button>`).join('')}</div>`,
-    [...(p&&DB.players.length>1?[{t:'삭제',cls:'gray',v:'del'}]:[]),{t:'취소',cls:'alt',v:null},{t:'저장',v:'save'}],
+    [...(p?[{t:'삭제',cls:'gray',v:'del'}]:[]),{t:'취소',cls:'alt',v:null},{t:'저장',v:'save'}],
     {dismiss:null,onOpen:bg=>{bg.querySelector('#emos').addEventListener('click',e=>{const b=e.target.closest('[data-e]');if(!b)return;e.stopPropagation();sel=b.dataset.e;bg.querySelectorAll('#emos button').forEach(x=>x.classList.toggle('on',x===b))});
       const inp=bg.querySelector('#pn');setTimeout(()=>inp.focus(),100);window._pn=inp}});
   if(v==='del'){const ok=await modal(`<h2>삭제할까요?</h2><p>${esc(p.name)}의 기록도 함께 지워져요.</p>`,[{t:'취소',cls:'alt',v:0},{t:'삭제',v:1}]);
-    if(ok){DB.players=DB.players.filter(x=>x!==p);delete DB.stats[p.id];if(DB.cur===p.id)DB.cur=DB.players[0].id;saveDB()}return}
+    if(ok){DB.players=DB.players.filter(x=>x!==p);delete DB.stats[p.id];if(DB.cur===p.id)DB.cur='link';saveDB()}return}
   if(v!=='save')return;
   const name=(window._pn.value||'').trim().slice(0,8)||'가족';
   if(p){p.name=name;p.emoji=sel}else{const np={id:'p'+Date.now(),name,emoji:sel};DB.players.push(np);DB.cur=np.id}
   saveDB();
 }
 async function openRank(){
-  const list=DB.players.map(p=>({p,s:statOf(p.id)})).sort((a,b)=>b.s.net-a.s.net||b.s.w-a.s.w);
+  const list=allPlayers().filter(p=>!p.roster||DB.stats[p.id]&&DB.stats[p.id].g||p.id===DB.cur).map(p=>({p,s:statOf(p.id)})).sort((a,b)=>b.s.net-a.s.net||b.s.w-a.s.w);
   const medal=['🥇','🥈','🥉'];
-  const hist=DB.history.slice(0,12).map(h=>`${h.t} ${esc(h.emoji)} ${esc(h.name)} vs ${h.opp?oppOf(h.opp).nick:'복돌이'} — ${h.win?'<b style="color:#8cc63f">승</b>':'<b style="color:#ff8a80">패</b>'} ${h.win?'+':'-'}${h.pts}점${h.go?' ('+h.go+'고)':''}`).join('<br>');
-  const v=await modal(`<h2>🏆 우리 가족 랭킹</h2><div class="rank">${list.map((x,i)=>`<div class="rk"><div class="no">${medal[i]||i+1}</div><div class="em">${esc(x.p.emoji)}</div><div class="nm"><b>${esc(x.p.name)}</b><small>${x.s.w}승 ${x.s.l}패 · 승률 ${x.s.g?Math.round(x.s.w/x.s.g*100):0}% · 최고 ${x.s.best}점${x.s.maxGo?' · 최대 '+x.s.maxGo+'고':''}</small></div><div class="pt ${x.s.net<0?'neg':''}">${x.s.net>0?'+':''}${x.s.net}</div><button class="ed" data-v="e:${x.p.id}">✎</button></div>`).join('')}</div>
+  const hist=DB.history.slice(0,12).map(h=>`${h.t} ${esc(h.emoji||'')} ${esc(h.name)} vs ${h.opp?oppOf(h.opp).nick:'복돌이'} — ${h.win?'<b style="color:#8cc63f">승</b>':'<b style="color:#ff8a80">패</b>'} ${h.win?'+':'-'}${h.pts}점${h.go?' ('+h.go+'고)':''}`).join('<br>');
+  const v=await modal(`<h2>🏆 링크 가족 랭킹</h2><div class="rank">${list.map((x,i)=>`<div class="rk"><div class="no">${medal[i]||i+1}</div><div class="em" style="width:38px;height:38px">${avaHTML(x.p)}</div><div class="nm"><b>${esc(pName(x.p))}${x.p.roster?` <small style="opacity:.6">${x.p.name}</small>`:''}${x.p.id===DB.cur?' 👑':''}</b><small>${x.s.w}승 ${x.s.l}패 · 승률 ${x.s.g?Math.round(x.s.w/x.s.g*100):0}% · 최고 ${x.s.best}점${x.s.maxGo?' · 최대 '+x.s.maxGo+'고':''}</small></div><div class="pt ${x.s.net<0?'neg':''}">${x.s.net>0?'+':''}${x.s.net}</div>${x.p.roster?'':`<button class="ed" data-v="e:${x.p.id}">✎</button>`}</div>`).join('')}</div>
    <div class="lbl" style="margin-top:12px">📜 최근 경기</div><div class="hist">${hist||'아직 경기 기록이 없어요. 한 판 붙어보세요!'}</div>`,
    [{t:'기록 초기화',cls:'gray',v:'reset'},{t:'닫기',v:null}],{dismiss:null});
   if(v&&v.startsWith('e:')){await editPlayer(DB.players.find(p=>p.id===v.slice(2)));renderHome();return openRank()}
@@ -1066,7 +1081,7 @@ $('#game').addEventListener('click',e=>{
 });
 $('#home').addEventListener('click',async e=>{
   const pb=e.target.closest('[data-pid]');
-  if(pb){if(DB.cur===pb.dataset.pid){await editPlayer(curP())}else{DB.cur=pb.dataset.pid;saveDB();SFX.init();SFX.select()}renderHome();return}
+  if(pb){const cp=curP();if(DB.cur===pb.dataset.pid&&!cp.roster){await editPlayer(cp)}else{DB.cur=pb.dataset.pid;saveDB();SFX.init();SFX.coin()}renderHome();const me=curP();if(me.roster&&DB.cur===pb.dataset.pid){$('#homeSay').textContent=`👑 ${me.name}(${me.nick}) 구단주님 입장!`}return}
   if(e.target.closest('#addP')){await editPlayer(null);renderHome();return}
   const lb=e.target.closest('[data-op]');if(lb){DB.set.opp=lb.dataset.op;saveDB();renderHome();const O=oppOf(DB.set.opp);$('#homeMz').innerHTML=oppSVG(O);$('#homeSay').textContent=`${O.nick}: “${O.hi}”`;SFX.init();SFX.select();return}
   if(0){$('#homeSay').textContent=['살살 해주세요~ 헤헤','좋아요, 한 판 붙어봅시다!','후후… 각오는 되셨나?'][DB.set.level];SFX.init();SFX.select();return}
