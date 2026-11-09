@@ -303,6 +303,14 @@ small.zero,.seg small.mn.zero{color:#ff8a80!important}
 .sweeper{position:fixed;left:0;z-index:3100;pointer-events:none;width:110px;height:110px}
 .sweeper img{width:110px;height:110px;border-radius:50%;background:#fff;box-shadow:0 0 0 4px #f5c24a,0 10px 24px #000a}
 .sweeper span{position:absolute;right:-18px;bottom:-6px;font-size:44px;transform:rotate(-30deg)}
+.banner{font-family:'Jua',sans-serif;font-weight:400;letter-spacing:0;-webkit-text-stroke:0;text-shadow:none;color:transparent;
+ background:linear-gradient(180deg,#ffffff 0%,#fff3b0 38%,#ffc93c 62%,#ff9a3d 100%);-webkit-background-clip:text;background-clip:text;
+ filter:drop-shadow(0 2px 0 #6a2a00) drop-shadow(2px 0 0 #6a2a00) drop-shadow(-2px 0 0 #6a2a00) drop-shadow(0 -2px 0 #6a2a00) drop-shadow(0 6px 12px #000a);padding:4px 10px}
+.banner.gold{background-image:linear-gradient(180deg,#fffef2 0%,#fff1a8 40%,#ffd23f 65%,#f0a500 100%)}
+.banner.red{background-image:linear-gradient(180deg,#fff0f0 0%,#ff9a9a 40%,#ff3b3b 70%,#c2001a 100%);filter:drop-shadow(0 2px 0 #4a0010) drop-shadow(2px 0 0 #4a0010) drop-shadow(-2px 0 0 #4a0010) drop-shadow(0 -2px 0 #4a0010) drop-shadow(0 6px 12px #000a)}
+.banner.go{background-image:linear-gradient(180deg,#fff7e0 0%,#ffcf7a 40%,#ff8a3d 70%,#e8501c 100%);filter:drop-shadow(0 3px 0 #5a1a00) drop-shadow(3px 0 0 #5a1a00) drop-shadow(-3px 0 0 #5a1a00) drop-shadow(0 -3px 0 #5a1a00) drop-shadow(0 0 18px #ff6d00aa)}
+.banner.stop{background-image:linear-gradient(180deg,#f2fffb 0%,#b8fff0 40%,#4fe0c4 70%,#0f9e86 100%);filter:drop-shadow(0 3px 0 #023a33) drop-shadow(3px 0 0 #023a33) drop-shadow(-3px 0 0 #023a33) drop-shadow(0 -3px 0 #023a33) drop-shadow(0 0 16px #1de9b6aa)}
+.taunt,.total,.title .t2,.pscore b,.bb .bt,.boss b{font-family:'Jua',sans-serif}
 </style>
 </head>
 <body>
@@ -371,7 +379,7 @@ small.zero,.seg small.mn.zero{color:#ff8a80!important}
 
 <script>
 'use strict';
-const VER='v31';
+const VER='v32';
 const $=s=>document.querySelector(s);
 const sleep=ms=>new Promise(r=>setTimeout(r,ms));
 const rnd=n=>Math.floor(Math.random()*n);
