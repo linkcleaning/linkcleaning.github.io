@@ -327,7 +327,7 @@ small.zero,.seg small.mn.zero{color:#ff8a80!important}
 
 <script>
 'use strict';
-const VER='v20';
+const VER='v21';
 const $=s=>document.querySelector(s);
 const sleep=ms=>new Promise(r=>setTimeout(r,ms));
 const rnd=n=>Math.floor(Math.random()*n);
@@ -1229,7 +1229,7 @@ async function moneyCheck(){
   return true;
 }
 function show(id){document.querySelectorAll('.screen').forEach(s=>s.classList.toggle('on',s.id===id))}
-function goHome(){if(S)S.gid=-1;S=null;BGM.stop();show('home');renderHome();renderBestBox()}
+function goHome(){if(window._pendingUpd){location.replace(location.pathname+'?v='+window._pendingUpd);return}if(S)S.gid=-1;S=null;BGM.stop();show('home');renderHome();renderBestBox()}
 function moneyRank(){return allPlayers().slice().sort((a,b)=>moneyOf(b.id)-moneyOf(a.id))}
 function renderHome(){
   const me=curP(),rk=moneyRank(),myRank=rk.findIndex(p=>p.id===me.id)+1;
@@ -1562,6 +1562,22 @@ function makeIcon(size){
   x.fillStyle='#ff8a3d';x.font=`900 ${17*u}px sans-serif`;x.textAlign='center';x.textBaseline='middle';x.lineWidth=4*u;x.strokeStyle='#3a1500';x.strokeText('맞고',50*u,86*u);x.fillText('맞고',50*u,86*u);
   return cv.toDataURL('image/png');
 }
+let updBusy=false;
+async function checkUpdate(){
+  if(updBusy||location.protocol==='file:')return;updBusy=true;
+  try{
+    window._swReg&&window._swReg.update().catch(()=>{});
+    const r=await fetch(location.pathname.replace(/[^/]*$/,'')+'index.html?u='+Date.now(),{cache:'no-store'});
+    const t=await r.text(),m=t.match(/const VER='(v\d+)'/);
+    if(m&&m[1]!==VER){
+      const inGame=$('#game').classList.contains('on')&&S&&!S.over;
+      if(!inGame){location.replace(location.pathname+'?v='+m[1]);return}
+      if(!document.getElementById('updBar')){const b=document.createElement('div');b.id='updBar';b.textContent=`🔄 새 버전 ${m[1]} — 이 판 끝나면 자동 업데이트`;b.style.cssText='position:fixed;left:50%;bottom:calc(env(safe-area-inset-bottom) + 4px);transform:translateX(-50%);z-index:5000;background:#e8661c;color:#fff;font-weight:800;font-size:12px;padding:5px 12px;border-radius:12px;pointer-events:none';document.body.appendChild(b)}
+      window._pendingUpd=m[1];
+    }
+  }catch(e){}
+  updBusy=false;
+}
 function setupPWA(){
   try{$('#ati').href=makeIcon(180)}catch(e){}
   (location.protocol==='file:'?Promise.reject():fetch('manifest.json',{cache:'no-store'}).then(r=>{if(!r.ok)throw 0})).catch(()=>{
@@ -1570,7 +1586,9 @@ function setupPWA(){
       $('#mf').href='data:application/manifest+json;charset=utf-8,'+encodeURIComponent(JSON.stringify(m))}catch(e){}
   });
   if('serviceWorker' in navigator&&(location.protocol==='https:'||location.hostname==='localhost'))
-    navigator.serviceWorker.register('sw.js').catch(()=>{});
+    navigator.serviceWorker.register('sw.js',{updateViaCache:'none'}).then(reg=>{window._swReg=reg;reg.update().catch(()=>{})}).catch(()=>{});
+  // 새 버전 자동 확인: 앱을 열거나 다시 돌아올 때 서버의 버전과 비교
+  checkUpdate();document.addEventListener('visibilitychange',()=>{if(!document.hidden)checkUpdate()});setInterval(checkUpdate,5*60*1000);
 }
 
 /* ---------- 시작 ---------- */
