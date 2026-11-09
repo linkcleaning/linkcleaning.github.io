@@ -11,12 +11,14 @@
 <meta name="description" content="길쭈기 가족이 즐기는 맞고 · 고스톱 게임">
 <title>길쭈기 맞고</title>
 <link rel="manifest" id="mf" href="manifest.json">
+<link rel="preload" href="fonts/jua.css" as="style">
+<link rel="stylesheet" href="fonts/jua.css">
 <link rel="apple-touch-icon" id="ati" href="icon-192.png">
 <style>
 *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
 :root{--teal:#0c5b58;--teal2:#08403e;--teal3:#052a29;--orange:#ff8a3d;--orange2:#e8661c;--green:#8cc63f;--cream:#fbf1dc;--gold:#f5c24a;--wood1:#6b4226;--wood2:#3d2414;
 --hw:64px;--hh:99px;--fw:46px;--fh:71px;--mw:22px;--mh:34px;--ow:15px;--oh:23px;--caph:42px;--handh:220px}
-html,body{height:100%;overflow:hidden;background:#1b0f07;color:#fff;font-family:-apple-system,BlinkMacSystemFont,"Apple SD Gothic Neo","Malgun Gothic","Noto Sans KR",sans-serif;user-select:none;-webkit-user-select:none;touch-action:manipulation;overscroll-behavior:none;-webkit-touch-callout:none}
+html,body{height:100%;overflow:hidden;background:#1b0f07;color:#fff;font-family:"Jua",-apple-system,BlinkMacSystemFont,"Apple SD Gothic Neo","Malgun Gothic","Noto Sans KR",sans-serif;font-synthesis:none;-webkit-font-smoothing:antialiased;letter-spacing:.2px;user-select:none;-webkit-user-select:none;touch-action:manipulation;overscroll-behavior:none;-webkit-touch-callout:none}
 button{font-family:inherit;cursor:pointer}
 #app{position:fixed;inset:0;display:flex;justify-content:center;
  background:radial-gradient(ellipse at 50% -10%,#8a5a34 0%,transparent 55%),
@@ -369,7 +371,7 @@ small.zero,.seg small.mn.zero{color:#ff8a80!important}
 
 <script>
 'use strict';
-const VER='v30';
+const VER='v31';
 const $=s=>document.querySelector(s);
 const sleep=ms=>new Promise(r=>setTimeout(r,ms));
 const rnd=n=>Math.floor(Math.random()*n);
@@ -579,8 +581,7 @@ function bonusSVG(c){
    +`<rect x="6" y="14" width="48" height="17" rx="6" fill="#fff" stroke="#222" stroke-width=".7"/><path d="M36 30.6 l3 5 1-5z" fill="#fff" stroke="#222" stroke-width=".7"/><rect x="35.6" y="29.6" width="5" height="1.6" fill="#fff"/>`
    +`<text x="30" y="21.4" font-size="${sw?4.6:5.6}" font-weight="800" fill="#222" text-anchor="middle">${c.say[0]}</text><text x="30" y="28" font-size="${sw?4.6:5.6}" font-weight="800" fill="#222" text-anchor="middle">${c.say[1]}</text>`
    +`<circle cx="30" cy="54" r="17" fill="#fff" stroke="${L?'#fff3b0':'#b8860b'}" stroke-width="1.4"/>`+(LOGO_URL?`<image href="${LOGO_URL}" x="14" y="38" width="32" height="32"/>`:'')
-   +(c.steal?`<rect x="8" y="73" width="44" height="13" rx="4" fill="#b71c1c"/><text x="30" y="82.3" font-size="7.4" font-weight="900" fill="#fff" text-anchor="middle">${c.lab}</text>`
-     :`<text x="30" y="84" font-size="${L?10:12}" font-weight="900" fill="#b71c1c" stroke="#fff" stroke-width=".6" text-anchor="middle">${c.lab}</text>`)
+   +`<rect x="6" y="73" width="48" height="14" rx="7" fill="${c.steal?'#b71c1c':L?'#6a1b9a':'#7a3500'}" stroke="#fff" stroke-width=".8"/><text x="30" y="83.2" font-size="${c.lab.length>4?7.6:9.5}" fill="#fff" text-anchor="middle">${c.lab}</text>`
    +(L?emo(9,40,6,'🍀')+emo(51,40,6,'🎰'):'')+`</svg>`;
 }
 function cardSVG(c){
