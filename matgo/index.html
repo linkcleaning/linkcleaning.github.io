@@ -7,9 +7,9 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<meta name="apple-mobile-web-app-title" content="가족맞고">
-<meta name="description" content="우리 가족끼리 즐기는 맞고 · 고스톱 게임">
-<title>우리 가족 맞고</title>
+<meta name="apple-mobile-web-app-title" content="길쭈기맞고">
+<meta name="description" content="길쭈기 가족이 즐기는 맞고 · 고스톱 게임">
+<title>길쭈기 맞고</title>
 <link rel="manifest" id="mf" href="manifest.json">
 <link rel="apple-touch-icon" id="ati" href="icon-192.png">
 <style>
@@ -260,7 +260,7 @@ small.zero,.seg small.mn.zero{color:#ff8a80!important}
   <div class="hero" id="hero">
    <div class="hchar"><img id="heroImg" alt="링크클린"><div class="hfan" id="fan"></div></div>
    <div class="hsay" id="homeSay">한 판 붙어볼까? 복이 굴러온다~</div>
-   <div class="title"><span class="t1">우리 가족</span><span class="t2">맞<span>고</span></span></div>
+   <div class="title"><span class="t1">길쭈기</span><span class="t2">맞<span>고</span></span></div>
   </div>
   <div class="panel">
    <div class="lbl">🙋 나</div>
@@ -297,7 +297,7 @@ small.zero,.seg small.mn.zero{color:#ff8a80!important}
 
 <script>
 'use strict';
-const VER='v9';
+const VER='v10';
 const $=s=>document.querySelector(s);
 const sleep=ms=>new Promise(r=>setTimeout(r,ms));
 const rnd=n=>Math.floor(Math.random()*n);
@@ -1203,7 +1203,7 @@ async function openCoffee(){
   SFX.win();confetti();await showCoupon(c);renderHome();
 }
 async function showCoupon(c){const d=new Date(c.ts);
-  await modal(`<div class="coupon"><div style="font-size:11px;letter-spacing:2px;opacity:.8">LINK 맞고 EVENT</div><div style="font-size:26px;font-weight:900">커피 교환권</div><div style="font-size:40px;margin-top:6px">${'☕'.repeat(c.cups)}</div><div style="font-weight:900;margin-top:4px">스타벅스 원하는 커피 ${c.cups}잔</div><div class="code">${c.code}</div><div style="display:flex;justify-content:space-between;font-size:12px;margin-top:8px"><span>이름 <b>${esc(c.name)}</b></span><span>${d.getMonth()+1}/${d.getDate()} ${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}</span></div></div><p style="margin-top:8px;font-size:12px">📸 이 화면을 캡처해서 관리인(한승우)에게 보내 주세요!</p>`,[{t:'닫기',v:1}]);}
+  await modal(`<div class="coupon"><div style="font-size:11px;letter-spacing:2px;opacity:.8">길쭈기 맞고 EVENT</div><div style="font-size:26px;font-weight:900">커피 교환권</div><div style="font-size:40px;margin-top:6px">${'☕'.repeat(c.cups)}</div><div style="font-weight:900;margin-top:4px">스타벅스 원하는 커피 ${c.cups}잔</div><div class="code">${c.code}</div><div style="display:flex;justify-content:space-between;font-size:12px;margin-top:8px"><span>이름 <b>${esc(c.name)}</b></span><span>${d.getMonth()+1}/${d.getDate()} ${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}</span></div></div><p style="margin-top:8px;font-size:12px">📸 이 화면을 캡처해서 관리인(한승우)에게 보내 주세요!</p>`,[{t:'닫기',v:1}]);}
 /* ---------- 📝 댓글 이벤트 ---------- */
 const CMT_LINKS=[['링크클린 네이버 블로그','https://m.blog.naver.com/linkcleaning'],['링크클린 구글 블로그','https://linkdole.blogspot.com'],['링크클린 유튜브','https://www.youtube.com/@linkcleaning'],['링크클린 인스타그램','https://www.instagram.com/linkcleaning'],['링크 앱 모음','https://linkcleaning.github.io/apps/']];
 const CMT_REWARD=10000;
@@ -1371,7 +1371,7 @@ function makeIcon(size){
 function setupPWA(){
   try{$('#ati').href=makeIcon(180)}catch(e){}
   (location.protocol==='file:'?Promise.reject():fetch('manifest.json',{cache:'no-store'}).then(r=>{if(!r.ok)throw 0})).catch(()=>{
-    try{const m={name:'우리 가족 맞고',short_name:'가족맞고',start_url:location.href.split('#')[0],scope:location.href.replace(/[^/]*$/,''),display:'standalone',orientation:'portrait',background_color:'#1b0f07',theme_color:'#08403e',
+    try{const m={name:'길쭈기 맞고',short_name:'길쭈기맞고',start_url:location.href.split('#')[0],scope:location.href.replace(/[^/]*$/,''),display:'standalone',orientation:'portrait',background_color:'#1b0f07',theme_color:'#08403e',
       icons:[{src:makeIcon(192),sizes:'192x192',type:'image/png'},{src:makeIcon(512),sizes:'512x512',type:'image/png',purpose:'any maskable'}]};
       $('#mf').href='data:application/manifest+json;charset=utf-8,'+encodeURIComponent(JSON.stringify(m))}catch(e){}
   });

@@ -1,7 +1,7 @@
 {
-  "name": "우리 가족 맞고",
-  "short_name": "가족맞고",
-  "description": "우리 가족끼리 즐기는 맞고 · 고스톱",
+  "name": "길쭈기 맞고",
+  "short_name": "길쭈기맞고",
+  "description": "길쭈기 가족이 즐기는 맞고 · 고스톱",
   "start_url": "./index.html",
   "scope": "./",
   "display": "standalone",
