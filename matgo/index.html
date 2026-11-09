@@ -382,7 +382,7 @@ small.zero,.seg small.mn.zero{color:#ff8a80!important}
 
 <script>
 'use strict';
-const VER='v35';
+const VER='v36';
 const $=s=>document.querySelector(s);
 const sleep=ms=>new Promise(r=>setTimeout(r,ms));
 const rnd=n=>Math.floor(Math.random()*n);
@@ -397,9 +397,10 @@ const KEY='uri-family-matgo';
 let DB;
 function loadDB(){
   const def={players:[],cur:'',stats:{},history:[],
-    set:{sound:true,bgm:true,voice:true,vib:true,hint:true,twoTap:false,level:1,target:3,opp:'link'},vs:{},money:{},cfg:Object.assign({},CFG_DEF),nagari:0,first:0};
+    set:{sound:true,bgm:true,voice:false,vib:true,hint:true,twoTap:false,level:1,target:3,opp:'link'},vs:{},money:{},cfg:Object.assign({},CFG_DEF),nagari:0,first:0};
   try{const d=JSON.parse(localStorage.getItem(KEY)||'null');if(d){DB=Object.assign(def,d);DB.set=Object.assign(def.set,d.set||{});}else DB=def;}catch(e){DB=def}
   DB.cfg=Object.assign({},CFG_DEF,DB.cfg||{});DB.money=DB.money||{};
+  if(DB.set.voiceMig!==1){DB.set.voice=false;DB.set.voiceMig=1}
   if(DB.cfg.sv!==SEASON_V){DB.cfg.start=30000;DB.money={}}
   // 예전 기본 프로필(아빠·엄마)은 기록이 없으면 정리
   // 예전 기본 프로필(아빠·엄마)은 완전히 정리
@@ -668,7 +669,7 @@ const SFX={ctx:null,master:null,nb:null,
    const n=this.ctx.sampleRate;this.nb=this.ctx.createBuffer(1,n,n);const d=this.nb.getChannelData(0);for(let i=0;i<n;i++)d[i]=Math.random()*2-1;}
   if(this.ctx.state!=='running')this.ctx.resume().catch(()=>{});
  },
- ok(){if(this.ctx&&this.ctx.state!=='running')this.ctx.resume().catch(()=>{});return DB.set.sound&&this.ctx&&this.ctx.state==='running'},
+ ok(){if(!DB.set.sound||!this.ctx||this.ctx.state==='closed')return false;if(this.ctx.state!=='running'){try{if(navigator.audioSession)navigator.audioSession.type='playback'}catch(e){}this.ctx.resume().catch(()=>{})}return true},
  tone(f,st,dur,type='sine',vol=.2,f2){if(!this.ok())return;const c=this.ctx,t=c.currentTime+st,o=c.createOscillator(),g=c.createGain();o.type=type;o.frequency.setValueAtTime(f,t);if(f2)o.frequency.exponentialRampToValueAtTime(f2,t+dur);g.gain.setValueAtTime(.0001,t);g.gain.exponentialRampToValueAtTime(vol,t+.008);g.gain.exponentialRampToValueAtTime(.0001,t+dur);o.connect(g).connect(this.master);o.start(t);o.stop(t+dur+.05)},
  noise(st,dur,vol,type,freq,q=1){if(!this.ok())return;const c=this.ctx,t=c.currentTime+st,s=c.createBufferSource(),f=c.createBiquadFilter(),g=c.createGain();s.buffer=this.nb;f.type=type;f.frequency.value=freq;f.Q.value=q;g.gain.setValueAtTime(vol,t);g.gain.exponentialRampToValueAtTime(.0001,t+dur);s.connect(f).connect(g).connect(this.master);s.start(t,Math.random()*.5);s.stop(t+dur+.02)},
  slap(p=1){ // 화투 '탁' — 짧은 종이·나무 타격
@@ -1724,7 +1725,7 @@ async function adminPanel(msg=''){
 async function openRules(){await modal('<h2>📖 맞고 규칙</h2>'+RULES,[{t:'알겠어요!',v:1}],{dismiss:0})}
 async function openSettings(){
   const row=(k,label)=>`<div class="tog"><span>${label}</span><button class="sw ${DB.set[k]?'on':''}" data-k="${k}"></button></div>`;
-  await modal(`<h2>⚙️ 설정</h2>${row('sound','🔊 소리 전체')}${row('bgm','🎵 배경음악')}${row('voice','🗣️ 음성 멘트 (뻑! 뿌직~)')}${row('vib','📳 진동 (안드로이드)')}${row('twoTap','✌️ 두 번 눌러서 내기 (실수 방지)')}${row('hint','🔢 카드에 월·종류 표시')}<p style="margin-top:10px;font-size:12px;opacity:.7">소리가 안 나면 아이폰 옆면 볼륨 버튼을 올려 주세요.<br>홈 화면에 추가하면 앱처럼 전체 화면으로 실행돼요.<br>iPhone: 공유 버튼 → '홈 화면에 추가'</p>`,
+  await modal(`<h2>⚙️ 설정</h2>${row('sound','🔊 소리 전체')}${row('bgm','🎵 배경음악')}${row('voice','🗣️ 음성 멘트 (아이폰에선 효과음이 끊길 수 있어요)')}${row('vib','📳 진동 (안드로이드)')}${row('twoTap','✌️ 두 번 눌러서 내기 (실수 방지)')}${row('hint','🔢 카드에 월·종류 표시')}<p style="margin-top:10px;font-size:12px;opacity:.7">소리가 안 나면 아이폰 옆면 볼륨 버튼을 올려 주세요.<br>홈 화면에 추가하면 앱처럼 전체 화면으로 실행돼요.<br>iPhone: 공유 버튼 → '홈 화면에 추가'</p>`,
     [{t:'닫기',v:1}],{dismiss:0,onOpen:bg=>bg.addEventListener('click',e=>{const b=e.target.closest('.sw');if(!b)return;const k=b.dataset.k;DB.set[k]=!DB.set[k];b.classList.toggle('on',DB.set[k]);saveDB();if(k==='hint'){clearSvgCache();fanArt();S&&render()}if(k==='sound'||k==='bgm'){SFX.init();if(DB.set.sound&&DB.set.bgm&&S)BGM.start();else BGM.stop();if(DB.set.sound)SFX.select()}})});
 }
 async function openMenu(){
