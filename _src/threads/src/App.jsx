@@ -4,7 +4,7 @@ import {
   performanceSummary, fullText, generatePost,
 } from './lib.js'
 
-// v17 — 링크 앱 스타일 가이드(카드로 꽉 채우기·큰 숫자·상태 점) 적용
+// v18 — 같은 글 반복 방지(뽑기만 한 글도 피함, 글마다 랜덤 각도) · v17 — 링크 앱 스타일 가이드(카드로 꽉 채우기·큰 숫자·상태 점) 적용
 const DEFAULT_PROFILE = `제주에 사는 사장님 (스레드는 회사 계정이 아니라 개인 계정)
 - 직업: 제주에서 청소 일 12년째, 2016년에 청소 회사 '링크클린' 창업 (제주시·서귀포)
 - 별장·세컨하우스 관리, 고소작업·외벽청소도 함
@@ -73,7 +73,8 @@ export default function App() {
       const out = await generatePost({
         apiKey, toneId: theme, profile, fieldNote: note, useSearch,
         onStage: s => { setStage(s); setTick(0) },
-        recentHooks: posted.slice(0, 7).map(h => h.post.title || h.post.hook),
+        // 올린 글 + 뽑아 보기만 한 글 모두 (최근 3일, 최대 10개) → 같은 글 반복 방지
+        recentHooks: history.filter(h => Date.now() - h.id < 3 * 864e5).slice(0, 10).map(h => `${h.post.title || ''} / ${h.post.hook || ''}`),
         rules, length, performance: performanceSummary(posted), publicApps: apps,
       })
       const id = Date.now()
@@ -124,7 +125,7 @@ export default function App() {
         <header className="flex items-center justify-between px-1 pb-3 pt-1">
           <div>
             <p className="text-[13px] font-medium text-muted">{dateLabel}</p>
-            <h1 className="font-num text-[26px] leading-tight text-deep">오늘의 스레드<span className="text-accent">.</span> <span className="align-middle font-body text-[10px] font-medium text-muted">v17</span></h1>
+            <h1 className="font-num text-[26px] leading-tight text-deep">오늘의 스레드<span className="text-accent">.</span> <span className="align-middle font-body text-[10px] font-medium text-muted">v18</span></h1>
           </div>
           <div className="flex gap-1.5">
             <HeadBtn onClick={reset}>초기화</HeadBtn>
