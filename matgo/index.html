@@ -106,7 +106,12 @@ button{font-family:inherit;cursor:pointer}
 .cd.o{--w:var(--ow);width:var(--ow);height:var(--oh);box-shadow:0 1px 2px #0009}
 .cd.h.sel{top:-14px;box-shadow:0 0 0 3px var(--orange),0 10px 20px #000b}
 .cd.can:after,.cd.hl:after{content:'';position:absolute;inset:-3px;border-radius:inherit;pointer-events:none;animation:pulse 1s ease-in-out infinite}
-.cd.can:after{box-shadow:0 0 0 2px #ffe27a,0 0 12px 2px #ffd23f}
+.cd.can:after{inset:-4px;box-shadow:0 0 0 4px #ffd400,0 0 0 6px #7a3d00,0 0 22px 6px #ffb800;animation:pulseC 1s ease-in-out infinite}
+.cd.h.can{top:-6px}
+.cd.h.can:before{content:'▼';position:absolute;left:50%;top:-19px;transform:translateX(-50%);color:#ffd400;font-size:13px;text-shadow:0 1px 2px #000;pointer-events:none;z-index:2}
+.cd.h.can.sel:before{display:none}
+.cd.h.nom{filter:brightness(.62) saturate(.7)}
+@keyframes pulseC{50%{box-shadow:0 0 0 4px #fff3a0,0 0 0 6px #7a3d00,0 0 30px 10px #ffd400}}
 .cd.hl:after{box-shadow:0 0 0 3px var(--orange),0 0 16px 4px #ff8a3d}
 .cd.hl{cursor:pointer}
 .cd.dim{filter:brightness(.72) saturate(.8)}
@@ -434,7 +439,7 @@ small.zero,.seg small.mn.zero{color:#ff8a80!important}
 
 <script>
 'use strict';
-const VER='v45';
+const VER='v46';
 const $=s=>document.querySelector(s);
 const sleep=ms=>new Promise(r=>setTimeout(r,ms));
 const rnd=n=>Math.floor(Math.random()*n);
@@ -902,7 +907,7 @@ function render(){
   const hand=S.hands[0].slice().sort((a,b)=>(a.m<=0?99:a.m)-(b.m<=0?99:b.m)||TORD[a.t]-TORD[b.t]);
   $('#hand').innerHTML=hand.map(c=>{
     let cls='h';if(c.id===S.sel)cls+=' sel';
-    if(myTurn&&c.m>0&&S.floor.some(f=>f.m===c.m))cls+=' can';
+    if(myTurn&&c.m>0&&S.floor.some(f=>f.m===c.m))cls+=' can';else if(myTurn&&c.m>0)cls+=' nom';
     if(S.turn!==0||S.over)cls+=' dim';
     return cardDiv(c,cls);
   }).join('');
