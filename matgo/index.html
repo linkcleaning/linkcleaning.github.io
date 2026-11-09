@@ -253,7 +253,7 @@ button{font-family:inherit;cursor:pointer}
 
 <script>
 'use strict';
-const VER='v3';
+const VER='v4';
 const $=s=>document.querySelector(s);
 const sleep=ms=>new Promise(r=>setTimeout(r,ms));
 const rnd=n=>Math.floor(Math.random()*n);
@@ -318,46 +318,66 @@ function ribbon(col,txt,x=30,y=40,rot=-10){
 }
 const GMARK=`<circle cx="12" cy="12" r="8" fill="#d7262e" stroke="#fff" stroke-width="1.2"/><text x="12" y="12.6" font-size="10" fill="#fff" text-anchor="middle" dominant-baseline="central" font-weight="900">光</text>`;
 
+const pineFan=(x,y,s=1)=>`<g transform="translate(${x} ${y}) scale(${s})"><path d="M-16 4 Q-10 -14 0 -14 Q10 -14 16 4 Q8 0 0 1.5 Q-8 0 -16 4Z" fill="#101010"/><path d="M-12 2 L0 -12 M-6 3 L0 -12 M0 2 L0 -12 M6 3 L0 -12 M12 2 L0 -12" stroke="#3f8f46" stroke-width="1.2"/></g>`;
+const band=(y,h,col='#d32f2f')=>`<rect x="0" y="${y}" width="60" height="${h}" fill="${col}"/>`;
+const bigLeaf=(x,y,s,rot,col)=>`<path transform="translate(${x} ${y}) rotate(${rot}) scale(${s})" d="M0 0 C6 -6 14 -6 18 0 C14 6 6 6 0 0Z" fill="${col}"/>`;
+const heartLeaf=(x,y,s,rot,col)=>`<path transform="translate(${x} ${y}) rotate(${rot}) scale(${s})" d="M0 10 C-14 0 -12 -12 -4 -12 C-1 -12 0 -9 0 -8 C0 -9 1 -12 4 -12 C12 -12 14 0 0 10Z" fill="${col}"/><path transform="translate(${x} ${y}) rotate(${rot}) scale(${s})" d="M0 9 L0 -7 M0 0 L-6 -6 M0 0 L6 -6" stroke="#ffffff30" stroke-width="1" fill="none"/>`;
+function peony(x,y,r){let s='';for(let i=0;i<8;i++){const a=i*45*Math.PI/180;s+=`<circle cx="${(x+Math.cos(a)*r*.62).toFixed(1)}" cy="${(y+Math.sin(a)*r*.62).toFixed(1)}" r="${(r*.48).toFixed(1)}" fill="#c8102e" stroke="#5a0010" stroke-width=".6"/>`}
+ return s+`<circle cx="${x}" cy="${y}" r="${(r*.62).toFixed(1)}" fill="#e53950"/><circle cx="${x}" cy="${y}" r="${(r*.32).toFixed(1)}" fill="#ff7d8e"/><circle cx="${x}" cy="${y}" r="${(r*.13).toFixed(1)}" fill="#ffd54f"/>`}
 function plant(c){
-  const m=c.m, t=c.t;
+  const m=c.m,t=c.t,P=t==='P';
   switch(m){
-  case 1: return `<path d="M10 92 C18 74 14 58 30 44 S40 22 38 6" stroke="#1e1410" stroke-width="3.6" fill="none" stroke-linecap="round"/>`+pineC(16,30)+pineC(43,20)+(t==='G'?pineC(12,58,.9):pineC(20,58)+pineC(45,50)+pineC(30,76));
-  case 2: return `<path d="M2 74 Q20 62 26 42 T52 10" stroke="#161210" stroke-width="3" fill="none"/><path d="M26 42 Q38 46 54 38" stroke="#161210" stroke-width="2" fill="none"/>`+blossom(13,64,9,'#d8314a')+blossom(29,34,8,'#e04a60')+blossom(47,15,8,'#d8314a')+blossom(50,40,7,'#e86478')+(t==='Y'?'':blossom(38,58,7,'#e04a60'));
-  case 3: return `<path d="M0 30 Q22 34 30 18 T60 8" stroke="#161210" stroke-width="2.5" fill="none"/>`+blossom(10,24,8,'#e53935','#fff')+blossom(24,14,7,'#ffffff','#e53935')+blossom(30,30,8,'#ff7a8a','#fff')+blossom(46,12,7,'#e53935','#fff')+blossom(50,28,8,'#ffffff','#e53935')+(t==='G'?'':blossom(18,44,7,'#ff7a8a','#fff')+blossom(40,46,8,'#e53935','#fff')+blossom(28,62,7,'#ffffff','#e53935'));
-  case 4: {let s='';[[10,0],[26,0],[44,0]].forEach(([x],k)=>{s+=`<path d="M${x} 0 Q${x+6} 30 ${x-2} ${62+k*6}" stroke="#2a2a2a" stroke-width="1.3" fill="none"/>`;for(let j=0;j<6;j++){const yy=6+j*10;s+=leaf(x+3+(j%2?3:-3),yy,4.5,1.8,j%2?30:-30,'#1b1b1b')}s+=`<circle cx="${x-2}" cy="${62+k*6}" r="2" fill="#c62828"/>`});return s}
-  case 5: {let s='';[[12,-8],[22,-3],[34,5],[46,10]].forEach(([x,r])=>s+=`<path d="M${x} 92 Q${x+r} 60 ${x+r*1.4} 30" stroke="#151515" stroke-width="2.6" fill="none"/>`);return s+iris(14,32)+iris(32,24)+iris(48,38)}
-  case 6: return leaf(14,54,10,4,-40,'#161616')+leaf(46,56,10,4,40,'#161616')+leaf(20,70,9,3.5,20,'#1f3d1f')+leaf(40,72,9,3.5,-20,'#1f3d1f')+`<circle cx="30" cy="44" r="14" fill="#b5122a"/><circle cx="30" cy="44" r="10" fill="#d72c44"/><circle cx="30" cy="45" r="6" fill="#f05a6e"/><circle cx="30" cy="45" r="2.5" fill="#ffd54f"/>`+(t==='P'?`<circle cx="46" cy="22" r="7" fill="#d72c44"/><circle cx="46" cy="22" r="3.5" fill="#f05a6e"/>`:'');
-  case 7: {let s='';[[6,'M4 4 Q30 10 40 50'],[30,'M30 0 Q50 20 54 60'],[0,'M0 40 Q24 40 30 80']].forEach(([_,d])=>s+=`<path d="${d}" stroke="#4e342e" stroke-width="1.3" fill="none"/>`);
-    const pts=[[10,6],[18,10],[26,16],[32,26],[37,38],[38,48],[36,4],[42,12],[48,24],[52,36],[54,50],[6,42],[14,44],[22,50],[26,60],[28,72]];pts.forEach(([x,y],k)=>s+=leaf(x,y,2.6,1.6,k*30,k%3?'#d81f26':'#141414'));return s}
-  case 8: return (t==='G'?`<rect x="0" y="0" width="60" height="62" fill="url(#gRedSky)"/><circle cx="30" cy="28" r="16" fill="url(#gMoon)"/>`:t==='Y'?`<rect x="0" y="0" width="60" height="60" fill="#f6e7c4"/>`:`<rect x="0" y="0" width="60" height="60" fill="#fff"/><rect x="0" y="0" width="60" height="20" fill="#e53935" opacity=".85"/>`)+`<path d="M0 58 Q18 44 32 52 Q46 40 60 54 L60 92 L0 92Z" fill="#1d1d1d"/>`+[8,16,24,36,44,52].map(x=>`<path d="M${x} 92 Q${x+2} 74 ${x+5} 62" stroke="#f5f5f5" stroke-width=".9" fill="none" opacity=".75"/>`).join('');
-  case 9: return leaf(16,64,9,3.5,-30,'#161616')+leaf(44,66,9,3.5,30,'#161616')+leaf(30,80,9,3.5,90,'#2e4d1e')+mum(20,40,10)+mum(42,28,8)+(t==='P'?mum(32,58,7):'');
-  case 10: return `<path d="M0 10 Q30 20 60 6" stroke="#5d4037" stroke-width="1.5" fill="none"/>`+maple(12,16,1,'#d63a12')+maple(30,22,1.1,'#141414')+maple(48,14,1,'#c62828')+maple(20,36,.9,'#f4c20d')+maple(42,36,.95,'#d63a12')+(t==='Y'?'':maple(14,58,1,'#c62828')+maple(34,56,1.1,'#d63a12')+maple(50,70,.9,'#141414'));
-  case 11: return `<path d="M30 92 L30 40" stroke="#3e2723" stroke-width="2"/>`+leaf(18,58,13,7,-30,c.sub==='ssang'?'#e3b505':'#121212')+leaf(42,58,13,7,30,'#121212')+leaf(30,78,12,6,0,'#1a1a1a')+(t==='G'?'':`<g>${[0,1,2,3,4].map(k=>`<circle cx="${20+k*5}" cy="${26-(k%2)*3}" r="3" fill="#8e44ad"/>`).join('')}<path d="M18 30 Q30 22 44 30" stroke="#5d4037" stroke-width="1" fill="none"/></g>`);
+  case 1: return (t==='G'?`<circle cx="44" cy="22" r="13" fill="url(#gSun)"/>`:P?band(0,24):'')+`<path d="M4 92 C14 72 8 58 26 46 S46 30 40 6" stroke="#111" stroke-width="4.6" fill="none" stroke-linecap="round"/><path d="M26 46 Q40 48 50 40" stroke="#111" stroke-width="2.6" fill="none"/>`
+     +pineFan(18,36,1.15)+pineFan(46,40,1)+pineFan(36,18,1)+(t==='G'?'':pineFan(16,66,1.2)+pineFan(42,70,1.1));
+  case 2: return (P?band(68,24):'')+`<path d="M2 90 Q18 70 28 50 T56 6" stroke="#111" stroke-width="4" fill="none" stroke-linecap="round"/><path d="M28 50 Q42 52 56 44 M20 66 Q8 58 4 44" stroke="#111" stroke-width="2.4" fill="none"/>`
+     +blossom(12,72,10,'#e0242f','#fff')+blossom(30,46,9,'#e0242f','#fff')+blossom(46,22,9,'#e0242f','#fff')+blossom(52,44,8,'#e0242f','#fff')+blossom(6,44,8,'#e0242f','#fff')+(t==='Y'?'':blossom(40,64,8,'#e0242f','#fff'));
+  case 3: {const pts=[[9,12],[23,8],[38,12],[52,9],[15,26],[30,24],[46,27],[22,40],[40,40],[8,40],[53,42]];
+     return (P?band(66,26):'')+`<path d="M0 50 Q20 40 30 24 M30 24 Q44 34 60 30 M30 24 Q26 12 34 0" stroke="#111" stroke-width="2.2" fill="none"/>`
+     +pts.map(([x,y],k)=>blossom(x,y,9,k%3===1?'#ffffff':'#f48fb1',k%3===1?'#e53935':'#c2185b')).join('')}
+  case 4: {let s='';[[9,52],[23,66],[38,58],[52,70]].forEach(([x,len])=>{s+=`<path d="M${x} 0 Q${x+5} ${len/2} ${x-1} ${len}" stroke="#111" stroke-width="1.6" fill="none"/>`;
+       for(let j=0;j*9+5<len;j++){const yy=5+j*9;s+=bigLeaf(x+1,yy,.55,j%2?150:30,'#121212')}s+=`<circle cx="${x-1}" cy="${len+2}" r="2.4" fill="#d32f2f"/><circle cx="${x+2}" cy="${len-4}" r="1.8" fill="#d32f2f"/>`});
+     return (P?band(78,14,'#d32f2f'):'')+s}
+  case 5: {let s='';[[8,-6],[16,-2],[26,3],[36,6],[46,10],[54,14]].forEach(([x,r])=>s+=`<path d="M${x} 92 Q${x+r} 58 ${x+r*1.6} 26" stroke="#111" stroke-width="3.2" fill="none" stroke-linecap="round"/>`);
+     return (P?band(80,12,'#d32f2f'):'')+s+`<g transform="scale(1.35)">`+iris(10,22)+iris(24,16)+iris(36,26)+`</g>`}
+  case 6: return bigLeaf(4,64,1.3,-30,'#121212')+bigLeaf(56,64,1.3,210,'#121212')+bigLeaf(10,80,1.2,-10,'#121212')+bigLeaf(50,82,1.2,190,'#121212')+bigLeaf(30,70,1,90,'#1d3b1d')
+     +peony(30,44,17)+(P?peony(48,16,8)+band(86,6):'');
+  case 7: {let s=`<path d="M2 90 Q10 40 50 8 M10 92 Q30 50 58 30 M20 92 Q34 70 52 60" stroke="#3a1a1a" stroke-width="1.5" fill="none"/>`;
+     const pts=[[6,76],[9,62],[13,50],[19,38],[27,28],[35,20],[43,14],[18,74],[24,62],[32,52],[40,44],[48,38],[55,32],[28,82],[36,74],[44,66],[50,62]];
+     pts.forEach(([x,y],k)=>s+=leaf(x,y,3.6,1.8,(k*40)%180,k%4===3?'#111':'#d81f26'));return (P?band(0,12,'#d32f2f'):'')+s}
+  case 8: return (t==='G'?`<rect x="0" y="0" width="60" height="62" fill="url(#gRedSky)"/><circle cx="30" cy="28" r="17" fill="url(#gMoon)"/>`:t==='Y'?`<rect x="0" y="0" width="60" height="60" fill="#fff6e0"/>`:band(0,22))
+     +`<path d="M0 56 Q16 40 32 50 Q46 38 60 50 L60 92 L0 92Z" fill="#111"/>`+[6,12,18,24,30,36,42,48,54].map((x,k)=>`<path d="M${x} 92 Q${x+2} 72 ${x+4} ${58+(k%3)*3}" stroke="#fff" stroke-width="1" fill="none" opacity=".85"/>`).join('');
+  case 9: return bigLeaf(4,70,1.2,-20,'#121212')+bigLeaf(56,72,1.2,200,'#121212')+bigLeaf(18,86,1,-50,'#121212')+`<path d="M30 92 L30 40" stroke="#111" stroke-width="2"/>`
+     +mum(30,32,15)+(P?mum(12,56,8)+mum(48,54,8):'')+(t==='T'?'':mum(10,12,6));
+  case 10: return `<path d="M30 0 Q34 40 30 92 M30 30 Q14 40 4 36 M30 30 Q46 40 58 34" stroke="#3e2015" stroke-width="1.6" fill="none"/>`
+     +maple(14,14,1.6,'#d32f2f')+maple(44,12,1.6,'#d32f2f')+maple(30,30,1.5,'#f4c20d')+maple(12,40,1.4,'#111')+maple(48,40,1.4,'#d32f2f')+(t==='Y'?'':maple(18,64,1.5,'#d32f2f')+maple(42,66,1.5,'#111')+maple(30,84,1.4,'#d32f2f'));
+  case 11: return (c.sub==='ssang'?band(0,30,'#f2c21b'):'')+`<path d="M30 92 L30 30" stroke="#111" stroke-width="2.4"/>`
+     +heartLeaf(16,62,1.6,-25,c.sub==='ssang'?'#d4a017':'#111')+heartLeaf(44,62,1.6,25,'#111')+heartLeaf(30,80,1.4,0,'#111')
+     +(t==='G'?'':`${[0,1,2,3,4,5].map(k=>`<circle cx="${18+k*5}" cy="${24-(k%2)*4}" r="3.2" fill="#8e24aa" stroke="#3a0040" stroke-width=".5"/>`).join('')}`);
   case 12: {let s=`<rect x="0" y="0" width="60" height="92" fill="${t==='G'?'#2b2f3a':'#f2ead6'}"/>`;
     for(let k=0;k<9;k++)s+=`<line x1="${k*8-6}" y1="0" x2="${k*8-18}" y2="92" stroke="${t==='G'?'#ffffff22':'#5a6a7a33'}" stroke-width=".8"/>`;
-    s+=`<path d="M60 0 Q40 30 48 92 M56 0 Q34 40 38 92 M60 20 Q46 50 56 92" stroke="#2e5d34" stroke-width="1.6" fill="none"/>`;
-    for(let j=0;j<8;j++)s+=leaf(44+(j%2?4:-3),8+j*10,4,1.3,70,'#3b7a40');return s}
+    s+=`<path d="M60 0 Q40 30 48 92 M56 0 Q34 40 38 92 M60 20 Q46 50 56 92" stroke="#1e3d22" stroke-width="1.8" fill="none"/>`;
+    for(let j=0;j<8;j++)s+=leaf(44+(j%2?4:-3),8+j*10,4.4,1.4,70,'#245a2a');return s}
   }
   return '';
 }
 function special(c){
   const m=c.m,t=c.t,s=c.sub;
   if(t==='G'){
-    if(m===1)return `<circle cx="44" cy="24" r="12" fill="url(#gSun)"/>`+`<g transform="translate(30 66)"><path d="M-15 6 Q0 -4 14 4 Q4 13 -15 6Z" fill="#fff" stroke="#333" stroke-width=".6"/><path d="M9 3 Q17 -12 10 -21" stroke="#222" stroke-width="2.2" fill="none"/><circle cx="10" cy="-22" r="2.8" fill="#fff" stroke="#333" stroke-width=".5"/><circle cx="10" cy="-24" r="1.4" fill="#e1262f"/><path d="M12.6 -22 l6.5 1.6 -6.5 .7z" fill="#c98a2a"/><path d="M-15 6 l-7 2 7 1.5z" fill="#222"/><path d="M-3 10 l-2 13 M3 10 l1 13" stroke="#222" stroke-width="1.1"/><path d="M-8 3 Q0 -2 8 3" stroke="#222" stroke-width="1" fill="none"/></g>`;
+    if(m===1)return `<g transform="translate(30 66)"><path d="M-15 6 Q0 -4 14 4 Q4 13 -15 6Z" fill="#fff" stroke="#333" stroke-width=".6"/><path d="M9 3 Q17 -12 10 -21" stroke="#222" stroke-width="2.2" fill="none"/><circle cx="10" cy="-22" r="2.8" fill="#fff" stroke="#333" stroke-width=".5"/><circle cx="10" cy="-24" r="1.4" fill="#e1262f"/><path d="M12.6 -22 l6.5 1.6 -6.5 .7z" fill="#c98a2a"/><path d="M-15 6 l-7 2 7 1.5z" fill="#222"/><path d="M-3 10 l-2 13 M3 10 l1 13" stroke="#222" stroke-width="1.1"/><path d="M-8 3 Q0 -2 8 3" stroke="#222" stroke-width="1" fill="none"/></g>`;
     if(m===3)return `<path d="M3 56 Q30 50 57 56 L55 90 Q30 84 5 90Z" fill="#c62828"/>`+[0,1,2,3].map(k=>`<path d="M${10+k*12} 55 L${9+k*12} 88" stroke="#fff" stroke-width="3" opacity=".9"/>`).join('')+`<path d="M3 56 Q30 50 57 56" stroke="#f5c24a" stroke-width="2.4" fill="none"/><circle cx="30" cy="53" r="2.4" fill="#f5c24a"/>`;
     if(m===8)return '';
     if(m===11)return `<g transform="translate(32 50)"><path d="M-12 0 Q-1 -15 12 -9 Q8 5 -12 0Z" fill="#e2372b"/><circle cx="12" cy="-12" r="4.4" fill="#2f7d32"/><path d="M15.5 -12.5 l4.5 1 -4.5 1z" fill="#f4c20d"/><circle cx="13" cy="-13" r=".9" fill="#000"/><path d="M11 -16 q2 -6 6 -5" stroke="#e2372b" stroke-width="1.6" fill="none"/><path d="M-12 0 Q-26 12 -20 32" stroke="#f4c20d" stroke-width="2.6" fill="none"/><path d="M-9 2 Q-20 16 -12 34" stroke="#2f7d32" stroke-width="2.2" fill="none"/><path d="M-6 3 Q-11 18 -2 34" stroke="#1565c0" stroke-width="2.2" fill="none"/><path d="M-2 -6 Q4 -19 11 -15" stroke="#1565c0" stroke-width="3" fill="none"/></g>`;
     if(m===12)return `<path d="M10 42 Q30 20 50 42Z" fill="#d84315"/><path d="M20 42 Q30 24 30 22 M40 42 Q30 24 30 22" stroke="#ffcc80" stroke-width="1"/><path d="M30 42 V66" stroke="#6d4c41" stroke-width="1.6"/><circle cx="25" cy="49" r="4.4" fill="#f1c27d"/><path d="M19 54 Q25 50 31 54 L34 80 L16 80Z" fill="#3949ab"/><path d="M16 80 l-2 6 M34 80 l2 6" stroke="#222" stroke-width="1.4"/><rect x="21" y="44" width="8" height="2.2" rx="1" fill="#222"/>`+emo(48,82,11,'🐸');
   }
   if(t==='Y'){
-    if(m===2)return bird(30,62,1.3,'#f2c21b','#2b2b2b');
+    if(m===2)return bird(34,70,1.45,'#f2c21b','#2b2b2b');
     if(m===4)return bird(30,58,1.25,'#3a3a3a','#1b1b1b',true)+`<circle cx="46" cy="22" r="6" fill="#e53935" opacity=".85"/>`;
     if(m===5)return `<path d="M2 72 Q30 56 58 72" stroke="#6d4c2f" stroke-width="5" fill="none"/>`+[10,22,38,50].map(x=>`<path d="M${x} ${x<30?67-x/6:57+x/6} V86" stroke="#6d4c2f" stroke-width="2"/>`).join('');
     if(m===6)return emo(16,24,14,'🦋',-15)+emo(44,72,12,'🦋',15);
-    if(m===7)return emo(30,70,24,'🐗');
+    if(m===7)return emo(32,72,26,'🐗');
     if(m===8)return goose(18,18,1.2)+goose(36,28,1.3)+goose(24,38,1.1);
     if(m===9)return `<g transform="translate(30 70)"><path d="M-13 -7 L13 -7 L8 6 L-8 6Z" fill="#b71c1c"/><ellipse cx="0" cy="-7" rx="13" ry="3.2" fill="#d32f2f"/><ellipse cx="0" cy="-7" rx="10" ry="2" fill="#7f0000"/><text y="1" font-size="8" fill="#f5c24a" text-anchor="middle" font-weight="900">壽</text><rect x="-4" y="6" width="8" height="3" fill="#8e1414"/></g>`;
-    if(m===10)return emo(30,68,24,'🦌');
+    if(m===10)return emo(30,70,28,'🦌');
     if(m===12)return bird(30,46,1.3,'#1a237e','#0d1240');
   }
   if(t==='T'){
@@ -376,7 +396,7 @@ function hintMarks(c){
   else if(c.t==='Y'){lab=c.sub==='godori'?'고':c.sub==='gukjin'?'국':'열';col=c.sub==='godori'?'#ef6c00':'#2e7d32'}
   else if(c.t==='T'){lab={hong:'홍',cheong:'청',cho:'초',plain:'띠'}[c.sub];col=c.sub==='cheong'?'#1565c0':c.sub==='plain'?'#6d4c41':'#c62828'}
   else {lab=c.sub==='ssang'?'쌍':'피';col=c.sub==='ssang'?'#8e24aa':'#555'}
-  return `<circle cx="9.6" cy="82.4" r="5.9" fill="#000000b8"/><text x="9.6" y="82.9" font-size="${c.m>9?6.8:8}" fill="#fff" text-anchor="middle" dominant-baseline="central" font-weight="900">${c.m}</text><rect x="43.4" y="76.6" width="13" height="11.8" rx="3.2" fill="${col}"/><text x="49.9" y="82.7" font-size="8" fill="#fff" text-anchor="middle" dominant-baseline="central" font-weight="900">${lab}</text>`;
+  return `<circle cx="10" cy="82" r="7" fill="#000000c8" stroke="#fff" stroke-width=".8"/><text x="10" y="82.5" font-size="${c.m>9?7.6:9.4}" fill="#fff" text-anchor="middle" dominant-baseline="central" font-weight="900">${c.m}</text><rect x="43.4" y="76.6" width="13" height="11.8" rx="3.2" fill="${col}"/><text x="49.9" y="82.7" font-size="8" fill="#fff" text-anchor="middle" dominant-baseline="central" font-weight="900">${lab}</text>`;
 }
 function cardSVG(c){
   const open='<svg viewBox="0 0 60 92" xmlns="http://www.w3.org/2000/svg">';
@@ -387,8 +407,7 @@ function cardSVG(c){
   let sp=special(c);
   if(c.t==='P'&&c.sub==='ssang'&&c.m===12)art='';
   const bg=`<rect width="60" height="92" rx="5" fill="#d3222c"/><rect x="2.6" y="2.6" width="54.8" height="86.8" rx="3.2" fill="#fffdf6"/><rect x="2.6" y="60" width="54.8" height="29.4" fill="url(#gSkyB)"/>`;
-  const pre=(c.m===1&&c.t==='G')?sp:'';
-  if(pre)sp='';
+  const pre='';
   return open+bg+`<g clip-path="url(#cIn)">${pre+art+sp}</g>`+(c.t==='G'?GMARK:'')+hintMarks(c)+`<rect x=".5" y=".5" width="59" height="91" rx="4.6" fill="none" stroke="#00000040"/></svg>`;
 }
 const BACK='<svg viewBox="0 0 60 92" xmlns="http://www.w3.org/2000/svg"><rect width="60" height="92" rx="5" fill="#c8161e"/><rect x="1.5" y="1.5" width="57" height="89" rx="4" fill="none" stroke="#ff5a5a" stroke-width="1" opacity=".55"/><rect x="1.5" y="60" width="57" height="30" rx="4" fill="#000" opacity=".08"/></svg>';
