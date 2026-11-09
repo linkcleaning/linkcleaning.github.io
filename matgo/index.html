@@ -327,7 +327,7 @@ small.zero,.seg small.mn.zero{color:#ff8a80!important}
 
 <script>
 'use strict';
-const VER='v19';
+const VER='v20';
 const $=s=>document.querySelector(s);
 const sleep=ms=>new Promise(r=>setTimeout(r,ms));
 const rnd=n=>Math.floor(Math.random()*n);
@@ -1438,16 +1438,28 @@ const RULES=`<div class="rules">
 <h3>💰 돈</h3>모두 같은 돈으로 시작해요. 이기면 <b>점수 × 점당 금액</b>만큼 상대 지갑에서 가져와요. 상대 돈이 모자라면 <b>올인</b>! 지갑이 비면 관리인이 충전해 줘요. 댓글 이벤트로 직접 채울 수도 있어요.
 <h3>💸 배수</h3><b>피박</b> 피로 났는데 상대 피 5장 이하 ×2 · <b>광박</b> 광으로 났는데 상대 광 0장 ×2 · <b>멍따</b> 열끗 7장 이상 ×2 · <b>고박</b> 고 했는데 상대가 나면 ×2 · <b>나가리</b> 아무도 못 나면 다음 판 ×2
 </div>`;
+const RC_HASH='c74071a4ee0a6f7d4b6f0a72a4d3805b7b1ec4408bd583721f8ce70ca112325f';   // 관리인 복구 코드 확인용 (코드 자체는 관리인만 보관)
+async function resetAdminPin(){
+  let done=false;
+  await modal(`<h2>🔑 비밀번호 다시 정하기</h2><p>관리인 <b>복구 코드</b>를 넣고 새 비밀번호를 정하세요.<br><small>링크 더비 관리인 비밀번호도 같이 바뀌어요</small></p><input class="inp" id="rc" placeholder="복구 코드 (LINK-XXXX-XXXX)" autocapitalize="characters"><input class="inp" id="n1" type="password" inputmode="numeric" placeholder="새 비밀번호 (4자리 이상)"><input class="inp" id="n2" type="password" inputmode="numeric" placeholder="한 번 더"><p id="rerr" style="color:#ff8a80;font-size:13px;margin-top:6px"></p>`,
+    [{t:'취소',cls:'alt',v:0},{t:'바꾸기',keep:true,fn:async(bg,close)=>{const er=bg.querySelector('#rerr');const rc=bg.querySelector('#rc').value.trim().toUpperCase(),a=bg.querySelector('#n1').value,b=bg.querySelector('#n2').value;
+      if(await sha('RC|'+rc)!==RC_HASH){er.textContent='복구 코드가 달라요';SFX.ppuk();return}
+      if(a.length<4){er.textContent='4자리 이상으로 정해 주세요';return}if(a!==b){er.textContent='두 번 입력한 비밀번호가 달라요';return}
+      const r=await LG.req('admin','PUT',{pin:await sha(a)});if(!r){er.textContent='인터넷 연결을 확인해 주세요';return}done=true;close(1)}}]);
+  if(done){SFX.win();await modal('<h2>✅ 바뀌었어요!</h2><p>새 비밀번호로 관리인 메뉴를 열어 주세요.</p>',[{t:'확인',v:1}])}
+  return done;
+}
 async function openAdmin(){
   const ad=await LG.req('admin');
   if(ad===null){await modal('<h2>📡 연결 안 됨</h2><p>관리인 메뉴는 인터넷이 연결돼야 열려요.</p>',[{t:'닫기',v:0}]);return}
   const has=!!ad.pin;let ok=false;
-  await modal(`<h2>👑 관리인 확인</h2><p>${has?'링크 더비와 같은 관리인 비밀번호를 입력하세요.':'처음이에요! 관리인 비밀번호를 정해 주세요. (링크 더비와 같이 쓰여요)'}</p><input class="inp" id="ap1" type="password" inputmode="numeric" placeholder="비밀번호">${has?'':'<input class="inp" id="ap2" type="password" inputmode="numeric" placeholder="한 번 더">'}<p id="aerr" style="color:#ff8a80;font-size:13px;margin-top:6px"></p>`,
+  const av=await modal(`<h2>👑 관리인 확인</h2><p>${has?'링크 더비와 같은 관리인 비밀번호를 입력하세요.':'처음이에요! 관리인 비밀번호를 정해 주세요. (링크 더비와 같이 쓰여요)'}</p><input class="inp" id="ap1" type="password" inputmode="numeric" placeholder="비밀번호">${has?'':'<input class="inp" id="ap2" type="password" inputmode="numeric" placeholder="한 번 더">'}<p id="aerr" style="color:#ff8a80;font-size:13px;margin-top:6px"></p>${has?'<p style="margin-top:4px"><a href="#" data-v="forgot" style="color:#bfe5df;font-size:12px">비밀번호를 잊었어요</a></p>':''}`,
    [{t:'취소',cls:'alt',v:0},{t:has?'열기':'정하기',keep:true,fn:async(bg,close)=>{
      const a=bg.querySelector('#ap1').value,er=bg.querySelector('#aerr');
      if(has){if(ad.pin===await sha(a)){ok=true;close(1)}else{er.textContent='비밀번호가 틀려요';SFX.ppuk()}}
      else{const b=bg.querySelector('#ap2').value;if(a.length<4){er.textContent='4자리 이상으로 정해 주세요';return}if(a!==b){er.textContent='두 번 입력한 비밀번호가 달라요';return}await LG.req('admin','PUT',{pin:await sha(a)});ok=true;close(1)}
    }}],{onOpen:bg=>setTimeout(()=>bg.querySelector('#ap1').focus(),100)});
+  if(av==='forgot'){if(await resetAdminPin())return openAdmin();return}
   if(!ok)return;SFX.coin();
   await syncDown();
   return adminPanel();
