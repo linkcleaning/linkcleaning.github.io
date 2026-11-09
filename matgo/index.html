@@ -1571,7 +1571,10 @@ async function checkUpdate(){
     const t=await r.text(),m=t.match(/const VER='(v\d+)'/);
     if(m&&m[1]!==VER){
       const inGame=$('#game').classList.contains('on')&&S&&!S.over;
-      if(!inGame){location.replace(location.pathname+'?v='+m[1]);return}
+      let tried=0;try{tried=+sessionStorage.getItem('upd_'+m[1])||0}catch(e){}
+      if(tried>=2){updBusy=false;return}   // 반복 새로고침 방지
+      try{sessionStorage.setItem('upd_'+m[1],tried+1)}catch(e){}
+      if(!inGame){location.replace(location.pathname+'?v='+m[1]+'&t='+Date.now());return}
       if(!document.getElementById('updBar')){const b=document.createElement('div');b.id='updBar';b.textContent=`🔄 새 버전 ${m[1]} — 이 판 끝나면 자동 업데이트`;b.style.cssText='position:fixed;left:50%;bottom:calc(env(safe-area-inset-bottom) + 4px);transform:translateX(-50%);z-index:5000;background:#e8661c;color:#fff;font-weight:800;font-size:12px;padding:5px 12px;border-radius:12px;pointer-events:none';document.body.appendChild(b)}
       window._pendingUpd=m[1];
     }
