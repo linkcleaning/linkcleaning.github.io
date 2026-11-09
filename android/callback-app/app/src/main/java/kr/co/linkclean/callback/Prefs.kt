@@ -94,7 +94,7 @@ https://www.instagram.com/linkcleaning
     const val DEFAULT_SUBJECT = ""  // 제목 없음
     const val MAX_IMAGES = 3
     private const val KEY_SEED_VER = "seed_ver"
-    private const val SEED_VER = 15
+    private const val SEED_VER = 16
 
     const val KEY_ENABLED = "enabled"
     const val KEY_MESSAGE = "message"
@@ -298,6 +298,15 @@ https://www.instagram.com/linkcleaning
             val list = Templates.load(c).toMutableList()
             if (list.none { it.id == "t_review" }) Templates.defaults().firstOrNull { it.id == "t_review" }?.let { list.add(it); Templates.save(c, list) }
         }
+        // v16: 예금주 '한승우(링크클린)'로 통일
+        if (sp.getInt(KEY_SEED_VER, 0) < 16) {
+            val e = sp.edit()
+            val h = sp.getString(KEY_ACC_HOLDER, null)
+            if (h == null || h == "링크클린" || h == "한승우") e.putString(KEY_ACC_HOLDER, "한승우(링크클린)")
+            if (sp.getString(KEY_ACC_PHONE, null) == "050-6520-0440") e.remove(KEY_ACC_PHONE)
+            e.apply()
+            if (sp.getString(Templates.KEY, null) != null) Templates.save(c, Templates.load(c).map { it.copy(body = Templates.fixDepositor(it.body)) })
+        }
         sp.edit().putInt(KEY_SEED_VER, SEED_VER).commit()
     }
 
@@ -309,8 +318,8 @@ https://www.instagram.com/linkcleaning
     // ---------- 계좌 카드 정보 (설정에서 변경) ----------
     fun accBank(c: Context) = sp(c).getString(KEY_ACC_BANK, null)?.takeIf { it.isNotBlank() } ?: "토스뱅크"
     fun accNum(c: Context) = sp(c).getString(KEY_ACC_NUM, null)?.takeIf { it.isNotBlank() } ?: "1000-1626-3066"
-    fun accHolder(c: Context) = sp(c).getString(KEY_ACC_HOLDER, null)?.takeIf { it.isNotBlank() } ?: "링크클린"
-    fun accPhone(c: Context) = sp(c).getString(KEY_ACC_PHONE, null) ?: "050-6520-0440"
+    fun accHolder(c: Context) = sp(c).getString(KEY_ACC_HOLDER, null)?.takeIf { it.isNotBlank() } ?: "한승우(링크클린)"
+    fun accPhone(c: Context) = sp(c).getString(KEY_ACC_PHONE, null) ?: "064-763-4545"
     fun accountText(c: Context) = "[링크클린] 입금 계좌 안내\n${accBank(c)} ${accNum(c)}\n예금주 ${accHolder(c)}"
 
     fun titleOn(c: Context) = sp(c).getBoolean(KEY_TITLE_ON, false)

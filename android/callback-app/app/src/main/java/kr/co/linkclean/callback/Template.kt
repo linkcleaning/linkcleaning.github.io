@@ -210,7 +210,7 @@ $CARD_URL
 청소하는 날 : {청소날짜}
 청소 비용 : {청소비용}
 계약금 : {계약금}
-토스뱅크 1000-1626-3066 (예금주 링크클린)
+토스뱅크 1000-1626-3066 / 예금주 한승우(링크클린)
 
 당일 {도착시간}경에 도착합니다.
 정확한 주소를 남겨주세요.
@@ -220,7 +220,7 @@ $CARD_URL
     val ACCOUNT = """
 [링크클린] 입금 계좌 안내
 토스뱅크 1000-1626-3066
-예금주 링크클린
+예금주 한승우(링크클린)
 """.trim()
 
     /** 후기 요청 문자 – 청소 다음 날 */
@@ -265,8 +265,8 @@ https://m.place.naver.com/place/37742213/review/visitor
 
     /** 예금주 표기를 '링크클린'으로 통일 */
     fun fixDepositor(body: String): String = body
-        .replace("예금주 : 한승우", "예금주 : 링크클린").replace("예금주 한승우", "예금주 링크클린")
-        .replace("3066 (한승우)", "3066 (링크클린)")
+        .replace(Regex("예금주( ?: ?| )(한승우|링크클린)(?!\\()"), "예금주$1한승우(링크클린)")
+        .replace(Regex("3066 \\((한승우|링크클린)\\)"), "3066 / 예금주 한승우(링크클린)")
 
     fun tokens(body: String): Set<String> = TOKEN_RE.findAll(body).map { it.groupValues[1] }.toSet()
 }

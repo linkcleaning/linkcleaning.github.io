@@ -64,9 +64,8 @@ object ReservationCard {
         val box = RectF(60f, 1140f, W - 60f, 1290f)
         cv.drawRoundRect(box, 32f, 32f, p(0xFFFFFBEB.toInt(), 1f))
         cv.drawRoundRect(box, 32f, 32f, p(0xFFFCD34D.toInt(), 1f).apply { style = Paint.Style.STROKE; strokeWidth = 4f })
-        cv.drawText("계약금 입금 계좌", 110f, 1198f, p(0xFF92400E.toInt(), 34f, true))
-        cv.drawText("${Prefs.accBank(c)} ${Prefs.accNum(c)}", 110f, 1258f, p(0xFF0F172A.toInt(), 46f, true))
-        cv.drawText("예금주 ${Prefs.accHolder(c)}", W - 110f, 1258f, p(0xFF475569.toInt(), 36f, true, Paint.Align.RIGHT))
+        cv.drawText("계약금 입금 계좌 · 예금주 ${Prefs.accHolder(c)}", 110f, 1198f, p(0xFF92400E.toInt(), 34f, true))
+        cv.drawText("${Prefs.accBank(c)} ${Prefs.accNum(c)}", 110f, 1258f, p(0xFF0F172A.toInt(), 46f, true).also { while (it.measureText("${Prefs.accBank(c)} ${Prefs.accNum(c)}") > 860f && it.textSize > 30f) it.textSize -= 2f })
 
         cv.drawText("입금 확인 후 예약이 확정됩니다", W / 2f, 1345f, p(0xFF334155.toInt(), 34f, true, Paint.Align.CENTER))
         cv.drawText("정확한 주소(동·호수)를 문자로 남겨주세요" + Prefs.accPhone(c).let { if (it.isBlank()) "" else " · $it" }, W / 2f, 1400f, p(0xFF64748B.toInt(), 30f, true, Paint.Align.CENTER))

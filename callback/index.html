@@ -154,8 +154,8 @@
       <div class="space-y-2">
         <label class="block"><span class="mb-1 block text-[13px] font-bold text-slate-500">은행</span><input id="aBank" class="h-12 w-full rounded-xl border-2 border-slate-200 bg-slate-50 px-3 font-semibold outline-none focus:border-brand-500" placeholder="토스뱅크"/></label>
         <label class="block"><span class="mb-1 block text-[13px] font-bold text-slate-500">계좌번호</span><input id="aNum" inputmode="numeric" class="h-12 w-full rounded-xl border-2 border-slate-200 bg-slate-50 px-3 font-semibold outline-none focus:border-brand-500" placeholder="1000-1626-3066"/></label>
-        <label class="block"><span class="mb-1 block text-[13px] font-bold text-slate-500">예금주</span><input id="aHolder" class="h-12 w-full rounded-xl border-2 border-slate-200 bg-slate-50 px-3 font-semibold outline-none focus:border-brand-500" placeholder="링크클린"/></label>
-        <label class="block"><span class="mb-1 block text-[13px] font-bold text-slate-500">카드 아래 문의 번호 <span class="font-medium text-slate-400">(비우면 안 넣음)</span></span><input id="aPhone" type="tel" class="h-12 w-full rounded-xl border-2 border-slate-200 bg-slate-50 px-3 font-semibold outline-none focus:border-brand-500" placeholder="050-6520-0440"/></label>
+        <label class="block"><span class="mb-1 block text-[13px] font-bold text-slate-500">예금주</span><input id="aHolder" class="h-12 w-full rounded-xl border-2 border-slate-200 bg-slate-50 px-3 font-semibold outline-none focus:border-brand-500" placeholder="한승우(링크클린)"/></label>
+        <label class="block"><span class="mb-1 block text-[13px] font-bold text-slate-500">카드 아래 문의 번호 <span class="font-medium text-slate-400">(비우면 안 넣음)</span></span><input id="aPhone" type="tel" class="h-12 w-full rounded-xl border-2 border-slate-200 bg-slate-50 px-3 font-semibold outline-none focus:border-brand-500" placeholder="064-763-4545"/></label>
       </div>
       <img id="aPrev" class="mt-3 w-full rounded-2xl ring-1 ring-slate-200" alt="계좌 카드 미리보기"/>
     </section>
@@ -292,7 +292,7 @@ const DEFAULT_TEMPLATES = () => [
   { id:'t_contract', icon:'🤝', name:'계약 확정', type:'기타', title:'링크클린', sign:false, useCommon:false, imgs:[],
     body:`[링크클린]\n\n안녕하세요, 제주 청소 전문 "링크클린"입니다.\n소중한 인연을 맺어주셔서 진심으로 감사드립니다. 🙏\n\n${LINE}\n📅 청소 일정 : {청소날짜}\n⏰ 도착 시간 : {도착시간}경\n💰 청소 비용 : {청소비용}\n💳 계약금 : {계약금}\n${LINE}\n\n🏦 계약금 입금 계좌\n토스뱅크 1000-1626-3066\n예금주 : 링크클린\n\n✔ 계약금 입금이 확인되면 예약이 최종 확정됩니다.\n✔ 정확한 주소와 동·호수를 문자로 남겨주세요.\n✔ 현관 비밀번호가 있다면 함께 알려주시면 편리합니다.\n\n깨끗한 공간으로 보답하겠습니다. 감사합니다!\n📞 064-763-4545` },
   { id:'t_account', icon:'🏦', name:'계좌 안내', type:'기타', title:'', sign:false, useCommon:false, imgs:[],
-    body:`[링크클린] 입금 계좌 안내\n토스뱅크 1000-1626-3066\n예금주 링크클린` },
+    body:`[링크클린] 입금 계좌 안내\n토스뱅크 1000-1626-3066\n예금주 한승우(링크클린)` },
 ];
 const TYPES = ['수신','발신','부재중','기타'];
 const TYPE_COLOR = { '수신':'text-brand-700 bg-brand-50', '발신':'text-emerald-700 bg-emerald-50', '부재중':'text-red-600 bg-red-50', '기타':'text-slate-600 bg-slate-100' };
@@ -301,7 +301,7 @@ const PERIODS = [ ['always','매번',0], ['1d','1일',864e5], ['1w','1주',7*864
 const defaults = () => ({
   templates: DEFAULT_TEMPLATES(),
   selectedId: 't_in',
-  account: { bank:'토스뱅크', num:'1000-1626-3066', holder:'링크클린', phone:'050-6520-0440' },
+  account: { bank:'토스뱅크', num:'1000-1626-3066', holder:'한승우(링크클린)', phone:'064-763-4545' },
   sign: { phone:'064-763-4545', kakao:'https://pf.kakao.com/_xfxdrxmM', home:'www.linkclean.co.kr', mag:'', usePhone:true, useKakao:true, useHome:true, useMag:false },
   titleOn: false,
   commonImgs: [],
@@ -361,7 +361,7 @@ async function loadImgs() {
   } catch (e) {}
 }
 // 기본 홍보 사진 넣기 (버전이 오르면 한 번만 다시 적용)
-const SEED_V = 9;
+const SEED_V = 10;
 const COMMON_DEFAULT = ['img_thanks','img_services','img_waste'];
 const PROMO = { img_thanks:'promo/thanks.jpg', img_services:'promo/services.jpg', img_move:'promo/move.jpg', img_waste:'promo/waste.jpg' };
 const PROMO_MAP = { t_in:['img_thanks','img_services'], t_out:['img_thanks','img_services'], t_miss:['img_services'], t_move:['img_move'], t_waste:['img_waste'] };
@@ -404,6 +404,13 @@ async function seedPromo() {
     }
     // v8: 예금주를 링크클린으로
     if ((S.seedV || 0) < 8) S.templates.forEach(t => { t.body = t.body.replace(/예금주 : 한승우/g, '예금주 : 링크클린').replace(/예금주 한승우/g, '예금주 링크클린').replace(/3066 \(한승우\)/g, '3066 (링크클린)'); });
+    // v10: 예금주 '한승우(링크클린)'
+    if ((S.seedV || 0) < 10) {
+      S.account = Object.assign({}, S.account || {});
+      if (!S.account.holder || S.account.holder === '링크클린' || S.account.holder === '한승우') S.account.holder = '한승우(링크클린)';
+      if (S.account.phone === '050-6520-0440') S.account.phone = '064-763-4545';
+      S.templates.forEach(t => { t.body = t.body.replace(/예금주( ?: ?| )(한승우|링크클린)(?!\()/g, '예금주$1한승우(링크클린)').replace(/3066 \((한승우|링크클린)\)/g, '3066 / 예금주 한승우(링크클린)'); });
+    }
     S.seedV = SEED_V; save(); cleanupImgs();
   } catch (e) {}
 }
@@ -627,16 +634,15 @@ async function drawReservationCard() {
     y += 108;
   });
   x.fillStyle = '#fffbeb'; rr(60, 1140, 1020, 1290, 32); x.fill(); x.strokeStyle = '#fcd34d'; x.lineWidth = 4; x.stroke();
-  x.textAlign = 'left'; x.fillStyle = '#92400e'; x.font = F(34); x.fillText('계약금 입금 계좌', 110, 1198);
+  x.textAlign = 'left'; x.fillStyle = '#92400e'; x.font = F(34); x.fillText(`계약금 입금 계좌 · 예금주 ${ACC().holder}`, 110, 1198);
   x.fillStyle = '#0f172a'; x.font = F(46); x.fillText(`${ACC().bank} ${ACC().num}`, 110, 1258);
-  x.textAlign = 'right'; x.fillStyle = '#475569'; x.font = F(36); x.fillText(`예금주 ${ACC().holder}`, 970, 1258);
   x.textAlign = 'center'; x.fillStyle = '#334155'; x.font = F(34); x.fillText('입금 확인 후 예약이 확정됩니다', 540, 1345);
   x.fillStyle = '#64748b'; x.font = F(30); x.fillText('정확한 주소(동·호수)를 문자로 남겨주세요' + (ACC().phone ? ' · ' + ACC().phone : ''), 540, 1400);
   return new Promise((res, rej) => c.toBlob(b => b ? res(b) : rej(), 'image/png'));
 }
 const isAccountTpl = t => t && t.id === 't_account';
 let _acct = { blob: null, url: '' };
-const ACC = () => Object.assign({ bank:'토스뱅크', num:'1000-1626-3066', holder:'링크클린', phone:'050-6520-0440' }, S.account || {});
+const ACC = () => Object.assign({ bank:'토스뱅크', num:'1000-1626-3066', holder:'한승우(링크클린)', phone:'064-763-4545' }, S.account || {});
 async function drawAccountCard() {
   const W = 1080, H = 1080, c = document.createElement('canvas'); c.width = W; c.height = H;
   const x = c.getContext('2d'), a = ACC();
