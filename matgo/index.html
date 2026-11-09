@@ -327,7 +327,7 @@ small.zero,.seg small.mn.zero{color:#ff8a80!important}
 
 <script>
 'use strict';
-const VER='v18';
+const VER='v19';
 const $=s=>document.querySelector(s);
 const sleep=ms=>new Promise(r=>setTimeout(r,ms));
 const rnd=n=>Math.floor(Math.random()*n);
@@ -347,7 +347,9 @@ function loadDB(){
   DB.cfg=Object.assign({},CFG_DEF,DB.cfg||{});DB.money=DB.money||{};
   if(DB.cfg.sv!==SEASON_V){DB.cfg.start=30000;DB.money={}}
   // 예전 기본 프로필(아빠·엄마)은 기록이 없으면 정리
-  DB.players=DB.players.filter(p=>!((p.id==='p1'||p.id==='p2')&&!(DB.stats[p.id]&&DB.stats[p.id].g)));
+  // 예전 기본 프로필(아빠·엄마)은 완전히 정리
+  const OLD=['p1','p2'];DB.players=DB.players.filter(p=>!OLD.includes(p.id));OLD.forEach(id=>{delete DB.money[id];delete DB.stats[id]});
+  if(OLD.includes(DB.cur)){DB.cur='';DB.meLocked=false}
   if(!allPlayers().find(p=>p.id===DB.cur)){
     // 링크 더비에서 고른 '나'가 있으면 그대로 사용
     let me='link';try{const nm=JSON.parse(localStorage.getItem('sd_me')||'null');const o=OPP.find(x=>x.real===nm);if(o)me=o.id}catch(e){}
@@ -373,7 +375,7 @@ const moneyOf=id=>DB.money[id]!=null?DB.money[id]:DB.cfg.start;
 async function syncDown(){
   const [c,m]=await Promise.all([LG.req('matgo/cfg'),LG.req('matgo/money')]);if(!c&&!m)return false;
   if(c&&c.start)DB.cfg=Object.assign({},CFG_DEF,c);
-  if(m)Object.assign(DB.money,m);
+  if(m){['p1','p2'].forEach(id=>{if(m[id]!=null){delete m[id];LG.req('matgo/money/'+id,'DELETE')}});Object.assign(DB.money,m)}
   if((c?c.sv:0)!==SEASON_V){   // 새 시즌: 모두 3만원으로 시작
     DB.cfg=Object.assign({},CFG_DEF,c&&c.start?c:{},{start:30000,sv:SEASON_V});
     const nm={};allPlayers().forEach(p=>nm[p.id]=30000);DB.money=nm;
