@@ -244,6 +244,17 @@ small.zero,.seg small.mn.zero{color:#ff8a80!important}
 .boss small{display:block;font-size:11px;opacity:.85;margin-top:2px}
 .boss .x2{display:inline-block;margin-top:5px;font-size:15px;font-weight:900;color:#3a1500;background:linear-gradient(90deg,#ffe08a,#f5c24a);border-radius:10px;padding:3px 10px;box-shadow:0 2px 0 #8a5a00}
 .homebtns .ev3{display:flex;flex-direction:column;align-items:center;gap:2px;font-size:14px;background:linear-gradient(90deg,#7b1fa2,#c2185b);border-color:#f5c24a66}
+.top3{margin-bottom:6px;cursor:pointer}
+.t3h{font-size:12px;font-weight:900;color:#f5c24a;display:flex;justify-content:space-between;margin:0 2px 6px}.t3h small{color:#bfe5df;font-weight:700}
+.t3r{display:grid;grid-template-columns:1fr 1.15fr 1fr;gap:6px;align-items:end}
+.t3{position:relative;text-align:center;background:#0006;border:1.5px solid #ffffff22;border-radius:14px;padding:6px 4px 7px}
+.t3 .md{position:absolute;left:4px;top:2px;font-size:16px}
+.t3 .av{display:block;width:40px;height:40px;margin:0 auto;font-size:26px}.t3 .av svg{width:40px;height:40px}
+.t3 b{display:block;font-size:12px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.t3 small{font-size:11px;color:#ffe08a;font-weight:800}
+.t3.r1{order:2;border-color:#f5c24a;background:linear-gradient(180deg,#5a4100aa,#0006);padding-top:10px}.t3.r1 .av{width:50px;height:50px}.t3.r1 .av svg{width:50px;height:50px}
+.t3.r2{order:1}.t3.r3{order:3}
+.lbl.fight{font-size:15px;color:#ffd0d0;margin-top:14px}
+.homebtns.sub{grid-template-columns:1fr 1fr;margin-top:-18px}
 </style>
 </head>
 <body>
@@ -272,9 +283,10 @@ small.zero,.seg small.mn.zero{color:#ff8a80!important}
    <div class="title"><span class="t1">길쭈기</span><span class="t2">맞<span>고</span></span></div>
   </div>
   <div class="panel">
+   <div class="top3" id="top3"></div>
    <div class="lbl">🙋 나</div>
    <button class="mebtn" id="meBtn"></button>
-   <div class="lbl">🎯 누구를 공격할까? <small style="opacity:.6;font-weight:600">(돈 많은 순)</small></div>
+   <div class="lbl fight">⚔️ 싸울 상대를 고르시오 <small style="opacity:.6;font-weight:600">(돈 많은 순)</small></div>
    <button class="boss" id="bossBtn" data-op="tutu"></button>
    <div class="seg opp" id="lvSeg"></div>
    <div class="seg" id="tgSeg" style="display:none"></div>
@@ -282,12 +294,13 @@ small.zero,.seg small.mn.zero{color:#ff8a80!important}
    <button class="start" id="startBtn">게임 시작 ▶</button>
   </div>
   <div class="homebtns">
-   <button id="rankBtn">🏆 가족 랭킹</button>
+   <button id="coffeeBtn" class="ev1">☕ 커피 이벤트<small>30만원 = 커피 1잔</small></button>
+   <button id="spinBtn" class="ev3">🎡 행운 룰렛<small>하루 1번 최대 2만원</small></button>
+   <button id="cmtBtn" class="ev2">📝 댓글 이벤트<small>인증하면 +3만원</small></button>
+  </div>
+  <div class="homebtns sub">
    <button id="ruleBtn">📖 게임 규칙</button>
    <button id="setBtn">⚙️ 설정</button>
-   <button id="coffeeBtn" class="ev1">☕ 커피 이벤트<small>30만원 = 커피 1잔</small></button>
-   <button id="spinBtn" class="ev3">🎡 행운 룰렛<small>하루 1번 최대 1만원</small></button>
-   <button id="cmtBtn" class="ev2">📝 댓글 이벤트<small>인증하면 +3만원</small></button>
   </div>
   <div class="ver home" id="ver1"></div>
  </section>
@@ -307,7 +320,7 @@ small.zero,.seg small.mn.zero{color:#ff8a80!important}
 
 <script>
 'use strict';
-const VER='v14';
+const VER='v15';
 const $=s=>document.querySelector(s);
 const sleep=ms=>new Promise(r=>setTimeout(r,ms));
 const rnd=n=>Math.floor(Math.random()*n);
@@ -1188,6 +1201,7 @@ function goHome(){if(S)S.gid=-1;S=null;BGM.stop();show('home');renderHome()}
 function moneyRank(){return allPlayers().slice().sort((a,b)=>moneyOf(b.id)-moneyOf(a.id))}
 function renderHome(){
   const me=curP(),rk=moneyRank(),myRank=rk.findIndex(p=>p.id===me.id)+1;
+  $('#top3').innerHTML=`<div class="t3h">🏆 돈 랭킹 TOP 3 <small>전체 보기 ›</small></div><div class="t3r">${rk.slice(0,3).map((p,i)=>`<div class="t3 r${i+1}"><span class="md">${['🥇','🥈','🥉'][i]}</span><span class="av">${avaHTML(p)}</span><b>${esc(pName(p))}${p.id===me.id?' (나)':''}</b><small>${won(moneyOf(p.id))}</small></div>`).join('')}</div>`;
   $('#meBtn').innerHTML=`<span class="mm">${avaHTML(me)}</span><span><b>${esc(me.roster?me.name:pName(me))}</b>${me.roster?` <small style="display:inline">${me.nick}</small>`:''}<small>💰 ${won(moneyOf(me.id))}</small></span><span class="rk2">${['🥇','🥈','🥉'][myRank-1]||''} ${myRank}위 / ${rk.length}명<i>${DB.meLocked?'순위 보기 ▾':'나 고르기 ▾'}</i></span>`;
   if(DB.set.opp===DB.cur)DB.set.opp=OPP.find(o=>o.id!==DB.cur).id;
   const opps=OPP.filter(o=>o.id!==DB.cur).sort((a,b)=>moneyOf(b.id)-moneyOf(a.id));
@@ -1241,8 +1255,8 @@ async function openCoffee(){
 async function showCoupon(c){const d=new Date(c.ts);
   await modal(`<div class="coupon"><div style="font-size:11px;letter-spacing:2px;opacity:.8">길쭈기 맞고 EVENT</div><div style="font-size:26px;font-weight:900">커피 교환권</div><div style="font-size:40px;margin-top:6px">${'☕'.repeat(c.cups)}</div><div style="font-weight:900;margin-top:4px">스타벅스 원하는 커피 ${c.cups}잔</div><div class="code">${c.code}</div><div style="display:flex;justify-content:space-between;font-size:12px;margin-top:8px"><span>이름 <b>${esc(c.name)}</b></span><span>${d.getMonth()+1}/${d.getDate()} ${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}</span></div></div><p style="margin-top:8px;font-size:12px">📸 이 화면을 캡처해서 관리인(한승우)에게 보내 주세요!</p>`,[{t:'닫기',v:1}]);}
 /* ---------- 🎡 행운 룰렛 (하루 1번) ---------- */
-const WHEEL=[0,1000,0,3000,1000,0,5000,10000];
-const WCOL=['#6b6b7a','#ffcf5a','#6b6b7a','#4fc3a1','#ffcf5a','#6b6b7a','#ff8a3d','#e53950'];
+const WHEEL=[0,1000,3000,0,5000,1000,10000,20000];
+const WCOL=['#6b6b7a','#ffcf5a','#4fc3a1','#6b6b7a','#ff8a3d','#ffcf5a','#7b1fa2','#e53950'];
 const wlab=v=>v===0?'꽝':v>=10000?v/10000+'만':v/1000+'천';
 const today=()=>{const d=new Date();return d.getFullYear()+'-'+(d.getMonth()+1)+'-'+d.getDate()};
 function wheelSVG(){const n=WHEEL.length,r=100;let g='';
@@ -1331,7 +1345,7 @@ const RULES=`<div class="rules">
 <h3>💥 특수 상황</h3><b>쪽</b> 낸 패를 뒤집은 패로 바로 먹기 → 피 1장 뺏기<br><b>뻑</b> 낸 패로 먹었는데 뒤집은 패도 같은 월 → 3장이 바닥에 묶여요. 나중에 먹으면 피 1장(자기 뻑이면 2장)<br><b>따닥</b> 바닥 2장 + 낸 패 + 뒤집은 패 모두 같은 월 → 4장 다 먹고 피 1장<br><b>싹쓸</b> 바닥을 다 비우면 피 1장<br><b>폭탄</b> 같은 월 3장을 들고 바닥에 1장 → 한 번에 4장 먹고 피 1장, ×2, 빈패 2장 받음<br><b>흔들기</b> 같은 월 3장을 들고 바닥에 없을 때 선언 → ×2<br><b>3뻑</b> 한 판에 뻑 3번이면 즉시 승리 · <b>총통</b> 처음에 같은 월 4장이면 10점 승리<br><b>링크의 보너스 패</b> (최대 5장, 관리인이 장수 결정) 내면 바로 먹고 한 장 더 받아요 — 쓰리피 · 쌍피 · 피 1장 뺏기 · 피 2장 뺏기 · 행운 룰렛<br><b>미션</b> 판마다 정해지는 미션패 3장을 모두 먹고 나면 ×2 (내가 먹으면 ○, 상대가 먹으면 ✕)
 <h3>🎨 그림</h3>화투 그림은 무료 공개 화투 일러스트를 사용했어요.
 <h3>🎲 특수 이벤트 (관리인이 켜고 끔)</h3><b>첫뻑</b> 첫 턴에 뻑 → 상대가 5점어치 즉시 지급 · <b>연뻑</b> 두 턴 연속 뻑 → 10점어치<br><b>첫따닥</b> 5점어치 · <b>첫쪽</b> 3점어치 · <b>막쓸</b> 마지막 패로 싹쓸 → 피 1장 + 3점어치<br><b>보너스 대박</b> 보너스패 3장 이상 먹으면 5점어치 · <b>쓰리고 축하금</b> 3점어치<br><b>🍀 링크의 행운 패</b> 먹으면 룰렛! (피 2장 뺏기 / 이기면 ×2 / 5점어치 / 피 1장+3점어치)<br><b>🎰 잭팟 판</b> 가끔(15%) 판 전체 점수 ×2 · <b>완봉승</b> 상대 0점이면 +3점 · <b>초스피드 승</b> 각자 4턴 안에 나면 +2점<br><small>'점어치'는 점당 금액으로 바로 바꿔 판 끝에 함께 정산돼요 (나가리여도 정산)</small>
-<h3>☕ 커피 · 📝 댓글 이벤트</h3>돈 30만원을 모으면 스타벅스 커피 1잔, 20만원 더 모으면 1잔 더 (1인 최대 2잔). 🎡 행운 룰렛은 하루 1번 (꽝·1천·3천·5천·1만원)! 링크클린 블로그·앱에 댓글 달고 캡처를 올리면 관리인 확인 후 +3만원!
+<h3>☕ 커피 · 📝 댓글 이벤트</h3>돈 30만원을 모으면 스타벅스 커피 1잔, 20만원 더 모으면 1잔 더 (1인 최대 2잔). 🎡 행운 룰렛은 하루 1번 (꽝·1천·3천·5천·1만·2만원)! 링크클린 블로그·앱에 댓글 달고 캡처를 올리면 관리인 확인 후 +3만원!
 <h3>🐸 투투개구리</h3>가장 센 보스 상대예요. 이기면 딴 돈의 <b>2배</b>를 받아요 (지면 보통처럼 내요).
 <h3>💰 돈</h3>모두 같은 돈으로 시작해요. 이기면 <b>점수 × 점당 금액</b>만큼 상대 지갑에서 가져와요. 상대 돈이 모자라면 <b>올인</b>! 지갑이 비면 관리인이 충전해 줘요. 댓글 이벤트로 직접 채울 수도 있어요.
 <h3>💸 배수</h3><b>피박</b> 피로 났는데 상대 피 5장 이하 ×2 · <b>광박</b> 광으로 났는데 상대 광 0장 ×2 · <b>멍따</b> 열끗 7장 이상 ×2 · <b>고박</b> 고 했는데 상대가 나면 ×2 · <b>나가리</b> 아무도 못 나면 다음 판 ×2
@@ -1413,6 +1427,7 @@ $('#game').addEventListener('click',e=>{
 });
 let adminTaps=0,adminT=0;
 $('#home').addEventListener('click',async e=>{
+  if(e.target.closest('#top3')){SFX.init();SFX.select();return pickMe()}
   if(e.target.closest('#meBtn')){SFX.init();SFX.select();return pickMe()}
   if(e.target.closest('#coffeeBtn'))return openCoffee();
   if(e.target.closest('#cmtBtn'))return openComment();
