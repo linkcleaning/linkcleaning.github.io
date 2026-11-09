@@ -343,6 +343,22 @@ small.zero,.seg small.mn.zero{color:#ff8a80!important}
 .evlbl{color:#e9dcc0}
 .corner{background:#3a2212cc}
 #home .ver{color:#e9dcc0;opacity:.45}
+
+/* v45 홈 구역 나누기 */
+.shd{width:100%;max-width:400px;display:flex;align-items:center;gap:8px;margin:26px 0 9px;padding:0 2px}
+.shd span{font-size:17px;font-weight:900;color:#fff;letter-spacing:.3px;padding:5px 14px 5px 11px;border-radius:0 20px 20px 0;border-left:5px solid var(--sc);background:linear-gradient(90deg,color-mix(in srgb,var(--sc) 40%,transparent),transparent);text-shadow:0 2px 4px #000a}
+.shd small{margin-left:auto;font-size:12px;font-weight:800;color:var(--sc);opacity:.95}
+.shd:after{content:'';flex:1;height:1px;background:linear-gradient(90deg,var(--sc),transparent);opacity:.5;order:1}
+.shd small{order:2}
+.shd.gold{--sc:#f5c24a}.shd.teal{--sc:#4fd1c5}.shd.red{--sc:#ff6b6b}.shd.purple{--sc:#c39bff}.shd.orange{--sc:#ffa94d}
+.hero+.shd{margin-top:6px}
+.panel.sec{border:2px solid color-mix(in srgb,var(--sc) 55%,transparent);padding:12px}
+.s-rank{--sc:#f5c24a}.s-me{--sc:#4fd1c5}.s-fight{--sc:#ff6b6b;background:linear-gradient(180deg,#3b1418ee,#1f0c0eee)!important}
+.s-me .shopbig{margin-top:10px}
+.s-fight .toprow{margin-top:0}
+.s-fight .start{margin-top:14px}
+.bestbox{margin-top:0!important}
+.homebtns{margin-top:0!important}
 </style>
 </head>
 <body>
@@ -372,20 +388,26 @@ small.zero,.seg small.mn.zero{color:#ff8a80!important}
    <div class="hsay" id="homeSay">오늘 바닥 패, 내가 싹 청소해 줄게~ 🧹</div>
    <img class="htitle2" src="title6.webp" alt="花鬪 화투">
   </div>
-  <div class="panel">
+  <div class="shd gold"><span>🏆 돈 랭킹</span></div>
+  <div class="panel sec s-rank">
    <div class="top3" id="top3"></div>
-   <div class="lbl">🙋 나</div>
+  </div>
+  <div class="shd teal"><span>🙋 내 지갑</span></div>
+  <div class="panel sec s-me">
    <button class="mebtn" id="meBtn"></button>
    <button class="shopbig" id="shopBig"></button>
-   <div class="lbl fight">⚔️ 싸울 상대를 고르시오 <small style="opacity:.6;font-weight:600">(돈 많은 순)</small></div>
+  </div>
+  <div class="shd red"><span>⚔️ 싸울 상대를 고르시오</span><small>돈 많은 순</small></div>
+  <div class="panel sec s-fight">
    <div class="toprow"><button class="boss" id="bossBtn" data-op="tutu"></button><div class="seg opp rich" id="richBox"></div></div>
    <div class="seg opp three" id="lvSeg"></div>
    <div class="seg" id="tgSeg" style="display:none"></div>
    <div class="nagari-note" id="ngNote"></div>
    <button class="start" id="startBtn">게임 시작 ▶</button>
   </div>
+  <div class="shd purple"><span>🏅 이번 주 · 이번 달 최고 점수</span></div>
   <div class="bestbox" id="bestBox"></div>
-  <div class="evlbl">🎉 이벤트</div>
+  <div class="shd orange"><span>🎉 이벤트</span><small>매일 돈 버는 곳</small></div>
   <div class="homebtns">
    <button id="attBtn" class="ev4">📅 출석 체크<small id="attSub">매일 +1천원</small></button>
    <button id="questBtn" class="ev5">🎯 오늘의 미션<small id="qSub">3개 깨면 보상</small></button>
@@ -412,7 +434,7 @@ small.zero,.seg small.mn.zero{color:#ff8a80!important}
 
 <script>
 'use strict';
-const VER='v44';
+const VER='v45';
 const $=s=>document.querySelector(s);
 const sleep=ms=>new Promise(r=>setTimeout(r,ms));
 const rnd=n=>Math.floor(Math.random()*n);
@@ -1376,7 +1398,7 @@ function goHome(){if(window._pendingUpd){location.replace(location.pathname+'?v=
 function moneyRank(){return allPlayers().slice().sort((a,b)=>moneyOf(b.id)-moneyOf(a.id))}
 function renderHome(){
   const me=curP(),rk=moneyRank(),myRank=rk.findIndex(p=>p.id===me.id)+1;
-  $('#top3').innerHTML=`<div class="t3h">🏆 돈 랭킹 TOP 3 <small>전체 보기 ›</small></div><div class="t3r">${rk.slice(0,3).map((p,i)=>`<div class="t3 r${i+1}"><span class="md">${['🥇','🥈','🥉'][i]}</span><span class="av">${avaHTML(p)}</span><b>${esc(pName(p))}${p.id===me.id?' (나)':''}</b><small>${won(moneyOf(p.id))}</small></div>`).join('')}</div>`;
+  $('#top3').innerHTML=`<div class="t3h"><span>TOP 3</span><small>전체 보기 ›</small></div><div class="t3r">${rk.slice(0,3).map((p,i)=>`<div class="t3 r${i+1}"><span class="md">${['🥇','🥈','🥉'][i]}</span><span class="av">${avaHTML(p)}</span><b>${esc(pName(p))}${p.id===me.id?' (나)':''}</b><small>${won(moneyOf(p.id))}</small></div>`).join('')}</div>`;
   $('#meBtn').innerHTML=`<span class="mm">${avaHTML(me)}</span><span class="mecol"><span class="merow"><b>${esc(me.roster?me.name:pName(me))}</b><span class="mymoney ${moneyOf(me.id)<DB.cfg.start?'down':'up'}">💰${won(moneyOf(me.id))}</span></span>${me.roster?`<small>${me.nick} · 시작 ${won(DB.cfg.start)} 대비 ${moneyOf(me.id)>=DB.cfg.start?'+':''}${won(moneyOf(me.id)-DB.cfg.start)}</small>`:''}</span><span class="rk2">${['🥇','🥈','🥉'][myRank-1]||''} ${myRank}위 / ${rk.length}명<i>${DB.meLocked?'순위 보기 ▾':'나 고르기 ▾'}</i></span>`;
   {const v=vitOf(me.id);$('#shopBig').innerHTML=`<span class="sbi">🏪</span><span class="sbt"><b>링크 편의점 · 선수 업그레이드</b><small>${v<30?'⚠️ 활력이 낮아요! 드링크 한 병 어때요?':'활력이 높을수록 좋은 패가 잘 와요'}</small><span class="vit" style="width:100%"><i style="width:${v}%"></i><em>⚡ 활력 ${v}%${buffTxt(me.id)}</em></span></span><span class="sbgo">GO ›</span>`;$('#shopBig').classList.toggle('low',v<30)}
   if(DB.set.opp===DB.cur)DB.set.opp=OPP.find(o=>o.id!==DB.cur).id;
