@@ -327,7 +327,7 @@ small.zero,.seg small.mn.zero{color:#ff8a80!important}
 
 <script>
 'use strict';
-const VER='v17';
+const VER='v18';
 const $=s=>document.querySelector(s);
 const sleep=ms=>new Promise(r=>setTimeout(r,ms));
 const rnd=n=>Math.floor(Math.random()*n);
@@ -604,7 +604,7 @@ const oppSVG=(o,mood)=>mascotSVG(o.acc,mood,'gO_'+o.id);
 ===================================================== */
 const SFX={ctx:null,master:null,nb:null,
  init(){
-  if(!this.ctx){const AC=window.AudioContext||window.webkitAudioContext;if(!AC)return;this.ctx=new AC();this.master=this.ctx.createGain();this.master.gain.value=.7;this.master.connect(this.ctx.destination);
+  if(!this.ctx){const AC=window.AudioContext||window.webkitAudioContext;if(!AC)return;this.ctx=new AC();this.ctx.onstatechange=()=>{if(this.ctx.state!=='running'&&!document.hidden)setTimeout(recoverAudio,250)};this.master=this.ctx.createGain();this.master.gain.value=.7;this.master.connect(this.ctx.destination);
    const n=this.ctx.sampleRate;this.nb=this.ctx.createBuffer(1,n,n);const d=this.nb.getChannelData(0);for(let i=0;i<n;i++)d[i]=Math.random()*2-1;}
   if(this.ctx.state!=='running')this.ctx.resume().catch(()=>{});
  },
@@ -639,8 +639,18 @@ function pickVoice(){try{const vs=speechSynthesis.getVoices();koVoice=vs.find(v=
 if('speechSynthesis' in window){pickVoice();speechSynthesis.onvoiceschanged=pickVoice}
 function speak(t,pitch=1.3,rate=1.15){
   if(!DB.set.sound||!DB.set.voice||!('speechSynthesis' in window))return;
-  try{speechSynthesis.cancel();const u=new SpeechSynthesisUtterance(t);u.lang='ko-KR';if(koVoice)u.voice=koVoice;u.pitch=pitch;u.rate=rate;u.volume=1;speechSynthesis.speak(u)}catch(e){}
+  try{if(speechSynthesis.pending)return;   // 앞 멘트를 끊지 않고, 밀린 게 있으면 건너뜀
+    const u=new SpeechSynthesisUtterance(t);u.lang='ko-KR';if(koVoice)u.voice=koVoice;u.pitch=pitch;u.rate=rate;u.volume=1;
+    u.onend=u.onerror=()=>setTimeout(recoverAudio,60);speechSynthesis.speak(u)}catch(e){}
 }
+/* 아이폰은 음성·전화·알림 뒤에 게임 소리(Web Audio)가 멈추는 일이 있어 자동으로 다시 살림 */
+function recoverAudio(){
+  if(document.hidden)return;
+  try{if(navigator.audioSession&&navigator.audioSession.type!=='playback')navigator.audioSession.type='playback'}catch(e){}
+  if(SFX.ctx&&SFX.ctx.state!=='running')SFX.ctx.resume().catch(()=>{});
+  if(silentEl&&silentEl.paused)silentEl.play().catch(()=>{});
+}
+setInterval(recoverAudio,1500);
 let voiceUnlocked=false;
 function unlockAudio(){
   if(!voiceUnlocked&&'speechSynthesis' in window){voiceUnlocked=true;try{const u=new SpeechSynthesisUtterance(' ');u.volume=0;speechSynthesis.speak(u)}catch(e){}}
@@ -1553,7 +1563,8 @@ function setupPWA(){
 loadDB();
 $('#ver1').textContent=VER;$('#ver2').textContent=VER;
 fanArt();renderHome();setupPWA();renderBestBox();syncDown().then(async ok=>{if(ok){renderHome();if(DB.meLocked)await checkAwards();renderBestBox()}if(!DB.meLocked)pickMe(true)});
-document.addEventListener('visibilitychange',()=>{if(!document.hidden&&$('#home').classList.contains('on'))syncDown().then(ok=>{if(ok)renderHome()})});
+document.addEventListener('visibilitychange',()=>{if(!document.hidden&&$('#home').classList.contains('on'))syncDown().then(ok=>{if(ok){renderHome();renderBestBox()}})});
+setInterval(()=>{if(document.hidden||!$('#home').classList.contains('on')||document.querySelector('.mbg'))return;syncDown().then(ok=>{if(ok){renderHome();renderBestBox()}})},20000);
 document.addEventListener('gesturestart',e=>e.preventDefault());
 document.addEventListener('dblclick',e=>e.preventDefault(),{passive:false});
 </script>
