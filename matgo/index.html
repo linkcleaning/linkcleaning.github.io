@@ -287,6 +287,13 @@ small.zero,.seg small.mn.zero{color:#ff8a80!important}
 .stamp small{font-size:8px;opacity:.8}.stamp.on{background:#5a1020;border:1.5px solid #ff5c8a;font-size:20px}
 .stamp:last-child{border-color:#f5c24a}
 .qbar{height:6px;border-radius:3px;background:#ffffff18;margin:4px 0 2px;overflow:hidden}.qbar i{display:block;height:100%;background:linear-gradient(90deg,#8cc63f,#f5c24a)}
+.toprow{display:grid;grid-template-columns:2fr 1fr;gap:6px;margin-bottom:6px;align-items:stretch}
+.toprow .boss{margin:0;padding:8px 8px;gap:6px}
+.toprow .boss .bm,.toprow .boss .bm svg{width:66px;height:66px}
+.toprow .boss b{font-size:15px;white-space:nowrap}.toprow .boss b em{display:none}
+.toprow .boss small{font-size:10px}.toprow .boss .x2{font-size:12px;padding:2px 7px;margin-top:3px}
+.seg.opp.rich{grid-template-columns:1fr;height:100%}.seg.opp.rich button{height:100%;justify-content:center;padding-top:14px}
+.seg.opp.three{grid-template-columns:repeat(3,1fr)}
 </style>
 </head>
 <body>
@@ -321,8 +328,8 @@ small.zero,.seg small.mn.zero{color:#ff8a80!important}
    <div class="lbl">🙋 나</div>
    <button class="mebtn" id="meBtn"></button>
    <div class="lbl fight">⚔️ 싸울 상대를 고르시오 <small style="opacity:.6;font-weight:600">(돈 많은 순)</small></div>
-   <button class="boss" id="bossBtn" data-op="tutu"></button>
-   <div class="seg opp" id="lvSeg"></div>
+   <div class="toprow"><button class="boss" id="bossBtn" data-op="tutu"></button><div class="seg opp rich" id="richBox"></div></div>
+   <div class="seg opp three" id="lvSeg"></div>
    <div class="seg" id="tgSeg" style="display:none"></div>
    <div class="nagari-note" id="ngNote"></div>
    <button class="start" id="startBtn">게임 시작 ▶</button>
@@ -355,7 +362,7 @@ small.zero,.seg small.mn.zero{color:#ff8a80!important}
 
 <script>
 'use strict';
-const VER='v25';
+const VER='v27';
 const $=s=>document.querySelector(s);
 const sleep=ms=>new Promise(r=>setTimeout(r,ms));
 const rnd=n=>Math.floor(Math.random()*n);
@@ -627,7 +634,7 @@ const BOSS={id:'tutu',nick:'투투개구리',real:'보스',lv:2,boss:true,acc:'t
 const oppOf=id=>id==='tutu'?BOSS:(OPP.find(o=>o.id===id)||OPP[0]);
 const isBoss=id=>id==='tutu';
 // 투투 배수별 난이도: 2배 쉬움 · 3배 강함 · 4배 더 강함 · 5배 최강
-const TUTU={2:{lv:0,luck:0,st:'★☆☆',tx:'할 만한 상대'},3:{lv:2,luck:.3,st:'★★★',tx:'강력한 상대 · 뒤집기 운 30%'},4:{lv:2,luck:.45,st:'★★★★',tx:'무서운 상대 · 뒤집기 운 45%'},5:{lv:2,luck:.6,st:'★★★★★',tx:'최강 보스 · 뒤집기 운 60%'}};
+const TUTU={2:{lv:0,luck:0,st:'★☆☆',tx:'할 만한 상대'},3:{lv:2,luck:.3,st:'★★★',tx:'뒤집기 운 30%'},4:{lv:2,luck:.45,st:'★★★★',tx:'뒤집기 운 45%'},5:{lv:2,luck:.6,st:'★★★★★',tx:'최강 · 운 60%'}};
 const tutuX=()=>Math.min(5,Math.max(2,(DB.cfg&&DB.cfg.tutuX)||3));
 const tutu=()=>TUTU[tutuX()];
 const oppSVG=(o,mood)=>mascotSVG(o.acc,mood,'gO_'+o.id);
@@ -638,29 +645,39 @@ const oppSVG=(o,mood)=>mascotSVG(o.acc,mood,'gO_'+o.id);
 ===================================================== */
 const SFX={ctx:null,master:null,nb:null,
  init(){
-  if(!this.ctx){const AC=window.AudioContext||window.webkitAudioContext;if(!AC)return;this.ctx=new AC();this.ctx.onstatechange=()=>{if(this.ctx.state!=='running'&&!document.hidden)setTimeout(recoverAudio,250)};this.master=this.ctx.createGain();this.master.gain.value=.7;this.master.connect(this.ctx.destination);
+  if(!this.ctx){const AC=window.AudioContext||window.webkitAudioContext;if(!AC)return;this.ctx=new AC();this.ctx.onstatechange=()=>{if(this.ctx.state!=='running'&&!document.hidden)setTimeout(recoverAudio,250)};this.master=this.ctx.createGain();this.master.gain.value=.75;const comp=this.ctx.createDynamicsCompressor();comp.threshold.value=-16;comp.ratio.value=3;comp.attack.value=.004;comp.release.value=.2;this.master.connect(comp).connect(this.ctx.destination);const dl=this.ctx.createDelay(.5),fb=this.ctx.createGain(),lp=this.ctx.createBiquadFilter(),wet=this.ctx.createGain();dl.delayTime.value=.075;fb.gain.value=.28;lp.type='lowpass';lp.frequency.value=2200;wet.gain.value=.16;this.master.connect(dl);dl.connect(lp).connect(fb).connect(dl);lp.connect(wet).connect(comp);
    const n=this.ctx.sampleRate;this.nb=this.ctx.createBuffer(1,n,n);const d=this.nb.getChannelData(0);for(let i=0;i<n;i++)d[i]=Math.random()*2-1;}
   if(this.ctx.state!=='running')this.ctx.resume().catch(()=>{});
  },
  ok(){if(this.ctx&&this.ctx.state!=='running')this.ctx.resume().catch(()=>{});return DB.set.sound&&this.ctx&&this.ctx.state==='running'},
  tone(f,st,dur,type='sine',vol=.2,f2){if(!this.ok())return;const c=this.ctx,t=c.currentTime+st,o=c.createOscillator(),g=c.createGain();o.type=type;o.frequency.setValueAtTime(f,t);if(f2)o.frequency.exponentialRampToValueAtTime(f2,t+dur);g.gain.setValueAtTime(.0001,t);g.gain.exponentialRampToValueAtTime(vol,t+.008);g.gain.exponentialRampToValueAtTime(.0001,t+dur);o.connect(g).connect(this.master);o.start(t);o.stop(t+dur+.05)},
  noise(st,dur,vol,type,freq,q=1){if(!this.ok())return;const c=this.ctx,t=c.currentTime+st,s=c.createBufferSource(),f=c.createBiquadFilter(),g=c.createGain();s.buffer=this.nb;f.type=type;f.frequency.value=freq;f.Q.value=q;g.gain.setValueAtTime(vol,t);g.gain.exponentialRampToValueAtTime(.0001,t+dur);s.connect(f).connect(g).connect(this.master);s.start(t,Math.random()*.5);s.stop(t+dur+.02)},
- slap(p=1){this.noise(0,.09,.9*p,'bandpass',2100,.7);this.noise(0,.035,.6*p,'highpass',5200);this.tone(160,0,.13,'sine',.55*p,48)},
- capture(){this.slap(1);setTimeout(()=>this.slap(.85),75);this.tone(95,.05,.18,'sine',.4,40)},
- flip(){this.noise(0,.05,.45,'highpass',3600);this.tone(1300,0,.05,'triangle',.08,620)},
- select(){this.tone(700,0,.07,'triangle',.14,1050)},
- coin(){this.tone(1319,0,.07,'square',.07);this.tone(1760,.07,.16,'square',.07)},
- event(){[784,988,1175,1568].forEach((f,i)=>this.tone(f,i*.06,.18,'triangle',.16))},
- bonus(){[1047,1319,1568,2093].forEach((f,i)=>this.tone(f,i*.05,.14,'square',.06));this.coin()},
- pujik(){this.tone(150,0,.12,'sawtooth',.18,70);this.tone(120,.1,.18,'square',.12,55);this.noise(0,.32,.5,'lowpass',380,2);this.tone(95,.2,.25,'sawtooth',.14,40);[0,.08,.16].forEach(t=>this.tone(300+Math.random()*200,.3+t,.05,'sine',.08,140))},
- ppuk(){this.tone(240,0,.28,'sawtooth',.13,110);this.tone(170,.14,.34,'square',.09,80);this.noise(0,.2,.3,'lowpass',500)},
- bomb(){this.noise(0,.6,1,'lowpass',380);this.tone(90,0,.5,'sine',.7,30);this.noise(.02,.15,.6,'bandpass',1200)},
- shake(){for(let i=0;i<5;i++)this.noise(i*.07,.05,.5,'bandpass',2800+i*300,2)},
- go(){[523,659,784,1047].forEach((f,i)=>this.tone(f,i*.08,.22,'square',.09));this.tone(1047,.32,.35,'sawtooth',.08);this.slap(.8)},
- stop(){this.tone(880,0,.12,'square',.09);this.tone(660,.12,.3,'square',.09)},
- win(){const N=[[523,0,.15],[659,.15,.15],[784,.3,.15],[1047,.45,.3],[784,.78,.12],[1047,.9,.6]];N.forEach(([f,s,d])=>{this.tone(f,s,d,'square',.08);this.tone(f/2,s,d,'triangle',.1)});[523,659,784].forEach(f=>this.tone(f,.9,.8,'sine',.06))},
- lose(){[[523,0],[466,.22],[415,.44],[349,.66]].forEach(([f,s])=>this.tone(f,s,.32,'triangle',.14));this.tone(174,.66,.7,'sine',.12,120)},
- deal(){this.noise(0,.04,.35,'bandpass',2600,1);this.tone(900,0,.03,'triangle',.05)}
+ slap(p=1){ // 화투 '탁' — 짧은 종이·나무 타격
+  this.noise(0,.055,.85*p,'bandpass',1500,.9);this.noise(0,.018,.45*p,'highpass',4200);
+  this.tone(230,0,.07,'sine',.4*p,170);this.noise(.004,.11,.18*p,'lowpass',700,.7)},
+ capture(){this.slap(1);setTimeout(()=>this.slap(.8),70);setTimeout(()=>this.noise(0,.09,.22,'bandpass',2600,.6),140)},
+ flip(){ // 패 뒤집는 '스윽'
+  if(!this.ok())return;const c=this.ctx,t=c.currentTime,s=c.createBufferSource(),f=c.createBiquadFilter(),g=c.createGain();s.buffer=this.nb;f.type='bandpass';f.Q.value=1.2;f.frequency.setValueAtTime(5200,t);f.frequency.exponentialRampToValueAtTime(1400,t+.13);g.gain.setValueAtTime(.0001,t);g.gain.exponentialRampToValueAtTime(.32,t+.03);g.gain.exponentialRampToValueAtTime(.0001,t+.15);s.connect(f).connect(g).connect(this.master);s.start(t,Math.random()*.5);s.stop(t+.17);
+  this.noise(.12,.03,.35,'bandpass',1800,1)},
+ select(){this.noise(0,.02,.35,'bandpass',3000,1.5);this.tone(1150,0,.04,'sine',.06,1000)},
+ coin(){this.tone(1568,0,.12,'sine',.1);this.tone(2093,.06,.25,'sine',.09);this.tone(3136,.06,.18,'sine',.025)},
+ bell(f,st,d,v=.12){this.tone(f,st,d,'sine',v);this.tone(f*2.01,st,d*.6,'sine',v*.35);this.tone(f*3.02,st,d*.35,'sine',v*.12)},
+ event(){[784,988,1175].forEach((f,i)=>this.bell(f,i*.07,.45,.11))},
+ bonus(){[1047,1319,1568,2093].forEach((f,i)=>this.bell(f,i*.06,.4,.08))},
+ pujik(){ // 코믹한 '뿌직~'
+  if(!this.ok())return;const c=this.ctx,t=c.currentTime,o=c.createOscillator(),lfo=c.createOscillator(),lg=c.createGain(),f=c.createBiquadFilter(),g=c.createGain();
+  o.type='sawtooth';o.frequency.setValueAtTime(95,t);o.frequency.exponentialRampToValueAtTime(55,t+.5);lfo.frequency.setValueAtTime(28,t);lfo.frequency.linearRampToValueAtTime(12,t+.5);lg.gain.value=25;lfo.connect(lg).connect(o.frequency);
+  f.type='lowpass';f.frequency.value=520;f.Q.value=6;g.gain.setValueAtTime(.0001,t);g.gain.exponentialRampToValueAtTime(.5,t+.02);g.gain.setValueAtTime(.45,t+.3);g.gain.exponentialRampToValueAtTime(.0001,t+.55);
+  o.connect(f).connect(g).connect(this.master);o.start(t);lfo.start(t);o.stop(t+.6);lfo.stop(t+.6);this.noise(.02,.4,.12,'lowpass',300,1)},
+ ppuk(){ // '뻑' — 둔탁한 충돌 + 김빠지는 소리
+  this.noise(0,.12,.9,'lowpass',420,.8);this.tone(150,0,.18,'sine',.55,70);this.tone(520,.08,.35,'triangle',.08,180)},
+ bomb(){this.noise(0,.7,1,'lowpass',320,.7);this.tone(80,0,.6,'sine',.75,28);this.noise(.01,.12,.5,'bandpass',900,.8)},
+ shake(){for(let i=0;i<6;i++){this.noise(i*.06,.045,.38,'bandpass',1700+i*120,1.4)}},
+ go(){this.slap(.9);[523,659,784,1047].forEach((f,i)=>this.bell(f,.05+i*.075,.5,.1))},
+ stop(){this.slap(.7);this.bell(784,.04,.45,.11);this.bell(587,.16,.6,.11)},
+ win(){const N=[[523,0,.4],[659,.14,.4],[784,.28,.4],[1047,.42,.9],[784,.72,.3],[1047,.86,1.2]];N.forEach(([f,s,d])=>this.bell(f,s,d,.1));[262,330,392].forEach(f=>this.tone(f,.86,1.3,'triangle',.05))},
+ lose(){[[523,0],[466,.25],[415,.5],[349,.75]].forEach(([f,s])=>this.bell(f,s,.6,.09));this.tone(175,.75,.9,'sine',.08,130)},
+ deal(){this.noise(0,.035,.3,'bandpass',2200,1.1);this.noise(.01,.05,.12,'lowpass',900,.7)}
 };
 const vib=p=>{if(DB.set.vib&&navigator.vibrate)try{navigator.vibrate(p)}catch(e){}};
 let audioUnlocked=false,silentEl=null;
@@ -669,9 +686,9 @@ function silentWavURL(){const sr=8000,n=sr/2,buf=new ArrayBuffer(44+n*2),v=new D
   return URL.createObjectURL(new Blob([buf],{type:'audio/wav'}))}
 /* ---------- 음성 멘트 (휴대폰 내장 한국어 음성) ---------- */
 let koVoice=null;
-function pickVoice(){try{const vs=speechSynthesis.getVoices();koVoice=vs.find(v=>/ko/i.test(v.lang))||null}catch(e){}}
+function pickVoice(){try{const vs=speechSynthesis.getVoices().filter(v=>/^ko/i.test(v.lang));const rank=v=>(/premium|enhanced|고급/i.test(v.name)?4:0)+(/yuna|유나|google|heami|sora|sunhi/i.test(v.name)?2:0)+(v.localService?1:0);vs.sort((a,b)=>rank(b)-rank(a));koVoice=vs[0]||null}catch(e){}}
 if('speechSynthesis' in window){pickVoice();speechSynthesis.onvoiceschanged=pickVoice}
-function speak(t,pitch=1.3,rate=1.15){
+function speak(t,pitch=1,rate=1){pitch=1+(pitch-1)*.35;rate=1+(rate-1)*.4;
   if(!DB.set.sound||!DB.set.voice||!('speechSynthesis' in window))return;
   try{if(speechSynthesis.pending)return;   // 앞 멘트를 끊지 않고, 밀린 게 있으면 건너뜀
     const u=new SpeechSynthesisUtterance(t);u.lang='ko-KR';if(koVoice)u.voice=koVoice;u.pitch=pitch;u.rate=rate;u.volume=1;
@@ -705,14 +722,14 @@ const BGM={timer:null,step:0,next:0,g:null,
  MEL:[330,0,392,440, 392,0,330,294, 330,0,0,0, 262,294,330,0, 392,0,440,523, 440,0,392,330, 294,0,330,294, 262,0,220,0],
  BASS:[110,131,98,110],
  start(){const c=SFX.ctx;if(!DB.set.bgm||!DB.set.sound||!c||this.timer)return;
-  if(!this.g){this.g=c.createGain();this.g.connect(SFX.master)}this.g.gain.value=.16;
+  if(!this.g){this.g=c.createGain();this.g.connect(SFX.master)}this.g.gain.value=.09;
   this.next=c.currentTime+.15;this.timer=setInterval(()=>this.tick(),90)},
  stop(){clearInterval(this.timer);this.timer=null},
  tick(){const c=SFX.ctx;if(!c||c.state!=='running')return;if(this.next<c.currentTime)this.next=c.currentTime+.05;
   while(this.next<c.currentTime+.35){this.note(this.step%32,this.next);this.next+=.24;this.step++}},
- pluck(f,t,v,d){const c=SFX.ctx,o=c.createOscillator(),o2=c.createOscillator(),g=c.createGain();o.type='triangle';o2.type='sine';o.frequency.value=f;o2.frequency.value=f*2.01;
+ pluck(f,t,v,d){const c=SFX.ctx,o=c.createOscillator(),o2=c.createOscillator(),g=c.createGain();if(!this.lp){this.lp=c.createBiquadFilter();this.lp.type='lowpass';this.lp.frequency.value=1600;this.lp.connect(this.g)}o.type='triangle';o2.type='sine';o.frequency.value=f;o2.frequency.value=f*2.01;
   g.gain.setValueAtTime(.0001,t);g.gain.exponentialRampToValueAtTime(v,t+.006);g.gain.exponentialRampToValueAtTime(.0001,t+d);
-  o.connect(g);o2.connect(g);g.connect(this.g);o.start(t);o2.start(t);o.stop(t+d+.05);o2.stop(t+d+.05)},
+  o.connect(g);o2.connect(g);g.connect(this.lp);o.start(t);o2.start(t);o.stop(t+d+.05);o2.stop(t+d+.05)},
  drum(t,f,v,d,n){const c=SFX.ctx,o=c.createOscillator(),g=c.createGain();o.frequency.setValueAtTime(f,t);o.frequency.exponentialRampToValueAtTime(f*.5,t+d);g.gain.setValueAtTime(v,t);g.gain.exponentialRampToValueAtTime(.0001,t+d);o.connect(g).connect(this.g);o.start(t);o.stop(t+d+.02);
   if(n){const s=c.createBufferSource(),fl=c.createBiquadFilter(),g2=c.createGain();s.buffer=SFX.nb;fl.type='highpass';fl.frequency.value=2500;g2.gain.setValueAtTime(n,t);g2.gain.exponentialRampToValueAtTime(.0001,t+.06);s.connect(fl).connect(g2).connect(this.g);s.start(t,Math.random()*.5);s.stop(t+.08)}},
  note(i,t){const m=this.MEL[i];if(m)this.pluck(m,t,.32,.55);if(i%8===0)this.pluck(this.BASS[(i/8)%4],t,.38,1.2);
@@ -1023,9 +1040,9 @@ async function playCard(p,card,pick){
   }
   if(p===0){if(ev.includes('뻑 먹기')||ev.includes('자뻑'))qHit('ppukEat');if(ev.includes('쪽')||ev.includes('따닥'))qHit('jjok')}
   for(const e of ev){
-    if(e==='뻑'){SFX.ppuk();vib([40,40,40]);speak('뻑!',1.1,1.1);say(p===1?pickT('ppuk'):pickT('ppukMe'))}else{SFX.event();vib(25);speak({'쪽':'쪽!','따닥':'따닥!','자뻑':'자뻑이다!','뻑 먹기':'뻑 먹었다!'}[e]||e)}
+    if(e==='뻑'){SFX.ppuk();vib([40,40,40]);speak('뻑!');say(p===1?pickT('ppuk'):pickT('ppukMe'))}else{SFX.event();vib(25);speak({'쪽':'쪽!','따닥':'따닥!','자뻑':'자뻑이다!','뻑 먹기':'뻑 먹었다!'}[e]||e)}
     await banner(e+'!',e==='뻑'?'red':'gold',700);
-    if(e==='뻑'){SFX.pujik();speak('뿌지익~',0.7,0.9);vib([60,30,90]);await banner('뿌직~ 쌌다! 💩','red small',850)}
+    if(e==='뻑'){SFX.pujik();setTimeout(()=>speak('뿌직'),450);vib([60,30,90]);await banner('뿌직~ 쌌다! 💩','red small',850)}
     if(e==='뻑'){if(firstTurn)await instBonus(p,'첫뻑',5);else if(S.lastPpuk[p])await instBonus(p,'연뻑',10)}
     if(e==='따닥'&&firstTurn)await instBonus(p,'첫따닥',5);
     if(e==='쪽'&&firstTurn)await instBonus(p,'첫쪽',3);
@@ -1094,7 +1111,7 @@ async function afterTurn(p,before0,again){
       if(p===1)say(S.go[1]===1?S.opp.go:pickT('go'));else say(pickT('meGo'));
       await banner(['','원고!','투고!','쓰리고!','포고!','파이브고!'][S.go[p]]||S.go[p]+'고!','go',900);if(S.go[p]>=3){confetti();if(DB.cfg.event&&S.go[p]===3)await instBonus(p,'쓰리고 축하금',3)}render();
     }else{
-      SFX.stop();speak('스톱!',1.2,1.1);if(p===1)say(pickT('stop'));
+      SFX.stop();speak('스톱!');if(p===1)say(pickT('stop'));
       await banner('스톱!','stop',850);return endGame(p);
     }
   }
@@ -1290,7 +1307,8 @@ function renderHome(){
   if(DB.set.opp===DB.cur)DB.set.opp=OPP.find(o=>o.id!==DB.cur).id;
   const opps=OPP.filter(o=>o.id!==DB.cur).sort((a,b)=>moneyOf(b.id)-moneyOf(a.id));
   const top=opps.find(o=>moneyOf(o.id)>0);
-  $('#lvSeg').innerHTML=opps.map(o=>{const r=DB.vs[DB.cur+'|'+o.id];return `<button class="${DB.set.opp===o.id?'on':''} ${moneyOf(o.id)<=0||playsWith(o.id)>=(DB.cfg.dailyMax||3)?'broke':''}" data-op="${o.id}">${top&&o.id===top.id?'<span class="tgt">🎯 최고 부자</span>':''}<span class="mm">${oppSVG(o)}</span>${o.nick}<small>${o.real} · ${LV[o.lv].st}</small><small class="mn ${moneyOf(o.id)<=0?'zero':''}">${moneyOf(o.id)<=0?'파산':won(moneyOf(o.id))}</small>${(()=>{const n=playsWith(o.id),mx=DB.cfg.dailyMax||3;return `<small class="cnt3 ${n>=mx?'full':''}">${n>=mx?'오늘 끝':`오늘 ${n}/${mx}판`}</small>`})()}</button>`}).join('');
+  const oppBtn=o=>{const r=DB.vs[DB.cur+'|'+o.id];return `<button class="${DB.set.opp===o.id?'on':''} ${moneyOf(o.id)<=0||playsWith(o.id)>=(DB.cfg.dailyMax||3)?'broke':''}" data-op="${o.id}">${top&&o.id===top.id?'<span class="tgt">🎯 최고 부자</span>':''}<span class="mm">${oppSVG(o)}</span>${o.nick}<small>${o.real} · ${LV[o.lv].st}</small><small class="mn ${moneyOf(o.id)<=0?'zero':''}">${moneyOf(o.id)<=0?'파산':won(moneyOf(o.id))}</small>${(()=>{const n=playsWith(o.id),mx=DB.cfg.dailyMax||3;return `<small class="cnt3 ${n>=mx?'full':''}">${n>=mx?'오늘 끝':`오늘 ${n}/${mx}판`}</small>`})()}</button>`};
+  const rich=top||opps[0];$('#richBox').innerHTML=oppBtn(rich);$('#lvSeg').innerHTML=opps.filter(o=>o!==rich).map(oppBtn).join('');
   {const B=BOSS,r=DB.vs[DB.cur+'|tutu'];$('#bossBtn').className='boss'+(DB.set.opp==='tutu'?' on':'');$('#bossBtn').innerHTML=`<span class="bm">${oppSVG(B)}</span><span class="bt"><b>👹 투투개구리 <em>보스</em></b><small>${tutu().st} ${tutu().tx}</small><span class="x2">이기면 딴 돈 ×${tutuX()}!</span>${r?`<small>${r.w}승 ${r.l}패</small>`:''}</span>`}
   $('#tgSeg').innerHTML=[3,5,7].map(t=>`<button class="${DB.set.target===t?'on':''}" data-tg="${t}">${t}점<small>${t===3?'빠른 판':t===5?'적당히':'정식 맞고'}</small></button>`).join('');
   {const a=(DB.att||{})[DB.cur],ok=a&&a.last===dayKey();$('#attSub').textContent=ok?'오늘 출석 완료 ✅':'매일 +1천원 · 7일 +1만';
