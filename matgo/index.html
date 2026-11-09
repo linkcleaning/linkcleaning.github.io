@@ -254,13 +254,22 @@ small.zero,.seg small.mn.zero{color:#ff8a80!important}
 .t3.r1{order:2;border-color:#f5c24a;background:linear-gradient(180deg,#5a4100aa,#0006);padding-top:10px}.t3.r1 .av{width:50px;height:50px}.t3.r1 .av svg{width:50px;height:50px}
 .t3.r2{order:1}.t3.r3{order:3}
 .lbl.fight{font-size:15px;color:#ffd0d0;margin-top:14px}
-.homebtns.sub{grid-template-columns:1fr 1fr;margin-top:-18px}
+.homebtns.sub{grid-template-columns:1.4fr 1fr 1fr;margin-top:-18px}
 .bestbox{width:100%;max-width:400px;display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:12px;cursor:pointer}
 .bestbox:empty{display:none}
 .bb{background:linear-gradient(160deg,#3a2a00,#1a1200);border:1.5px solid #f5c24a99;border-radius:14px;padding:8px 10px;font-size:13px;line-height:1.4;box-shadow:0 4px 12px #0008}
 .bb .bt{display:block;font-size:12px;font-weight:900;color:#f5c24a}.bb .bt i{font-style:normal;font-size:10px;background:#e53935;color:#fff;border-radius:6px;padding:0 5px;margin-left:3px}
 .bb small{display:block;font-size:10px;color:#ffe08a;opacity:.9}
 .bestnote{margin-top:8px;background:#5a4100aa;border:1px solid #f5c24a;border-radius:12px;padding:8px;font-size:13px;text-align:center}
+.vit{display:block;position:relative;height:13px;border-radius:7px;background:#ffffff18;margin-top:4px;overflow:hidden;width:150px}
+.vit i{position:absolute;left:0;top:0;bottom:0;background:linear-gradient(90deg,#ffd23f,#ff8a3d,#ff3d7f);border-radius:7px}
+.vit em{position:relative;font-style:normal;font-size:9.5px;font-weight:900;padding-left:6px;line-height:13px;color:#fff;text-shadow:0 1px 2px #000}
+.vit.big{width:100%;height:20px;border-radius:10px}.vit.big em{font-size:13px;line-height:20px}
+.vitbig{background:#0005;border-radius:14px;padding:8px 10px;margin-top:8px;text-align:left}.vitbig>span{font-weight:900;font-size:13px;color:#ffe08a}.vitbig small{display:block;font-size:11px;opacity:.8;margin-top:4px}
+.shophead{display:flex;align-items:center;gap:10px;background:linear-gradient(90deg,#00704a,#0c5b58);border-radius:16px;padding:8px 10px;text-align:left}
+.shophead img{width:56px;height:56px;border-radius:50%;background:#fff;flex:none}.shophead b{font-size:19px;display:block}.shophead small{font-size:12px;opacity:.9}
+.homebtns .shop{display:flex;flex-direction:column;align-items:center;gap:1px;background:linear-gradient(90deg,#0b8a5c,#3aa76d);border-color:#7fe0b5}
+.bd.vt{background:linear-gradient(90deg,#ff8a3d,#ff3d7f);border-color:#ffd23f}
 </style>
 </head>
 <body>
@@ -306,6 +315,7 @@ small.zero,.seg small.mn.zero{color:#ff8a80!important}
    <button id="cmtBtn" class="ev2">📝 댓글 이벤트<small>인증하면 +3만원</small></button>
   </div>
   <div class="homebtns sub">
+   <button id="shopBtn" class="shop">🏪 링크 편의점<small>드링크·영양제로 활력 UP</small></button>
    <button id="ruleBtn">📖 게임 규칙</button>
    <button id="setBtn">⚙️ 설정</button>
   </div>
@@ -327,7 +337,7 @@ small.zero,.seg small.mn.zero{color:#ff8a80!important}
 
 <script>
 'use strict';
-const VER='v21';
+const VER='v22';
 const $=s=>document.querySelector(s);
 const sleep=ms=>new Promise(r=>setTimeout(r,ms));
 const rnd=n=>Math.floor(Math.random()*n);
@@ -710,7 +720,7 @@ function scoreOf(cap){const a=calc(cap,false);if(!cap.some(c=>c.sub==='gukjin'))
    게임 상태
 ===================================================== */
 let S=null;
-function newState(){return{inst:[0,0],instLog:[],turnN:[0,0],lastPpuk:[false,false],lucky:[0,0],bonusFlag:[false,false],jackpot:false,deck:[],floor:[],hands:[[],[]],caps:[[],[]],turn:0,go:[0,0],lastGo:[0,0],shakes:[0,0],bombs:[0,0],shook:[[],[]],ppuk:[0,0],ppukOwner:{},slot:{},
+function newState(){return{vital:vitOf(DB.cur),buff:Object.assign({},(DB.buff||{})[DB.cur]||{}),vitHits:0,inst:[0,0],instLog:[],turnN:[0,0],lastPpuk:[false,false],lucky:[0,0],bonusFlag:[false,false],jackpot:false,deck:[],floor:[],hands:[[],[]],caps:[[],[]],turn:0,go:[0,0],lastGo:[0,0],shakes:[0,0],bombs:[0,0],shook:[[],[]],ppuk:[0,0],ppukOwner:{},slot:{},
   busy:true,sel:null,opp:oppOf(DB.set.opp),level:oppOf(DB.set.opp).lv,target:7,nagari:DB.nagari||0,over:false,dn:0,gid:Date.now()}}
 const dummy=()=>({id:'D-'+(S.dn++),m:-1,t:'D',sub:'',i:0});
 const SLOT_ORDER=[6,8,1,3,11,13,0,4,10,14,12,5,9];
@@ -775,7 +785,7 @@ function render(){
   // 나
   const p=curP(),s0=scoreOf(S.caps[0]);
   const hint=S.over?'게임 종료':myTurn?(S.sel?'한 번 더 누르면 내요 · 빛나는 바닥패를 눌러도 돼요':DB.set.twoTap?'내 차례! 낼 패를 고르세요':'내 차례! 낼 패를 눌러요 (빛나는 패는 먹을 수 있어요)'):S.turn===1?`${S.opp.nick} 생각 중…`:'…';
-  $('#mybar').innerHTML=`<div class="ava">${avaHTML(p)}</div><div class="pinfo"><div class="pname">${esc(pName(p))} <span class="bd money">💰${won(moneyOf(p.id))}</span>${p.roster?` <small style="opacity:.6;font-size:10px">${p.name}</small>`:''} <span class="bd tg">${S.target}점 나기${S.nagari?' · ×'+2**S.nagari:''}</span></div><div class="badges">${badges(0)}<span class="myhint">${hint}</span></div></div><div class="pscore ${S.turn===0&&!S.over?'turn':''}"><b>${s0.total}</b><small>점</small></div><button class="menu" id="menuBtn" aria-label="메뉴">☰</button>`;
+  $('#mybar').innerHTML=`<div class="ava">${avaHTML(p)}</div><div class="pinfo"><div class="pname">${esc(pName(p))} <span class="bd money">💰${won(moneyOf(p.id))}</span>${p.roster?` <small style="opacity:.6;font-size:10px">${p.name}</small>`:''} <span class="bd tg">${S.target}점 나기${S.nagari?' · ×'+2**S.nagari:''}</span>${S.vital?`<span class="bd vt">⚡${S.vital}%</span>`:''}</div><div class="badges">${badges(0)}<span class="myhint">${hint}</span></div></div><div class="pscore ${S.turn===0&&!S.over?'turn':''}"><b>${s0.total}</b><small>점</small></div><button class="menu" id="menuBtn" aria-label="메뉴">☰</button>`;
   // 손패
   const hand=S.hands[0].slice().sort((a,b)=>(a.m<=0?99:a.m)-(b.m<=0?99:b.m)||TORD[a.t]-TORD[b.t]);
   $('#hand').innerHTML=hand.map(c=>{
@@ -956,6 +966,11 @@ async function playCard(p,card,pick){
   await sleep(110);
   // 더미에서 뒤집기
   let F=null;
+  if(p===0&&S.vital&&S.deck.length>1&&Math.random()<S.vital/200){
+    const hm=H?H.m:-1,okM=m=>S.floor.some(f=>f.m===m&&!(m===hm&&kH===1));
+    const ix=S.deck.findIndex((c,i)=>i<S.deck.length-1&&c.t!=='B'&&(okM(c.m)||(m=>m===hm&&kH===0)(c.m)));
+    if(ix>=0){const c=S.deck.splice(ix,1)[0];S.deck.push(c);S.vitHits++;say('⚡ 활력 발동! 좋은 패가 온다~')}
+  }
   while(S.deck.length){
     const c=S.deck.pop();
     await act(()=>S.floor.push(c),{fromDeck:true,dur:420,wait:430});SFX.flip();if(c.t!=='B'){const hit=S.floor.some(x=>x!==c&&x.m===c.m);if(hit){SFX.slap(.85);impact(c,true)}}
@@ -1197,12 +1212,15 @@ async function endGame(w,sp={}){
    ${mul.length?`<div class="mult">${mul.map(([n,x])=>`<span>${n} ×${x}</span>`).join('')}</div>`:''}
    <div class="total ${w===0?'':'neg'}">${w===0?'+':'-'}${total}점</div>
    <p style="font-size:12px;opacity:.8">${esc(pName(pl))} 누적 ${st.net>=0?'+':''}${st.net}점 · ${st.w}승 ${st.l}패</p>`;
-  const d0=(w===0?total:-total)+S.inst[0]-S.inst[1];
+  let d0=(w===0?total:-total)+S.inst[0]-S.inst[1];
+  const charm=d0<0&&S.buff.charm;if(charm)d0=-Math.ceil(-d0/2);
   const instHtml=S.instLog.length?`<div class="res-lines">${S.instLog.map(([q,n,v])=>`<div><span>🎁 ${n} (${q===0?esc(pName(pl)):S.opp.nick})</span><b>${q===0?'+':'-'}${v}점어치</b></div>`).join('')}</div>`:'';
   const mr=d0>=0?await settleMoney(pl.id,S.opp.id,d0):await settleMoney(S.opp.id,pl.id,-d0);
+  let extra=0;if(d0>0&&S.buff.choco&&mr.pay>0){extra=Math.round(mr.pay*.2);DB.money[pl.id]=moneyOf(pl.id)+extra;await pushMoney([pl.id])}
+  useUpBuffs(pl.id);
   let bestMsg='';if(w===0){const r=await recordBest(pl,total,S.opp.nick);if(r)bestMsg=`<div class="bestnote">${r}</div>`}
   const gain=d0>=0;
-  const moneyHtml=instHtml+`<div class="moneybox ${gain?'':'neg'}"><b>${gain?'💰 +':'💸 -'}${won(mr.pay)}</b><small>점당 ${won(DB.cfg.per)} × ${Math.abs(d0)}점${S.instLog.length?' (즉시 보너스 포함)':''}${mr.boss?' → 👹 투투개구리 보너스 ×2!':''}${mr.allin?' → 올인! (가진 돈 전부)':''}</small><small>${esc(pName(pl))} 지갑 ${won(moneyOf(pl.id))} ${S.opp.boss?'':` · ${S.opp.nick} ${won(moneyOf(S.opp.id))}`}${LG.online?'':' · 오프라인 저장'}</small></div>`;
+  const moneyHtml=instHtml+`<div class="moneybox ${gain?'':'neg'}"><b>${gain?'💰 +':'💸 -'}${won(mr.pay)}</b><small>점당 ${won(DB.cfg.per)} × ${Math.abs(d0)}점${S.instLog.length?' (즉시 보너스 포함)':''}${charm?' · 🧧 부적으로 절반만!':''}${extra?` · 🍫 초코바 +${won(extra)}`:''}${mr.boss?' → 👹 투투개구리 보너스 ×2!':''}${mr.allin?' → 올인! (가진 돈 전부)':''}</small><small>${esc(pName(pl))} 지갑 ${won(moneyOf(pl.id))} ${S.opp.boss?'':` · ${S.opp.nick} ${won(moneyOf(S.opp.id))}`}${LG.online?'':' · 오프라인 저장'}</small></div>`;
   if(mr.allin){SFX.bomb();await banner(gain?S.opp.nick+' 파산!':'올인…','red',900)}
   render();
   const v=await modal(html+moneyHtml+bestMsg,[{t:'한 판 더!',v:'again'},{t:'홈으로',cls:'alt',v:'home'}]);
@@ -1210,7 +1228,7 @@ async function endGame(w,sp={}){
 }
 async function nagari(){
   if(S.over)return;S.over=true;S.busy=true;render();
-  DB.nagari=(DB.nagari||0)+1;saveDB();BGM.stop();SFX.lose();
+  DB.nagari=(DB.nagari||0)+1;useUpBuffs(curP().id);saveDB();BGM.stop();SFX.lose();
   const nd=S.inst[0]-S.inst[1];let nmsg='';if(nd){const pl=curP();const r=nd>0?await settleMoney(pl.id,S.opp.id,nd):await settleMoney(S.opp.id,pl.id,-nd);nmsg=`<br>🎁 즉시 보너스 정산: ${nd>0?'+':'-'}${won(r.pay)}`}
   await banner('나가리!','red',900);
   const v=await modal(`<div style="width:90px;height:90px;margin:0 auto">${oppSVG(S.opp,'sad')}</div><h2>나가리 😅</h2><p>아무도 나지 못했어요.<br>다음 판은 점수 <b style="color:#f5c24a">×${2**DB.nagari}</b>!${nmsg}</p>`,[{t:'다음 판!',v:'again'},{t:'홈으로',cls:'alt',v:'home'}]);
@@ -1234,7 +1252,7 @@ function moneyRank(){return allPlayers().slice().sort((a,b)=>moneyOf(b.id)-money
 function renderHome(){
   const me=curP(),rk=moneyRank(),myRank=rk.findIndex(p=>p.id===me.id)+1;
   $('#top3').innerHTML=`<div class="t3h">🏆 돈 랭킹 TOP 3 <small>전체 보기 ›</small></div><div class="t3r">${rk.slice(0,3).map((p,i)=>`<div class="t3 r${i+1}"><span class="md">${['🥇','🥈','🥉'][i]}</span><span class="av">${avaHTML(p)}</span><b>${esc(pName(p))}${p.id===me.id?' (나)':''}</b><small>${won(moneyOf(p.id))}</small></div>`).join('')}</div>`;
-  $('#meBtn').innerHTML=`<span class="mm">${avaHTML(me)}</span><span><b>${esc(me.roster?me.name:pName(me))}</b>${me.roster?` <small style="display:inline">${me.nick}</small>`:''}<small>💰 ${won(moneyOf(me.id))}</small></span><span class="rk2">${['🥇','🥈','🥉'][myRank-1]||''} ${myRank}위 / ${rk.length}명<i>${DB.meLocked?'순위 보기 ▾':'나 고르기 ▾'}</i></span>`;
+  $('#meBtn').innerHTML=`<span class="mm">${avaHTML(me)}</span><span><b>${esc(me.roster?me.name:pName(me))}</b>${me.roster?` <small style="display:inline">${me.nick}</small>`:''}<small>💰 ${won(moneyOf(me.id))}</small><span class="vit"><i style="width:${vitOf(me.id)}%"></i><em>⚡ 활력 ${vitOf(me.id)}%${buffTxt(me.id)}</em></span></span><span class="rk2">${['🥇','🥈','🥉'][myRank-1]||''} ${myRank}위 / ${rk.length}명<i>${DB.meLocked?'순위 보기 ▾':'나 고르기 ▾'}</i></span>`;
   if(DB.set.opp===DB.cur)DB.set.opp=OPP.find(o=>o.id!==DB.cur).id;
   const opps=OPP.filter(o=>o.id!==DB.cur).sort((a,b)=>moneyOf(b.id)-moneyOf(a.id));
   const top=opps.find(o=>moneyOf(o.id)>0);
@@ -1313,6 +1331,35 @@ async function openBest(tab='w'){
    ${prev&&prev.pid?`<p style="margin-top:10px;font-size:12px">👑 지난 ${tab==='w'?'주':'달'} 1등: <b>${esc(prev.n)}</b> ${prev.s}점 (+${won(prev.money)})</p>`:''}`,
    [{t:'닫기',v:null}],{dismiss:null});
   if(v&&v.startsWith('t:'))return openBest(v.slice(2));
+}
+/* ---------- 🏪 링크 편의점 (활력·버프) ---------- */
+const SHOP=[
+ {id:'kimbap',ic:'🍙',n:'삼각김밥',d:'출출할 땐 든든하게',price:1000,vit:5},
+ {id:'drink',ic:'🧃',n:'링카스 드링크',d:'링크클린 피로회복제 · 한 병에 쭉!',price:3000,vit:10},
+ {id:'vitamin',ic:'💊',n:'종합 영양제',d:'하루 한 알, 활력 듬뿍',price:8000,vit:30},
+ {id:'choco',ic:'🍫',n:'승리의 초코바',d:'다음 판 이기면 딴 돈 +20%',price:5000,buff:'choco'},
+ {id:'charm',ic:'🧧',n:'행운 부적',d:'다음 판 지면 잃는 돈 절반',price:10000,buff:'charm'}];
+const vitOf=id=>Math.max(0,Math.min(100,((DB.vital||{})[id])||0));
+function buffTxt(id){const b=(DB.buff||{})[id]||{};return (b.choco?' · 🍫':'')+(b.charm?' · 🧧':'')}
+function useUpBuffs(id){DB.vital=DB.vital||{};DB.vital[id]=Math.max(0,vitOf(id)-20);if(DB.buff)delete DB.buff[id];saveDB()}
+async function openShop(msg=''){
+  await syncDown();const me=curP(),m=moneyOf(me.id),v=vitOf(me.id),b=(DB.buff||{})[me.id]||{};
+  const r=await modal(`<div class="shophead"><img src="${LOGO_URL}"><div><b>🏪 링크 편의점</b><small>어서 오세요~ 오늘도 힘내서 한 판!</small></div></div>
+    ${msg?`<p style="color:#8cc63f;font-weight:800;margin:6px 0">${msg}</p>`:''}
+    <div class="vitbig"><span>⚡ 내 활력</span><div class="vit big"><i style="width:${v}%"></i><em>${v}%</em></div><small>활력이 높을수록 패를 뒤집을 때 <b>짝이 맞는 패</b>가 더 잘 나와요 · 한 판 칠 때마다 20% 줄어요</small></div>
+    <div class="res-lines" style="margin:8px 0"><div><span>내 돈</span><b>${won(m)}</b></div>${b.choco||b.charm?`<div><span>다음 판 효과</span><b>${b.choco?'🍫 초코바 ':''}${b.charm?'🧧 부적':''}</b></div>`:''}</div>
+    <div class="rank">${SHOP.map(it=>{const owned=it.buff&&b[it.buff],full=it.vit&&v>=100,can=m>=it.price&&!owned&&!full;return `<div class="rk"><div class="em" style="font-size:30px">${it.ic}</div><div class="nm"><b>${it.n}</b><small>${it.vit?`활력 +${it.vit}%`:it.d}${it.vit?' · '+it.d:''}</small></div><button class="btn" style="flex:none;padding:8px 10px;font-size:13px${can?'':';opacity:.4'}" data-v="${can?'b:'+it.id:'no:'+it.id}">${owned?'보유 중':full?'가득':won(it.price)}</button></div>`}).join('')}</div>`,
+    [{t:'나가기',cls:'alt',v:null}],{dismiss:null});
+  if(!r)return renderHome();
+  const [k,id]=r.split(':'),it=SHOP.find(x=>x.id===id);
+  if(k==='no'){return openShop(it.buff&&b[it.buff]?'이미 가지고 있어요 (다음 판에 써요)':v>=100&&it.vit?'활력이 이미 가득해요!':'돈이 모자라요 😢')}
+  await syncDown();if(moneyOf(me.id)<it.price)return openShop('돈이 모자라요 😢');
+  DB.money[me.id]=moneyOf(me.id)-it.price;await pushMoney([me.id]);
+  LG.req('matgo/log','POST',{w:'편의점',l:me.id,pts:0,pay:it.price,ts:Date.now()});
+  if(it.vit){DB.vital=DB.vital||{};DB.vital[me.id]=Math.min(100,vitOf(me.id)+it.vit)}
+  if(it.buff){DB.buff=DB.buff||{};(DB.buff[me.id]=DB.buff[me.id]||{})[it.buff]=true}
+  saveDB();SFX.coin();vib(20);speak(it.vit?'꿀꺽! 힘이 난다!':'감사합니다~');
+  return openShop(`${it.ic} ${it.n} 구매! ${it.vit?`활력 ${vitOf(me.id)}%`:'다음 판에 효과가 나요'}`);
 }
 /* ---------- ☕ 커피 이벤트 ---------- */
 const COFFEE_TIERS=[{cost:300000,cups:1},{cost:500000,cups:2}],COFFEE_MAX=2;
@@ -1436,6 +1483,7 @@ const RULES=`<div class="rules">
 <h3>🏅 주간·🏆 월간 최고 점수</h3>한 판에서 이겨서 받은 점수가 가장 높은 사람이 1등! 주간은 일요일 밤, 월간은 말일에 마감하고 1등에게 상금이 자동으로 들어가요 (월간 1등은 커피도!).
 <h3>🐸 투투개구리</h3>가장 센 보스 상대예요. 이기면 딴 돈의 <b>2배</b>를 받아요 (지면 보통처럼 내요).
 <h3>💰 돈</h3>모두 같은 돈으로 시작해요. 이기면 <b>점수 × 점당 금액</b>만큼 상대 지갑에서 가져와요. 상대 돈이 모자라면 <b>올인</b>! 지갑이 비면 관리인이 충전해 줘요. 댓글 이벤트로 직접 채울 수도 있어요.
+<h3>🏪 링크 편의점</h3>삼각김밥·링카스 드링크·영양제로 <b>활력</b>을 올리면 패를 뒤집을 때 짝 맞는 패가 더 잘 나와요 (한 판에 활력 20% 소모). 초코바는 다음 판 이기면 +20%, 행운 부적은 지면 절반만 내요.
 <h3>💸 배수</h3><b>피박</b> 피로 났는데 상대 피 5장 이하 ×2 · <b>광박</b> 광으로 났는데 상대 광 0장 ×2 · <b>멍따</b> 열끗 7장 이상 ×2 · <b>고박</b> 고 했는데 상대가 나면 ×2 · <b>나가리</b> 아무도 못 나면 다음 판 ×2
 </div>`;
 const RC_HASH='c74071a4ee0a6f7d4b6f0a72a4d3805b7b1ec4408bd583721f8ce70ca112325f';   // 관리인 복구 코드 확인용 (코드 자체는 관리인만 보관)
@@ -1534,6 +1582,7 @@ $('#game').addEventListener('click',e=>{
 let adminTaps=0,adminT=0;
 $('#home').addEventListener('click',async e=>{
   if(e.target.closest('#bestBox')){SFX.init();SFX.select();return openBest('w')}
+  if(e.target.closest('#shopBtn')){SFX.init();SFX.select();return openShop()}
   if(e.target.closest('#top3')){SFX.init();SFX.select();return pickMe()}
   if(e.target.closest('#meBtn')){SFX.init();SFX.select();return pickMe()}
   if(e.target.closest('#coffeeBtn'))return openCoffee();
