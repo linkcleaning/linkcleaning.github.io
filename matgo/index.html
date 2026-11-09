@@ -294,6 +294,8 @@ small.zero,.seg small.mn.zero{color:#ff8a80!important}
 .toprow .boss small{font-size:10px}.toprow .boss .x2{font-size:12px;padding:2px 7px;margin-top:3px}
 .seg.opp.rich{grid-template-columns:1fr;height:100%}.seg.opp.rich button{height:100%;justify-content:center;padding-top:14px}
 .seg.opp.three{grid-template-columns:repeat(3,1fr)}
+.boss .en{display:block;font-size:10px;font-weight:900;letter-spacing:1.5px;color:#ff8a80;margin-top:1px}
+.taunt small{display:block;font-size:14px;font-weight:800;color:#ff8a80;letter-spacing:1px;margin-top:4px}
 </style>
 </head>
 <body>
@@ -362,7 +364,7 @@ small.zero,.seg small.mn.zero{color:#ff8a80!important}
 
 <script>
 'use strict';
-const VER='v27';
+const VER='v28';
 const $=s=>document.querySelector(s);
 const sleep=ms=>new Promise(r=>setTimeout(r,ms));
 const rnd=n=>Math.floor(Math.random()*n);
@@ -797,7 +799,7 @@ function render(){
   const myTurn=S.turn===0&&!S.busy&&!S.over;
   // 상대
   const s1=scoreOf(S.caps[1]),O=S.opp;
-  $('#oppbar').innerHTML=`<div class="ava">${oppSVG(O)}</div><div class="pinfo"><div class="pname">${O.nick} <span class="bd money">${O.boss?'👹 이기면 ×'+tutuX():'💰'+won(moneyOf(O.id))}</span><em>${O.boss?tutu().st:LV[O.lv].st}</em></div><div class="ohand">${S.hands[1].map(c=>backDiv(c,'o')).join('')}</div></div><div class="badges" style="flex:none;max-width:38%;justify-content:flex-end">${badges(1)}</div><div class="pscore ${S.turn===1&&!S.over?'turn':''}"><b>${s1.total}</b><small>점</small></div>`;
+  $('#oppbar').innerHTML=`<div class="ava">${oppSVG(O)}</div><div class="pinfo"><div class="pname">${O.nick}${O.boss?' <small style="font-size:9px;opacity:.7">TUTU FROG</small>':''} <span class="bd money">${O.boss?'👹 이기면 ×'+tutuX():'💰'+won(moneyOf(O.id))}</span><em>${O.boss?tutu().st:LV[O.lv].st}</em></div><div class="ohand">${S.hands[1].map(c=>backDiv(c,'o')).join('')}</div></div><div class="badges" style="flex:none;max-width:38%;justify-content:flex-end">${badges(1)}</div><div class="pscore ${S.turn===1&&!S.over?'turn':''}"><b>${s1.total}</b><small>점</small></div>`;
   renderCaps(1,s1);
   // 바닥
   const selC=S.sel?S.hands[0].find(c=>c.id===S.sel):null;
@@ -1309,7 +1311,7 @@ function renderHome(){
   const top=opps.find(o=>moneyOf(o.id)>0);
   const oppBtn=o=>{const r=DB.vs[DB.cur+'|'+o.id];return `<button class="${DB.set.opp===o.id?'on':''} ${moneyOf(o.id)<=0||playsWith(o.id)>=(DB.cfg.dailyMax||3)?'broke':''}" data-op="${o.id}">${top&&o.id===top.id?'<span class="tgt">🎯 최고 부자</span>':''}<span class="mm">${oppSVG(o)}</span>${o.nick}<small>${o.real} · ${LV[o.lv].st}</small><small class="mn ${moneyOf(o.id)<=0?'zero':''}">${moneyOf(o.id)<=0?'파산':won(moneyOf(o.id))}</small>${(()=>{const n=playsWith(o.id),mx=DB.cfg.dailyMax||3;return `<small class="cnt3 ${n>=mx?'full':''}">${n>=mx?'오늘 끝':`오늘 ${n}/${mx}판`}</small>`})()}</button>`};
   const rich=top||opps[0];$('#richBox').innerHTML=oppBtn(rich);$('#lvSeg').innerHTML=opps.filter(o=>o!==rich).map(oppBtn).join('');
-  {const B=BOSS,r=DB.vs[DB.cur+'|tutu'];$('#bossBtn').className='boss'+(DB.set.opp==='tutu'?' on':'');$('#bossBtn').innerHTML=`<span class="bm">${oppSVG(B)}</span><span class="bt"><b>👹 투투개구리 <em>보스</em></b><small>${tutu().st} ${tutu().tx}</small><span class="x2">이기면 딴 돈 ×${tutuX()}!</span>${r?`<small>${r.w}승 ${r.l}패</small>`:''}</span>`}
+  {const B=BOSS,r=DB.vs[DB.cur+'|tutu'];$('#bossBtn').className='boss'+(DB.set.opp==='tutu'?' on':'');$('#bossBtn').innerHTML=`<span class="bm">${oppSVG(B)}</span><span class="bt"><b>👹 투투개구리 <em>보스</em></b><span class="en">TUTU FROG · BOSS</span><small>${tutu().st} ${tutu().tx}</small><span class="x2">이기면 딴 돈 ×${tutuX()}!</span>${r?`<small>${r.w}승 ${r.l}패</small>`:''}</span>`}
   $('#tgSeg').innerHTML=[3,5,7].map(t=>`<button class="${DB.set.target===t?'on':''}" data-tg="${t}">${t}점<small>${t===3?'빠른 판':t===5?'적당히':'정식 맞고'}</small></button>`).join('');
   {const a=(DB.att||{})[DB.cur],ok=a&&a.last===dayKey();$('#attSub').textContent=ok?'오늘 출석 완료 ✅':'매일 +1천원 · 7일 +1만';
    const q=qState(),L=todayQuests(),dn=L.filter(x=>(q.prog[x.id]||0)>=x.goal).length,cl=L.filter(x=>q.claimed[x.id]).length;$('#qSub').textContent=dn>cl?`🎁 보상 받기 ${dn-cl}개!`:`오늘 ${dn}/3 달성`;
@@ -1397,7 +1399,7 @@ const SHOP=[
 const vitOf=id=>Math.max(0,Math.min(100,((DB.vital||{})[id])||0));
 function buffTxt(id){const b=(DB.buff||{})[id]||{};return (b.choco?' · 🍫':'')+(b.charm?' · 🧧':'')}
 function useUpBuffs(id){DB.vital=DB.vital||{};DB.vital[id]=Math.max(0,vitOf(id)-20);if(DB.buff)delete DB.buff[id];saveDB()}
-function showBossTaunt(){const d=document.createElement('div');d.className='taunt';d.innerHTML='<span>👹</span>나를 이길 수 있겠어?';document.body.appendChild(d);setTimeout(()=>d.remove(),1900)}
+function showBossTaunt(){const d=document.createElement('div');d.className='taunt';d.innerHTML='<span>👹</span>나를 이길 수 있겠어?<small>Can you beat me?</small>';document.body.appendChild(d);setTimeout(()=>d.remove(),1900)}
 async function openShop(msg=''){
   await syncDown();const me=curP(),m=moneyOf(me.id),v=vitOf(me.id),b=(DB.buff||{})[me.id]||{};
   const r=await modal(`<div class="shophead"><img src="${LOGO_URL}"><div><b>🏪 링크 편의점</b><small>어서 오세요~ 오늘도 힘내서 한 판!</small></div></div>
