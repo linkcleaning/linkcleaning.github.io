@@ -313,6 +313,7 @@ small.zero,.seg small.mn.zero{color:#ff8a80!important}
 .taunt,.total,.title .t2,.pscore b,.bb .bt,.boss b{font-family:'Jua',sans-serif}
 .banner .bsub{display:block;font-size:.5em;line-height:1.1;margin-top:2px}
 .banner{text-align:center;line-height:1.05;width:-webkit-max-content;width:max-content;max-width:92vw;box-sizing:border-box}
+.shopmsg{min-height:20px;color:#8cc63f;font-weight:800;margin:6px 0;font-size:14px}
 </style>
 </head>
 <body>
@@ -381,7 +382,7 @@ small.zero,.seg small.mn.zero{color:#ff8a80!important}
 
 <script>
 'use strict';
-const VER='v34';
+const VER='v35';
 const $=s=>document.querySelector(s);
 const sleep=ms=>new Promise(r=>setTimeout(r,ms));
 const rnd=n=>Math.floor(Math.random()*n);
@@ -1438,24 +1439,33 @@ const vitOf=id=>Math.max(0,Math.min(100,((DB.vital||{})[id])||0));
 function buffTxt(id){const b=(DB.buff||{})[id]||{};return (b.choco?' · 🍫':'')+(b.charm?' · 🧧':'')}
 function useUpBuffs(id){DB.vital=DB.vital||{};DB.vital[id]=Math.max(0,vitOf(id)-20);if(DB.buff)delete DB.buff[id];saveDB()}
 function showBossTaunt(){const d=document.createElement('div');d.className='taunt';d.innerHTML='<span>👹</span>나를 이길 수 있겠어?<small>Can you beat me?</small>';document.body.appendChild(d);setTimeout(()=>d.remove(),1900)}
-async function openShop(msg=''){
-  await syncDown();const me=curP(),m=moneyOf(me.id),v=vitOf(me.id),b=(DB.buff||{})[me.id]||{};
-  const r=await modal(`<div class="shophead"><img src="${LOGO_URL}"><div><b>🏪 링크 편의점</b><small>어서 오세요~ 오늘도 힘내서 한 판!</small></div></div>
-    ${msg?`<p style="color:#8cc63f;font-weight:800;margin:6px 0">${msg}</p>`:''}
+function shopBody(msg){
+  const me=curP(),m=moneyOf(me.id),v=vitOf(me.id),b=(DB.buff||{})[me.id]||{};
+  return `<div class="shophead"><img src="${LOGO_URL}"><div><b>🏪 링크 편의점</b><small>어서 오세요~ 오늘도 힘내서 한 판!</small></div></div>
+    <p class="shopmsg">${msg||'&nbsp;'}</p>
     <div class="vitbig"><span>⚡ 내 활력</span><div class="vit big"><i style="width:${v}%"></i><em>${v}%</em></div><small>활력이 높을수록 패를 뒤집을 때 <b>짝이 맞는 패</b>가 더 잘 나와요 · 한 판 칠 때마다 20% 줄어요</small></div>
     <div class="res-lines" style="margin:8px 0"><div><span>내 돈</span><b>${won(m)}</b></div>${b.choco||b.charm?`<div><span>다음 판 효과</span><b>${b.choco?'🍫 초코바 ':''}${b.charm?'🧧 부적':''}</b></div>`:''}</div>
-    <div class="rank">${SHOP.map(it=>{const owned=it.buff&&b[it.buff],full=it.vit&&v>=100,can=m>=it.price&&!owned&&!full;return `<div class="rk"><div class="em" style="font-size:30px">${it.ic}</div><div class="nm"><b>${it.n}</b><small>${it.vit?`활력 +${it.vit}%`:it.d}${it.vit?' · '+it.d:''}</small></div><button class="btn" style="flex:none;padding:8px 10px;font-size:13px${can?'':';opacity:.4'}" data-v="${can?'b:'+it.id:'no:'+it.id}">${owned?'보유 중':full?'가득':won(it.price)}</button></div>`}).join('')}</div>`,
-    [{t:'나가기',cls:'alt',v:null}],{dismiss:null});
-  if(!r)return renderHome();
-  const [k,id]=r.split(':'),it=SHOP.find(x=>x.id===id);
-  if(k==='no'){return openShop(it.buff&&b[it.buff]?'이미 가지고 있어요 (다음 판에 써요)':v>=100&&it.vit?'활력이 이미 가득해요!':'돈이 모자라요 😢')}
-  await syncDown();if(moneyOf(me.id)<it.price)return openShop('돈이 모자라요 😢');
-  DB.money[me.id]=moneyOf(me.id)-it.price;await pushMoney([me.id]);
-  LG.req('matgo/log','POST',{w:'편의점',l:me.id,pts:0,pay:it.price,ts:Date.now()});
+    <div class="rank">${SHOP.map(it=>{const owned=it.buff&&b[it.buff],full=it.vit&&v>=100,can=m>=it.price&&!owned&&!full;return `<div class="rk"><div class="em" style="font-size:30px">${it.ic}</div><div class="nm"><b>${it.n}</b><small>${it.vit?`활력 +${it.vit}%`:it.d}${it.vit?' · '+it.d:''}</small></div><button class="btn" style="flex:none;padding:8px 10px;font-size:13px${can?'':';opacity:.4'}" data-buy="${it.id}">${owned?'보유 중':full?'가득':won(it.price)}</button></div>`}).join('')}</div>`;
+}
+async function buyItem(id){
+  const me=curP(),it=SHOP.find(x=>x.id===id),v=vitOf(me.id),b=(DB.buff||{})[me.id]||{};
+  if(it.buff&&b[it.buff])return '이미 가지고 있어요 (다음 판에 써요)';
+  if(it.vit&&v>=100)return '활력이 이미 가득해요!';
+  if(moneyOf(me.id)<it.price){SFX.ppuk();return '돈이 모자라요 😢'}
+  DB.money[me.id]=moneyOf(me.id)-it.price;saveDB();SFX.coin();vib(20);
   if(it.vit){DB.vital=DB.vital||{};DB.vital[me.id]=Math.min(100,vitOf(me.id)+it.vit)}
   if(it.buff){DB.buff=DB.buff||{};(DB.buff[me.id]=DB.buff[me.id]||{})[it.buff]=true}
-  saveDB();SFX.coin();vib(20);speak(it.vit?'꿀꺽! 힘이 난다!':'감사합니다~');
-  return openShop(`${it.ic} ${it.n} 구매! ${it.vit?`활력 ${vitOf(me.id)}%`:'다음 판에 효과가 나요'}`);
+  saveDB();speak(it.vit?'꿀꺽! 힘이 난다!':'감사합니다~');
+  pushMoney([me.id]);LG.req('matgo/log','POST',{w:'편의점',l:me.id,pts:0,pay:it.price,ts:Date.now()});
+  return `${it.ic} ${it.n} 구매! ${it.vit?`활력 ${vitOf(me.id)}%`:'다음 판에 효과가 나요'}`;
+}
+async function openShop(){
+  await syncDown();let busy=false;
+  await modal(`<div id="shopBox">${shopBody('')}</div>`,[{t:'나가기',cls:'alt',v:null}],{dismiss:null,onOpen:bg=>bg.addEventListener('click',async e=>{
+    const t=e.target.closest('[data-buy]');if(!t||busy)return;busy=true;
+    const msg=await buyItem(t.dataset.buy);const box=bg.querySelector('#shopBox');const sc=bg.querySelector('.modal').scrollTop;
+    box.innerHTML=shopBody(msg);bg.querySelector('.modal').scrollTop=sc;const pm=box.querySelector('.shopmsg');pm.animate&&pm.animate([{transform:'scale(.7)',opacity:0},{transform:'scale(1)',opacity:1}],{duration:250});busy=false})});
+  renderHome();
 }
 /* ---------- 📅 출석 체크 ---------- */
 const ATT_DAY=1000,ATT_7=10000;
