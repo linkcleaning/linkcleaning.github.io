@@ -171,6 +171,24 @@ button{font-family:inherit;cursor:pointer}
 .emos button.on{border-color:var(--gold);background:#ffffff30}
 .gs-sub{display:flex;justify-content:center;gap:16px;margin:4px 0 2px;font-size:13px;color:#cfeee9}
 .gs-sub b{color:var(--gold)}
+.ring{position:fixed;z-index:2000;width:74px;height:74px;border-radius:50%;border:3px solid #fff;box-shadow:0 0 14px #ffd23f,inset 0 0 10px #ffd23f;pointer-events:none}
+.spark{position:fixed;z-index:2001;pointer-events:none;font-size:14px;line-height:1}
+.table{background:radial-gradient(ellipse at 50% 45%,#14726c 0%,#0b4d49 55%,#062e2c 100%)}
+.table:after{content:'';position:absolute;inset:8px;border-radius:14px;pointer-events:none;opacity:.13;background:
+ url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='70'%3E%3Cpath d='M10 50 q10-18 26-10 q6-14 22-8 q14-6 18 8 q14 0 12 12 q-2 8-14 6 H18 q-10 0-8-8z' fill='none' stroke='%23fff' stroke-width='2.5'/%3E%3C/svg%3E") 6px 6px/110px no-repeat,
+ url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='70'%3E%3Cpath d='M10 50 q10-18 26-10 q6-14 22-8 q14-6 18 8 q14 0 12 12 q-2 8-14 6 H18 q-10 0-8-8z' fill='none' stroke='%23fff' stroke-width='2.5'/%3E%3C/svg%3E") calc(100% - 6px) calc(100% - 6px)/110px no-repeat}
+.deck .dk{box-shadow:none}
+.deck .dk:first-child{box-shadow:0 6px 10px #000a}
+.mission{position:absolute;left:50%;top:2px;transform:translateX(-50%);background:linear-gradient(#6b4226,#3d2414);border:1.5px solid #f5c24a;border-radius:9px;padding:2px 4px 4px;box-shadow:0 4px 10px #0009;text-align:center;white-space:nowrap}
+.mission .mt{font-size:9px;font-weight:900;color:#f5c24a;letter-spacing:.5px;line-height:1.3}
+.mission .mc{display:flex;gap:3px}
+.mcard{position:relative;width:var(--mw);height:var(--mh);border-radius:3px;overflow:hidden;box-shadow:0 1px 3px #000a}
+.mcard svg{width:100%;height:100%;display:block}
+.mcard.o:after,.mcard.x:after{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-weight:900;font-size:calc(var(--mw)*.95);background:#0004}
+.mcard.o:after{content:'○';color:#4fc3f7;text-shadow:0 0 6px #4fc3f7}
+.mcard.x:after{content:'✕';color:#ff5c9a;text-shadow:0 0 6px #ff5c9a}
+.mission.pulse{animation:mpulse .6s ease-in-out 3}
+@keyframes mpulse{50%{transform:translateX(-50%) scale(1.25)}}
 </style>
 </head>
 <body>
@@ -182,6 +200,8 @@ button{font-family:inherit;cursor:pointer}
   <linearGradient id="gBack" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#c41d33"/><stop offset="1" stop-color="#8c0f22"/></linearGradient>
   <linearGradient id="gToad" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#a5d65a"/><stop offset="1" stop-color="#4f9a2c"/></linearGradient>
   <linearGradient id="gRedSky" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#e53935"/><stop offset="1" stop-color="#ff8a65"/></linearGradient>
+  <linearGradient id="gSkyB" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#d6eef8" stop-opacity="0"/><stop offset="1" stop-color="#bfe3f3"/></linearGradient>
+  <clipPath id="cIn"><rect x="2.6" y="2.6" width="54.8" height="86.8" rx="3.2"/></clipPath>
   <pattern id="pBack" width="6" height="6" patternUnits="userSpaceOnUse" patternTransform="rotate(45)"><rect width="6" height="6" fill="none"/><line x1="0" y1="0" x2="0" y2="6" stroke="#ffffff14" stroke-width="2"/></pattern>
  </defs>
 </svg>
@@ -227,7 +247,7 @@ button{font-family:inherit;cursor:pointer}
 
 <script>
 'use strict';
-const VER='v1';
+const VER='v2';
 const $=s=>document.querySelector(s);
 const sleep=ms=>new Promise(r=>setTimeout(r,ms));
 const rnd=n=>Math.floor(Math.random()*n);
@@ -242,7 +262,7 @@ const KEY='uri-family-matgo';
 let DB;
 function loadDB(){
   const def={players:[{id:'p1',name:'아빠',emoji:'👨'},{id:'p2',name:'엄마',emoji:'👩'}],cur:'p1',stats:{},history:[],
-    set:{sound:true,vib:true,hint:true,level:1,target:3},nagari:0,first:0};
+    set:{sound:true,bgm:true,vib:true,hint:true,level:1,target:3},nagari:0,first:0};
   try{const d=JSON.parse(localStorage.getItem(KEY)||'null');if(d){DB=Object.assign(def,d);DB.set=Object.assign(def.set,d.set||{});}else DB=def;}catch(e){DB=def}
   if(!DB.players.length)DB.players=def.players;
   if(!DB.players.find(p=>p.id===DB.cur))DB.cur=DB.players[0].id;
@@ -278,7 +298,7 @@ function piVal(c){if(c.t==='B')return +c.sub;if(c.t==='P')return c.sub==='ssang'
    카드 그림 (SVG 직접 드로잉)
 ===================================================== */
 const blossom=(x,y,r,col,cc='#ffd84a')=>{let s='';for(let i=0;i<5;i++){const a=(i*72-90)*Math.PI/180;s+=`<circle cx="${(x+Math.cos(a)*r*.58).toFixed(1)}" cy="${(y+Math.sin(a)*r*.58).toFixed(1)}" r="${(r*.48).toFixed(1)}" fill="${col}"/>`}return s+`<circle cx="${x}" cy="${y}" r="${(r*.26).toFixed(1)}" fill="${cc}"/>`};
-const pineC=(x,y,s=1)=>`<g transform="translate(${x} ${y}) scale(${s})"><ellipse rx="12" ry="5.5" fill="#1d5a34"/><ellipse cy="-1.5" rx="9" ry="3.6" fill="#2b7a45"/><path d="M-10 1 L0 -6 L10 1 M-6 1 L0 -3.5 L6 1" stroke="#7fc28a" stroke-width=".8" fill="none"/></g>`;
+const pineC=(x,y,s=1)=>`<g transform="translate(${x} ${y}) scale(${s})"><path d="M-13 3 Q0 -13 13 3 Q0 0 -13 3Z" fill="#141414"/><path d="M-10 1.5 L0 -7 M-5 2 L0 -7 M0 1.5 L0 -7 M5 2 L0 -7 M10 1.5 L0 -7" stroke="#4caf50" stroke-width=".8"/></g>`;
 const leaf=(x,y,rx,ry,rot,col)=>`<ellipse cx="${x}" cy="${y}" rx="${rx}" ry="${ry}" transform="rotate(${rot} ${x} ${y})" fill="${col}"/>`;
 const bird=(x,y,s,body,wing,flip)=>`<g transform="translate(${x} ${y}) scale(${flip?-s:s} ${s})"><path d="M-9 0 Q-2 -6 6 -3 Q4 4 -9 0Z" fill="${body}"/><circle cx="6.5" cy="-4" r="3.2" fill="${body}"/><path d="M9.3 -4.6 l3.6 1 -3.6 .9z" fill="#e8a020"/><circle cx="7.3" cy="-4.6" r=".8" fill="#000"/><path d="M-3 -2 Q-6 -12 -12 -9 Q-7 -4 -3 -2Z" fill="${wing}"/><path d="M-8 0 l-7 3 1.5-5z" fill="${wing}"/></g>`;
 const goose=(x,y,s)=>`<g transform="translate(${x} ${y}) scale(${s})"><path d="M-10 -5 Q-4 1 0 0 Q4 1 10 -5 Q4 -1 1 -1.5 L0 -3 L-1 -1.5 Q-4 -1 -10 -5Z" fill="#2b2b2b"/><circle cx="0" cy="-3.2" r="1.4" fill="#2b2b2b"/></g>`;
@@ -290,23 +310,23 @@ function ribbon(col,txt,x=30,y=40,rot=-10){
   const t=txt?`<text x="${x}" y="${y-10}" font-size="7" font-weight="900" fill="#2a0606" text-anchor="middle">${txt[0]}</text><text x="${x}" y="${y-1}" font-size="7" font-weight="900" fill="#2a0606" text-anchor="middle">${txt[1]}</text>`:'';
   return `<g transform="rotate(${rot} ${x} ${y})"><rect x="${x-6.5}" y="${y-26}" width="13" height="46" rx="1" fill="${col}" stroke="#00000033"/><path d="M${x-6.5} ${y+20} l6.5 6 6.5-6z" fill="${col}"/><rect x="${x-6.5}" y="${y-26}" width="13" height="3" fill="#ffffff55"/>${t}</g>`;
 }
-const GMARK=`<circle cx="11" cy="11" r="8.2" fill="#d7262e" stroke="#fff" stroke-width="1.2"/><text x="11" y="11.6" font-size="10" fill="#fff" text-anchor="middle" dominant-baseline="central" font-weight="900">光</text>`;
+const GMARK=`<circle cx="12" cy="12" r="8" fill="#d7262e" stroke="#fff" stroke-width="1.2"/><text x="12" y="12.6" font-size="10" fill="#fff" text-anchor="middle" dominant-baseline="central" font-weight="900">光</text>`;
 
 function plant(c){
   const m=c.m, t=c.t;
   switch(m){
-  case 1: return `<path d="M10 92 C18 74 14 58 30 44 S40 22 38 6" stroke="#5b3a1e" stroke-width="3.4" fill="none" stroke-linecap="round"/>`+pineC(16,30)+pineC(43,20)+(t==='G'?pineC(12,58,.9):pineC(20,58)+pineC(45,50)+pineC(30,76));
-  case 2: return `<path d="M2 74 Q20 62 26 42 T52 10" stroke="#4a2f1b" stroke-width="3" fill="none"/><path d="M26 42 Q38 46 54 38" stroke="#4a2f1b" stroke-width="2" fill="none"/>`+blossom(13,64,9,'#d8314a')+blossom(29,34,8,'#e04a60')+blossom(47,15,8,'#d8314a')+blossom(50,40,7,'#e86478')+(t==='Y'?'':blossom(38,58,7,'#e04a60'));
-  case 3: return `<path d="M0 30 Q22 34 30 18 T60 8" stroke="#4a2f1b" stroke-width="2.5" fill="none"/>`+blossom(10,24,8,'#f6a5c0','#fff2a8')+blossom(24,14,7,'#f8bbd0','#fff2a8')+blossom(30,30,8,'#f48fb1','#fff2a8')+blossom(46,12,7,'#f6a5c0','#fff2a8')+blossom(50,28,8,'#f8bbd0','#fff2a8')+(t==='G'?'':blossom(18,44,7,'#f48fb1','#fff2a8')+blossom(40,46,8,'#f6a5c0','#fff2a8')+blossom(28,62,7,'#f8bbd0','#fff2a8'));
+  case 1: return `<path d="M10 92 C18 74 14 58 30 44 S40 22 38 6" stroke="#1e1410" stroke-width="3.6" fill="none" stroke-linecap="round"/>`+pineC(16,30)+pineC(43,20)+(t==='G'?pineC(12,58,.9):pineC(20,58)+pineC(45,50)+pineC(30,76));
+  case 2: return `<path d="M2 74 Q20 62 26 42 T52 10" stroke="#161210" stroke-width="3" fill="none"/><path d="M26 42 Q38 46 54 38" stroke="#161210" stroke-width="2" fill="none"/>`+blossom(13,64,9,'#d8314a')+blossom(29,34,8,'#e04a60')+blossom(47,15,8,'#d8314a')+blossom(50,40,7,'#e86478')+(t==='Y'?'':blossom(38,58,7,'#e04a60'));
+  case 3: return `<path d="M0 30 Q22 34 30 18 T60 8" stroke="#161210" stroke-width="2.5" fill="none"/>`+blossom(10,24,8,'#f6a5c0','#fff2a8')+blossom(24,14,7,'#f8bbd0','#fff2a8')+blossom(30,30,8,'#f48fb1','#fff2a8')+blossom(46,12,7,'#f6a5c0','#fff2a8')+blossom(50,28,8,'#f8bbd0','#fff2a8')+(t==='G'?'':blossom(18,44,7,'#f48fb1','#fff2a8')+blossom(40,46,8,'#f6a5c0','#fff2a8')+blossom(28,62,7,'#f8bbd0','#fff2a8'));
   case 4: {let s='';[[10,0],[26,0],[44,0]].forEach(([x],k)=>{s+=`<path d="M${x} 0 Q${x+6} 30 ${x-2} ${62+k*6}" stroke="#2a2a2a" stroke-width="1.3" fill="none"/>`;for(let j=0;j<6;j++){const yy=6+j*10;s+=leaf(x+3+(j%2?3:-3),yy,4.5,1.8,j%2?30:-30,'#1b1b1b')}s+=`<circle cx="${x-2}" cy="${62+k*6}" r="2" fill="#c62828"/>`});return s}
-  case 5: {let s='';[[12,-8],[22,-3],[34,5],[46,10]].forEach(([x,r])=>s+=`<path d="M${x} 92 Q${x+r} 60 ${x+r*1.4} 30" stroke="#2e7d32" stroke-width="2.2" fill="none"/>`);return s+iris(14,32)+iris(32,24)+iris(48,38)}
-  case 6: return leaf(14,54,10,4,-40,'#2e7d32')+leaf(46,56,10,4,40,'#2e7d32')+leaf(20,70,9,3.5,20,'#1b5e20')+leaf(40,72,9,3.5,-20,'#1b5e20')+`<circle cx="30" cy="44" r="14" fill="#b5122a"/><circle cx="30" cy="44" r="10" fill="#d72c44"/><circle cx="30" cy="45" r="6" fill="#f05a6e"/><circle cx="30" cy="45" r="2.5" fill="#ffd54f"/>`+(t==='P'?`<circle cx="46" cy="22" r="7" fill="#d72c44"/><circle cx="46" cy="22" r="3.5" fill="#f05a6e"/>`:'');
+  case 5: {let s='';[[12,-8],[22,-3],[34,5],[46,10]].forEach(([x,r])=>s+=`<path d="M${x} 92 Q${x+r} 60 ${x+r*1.4} 30" stroke="#151515" stroke-width="2.6" fill="none"/>`);return s+iris(14,32)+iris(32,24)+iris(48,38)}
+  case 6: return leaf(14,54,10,4,-40,'#161616')+leaf(46,56,10,4,40,'#161616')+leaf(20,70,9,3.5,20,'#1f3d1f')+leaf(40,72,9,3.5,-20,'#1f3d1f')+`<circle cx="30" cy="44" r="14" fill="#b5122a"/><circle cx="30" cy="44" r="10" fill="#d72c44"/><circle cx="30" cy="45" r="6" fill="#f05a6e"/><circle cx="30" cy="45" r="2.5" fill="#ffd54f"/>`+(t==='P'?`<circle cx="46" cy="22" r="7" fill="#d72c44"/><circle cx="46" cy="22" r="3.5" fill="#f05a6e"/>`:'');
   case 7: {let s='';[[6,'M4 4 Q30 10 40 50'],[30,'M30 0 Q50 20 54 60'],[0,'M0 40 Q24 40 30 80']].forEach(([_,d])=>s+=`<path d="${d}" stroke="#4e342e" stroke-width="1.3" fill="none"/>`);
-    const pts=[[10,6],[18,10],[26,16],[32,26],[37,38],[38,48],[36,4],[42,12],[48,24],[52,36],[54,50],[6,42],[14,44],[22,50],[26,60],[28,72]];pts.forEach(([x,y],k)=>s+=leaf(x,y,2.6,1.6,k*30,k%3?'#c2272d':'#1b5e20'));return s}
+    const pts=[[10,6],[18,10],[26,16],[32,26],[37,38],[38,48],[36,4],[42,12],[48,24],[52,36],[54,50],[6,42],[14,44],[22,50],[26,60],[28,72]];pts.forEach(([x,y],k)=>s+=leaf(x,y,2.6,1.6,k*30,k%3?'#d81f26':'#141414'));return s}
   case 8: return (t==='G'?`<rect x="0" y="0" width="60" height="62" fill="url(#gRedSky)"/><circle cx="30" cy="28" r="16" fill="url(#gMoon)"/>`:t==='Y'?`<rect x="0" y="0" width="60" height="60" fill="#f6e7c4"/>`:`<rect x="0" y="0" width="60" height="60" fill="#f3dccb"/>`)+`<path d="M0 58 Q18 44 32 52 Q46 40 60 54 L60 92 L0 92Z" fill="#1d1d1d"/>`+[8,16,24,36,44,52].map(x=>`<path d="M${x} 92 Q${x+2} 74 ${x+5} 62" stroke="#f5f5f5" stroke-width=".9" fill="none" opacity=".75"/>`).join('');
-  case 9: return leaf(16,64,9,3.5,-30,'#33691e')+leaf(44,66,9,3.5,30,'#33691e')+leaf(30,80,9,3.5,90,'#558b2f')+mum(20,40,10)+mum(42,28,8)+(t==='P'?mum(32,58,7):'');
+  case 9: return leaf(16,64,9,3.5,-30,'#161616')+leaf(44,66,9,3.5,30,'#161616')+leaf(30,80,9,3.5,90,'#2e4d1e')+mum(20,40,10)+mum(42,28,8)+(t==='P'?mum(32,58,7):'');
   case 10: return `<path d="M0 10 Q30 20 60 6" stroke="#5d4037" stroke-width="1.5" fill="none"/>`+maple(12,16,1,'#d63a12')+maple(30,22,1.1,'#e65100')+maple(48,14,1,'#c62828')+maple(20,36,.9,'#ef6c00')+maple(42,36,.95,'#d63a12')+(t==='Y'?'':maple(14,58,1,'#c62828')+maple(34,56,1.1,'#d63a12')+maple(50,70,.9,'#e65100'));
-  case 11: return `<path d="M30 92 L30 40" stroke="#3e2723" stroke-width="2"/>`+leaf(18,58,13,7,-30,c.sub==='ssang'?'#e3b505':'#1f2a1f')+leaf(42,58,13,7,30,'#1f2a1f')+leaf(30,78,12,6,0,'#263326')+(t==='G'?'':`<g>${[0,1,2,3,4].map(k=>`<circle cx="${20+k*5}" cy="${26-(k%2)*3}" r="3" fill="#8e44ad"/>`).join('')}<path d="M18 30 Q30 22 44 30" stroke="#5d4037" stroke-width="1" fill="none"/></g>`);
+  case 11: return `<path d="M30 92 L30 40" stroke="#3e2723" stroke-width="2"/>`+leaf(18,58,13,7,-30,c.sub==='ssang'?'#e3b505':'#121212')+leaf(42,58,13,7,30,'#121212')+leaf(30,78,12,6,0,'#1a1a1a')+(t==='G'?'':`<g>${[0,1,2,3,4].map(k=>`<circle cx="${20+k*5}" cy="${26-(k%2)*3}" r="3" fill="#8e44ad"/>`).join('')}<path d="M18 30 Q30 22 44 30" stroke="#5d4037" stroke-width="1" fill="none"/></g>`);
   case 12: {let s=`<rect x="0" y="0" width="60" height="92" fill="${t==='G'?'#2b2f3a':'#f2ead6'}"/>`;
     for(let k=0;k<9;k++)s+=`<line x1="${k*8-6}" y1="0" x2="${k*8-18}" y2="92" stroke="${t==='G'?'#ffffff22':'#5a6a7a33'}" stroke-width=".8"/>`;
     s+=`<path d="M60 0 Q40 30 48 92 M56 0 Q34 40 38 92 M60 20 Q46 50 56 92" stroke="#2e5d34" stroke-width="1.6" fill="none"/>`;
@@ -350,7 +370,7 @@ function hintMarks(c){
   else if(c.t==='Y'){lab=c.sub==='godori'?'고':c.sub==='gukjin'?'국':'열';col=c.sub==='godori'?'#ef6c00':'#2e7d32'}
   else if(c.t==='T'){lab={hong:'홍',cheong:'청',cho:'초',plain:'띠'}[c.sub];col=c.sub==='cheong'?'#1565c0':c.sub==='plain'?'#6d4c41':'#c62828'}
   else {lab=c.sub==='ssang'?'쌍':'피';col=c.sub==='ssang'?'#8e24aa':'#555'}
-  return `<circle cx="8.5" cy="83.5" r="6.3" fill="#000000b0"/><text x="8.5" y="84" font-size="${c.m>9?6.8:8}" fill="#fff" text-anchor="middle" dominant-baseline="central" font-weight="900">${c.m}</text><rect x="44" y="77.5" width="14" height="12.5" rx="3.5" fill="${col}"/><text x="51" y="84.2" font-size="8" fill="#fff" text-anchor="middle" dominant-baseline="central" font-weight="900">${lab}</text>`;
+  return `<circle cx="9.6" cy="82.4" r="5.9" fill="#000000b8"/><text x="9.6" y="82.9" font-size="${c.m>9?6.8:8}" fill="#fff" text-anchor="middle" dominant-baseline="central" font-weight="900">${c.m}</text><rect x="43.4" y="76.6" width="13" height="11.8" rx="3.2" fill="${col}"/><text x="49.9" y="82.7" font-size="8" fill="#fff" text-anchor="middle" dominant-baseline="central" font-weight="900">${lab}</text>`;
 }
 function cardSVG(c){
   const open='<svg viewBox="0 0 60 92" xmlns="http://www.w3.org/2000/svg">';
@@ -360,10 +380,10 @@ function cardSVG(c){
   if(c.t==='P'&&c.sub!=='ssang'&&c.i===3)art=`<g transform="translate(60 0) scale(-1 1)">${art}</g>`;
   let sp=special(c);
   if(c.t==='P'&&c.sub==='ssang'&&c.m===12)art='';
-  const bg=`<rect width="60" height="92" rx="5" fill="#fbf2dd"/>`;
+  const bg=`<rect width="60" height="92" rx="5" fill="#d3222c"/><rect x="2.6" y="2.6" width="54.8" height="86.8" rx="3.2" fill="#fffdf6"/><rect x="2.6" y="60" width="54.8" height="29.4" fill="url(#gSkyB)"/>`;
   const pre=(c.m===1&&c.t==='G')?sp:'';
   if(pre)sp='';
-  return open+bg+pre+art+sp+(c.t==='G'?GMARK:'')+hintMarks(c)+`<rect x=".5" y=".5" width="59" height="91" rx="4.6" fill="none" stroke="#00000030"/></svg>`;
+  return open+bg+`<g clip-path="url(#cIn)">${pre+art+sp}</g>`+(c.t==='G'?GMARK:'')+hintMarks(c)+`<rect x=".5" y=".5" width="59" height="91" rx="4.6" fill="none" stroke="#00000040"/></svg>`;
 }
 const BACK='<svg viewBox="0 0 60 92" xmlns="http://www.w3.org/2000/svg"><rect width="60" height="92" rx="5" fill="url(#gBack)"/><rect width="60" height="92" rx="5" fill="url(#pBack)"/><rect x="4" y="4" width="52" height="84" rx="3.5" fill="none" stroke="#ffd59a66" stroke-width="1"/><circle cx="30" cy="46" r="13" fill="#7a0c1c" stroke="#f5c24a" stroke-width="1.5"/><text x="30" y="47" font-size="15" font-weight="900" fill="#f5c24a" text-anchor="middle" dominant-baseline="central">福</text></svg>';
 const SVGC={};
@@ -392,9 +412,9 @@ const SFX={ctx:null,master:null,nb:null,
  init(){
   if(!this.ctx){const AC=window.AudioContext||window.webkitAudioContext;if(!AC)return;this.ctx=new AC();this.master=this.ctx.createGain();this.master.gain.value=.7;this.master.connect(this.ctx.destination);
    const n=this.ctx.sampleRate;this.nb=this.ctx.createBuffer(1,n,n);const d=this.nb.getChannelData(0);for(let i=0;i<n;i++)d[i]=Math.random()*2-1;}
-  if(this.ctx.state==='suspended')this.ctx.resume();
+  if(this.ctx.state!=='running')this.ctx.resume().catch(()=>{});
  },
- ok(){return DB.set.sound&&this.ctx&&this.ctx.state==='running'},
+ ok(){if(this.ctx&&this.ctx.state!=='running')this.ctx.resume().catch(()=>{});return DB.set.sound&&this.ctx&&this.ctx.state==='running'},
  tone(f,st,dur,type='sine',vol=.2,f2){if(!this.ok())return;const c=this.ctx,t=c.currentTime+st,o=c.createOscillator(),g=c.createGain();o.type=type;o.frequency.setValueAtTime(f,t);if(f2)o.frequency.exponentialRampToValueAtTime(f2,t+dur);g.gain.setValueAtTime(.0001,t);g.gain.exponentialRampToValueAtTime(vol,t+.008);g.gain.exponentialRampToValueAtTime(.0001,t+dur);o.connect(g).connect(this.master);o.start(t);o.stop(t+dur+.05)},
  noise(st,dur,vol,type,freq,q=1){if(!this.ok())return;const c=this.ctx,t=c.currentTime+st,s=c.createBufferSource(),f=c.createBiquadFilter(),g=c.createGain();s.buffer=this.nb;f.type=type;f.frequency.value=freq;f.Q.value=q;g.gain.setValueAtTime(vol,t);g.gain.exponentialRampToValueAtTime(.0001,t+dur);s.connect(f).connect(g).connect(this.master);s.start(t,Math.random()*.5);s.stop(t+dur+.02)},
  slap(p=1){this.noise(0,.09,.9*p,'bandpass',2100,.7);this.noise(0,.035,.6*p,'highpass',5200);this.tone(160,0,.13,'sine',.55*p,48)},
@@ -414,8 +434,42 @@ const SFX={ctx:null,master:null,nb:null,
  deal(){this.noise(0,.04,.35,'bandpass',2600,1);this.tone(900,0,.03,'triangle',.05)}
 };
 const vib=p=>{if(DB.set.vib&&navigator.vibrate)try{navigator.vibrate(p)}catch(e){}};
-function unlockAudio(){SFX.init()}
-['pointerdown','touchend','click'].forEach(ev=>document.addEventListener(ev,unlockAudio,{passive:true}));
+let audioUnlocked=false,silentEl=null;
+function silentWavURL(){const sr=8000,n=sr/2,buf=new ArrayBuffer(44+n*2),v=new DataView(buf),w=(o,t)=>{for(let i=0;i<t.length;i++)v.setUint8(o+i,t.charCodeAt(i))};
+  w(0,'RIFF');v.setUint32(4,36+n*2,true);w(8,'WAVE');w(12,'fmt ');v.setUint32(16,16,true);v.setUint16(20,1,true);v.setUint16(22,1,true);v.setUint32(24,sr,true);v.setUint32(28,sr*2,true);v.setUint16(32,2,true);v.setUint16(34,16,true);w(36,'data');v.setUint32(40,n*2,true);
+  return URL.createObjectURL(new Blob([buf],{type:'audio/wav'}))}
+function unlockAudio(){
+  // 아이폰: 무음(진동) 스위치가 켜져 있어도 게임 소리가 나도록 '재생' 모드로 전환
+  try{if(navigator.audioSession&&navigator.audioSession.type!=='playback')navigator.audioSession.type='playback'}catch(e){}
+  if(!silentEl&&!navigator.audioSession){try{silentEl=new Audio(silentWavURL());silentEl.loop=true;silentEl.setAttribute('playsinline','');silentEl.play().catch(()=>{silentEl=null})}catch(e){silentEl=null}}
+  SFX.init();if(!SFX.ctx)return;
+  if(!audioUnlocked){try{const b=SFX.ctx.createBuffer(1,1,22050),src=SFX.ctx.createBufferSource();src.buffer=b;src.connect(SFX.ctx.destination);src.start(0);audioUnlocked=true}catch(e){}}
+  if($('#game').classList.contains('on'))BGM.start();
+}
+['touchstart','touchend','pointerdown','click','keydown'].forEach(ev=>document.addEventListener(ev,unlockAudio,{passive:true,capture:true}));
+document.addEventListener('visibilitychange',()=>{
+  if(document.hidden){BGM.stop();silentEl&&silentEl.pause();SFX.ctx&&SFX.ctx.suspend&&SFX.ctx.suspend()}
+  else{SFX.ctx&&SFX.ctx.resume();silentEl&&silentEl.play().catch(()=>{});if($('#game').classList.contains('on'))BGM.start()}
+});
+/* ---------- 배경음악 (국악풍 5음계 · 가야금 + 장구, 직접 합성) ---------- */
+const BGM={timer:null,step:0,next:0,g:null,
+ MEL:[330,0,392,440, 392,0,330,294, 330,0,0,0, 262,294,330,0, 392,0,440,523, 440,0,392,330, 294,0,330,294, 262,0,220,0],
+ BASS:[110,131,98,110],
+ start(){const c=SFX.ctx;if(!DB.set.bgm||!DB.set.sound||!c||this.timer)return;
+  if(!this.g){this.g=c.createGain();this.g.connect(SFX.master)}this.g.gain.value=.16;
+  this.next=c.currentTime+.15;this.timer=setInterval(()=>this.tick(),90)},
+ stop(){clearInterval(this.timer);this.timer=null},
+ tick(){const c=SFX.ctx;if(!c||c.state!=='running')return;if(this.next<c.currentTime)this.next=c.currentTime+.05;
+  while(this.next<c.currentTime+.35){this.note(this.step%32,this.next);this.next+=.24;this.step++}},
+ pluck(f,t,v,d){const c=SFX.ctx,o=c.createOscillator(),o2=c.createOscillator(),g=c.createGain();o.type='triangle';o2.type='sine';o.frequency.value=f;o2.frequency.value=f*2.01;
+  g.gain.setValueAtTime(.0001,t);g.gain.exponentialRampToValueAtTime(v,t+.006);g.gain.exponentialRampToValueAtTime(.0001,t+d);
+  o.connect(g);o2.connect(g);g.connect(this.g);o.start(t);o2.start(t);o.stop(t+d+.05);o2.stop(t+d+.05)},
+ drum(t,f,v,d,n){const c=SFX.ctx,o=c.createOscillator(),g=c.createGain();o.frequency.setValueAtTime(f,t);o.frequency.exponentialRampToValueAtTime(f*.5,t+d);g.gain.setValueAtTime(v,t);g.gain.exponentialRampToValueAtTime(.0001,t+d);o.connect(g).connect(this.g);o.start(t);o.stop(t+d+.02);
+  if(n){const s=c.createBufferSource(),fl=c.createBiquadFilter(),g2=c.createGain();s.buffer=SFX.nb;fl.type='highpass';fl.frequency.value=2500;g2.gain.setValueAtTime(n,t);g2.gain.exponentialRampToValueAtTime(.0001,t+.06);s.connect(fl).connect(g2).connect(this.g);s.start(t,Math.random()*.5);s.stop(t+.08)}},
+ note(i,t){const m=this.MEL[i];if(m)this.pluck(m,t,.32,.55);if(i%8===0)this.pluck(this.BASS[(i/8)%4],t,.38,1.2);
+  if(i%16===0)this.drum(t,130,.7,.3,.15);else if(i%16===10)this.drum(t,110,.5,.25,0);
+  if(i%4===2)this.drum(t,600,.05,.04,.22);if(i%16===14||i%16===15)this.drum(t,500,.04,.03,.18)}
+};
 
 /* =====================================================
    점수 계산
@@ -442,7 +496,7 @@ let S=null;
 function newState(){return{deck:[],floor:[],hands:[[],[]],caps:[[],[]],turn:0,go:[0,0],lastGo:[0,0],shakes:[0,0],bombs:[0,0],shook:[[],[]],ppuk:[0,0],ppukOwner:{},slot:{},
   busy:true,sel:null,level:DB.set.level,target:DB.set.target,nagari:DB.nagari||0,over:false,dn:0,gid:Date.now()}}
 const dummy=()=>({id:'D-'+(S.dn++),m:-1,t:'D',sub:'',i:0});
-const SLOT_ORDER=[6,8,1,3,11,13,0,4,10,14,2,12,5,9];
+const SLOT_ORDER=[6,8,1,3,11,13,0,4,10,14,12,5,9];
 const TORD={G:0,Y:1,T:2,P:3,B:4,D:5};
 
 /* ---------- 레이아웃 계산 ---------- */
@@ -489,7 +543,8 @@ function render(){
   const bySlot={};order.forEach(m=>bySlot[S.slot[m]]=m);
   let fh='';
   for(let i=0;i<15;i++){
-    if(i===7){fh+=`<div class="cell"><div class="deck" data-cid="deck">${S.deck.length?[2,1,0].filter(k=>k<S.deck.length).map(k=>`<div class="dk" style="transform:translate(${k*1.5}px,${-k*1.5}px)">${BACK}</div>`).join(''):''}<span class="dn">${S.deck.length}장</span></div></div>`;continue}
+    if(i===2){fh+=`<div class="cell">${S.mission?`<div class="mission" id="mission"><div class="mt">MISSION · 3장 ×2</div><div class="mc">${S.mission.map(c=>`<div class="mcard ${S.caps[0].includes(c)?'o':S.caps[1].includes(c)?'x':''}">${svgOf(c)}</div>`).join('')}</div></div>`:''}</div>`;continue}
+    if(i===7){const L=Math.min(7,Math.ceil(S.deck.length/3));fh+=`<div class="cell"><div class="deck" data-cid="deck">${S.deck.length?Array.from({length:L},(_,k)=>L-1-k).map(k=>`<div class="dk" style="transform:translate(${k*.9}px,${k*1.2}px);filter:brightness(${1-k*.07})">${BACK}</div>`).join(''):''}<span class="dn">${S.deck.length}장</span></div></div>`;continue}
     const m=bySlot[i];
     if(m===undefined){fh+='<div class="cell"></div>';continue}
     const cs=groups[m],n=cs.length;
@@ -542,7 +597,7 @@ function flipAnim(before,o={}){
     const dx=r0.left-r1.left,dy=r0.top-r1.top,s=r0.width/r1.width;
     if(!fd&&Math.abs(dx)<1&&Math.abs(dy)<1&&Math.abs(s-1)<.02)return;
     el.style.zIndex=900;
-    const kf=fd?[{transform:`translate(${dx}px,${dy}px) scale(${s})`},{transform:`translate(${dx*.45}px,${dy*.45}px) scale(${((s+1)/2*.06).toFixed(3)},${((s+1)/2*1.1).toFixed(3)})`,offset:.42},{transform:'none'}]
+    const kf=o.slam&&!fd?[{transform:`translate(${dx}px,${dy}px) scale(${s})`},{transform:`translate(${dx*.12}px,${dy*.12-14}px) scale(1.22)`,offset:.72},{transform:'none'}]:fd?[{transform:`translate(${dx}px,${dy}px) scale(${s})`},{transform:`translate(${dx*.45}px,${dy*.45}px) scale(${((s+1)/2*.06).toFixed(3)},${((s+1)/2*1.1).toFixed(3)})`,offset:.42},{transform:'none'}]
       :[{transform:`translate(${dx}px,${dy}px) scale(${s})`},{transform:'none'}];
     if(!el.animate){el.style.zIndex='';return}
     const a=el.animate(kf,{duration:o.dur||360,easing:fd?'ease-out':'cubic-bezier(.2,.9,.25,1.05)'});
@@ -550,6 +605,18 @@ function flipAnim(before,o={}){
   });
 }
 async function act(fn,o={}){const b=snap();fn();render();flipAnim(b,o);await sleep(o.wait!=null?o.wait:(o.dur||360))}
+function impact(c,strong){
+  if(!c)return;const el=document.querySelector(`#floor [data-cid="${c.id}"]`);if(!el)return;
+  const r=el.getBoundingClientRect(),x=r.left+r.width/2,y=r.top+r.height/2;
+  const d=document.createElement('div');d.className='ring';d.style.left=x+'px';d.style.top=y+'px';document.body.appendChild(d);
+  if(d.animate)d.animate([{transform:'translate(-50%,-50%) scale(.3)',opacity:.95},{transform:'translate(-50%,-50%) scale(1.9)',opacity:0}],{duration:430,easing:'ease-out'}).onfinish=()=>d.remove();else d.remove();
+  if(el.animate)el.animate([{transform:'scale(1.12)'},{transform:'scale(.96)',offset:.5},{transform:'none'}],{duration:220});
+  if(strong&&$('#floor').animate)$('#floor').animate([{transform:'none'},{transform:'translate(-4px,2px)'},{transform:'translate(3px,-2px)'},{transform:'translate(-2px,1px)'},{transform:'none'}],{duration:220});
+  sparks(x,y,strong?9:5,['✦','✧','★']);
+}
+function sparks(x,y,n,ch){for(let i=0;i<n;i++){const s=document.createElement('div');s.className='spark';s.textContent=ch[i%ch.length];s.style.left=x+'px';s.style.top=y+'px';s.style.color=['#fff6b0','#ffd23f','#fff'][i%3];document.body.appendChild(s);
+  const a=Math.random()*Math.PI*2,r=30+Math.random()*50;if(s.animate)s.animate([{transform:'translate(-50%,-50%) scale(1)',opacity:1},{transform:`translate(${Math.cos(a)*r-7}px,${Math.sin(a)*r-7}px) scale(.3) rotate(${rnd(180)}deg)`,opacity:0}],{duration:500+rnd(250),easing:'ease-out'}).onfinish=()=>s.remove();else s.remove()}}
+function capSparkle(p){const el=$('#cap'+p);if(!el)return;const r=el.getBoundingClientRect();sparks(r.left+r.width*.5,r.top+r.height*.5,8,['✦','★','✧'])}
 
 /* ---------- 연출 ---------- */
 async function banner(txt,cls='',ms=750){
@@ -610,7 +677,8 @@ async function startGame(){
   S=newState();show('game');layout();
   const cards=shuffle(CARDS.slice());
   S.deck=cards;
-  render();await sleep(250);
+  {const pool=shuffle(CARDS.filter(c=>c.t!=='B'));const ms=[],mm=new Set();for(const c of pool){if(!mm.has(c.m)){ms.push(c);mm.add(c.m)}if(ms.length===3)break}S.mission=ms}
+  render();BGM.start();await sleep(250);
   const seq=[['f',4],['h0',5],['h1',5],['f',4],['h0',5],['h1',5]];
   for(const [w,n] of seq){
     await act(()=>{for(let i=0;i<n;i++){const c=S.deck.pop();if(w==='f')S.floor.push(c);else S.hands[+w[1]].push(c)}},{fromDeck:true,dur:330,wait:260});SFX.deal();
@@ -631,6 +699,7 @@ async function startGame(){
     const tm=Object.keys(c2).find(m=>c2[m]===4);
     if(tm){S.turn=p;render();SFX.event();await banner('총통! ('+MNAME[tm]+')','gold',1300);return endGame(p,{chongtong:true})}
   }
+  {const mb=$('#mission');mb&&mb.classList.add('pulse');SFX.event();await banner('오늘의 미션!','small gold',800);mb&&mb.classList.remove('pulse')}
   S.turn=first;S.busy=first===1;render();
   if(first===1){say('제가 선이에요~');aiTurn()}else say('먼저 치세요~');
 }
@@ -657,10 +726,10 @@ async function playCard(p,card,pick){
       if(yes){S.shakes[p]++;S.shook[p].push(H.m);SFX.shake();vib([15,30,15]);if(p===1)say('흔들어 볼까~?');await banner('흔들기!','gold',700);render()}
     }
     if(bomb){
-      await act(()=>{same.forEach(c=>{rm(hand,c);S.floor.push(c)});hand.push(dummy(),dummy())},{dur:420});
+      await act(()=>{same.forEach(c=>{rm(hand,c);S.floor.push(c)});hand.push(dummy(),dummy())},{dur:420,slam:true});same.forEach(c=>impact(c,true));
       S.shakes[p]++;S.bombs[p]++;SFX.bomb();vib(60);await banner('💣 폭탄!','red',800);
     }else{
-      await act(()=>{rm(hand,H);S.floor.push(H)},{dur:380});SFX.slap(kH?1:.7);vib(12);
+      await act(()=>{rm(hand,H);S.floor.push(H)},{dur:400,slam:true,wait:400});SFX.slap(kH?1:.75);impact(H,kH>0);vib(12);
     }
   }
   await sleep(110);
@@ -668,7 +737,7 @@ async function playCard(p,card,pick){
   let F=null;
   while(S.deck.length){
     const c=S.deck.pop();
-    await act(()=>S.floor.push(c),{fromDeck:true,dur:420,wait:430});SFX.flip();
+    await act(()=>S.floor.push(c),{fromDeck:true,dur:420,wait:430});SFX.flip();if(c.t!=='B'){const hit=S.floor.some(x=>x!==c&&x.m===c.m);if(hit){SFX.slap(.85);impact(c,true)}}
     if(c.t==='B'){await act(()=>{rm(S.floor,c);S.caps[p].push(c)},{dur:380});SFX.bonus();await banner('보너스!','gold',520);continue}
     F=c;break;
   }
@@ -697,7 +766,9 @@ async function playCard(p,card,pick){
     await banner(e+'!',e==='뻑'?'red':'gold',700);
   }
   if(took.length){
-    await act(()=>took.forEach(c=>{rm(S.floor,c);S.caps[p].push(c)}),{dur:460,wait:400});SFX.capture();vib(20);
+    await act(()=>took.forEach(c=>{rm(S.floor,c);S.caps[p].push(c)}),{dur:460,wait:400});SFX.capture();vib(20);capSparkle(p);
+    const mhit=S.mission?took.filter(c=>S.mission.includes(c)):[];
+    if(mhit.length){SFX.coin();const mb=$('#mission');mb&&mb.classList.add('pulse');await banner(p===0?'미션 ○ '+S.mission.filter(c=>S.caps[0].includes(c)).length+'/3':'미션 ✕','small '+(p===0?'gold':'red'),650)}
     if(p===1&&took.some(c=>c.t==='G'||c.sub==='godori'))say(pickT('big'));
   }
   if(took.length&&S.floor.length===0&&S.deck.length>0){steal++;SFX.event();await banner('싹쓸!','gold',700)}
@@ -846,6 +917,7 @@ async function endGame(w,sp={}){
     if(a.pp>0&&lPi<=5)mul.push(['피박',2]);
     if(a.gp>0&&lG===0)mul.push(['광박',2]);
   }
+  if(S.mission&&S.mission.every(c=>S.caps[w].includes(c)))mul.push(['미션 성공',2]);
   if(S.go[L]>0)mul.push(['고박',2]);
   if(S.nagari)mul.push(['나가리 판',2**S.nagari]);
   const total=score*mul.reduce((m,x)=>m*x[1],1);
@@ -856,6 +928,7 @@ async function endGame(w,sp={}){
   DB.history.unshift({t:`${d.getMonth()+1}/${d.getDate()} ${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}`,pid:pl.id,name:pl.name,emoji:pl.emoji,lv:S.level,win:w===0,pts:total,go:S.go[w]});
   DB.history=DB.history.slice(0,40);saveDB();
   await sleep(300);
+  BGM.stop();
   if(w===0){SFX.win();confetti();vib([30,50,30,50,80])}else SFX.lose();
   const html=`<div style="width:96px;height:96px;margin:-4px auto 0">${mascotSVG(LV[S.level].acc,w===0?'sad':'happy')}</div>
    <h2>${w===0?'🎉 '+esc(pl.name)+' 승리!':'😢 '+LV[S.level].name+' 승리'}</h2>
@@ -868,7 +941,7 @@ async function endGame(w,sp={}){
 }
 async function nagari(){
   if(S.over)return;S.over=true;S.busy=true;render();
-  DB.nagari=(DB.nagari||0)+1;saveDB();SFX.lose();
+  DB.nagari=(DB.nagari||0)+1;saveDB();BGM.stop();SFX.lose();
   await banner('나가리!','red',900);
   const v=await modal(`<div style="width:90px;height:90px;margin:0 auto">${mascotSVG(LV[S.level].acc,'sad')}</div><h2>나가리 😅</h2><p>아무도 나지 못했어요.<br>다음 판은 점수 <b style="color:#f5c24a">×${2**DB.nagari}</b>!</p>`,[{t:'다음 판!',v:'again'},{t:'홈으로',cls:'alt',v:'home'}]);
   if(v==='again')startGame();else goHome();
@@ -878,7 +951,7 @@ async function nagari(){
    화면 · 메뉴
 ===================================================== */
 function show(id){document.querySelectorAll('.screen').forEach(s=>s.classList.toggle('on',s.id===id))}
-function goHome(){if(S)S.gid=-1;S=null;show('home');renderHome()}
+function goHome(){if(S)S.gid=-1;S=null;BGM.stop();show('home');renderHome()}
 function renderHome(){
   $('#plist').innerHTML=DB.players.map(p=>`<button class="chip ${p.id===DB.cur?'on':''}" data-pid="${p.id}">${esc(p.emoji)} ${esc(p.name)}</button>`).join('')+`<button class="chip add" id="addP">＋ 가족 추가</button>`;
   $('#lvSeg').innerHTML=LV.map((l,i)=>`<button class="${DB.set.level===i?'on':''}" data-lv="${i}"><span class="mm">${mascotSVG(l.acc)}</span>${l.tag}<small>${l.name}</small></button>`).join('');
@@ -918,14 +991,14 @@ const RULES=`<div class="rules">
 <h3>🎴 기본 진행</h3>손패 1장을 내고, 더미에서 1장을 뒤집어요. 같은 <b>월(그림)</b>끼리 짝이 맞으면 먹어요. 낼 패를 한 번 누르면 <b>먹을 수 있는 바닥패가 빛나고</b>, 한 번 더 누르면(또는 빛나는 바닥패를 누르면) 내요.
 <h3>🧮 점수</h3><b>광</b> 3장 3점(비광 포함 시 2점), 4장 4점, 5장 15점<br><b>열끗</b> 5장 1점 + 1장마다 1점 · <b>고도리</b>(2·4·8월 새) 5점<br><b>띠</b> 5장 1점 + 1장마다 1점 · <b>홍단·청단·초단</b> 각 3점<br><b>피</b> 10장 1점 + 1장마다 1점 (쌍피·보너스는 2~3장으로 계산, 국진은 유리하게 자동 계산)
 <h3>🔥 고 / 스톱</h3>날 점수에 도달하면 고 또는 스톱! 1고 +1점, 2고 +2점, 3고부터 (+2점 후) ×2, ×4…
-<h3>💥 특수 상황</h3><b>쪽</b> 낸 패를 뒤집은 패로 바로 먹기 → 피 1장 뺏기<br><b>뻑</b> 낸 패로 먹었는데 뒤집은 패도 같은 월 → 3장이 바닥에 묶여요. 나중에 먹으면 피 1장(자기 뻑이면 2장)<br><b>따닥</b> 바닥 2장 + 낸 패 + 뒤집은 패 모두 같은 월 → 4장 다 먹고 피 1장<br><b>싹쓸</b> 바닥을 다 비우면 피 1장<br><b>폭탄</b> 같은 월 3장을 들고 바닥에 1장 → 한 번에 4장 먹고 피 1장, ×2, 빈패 2장 받음<br><b>흔들기</b> 같은 월 3장을 들고 바닥에 없을 때 선언 → ×2<br><b>3뻑</b> 한 판에 뻑 3번이면 즉시 승리 · <b>총통</b> 처음에 같은 월 4장이면 10점 승리<br><b>보너스패</b> 내면 바로 먹고 한 장 더 받아요
+<h3>💥 특수 상황</h3><b>쪽</b> 낸 패를 뒤집은 패로 바로 먹기 → 피 1장 뺏기<br><b>뻑</b> 낸 패로 먹었는데 뒤집은 패도 같은 월 → 3장이 바닥에 묶여요. 나중에 먹으면 피 1장(자기 뻑이면 2장)<br><b>따닥</b> 바닥 2장 + 낸 패 + 뒤집은 패 모두 같은 월 → 4장 다 먹고 피 1장<br><b>싹쓸</b> 바닥을 다 비우면 피 1장<br><b>폭탄</b> 같은 월 3장을 들고 바닥에 1장 → 한 번에 4장 먹고 피 1장, ×2, 빈패 2장 받음<br><b>흔들기</b> 같은 월 3장을 들고 바닥에 없을 때 선언 → ×2<br><b>3뻑</b> 한 판에 뻑 3번이면 즉시 승리 · <b>총통</b> 처음에 같은 월 4장이면 10점 승리<br><b>보너스패</b> 내면 바로 먹고 한 장 더 받아요<br><b>미션</b> 판마다 정해지는 미션패 3장을 모두 먹고 나면 ×2 (내가 먹으면 ○, 상대가 먹으면 ✕)
 <h3>💸 배수</h3><b>피박</b> 피로 났는데 상대 피 5장 이하 ×2 · <b>광박</b> 광으로 났는데 상대 광 0장 ×2 · <b>멍따</b> 열끗 7장 이상 ×2 · <b>고박</b> 고 했는데 상대가 나면 ×2 · <b>나가리</b> 아무도 못 나면 다음 판 ×2
 </div>`;
 async function openRules(){await modal('<h2>📖 맞고 규칙</h2>'+RULES,[{t:'알겠어요!',v:1}],{dismiss:0})}
 async function openSettings(){
   const row=(k,label)=>`<div class="tog"><span>${label}</span><button class="sw ${DB.set[k]?'on':''}" data-k="${k}"></button></div>`;
-  await modal(`<h2>⚙️ 설정</h2>${row('sound','🔊 효과음')}${row('vib','📳 진동 (안드로이드)')}${row('hint','🔢 카드에 월·종류 표시')}<p style="margin-top:10px;font-size:12px;opacity:.7">홈 화면에 추가하면 앱처럼 전체 화면으로 실행돼요.<br>iPhone: 공유 버튼 → '홈 화면에 추가'</p>`,
-    [{t:'닫기',v:1}],{dismiss:0,onOpen:bg=>bg.addEventListener('click',e=>{const b=e.target.closest('.sw');if(!b)return;const k=b.dataset.k;DB.set[k]=!DB.set[k];b.classList.toggle('on',DB.set[k]);saveDB();if(k==='hint'){clearSvgCache();fanArt();S&&render()}if(k==='sound'&&DB.set.sound){SFX.init();SFX.select()}})});
+  await modal(`<h2>⚙️ 설정</h2>${row('sound','🔊 소리 전체')}${row('bgm','🎵 배경음악')}${row('vib','📳 진동 (안드로이드)')}${row('hint','🔢 카드에 월·종류 표시')}<p style="margin-top:10px;font-size:12px;opacity:.7">소리가 안 나면 아이폰 옆면 볼륨 버튼을 올려 주세요.<br>홈 화면에 추가하면 앱처럼 전체 화면으로 실행돼요.<br>iPhone: 공유 버튼 → '홈 화면에 추가'</p>`,
+    [{t:'닫기',v:1}],{dismiss:0,onOpen:bg=>bg.addEventListener('click',e=>{const b=e.target.closest('.sw');if(!b)return;const k=b.dataset.k;DB.set[k]=!DB.set[k];b.classList.toggle('on',DB.set[k]);saveDB();if(k==='hint'){clearSvgCache();fanArt();S&&render()}if(k==='sound'||k==='bgm'){SFX.init();if(DB.set.sound&&DB.set.bgm&&S)BGM.start();else BGM.stop();if(DB.set.sound)SFX.select()}})});
 }
 async function openMenu(){
   const prev=S.busy;S.busy=true;
