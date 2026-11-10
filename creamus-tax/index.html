@@ -1,0 +1,556 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#0B3B40">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="크림어스 세금">
+<title>크림어스 세금노트</title>
+<link rel="apple-touch-icon" id="appleIcon" href="">
+<link rel="icon" id="favIcon" href="">
+<link rel="manifest" id="manifestLink" href="">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Black+Han+Sans&family=IBM+Plex+Sans+KR:wght@400;500;600;700&display=swap">
+<script>
+  (function () {
+    try {
+      var c = document.createElement('canvas'); c.width = 512; c.height = 512;
+      var g = c.getContext('2d');
+      g.fillStyle = '#0E5A60'; g.fillRect(0, 0, 512, 512);
+      g.fillStyle = '#F4F1EA'; g.beginPath(); g.arc(256, 228, 120, 0, Math.PI * 2); g.fill();
+      g.fillStyle = '#D9691F'; g.font = '900 150px sans-serif'; g.textAlign = 'center'; g.textBaseline = 'middle';
+      g.fillText('₩', 256, 232);
+      g.fillStyle = '#FFFFFF'; g.font = 'bold 66px sans-serif'; g.fillText('크림어스', 256, 420);
+      var png = c.toDataURL('image/png');
+      document.getElementById('appleIcon').href = png; document.getElementById('favIcon').href = png;
+      var m = { name: '크림어스 세금노트', short_name: '크림어스 세금', start_url: location.href.split('#')[0], display: 'standalone', background_color: '#F4F1EA', theme_color: '#0B3B40', icons: [{ src: png, sizes: '512x512', type: 'image/png' }] };
+      document.getElementById('manifestLink').href = URL.createObjectURL(new Blob([JSON.stringify(m)], { type: 'application/manifest+json' }));
+    } catch (e) {}
+  })();
+</script>
+<style>
+  :root {
+    --surface-100: #F4F1EA; --surface-card: #FFFFFF; --brand: #0E5A60; --brand-deep: #0B3B40; --brand-tint: #DCEDEB;
+    --on-brand: #FFFFFF; --accent: #D9691F; --leaf: #3F8F2E; --danger: #C0392B; --ink: #14262A; --muted: #56676A; --line: #E2DBCD;
+    --sans: "IBM Plex Sans KR", "Apple SD Gothic Neo", system-ui, sans-serif;
+    --num: "Black Han Sans", "IBM Plex Sans KR", system-ui, sans-serif;
+  }
+  * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+  html, body { margin: 0; background: var(--surface-100); color: var(--ink); font-family: var(--sans); font-size: 15px; line-height: 22px; -webkit-text-size-adjust: 100%; }
+  button, input, select { font-family: inherit; font-size: inherit; color: inherit; }
+  .wrap { max-width: 480px; margin: 0 auto; padding: 0 12px calc(96px + env(safe-area-inset-bottom)); }
+  header { position: sticky; top: 0; z-index: 20; background: var(--surface-100); padding: calc(env(safe-area-inset-top) + 12px) 4px 10px; display: flex; justify-content: space-between; align-items: baseline; }
+  header h1 { margin: 0; font-size: 20px; line-height: 28px; font-weight: 700; }
+  header .date { font-size: 13px; color: var(--muted); }
+  .ver { position: fixed; right: 6px; bottom: calc(70px + env(safe-area-inset-bottom)); font-size: 9px; color: #B9B1A2; z-index: 5; pointer-events: none; }
+  .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+  .card { background: var(--surface-card); border-radius: 14px; padding: 16px; min-width: 0; }
+  .wide { grid-column: span 2; }
+  .hero { background: var(--brand); color: var(--on-brand); border-radius: 22px; }
+  .hero .lab { color: var(--on-brand); opacity: .85; }
+  .lab { font-size: 12px; line-height: 16px; font-weight: 600; color: var(--muted); }
+  .num { font-family: var(--num); font-size: 28px; line-height: 32px; margin-top: 8px; letter-spacing: .2px; word-break: keep-all; }
+  .hero .num { font-size: 48px; line-height: 52px; }
+  .u { font-family: var(--sans); font-size: 13px; line-height: 18px; font-weight: 500; margin-left: 4px; }
+  .sub { font-size: 13px; line-height: 18px; color: var(--muted); margin-top: 6px; }
+  .hero .sub { color: var(--on-brand); opacity: .9; }
+  .acc { color: var(--accent); }
+  .row { display: flex; align-items: center; gap: 8px; padding: 11px 0; border-top: 1px solid var(--line); }
+  .row:first-of-type { border-top: 0; }
+  .dot { width: 8px; height: 8px; border-radius: 999px; flex: none; }
+  .ok { background: var(--leaf); } .today { background: var(--accent); } .late { background: var(--danger); }
+  .tag { margin-left: auto; font-size: 12px; font-weight: 600; color: var(--muted); white-space: nowrap; }
+  .sec { font-size: 14px; line-height: 20px; font-weight: 700; margin: 24px 4px 8px; }
+  .bar { height: 10px; background: var(--surface-100); border-radius: 999px; overflow: hidden; margin-top: 10px; position: relative; }
+  .bar i { display: block; height: 100%; background: var(--brand); border-radius: 999px; }
+  .bar b { position: absolute; top: -3px; width: 2px; height: 16px; background: var(--accent); }
+  .marks { display: flex; justify-content: space-between; font-size: 11px; color: var(--muted); margin-top: 6px; }
+  /* 탭바 */
+  nav { position: fixed; left: 0; right: 0; bottom: 0; z-index: 30; background: var(--surface-card); border-top: 1px solid var(--line); padding-bottom: env(safe-area-inset-bottom); }
+  nav .in { max-width: 480px; margin: 0 auto; display: grid; grid-template-columns: repeat(4, 1fr); }
+  nav button { background: none; border: 0; padding: 10px 0 12px; font-size: 13px; font-weight: 600; color: var(--muted); display: flex; flex-direction: column; align-items: center; gap: 3px; }
+  nav button svg { width: 22px; height: 22px; }
+  nav button.on { color: var(--brand); }
+  nav button.on::after { content: ''; width: 18px; height: 3px; border-radius: 99px; background: var(--accent); }
+  /* 입력 */
+  .monthbar { display: flex; align-items: center; justify-content: space-between; background: var(--surface-card); border-radius: 14px; padding: 6px; }
+  .monthbar button { width: 48px; height: 48px; border: 0; border-radius: 10px; background: var(--brand-tint); font-size: 20px; font-weight: 700; }
+  .monthbar .m { font-family: var(--num); font-size: 26px; }
+  .field { padding: 14px 0; border-top: 1px solid var(--line); }
+  .field:first-of-type { border-top: 0; padding-top: 4px; }
+  .field .t { font-weight: 700; font-size: 15px; }
+  .field .h { font-size: 12px; line-height: 17px; color: var(--muted); margin: 2px 0 8px; }
+  .money { position: relative; }
+  .money input { width: 100%; border: 0; border-radius: 12px; background: var(--surface-100); padding: 14px 44px 14px 14px; font-family: var(--num); font-size: 26px; text-align: right; outline: none; }
+  .money input:focus { box-shadow: 0 0 0 2px var(--brand) inset; background: #fff; }
+  .money span { position: absolute; right: 14px; top: 50%; transform: translateY(-50%); color: var(--muted); font-weight: 600; }
+  .total { display: flex; justify-content: space-between; align-items: baseline; padding-top: 12px; border-top: 2px solid var(--ink); margin-top: 4px; font-weight: 700; }
+  .total .num { margin: 0; font-size: 24px; }
+  .btn { width: 100%; border: 0; border-radius: 999px; background: var(--brand); color: var(--on-brand); font-weight: 700; font-size: 17px; padding: 16px; }
+  .btn.alt { background: var(--accent); color: var(--ink); }
+  .btn.ghost { background: var(--brand-tint); color: var(--ink); }
+  .btn:active, .monthbar button:active { transform: scale(.98); }
+  textarea, .txt { width: 100%; border: 0; border-radius: 12px; background: var(--surface-100); padding: 12px 14px; font-size: 15px; outline: none; }
+  select.txt { -webkit-appearance: none; appearance: none; }
+  /* 신고표 */
+  table { width: 100%; border-collapse: collapse; }
+  td { padding: 10px 0; border-top: 1px solid var(--line); vertical-align: top; }
+  tr:first-child td { border-top: 0; }
+  td.v { text-align: right; font-family: var(--num); font-size: 19px; white-space: nowrap; padding-left: 8px; }
+  td .d { display: block; font-size: 12px; line-height: 16px; color: var(--muted); }
+  .copy { cursor: pointer; border-radius: 6px; }
+  .copy:active { background: var(--brand-tint); }
+  .final td { border-top: 2px solid var(--ink); font-weight: 700; }
+  .final td.v { font-size: 24px; color: var(--accent); }
+  ol.steps { margin: 0; padding: 0; list-style: none; counter-reset: s; }
+  ol.steps li { position: relative; padding: 10px 0 10px 36px; border-top: 1px solid var(--line); counter-increment: s; }
+  ol.steps li:first-child { border-top: 0; }
+  ol.steps li::before { content: counter(s); position: absolute; left: 0; top: 10px; width: 24px; height: 24px; border-radius: 999px; background: var(--brand); color: #fff; font-size: 13px; font-weight: 700; display: flex; align-items: center; justify-content: center; }
+  .note { background: var(--brand-tint); border-radius: 14px; padding: 14px 16px; font-size: 14px; line-height: 21px; }
+  .warn { background: #FBE6D6; }
+  .chips { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 8px; }
+  .chip { border: 0; border-radius: 999px; background: var(--surface-100); padding: 8px 14px; font-weight: 600; font-size: 14px; }
+  .chip.on { background: var(--brand); color: #fff; }
+  .hidden { display: none !important; }
+  #toast { position: fixed; left: 50%; bottom: calc(88px + env(safe-area-inset-bottom)); transform: translateX(-50%); background: var(--ink); color: #fff; padding: 12px 20px; border-radius: 999px; font-weight: 600; font-size: 14px; opacity: 0; transition: opacity .2s; pointer-events: none; z-index: 50; white-space: nowrap; }
+  .yrsel { display: flex; gap: 6px; }
+  .link { color: var(--brand); font-weight: 700; text-decoration: underline; }
+</style>
+</head>
+<body>
+<header>
+  <h1 id="appTitle">크림어스 세금노트</h1>
+  <span class="date" id="today"></span>
+</header>
+
+<div class="wrap">
+  <!-- 홈 -->
+  <section id="p-home"></section>
+
+  <!-- 적기 -->
+  <section id="p-input" class="hidden">
+    <div class="monthbar">
+      <button id="mPrev" aria-label="이전 달">‹</button>
+      <div style="text-align:center"><div class="m" id="mLabel"></div><div class="lab" id="mState"></div></div>
+      <button id="mNext" aria-label="다음 달">›</button>
+    </div>
+
+    <div class="sec">1. 이번 달에 받은 돈 (매출)</div>
+    <div class="card">
+      <div class="field">
+        <div class="t">카드로 받은 돈</div>
+        <div class="h">카드 단말기 월 합계 또는 카드매출 조회(여신금융협회 cardsales.or.kr)의 승인 합계</div>
+        <div class="money"><input inputmode="numeric" data-k="card" placeholder="0"><span>원</span></div>
+      </div>
+      <div class="field">
+        <div class="t">배달앱·네이버·스마트스토어 결제</div>
+        <div class="h">배민·쿠팡이츠·네이버 예약/주문 등 앱으로 결제된 금액 합계 (수수료 빼기 전 금액)</div>
+        <div class="money"><input inputmode="numeric" data-k="online" placeholder="0"><span>원</span></div>
+      </div>
+      <div class="field">
+        <div class="t">현금영수증 끊어 준 현금·계좌이체</div>
+        <div class="h">현금영수증을 발급한 금액 합계</div>
+        <div class="money"><input inputmode="numeric" data-k="cashReceipt" placeholder="0"><span>원</span></div>
+      </div>
+      <div class="field">
+        <div class="t">영수증 없이 받은 현금·계좌이체</div>
+        <div class="h">통장 입금 내역에서 케이크·쿠키 값으로 받은 돈 중 위에 안 들어간 것</div>
+        <div class="money"><input inputmode="numeric" data-k="cash" placeholder="0"><span>원</span></div>
+      </div>
+      <div class="total"><span>이번 달 매출 합계</span><span class="num" id="saleTotal">0<span class="u">원</span></span></div>
+    </div>
+
+    <div class="sec">2. 이번 달에 가게 일로 쓴 돈 (매입)</div>
+    <div class="card">
+      <div class="field">
+        <div class="t">증빙 있는 지출</div>
+        <div class="h">재료(밀가루·버터·생크림·과일)·포장재·소모품 등을 <b>사업용 카드, 현금영수증(지출증빙), 세금계산서</b>로 산 금액 합계. 부가세에서 0.5%를 깎아줘요.</div>
+        <div class="money"><input inputmode="numeric" data-k="buyProof" placeholder="0"><span>원</span></div>
+      </div>
+      <div class="field">
+        <div class="t">증빙 없는 지출</div>
+        <div class="h">시장에서 현금으로 산 과일처럼 영수증이 없는 것. 부가세 공제는 안 되지만 5월 소득세 참고용으로 적어 두세요.</div>
+        <div class="money"><input inputmode="numeric" data-k="buyNone" placeholder="0"><span>원</span></div>
+      </div>
+      <div class="field">
+        <div class="t">메모 <span class="lab">(선택)</span></div>
+        <input class="txt" data-k="memo" placeholder="예: 크리스마스 케이크 주문 많았음">
+      </div>
+    </div>
+    <div style="height:12px"></div>
+    <button class="btn" id="saveMonth">이번 달 저장</button>
+    <div class="sub" style="text-align:center;margin-top:10px">언제든 다시 열어서 고칠 수 있어요. 한 달에 한 번, 다음 달 초에 적으면 충분해요.</div>
+  </section>
+
+  <!-- 신고 -->
+  <section id="p-file" class="hidden"></section>
+
+  <!-- 설정 -->
+  <section id="p-set" class="hidden">
+    <div class="sec" style="margin-top:4px">가게 정보</div>
+    <div class="card">
+      <div class="field">
+        <div class="t">상호</div>
+        <input class="txt" id="sName" placeholder="크림어스">
+      </div>
+      <div class="field">
+        <div class="t">업종 (부가가치율)</div>
+        <div class="h">사업자등록증의 업태를 보세요. 케이크를 직접 만들어 파는 제과점·카페는 음식점업이에요.</div>
+        <select class="txt" id="sRate">
+          <option value="15">음식점업·제과점·카페 (15%)</option>
+          <option value="15.1">소매업 — 사 온 빵·과자만 판매 (15%)</option>
+          <option value="20">제조업 (20%)</option>
+          <option value="25">숙박업 (25%)</option>
+          <option value="30">서비스업 (30%)</option>
+        </select>
+      </div>
+      <div class="field">
+        <div class="t">개업한 달</div>
+        <div class="h">사업자등록증의 개업연월일. 첫해는 일한 달 수로 납부면제(4,800만원)를 따져서 꼭 필요해요.</div>
+        <input class="txt" id="sOpen" type="month">
+      </div>
+      <div class="field">
+        <div class="t">세금계산서 발급 간이과세자</div>
+        <label style="display:flex;gap:10px;align-items:flex-start;margin-top:6px"><input type="checkbox" id="sInvoice" style="width:22px;height:22px;margin-top:2px"><span class="h" style="margin:0">작년 매출이 4,800만원 이상이었다면 체크. 이 경우 7월에 상반기(1~6월) 예정신고를 직접 해야 해요.</span></label>
+      </div>
+    </div>
+
+    <div class="sec">데이터 지키기</div>
+    <div class="card">
+      <div class="h" style="margin:0 0 10px">기록은 이 폰에만 저장돼요. 폰을 바꾸거나 앱을 지우기 전에 꼭 백업하세요. 백업 파일은 카톡 "나에게 보내기"나 iCloud에 두면 안전해요.</div>
+      <div class="grid">
+        <button class="btn" id="bBackup">백업 저장</button>
+        <button class="btn ghost" id="bRestore">백업 불러오기</button>
+        <button class="btn ghost wide" id="bCsv">엑셀(CSV)로 받기</button>
+      </div>
+      <input type="file" id="fRestore" accept=".json,application/json" class="hidden">
+      <div class="sub" id="lastBackup"></div>
+    </div>
+
+    <div class="sec">간이과세자 기본 상식</div>
+    <div class="card" style="font-size:14px;line-height:21px">
+      <div class="row"><span class="dot ok"></span><span>부가세 신고는 <b>1년에 한 번, 1월 1~25일</b> (작년 1~12월분)</span></div>
+      <div class="row"><span class="dot ok"></span><span>1년 매출이 <b>4,800만원 미만이면 낼 세금 0원</b>. 그래도 신고는 꼭 해야 해요.</span></div>
+      <div class="row"><span class="dot today"></span><span>7월에 고지서가 오면 작년 세금의 절반을 미리 내요(50만원 미만은 안 옴). 낸 돈은 1월에 빼줘요.</span></div>
+      <div class="row"><span class="dot today"></span><span>1년 매출이 <b>1억 400만원을 넘으면</b> 다음 해 7월부터 일반과세자로 바뀌어요.</span></div>
+      <div class="row"><span class="dot ok"></span><span>간이과세자는 세금을 돌려받는 환급이 없어요. 대신 세율이 매출의 1.5% 정도로 낮아요.</span></div>
+    </div>
+  </section>
+</div>
+
+<nav><div class="in">
+  <button data-tab="home" class="on"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 11l9-7 9 7v9a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1z"/></svg>홈</button>
+  <button data-tab="input"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4z"/></svg>적기</button>
+  <button data-tab="file"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6M8 13h8M8 17h5"/></svg>신고</button>
+  <button data-tab="set"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 0 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 0 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 0 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 0 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></svg>설정</button>
+</div></nav>
+<div class="ver">v1</div>
+<div id="toast"></div>
+
+<script>
+// =====================================================================
+//  크림어스 세금노트 — 간이과세자 전용 (월 1회 입력 → 1월 부가세 신고)
+// =====================================================================
+var KEY = 'creamus_tax_v1';
+var SALE_KEYS = ['card', 'online', 'cashReceipt', 'cash'];
+var BUY_KEYS = ['buyProof', 'buyNone'];
+
+function load() {
+  try { var d = JSON.parse(localStorage.getItem(KEY) || '{}'); return d && typeof d === 'object' ? d : {}; } catch (e) { return {}; }
+}
+var DB = load();
+function norm() {
+  if (!DB.months || typeof DB.months !== 'object') DB.months = {};
+  if (!DB.set || typeof DB.set !== 'object') DB.set = {};
+  var s = DB.set;
+  if (!s.name) s.name = '크림어스';
+  if (!s.rate) s.rate = '15';
+  if (typeof s.invoice !== 'boolean') s.invoice = false;
+  if (!s.open) s.open = '';
+  if (!s.prepaid || typeof s.prepaid !== 'object') s.prepaid = {};
+  if (!s.filed || typeof s.filed !== 'object') s.filed = {};
+  if (!s.done || typeof s.done !== 'object') s.done = {};
+}
+norm();
+function save() { try { localStorage.setItem(KEY, JSON.stringify(DB)); } catch (e) { toast('저장 공간이 부족해요'); } }
+
+// ---------- 유틸 ----------
+function $(id) { return document.getElementById(id); }
+function pad(n) { return (n < 10 ? '0' : '') + n; }
+function comma(n) { return Math.round(n || 0).toLocaleString('ko-KR'); }
+function numOf(v) { return parseInt(String(v || '').replace(/[^0-9]/g, ''), 10) || 0; }
+function esc(s) { return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]; }); }
+function ym(y, m) { return y + '-' + pad(m); }
+var NOW = new Date(), CY = NOW.getFullYear(), CM = NOW.getMonth() + 1, CD = NOW.getDate();
+var tt = null;
+function toast(t) { var e = $('toast'); e.textContent = t; e.style.opacity = 1; clearTimeout(tt); tt = setTimeout(function () { e.style.opacity = 0; }, 2000); }
+function rate() { return parseFloat(DB.set.rate) >= 15 && parseFloat(DB.set.rate) < 16 ? 15 : parseFloat(DB.set.rate); }
+function rateName() { var o = $('sRate').querySelector('option[value="' + DB.set.rate + '"]'); return o ? o.textContent.replace(/\s*\(.*$/, '') : '음식점업'; }
+
+// ---------- 집계 ----------
+function monthOf(k) { return DB.months[k] || null; }
+function saleSum(r) { return r ? SALE_KEYS.reduce(function (a, k) { return a + (r[k] || 0); }, 0) : 0; }
+function yearSum(y, uptoMonth) {
+  var S = { card: 0, online: 0, cashReceipt: 0, cash: 0, buyProof: 0, buyNone: 0, sales: 0, filled: 0, months: [] };
+  for (var m = 1; m <= (uptoMonth || 12); m++) {
+    var r = monthOf(ym(y, m));
+    if (!r) continue;
+    S.filled++; S.months.push(m);
+    SALE_KEYS.concat(BUY_KEYS).forEach(function (k) { S[k] += r[k] || 0; });
+  }
+  S.sales = S.card + S.online + S.cashReceipt + S.cash;
+  S.cardLike = S.card + S.online + S.cashReceipt;
+  return S;
+}
+// 그해 영업한 달 수 (개업월 반영)
+function bizMonths(y) {
+  var o = DB.set.open;
+  if (!o) return 12;
+  var oy = parseInt(o.slice(0, 4), 10), om = parseInt(o.slice(5, 7), 10);
+  if (oy > y) return 0;
+  if (oy < y) return 12;
+  return 12 - om + 1;
+}
+function cardRule(y) { return y <= 2026 ? { rate: 0.013, limit: 10000000, txt: '1.3%, 연 1,000만원 한도' } : { rate: 0.012, limit: 5000000, txt: '1.2%, 연 500만원 한도 (2027년~ 정부안 기준)' }; }
+
+// 간이과세 부가세 계산
+function calc(y) {
+  var S = yearSum(y), bm = bizMonths(y) || 12;
+  var annual = S.sales * 12 / bm;               // 연 환산 매출
+  var exempt = annual < 48000000;               // 납부의무 면제
+  var r = rate();
+  var base = Math.floor(S.sales * r / 100 * 0.1);   // 납부세액
+  var left = base;
+  var buyCredit = Math.min(left, Math.floor(S.buyProof * 0.005)); left -= buyCredit;
+  var cr = cardRule(y);
+  var cardCredit = Math.min(left, Math.floor(Math.min(S.cardLike * cr.rate, cr.limit))); left -= cardCredit;
+  var eCredit = Math.min(left, 10000); left -= eCredit;
+  var prepaid = Number(DB.set.prepaid[y]) || 0;
+  var due = exempt ? 0 - prepaid : left - prepaid;
+  return { S: S, bm: bm, annual: annual, exempt: exempt, r: r, base: base, buyCredit: buyCredit, cardCredit: cardCredit, cr: cr, eCredit: eCredit, prepaid: prepaid, due: due, beforePre: exempt ? 0 : left };
+}
+function filingYear() { return CM <= 6 ? CY - 1 : CY; } // 1~6월엔 작년 신고가 중심
+
+// ---------- 홈 ----------
+function todos() {
+  var L = [], done = DB.set.done;
+  var pmD = new Date(CY, CM - 2, 1), py = pmD.getFullYear(), pm = pmD.getMonth() + 1;
+  var openOk = function (y, m) { var o = DB.set.open; return !o || ym(y, m) >= o; };
+  // 지난달 미입력
+  if (openOk(py, pm) && !monthOf(ym(py, pm))) L.push({ k: 'm' + ym(py, pm), st: 'today', t: pm + '월 매출 적기', tag: '오늘', go: ['input', py, pm] });
+  // 그 전 달 빠진 것
+  var miss = 0;
+  for (var i = 2; i <= 12; i++) { var d = new Date(CY, CM - 1 - i, 1); if (d.getFullYear() < CY - 1) break; if (openOk(d.getFullYear(), d.getMonth() + 1) && !monthOf(ym(d.getFullYear(), d.getMonth() + 1))) miss++; }
+  if (miss) L.push({ k: 'miss' + CY + CM, st: 'late', t: '안 적은 달 ' + miss + '개월', tag: '지남', go: ['input'] });
+  // 1월 신고
+  var fy = CY - 1;
+  if (CM === 1 && CD <= 25 && !DB.set.filed[fy]) L.push({ k: 'file' + fy, st: 'today', t: fy + '년 부가세 신고 (1월 25일까지)', tag: '오늘', go: ['file', fy] });
+  if ((CM > 1 || CD > 25) && CM <= 6 && !DB.set.filed[fy] && yearSum(fy).filled) L.push({ k: 'late' + fy, st: 'late', t: fy + '년 부가세 신고 안 함', tag: '지남', go: ['file', fy] });
+  if (CM === 12 && CD >= 15) L.push({ k: 'pre' + CY, st: 'today', t: '1월 신고 준비 — 12월까지 다 적기', tag: '곧', go: ['input'] });
+  if (CM === 7) L.push({ k: 'jul' + CY, st: 'today', t: '7월 예정부과 고지서 확인 (25일까지 납부)', tag: '오늘', go: ['file', CY] });
+  if (CM === 7 && DB.set.invoice) L.push({ k: 'julf' + CY, st: 'today', t: '상반기(1~6월) 예정신고 (7월 25일까지)', tag: '오늘', go: ['file', CY] });
+  if (CM === 5) L.push({ k: 'inc' + CY, st: 'today', t: '종합소득세 신고 (5월 31일까지)', tag: '오늘', go: ['file', CY - 1] });
+  if (!DB.lastBackup || Date.now() - DB.lastBackup > 30 * 86400000) L.push({ k: 'bk' + ym(CY, CM), st: 'today', t: '한 달에 한 번 백업하기', tag: '오늘', go: ['set'] });
+  return L.filter(function (x) { return !done[x.k]; });
+}
+function renderHome() {
+  var y = CY, c = calc(y), S = c.S, mNow = monthOf(ym(CY, CM)), lastM = new Date(CY, CM - 2, 1);
+  var bm = c.bm, monthsSoFar = Math.max(1, Math.min(bm, S.filled || 1));
+  var pace = S.sales / monthsSoFar * 12; // 이 속도면 1년 매출
+  var heroNum = c.exempt ? '0' : comma(Math.max(0, c.beforePre));
+  var heroSub = c.exempt ? '연 매출 4,800만원 미만이면 납부 면제 · 신고는 ' + (y + 1) + '년 1월 25일까지 꼭' : (y + 1) + '년 1월 25일까지 신고 · 지금까지 적은 매출 기준';
+  var pct = Math.min(100, S.sales / 104000000 * 100), p48 = 48 / 104 * 100;
+  var L = todos();
+  var h = '';
+  h += '<div class="grid">';
+  h += '<div class="card wide hero"><div class="lab">' + y + '년 예상 부가세</div><div class="num">' + heroNum + '<span class="u">원</span></div><div class="sub">' + heroSub + '</div></div>';
+  h += '<div class="card"><div class="lab">올해 매출</div><div class="num">' + comma(S.sales / 10000) + '<span class="u">만원</span></div><div class="sub">' + S.filled + '개월 적음</div></div>';
+  h += '<div class="card"><div class="lab">' + (lastM.getMonth() + 1) + '월 매출</div><div class="num">' + (monthOf(ym(lastM.getFullYear(), lastM.getMonth() + 1)) ? comma(saleSum(monthOf(ym(lastM.getFullYear(), lastM.getMonth() + 1))) / 10000) : '-') + '<span class="u">만원</span></div><div class="sub">' + (monthOf(ym(lastM.getFullYear(), lastM.getMonth() + 1)) ? '적음' : '아직 안 적음') + '</div></div>';
+  h += '<div class="card"><div class="lab">이 속도면 1년 매출</div><div class="num ' + (pace >= 48000000 ? 'acc' : '') + '">' + comma(pace / 10000) + '<span class="u">만원</span></div><div class="sub">' + (pace < 48000000 ? '납부 면제 예상' : pace < 104000000 ? '세금 내는 구간' : '일반과세 전환 주의') + '</div></div>';
+  h += '<div class="card"><div class="lab">세금 모아둘 돈</div><div class="num acc">' + comma(c.exempt ? 0 : Math.max(0, c.due)) + '<span class="u">원</span></div><div class="sub">' + (c.prepaid ? '7월 낸 돈 뺀 금액' : '1월에 낼 돈') + '</div></div>';
+  h += '<div class="card wide"><div class="lab">올해 매출 위치</div><div class="bar"><i style="width:' + pct.toFixed(1) + '%"></i><b style="left:' + p48.toFixed(1) + '%"></b></div><div class="marks" style="position:relative;height:16px"><span>0</span><span style="position:absolute;left:' + p48.toFixed(1) + '%;transform:translateX(-50%)">4,800만 면제선</span><span style="position:absolute;right:0">1억400만</span></div>' +
+    (bm < 12 ? '<div class="sub">올해 ' + bm + '개월 영업이라 면제선은 ' + comma(48000000 * bm / 12 / 10000) + '만원이에요.</div>' : '') + '</div>';
+  h += '<div class="card wide"><div class="lab" style="margin-bottom:4px">할 일</div>' +
+    (L.length ? L.map(function (x) { return '<div class="row todo" data-k="' + x.k + '" data-go="' + esc(JSON.stringify(x.go || [])) + '"><span class="dot ' + x.st + '"></span><span>' + esc(x.t) + '</span><span class="tag">' + x.tag + '</span></div>'; }).join('') : '<div class="row"><span class="dot ok"></span><span>지금 할 일 없음</span><span class="tag">완료</span></div>') +
+    (L.length ? '<div class="sub">줄을 누르면 해당 화면으로 가요. 다 했으면 길게 눌러 지우세요.</div>' : '') + '</div>';
+  h += '</div><div style="height:12px"></div><button class="btn" id="goInput">' + (lastM.getMonth() + 1) + '월 매출 적기</button>';
+  $('p-home').innerHTML = h;
+  $('goInput').onclick = function () { openInput(lastM.getFullYear(), lastM.getMonth() + 1); };
+  document.querySelectorAll('.todo').forEach(function (el) {
+    var timer = null;
+    el.addEventListener('touchstart', function () { timer = setTimeout(function () { timer = 'held'; if (confirm('이 할 일을 지울까요?')) { DB.set.done[el.dataset.k] = Date.now(); save(); renderHome(); } }, 600); }, { passive: true });
+    el.addEventListener('touchend', function () { if (timer && timer !== 'held') clearTimeout(timer); });
+    el.addEventListener('click', function () {
+      if (timer === 'held') { timer = null; return; }
+      var g = JSON.parse(el.dataset.go || '[]');
+      if (g[0] === 'input') openInput(g[1], g[2]);
+      else if (g[0] === 'file') { fileYear = g[1] || filingYear(); tab('file'); }
+      else if (g[0]) tab(g[0]);
+    });
+  });
+}
+
+// ---------- 적기 ----------
+var curY = CY, curM = CM;
+function openInput(y, m) { if (y) { curY = y; curM = m; } else { var d = new Date(CY, CM - 2, 1); curY = d.getFullYear(); curM = d.getMonth() + 1; } tab('input'); }
+function renderInput() {
+  $('mLabel').textContent = curY + '년 ' + curM + '월';
+  var r = monthOf(ym(curY, curM));
+  $('mState').textContent = r ? '적음 · 고치면 다시 저장' : '아직 안 적음';
+  document.querySelectorAll('#p-input [data-k]').forEach(function (el) {
+    var k = el.dataset.k;
+    if (k === 'memo') el.value = r && r.memo ? r.memo : '';
+    else el.value = r && r[k] ? comma(r[k]) : '';
+  });
+  $('mNext').disabled = ym(curY, curM) >= ym(CY, CM);
+  $('mNext').style.opacity = $('mNext').disabled ? .3 : 1;
+  updTotal();
+}
+function updTotal() {
+  var t = 0; SALE_KEYS.forEach(function (k) { t += numOf(document.querySelector('#p-input [data-k="' + k + '"]').value); });
+  $('saleTotal').innerHTML = comma(t) + '<span class="u">원</span>';
+}
+function saveMonth() {
+  var r = { savedAt: Date.now() }, any = false;
+  SALE_KEYS.concat(BUY_KEYS).forEach(function (k) { var v = numOf(document.querySelector('#p-input [data-k="' + k + '"]').value); r[k] = v; if (v) any = true; });
+  r.memo = document.querySelector('#p-input [data-k="memo"]').value.trim();
+  if (!any && !confirm(curM + '월 매출이 0원인가요?\n(가게를 쉬었다면 확인을 누르세요)')) return;
+  DB.months[ym(curY, curM)] = r; save();
+  toast(curM + '월 저장 완료');
+  // 다음 안 적은 달로 안내
+  tab('home');
+}
+
+// ---------- 신고 ----------
+var fileYear = filingYear();
+function row(label, desc, v, cls) { return '<tr class="' + (cls || '') + '"><td>' + label + (desc ? '<span class="d">' + desc + '</span>' : '') + '</td><td class="v copy" data-c="' + Math.round(v) + '">' + comma(v) + '</td></tr>'; }
+function renderFile() {
+  var y = fileYear, c = calc(y), S = c.S;
+  var years = {}; years[CY] = 1; years[CY - 1] = 1; Object.keys(DB.months).forEach(function (k) { years[parseInt(k, 10)] = 1; });
+  var ys = Object.keys(years).map(Number).sort(function (a, b) { return b - a; });
+  var h = '<div class="chips" style="margin:0 0 8px">' + ys.map(function (v) { return '<button class="chip yr ' + (v === y ? 'on' : '') + '" data-y="' + v + '">' + v + '년분</button>'; }).join('') + '</div>';
+  var deadline = (y + 1) + '년 1월 25일';
+  // 상태 카드
+  var miss = 12 - S.filled - (12 - c.bm);
+  h += '<div class="card hero"><div class="lab">' + y + '년분 부가세 · ' + deadline + '까지</div><div class="num">' + comma(Math.max(0, c.due)) + '<span class="u">원</span></div><div class="sub">' +
+    (c.exempt ? '납부 면제 대상이에요. 신고만 하면 끝.' + (c.prepaid ? ' 7월에 낸 ' + comma(c.prepaid) + '원은 돌려받아요.' : '') :
+      c.due < 0 ? '7월에 미리 낸 돈이 더 많아 ' + comma(-c.due) + '원을 돌려받아요.' : '홈택스에서 신고 후 이 금액을 내면 끝.') + '</div></div>';
+  if (miss > 0) h += '<div style="height:8px"></div><div class="note warn"><b>' + miss + '개월이 아직 안 적혔어요.</b> 다 적어야 숫자가 맞아요. <span class="link" id="goFill">적으러 가기</span></div>';
+  if (DB.set.filed[y]) h += '<div style="height:8px"></div><div class="note"><span class="dot ok" style="display:inline-block;margin-right:6px"></span><b>' + y + '년분 신고 완료로 표시됨</b></div>';
+
+  h += '<div class="sec">홈택스에 넣을 숫자 <span class="lab">— 숫자를 누르면 복사돼요</span></div>';
+  h += '<div class="card"><table>' +
+    row('업종', rateName() + ' · 부가가치율 ' + c.r + '%', c.r) +
+    row('과세표준 (공급대가)', '1년 매출 합계 · 부가세 포함 금액 그대로', S.sales) +
+    row('납부세액', '매출 × ' + c.r + '% × 10%', c.base) +
+    row('매입세금계산서 등 수취세액공제', '증빙 있는 매입 ' + comma(S.buyProof) + '원 × 0.5%', c.buyCredit) +
+    row('신용카드매출전표 등 발행세액공제', '카드+배달앱+현금영수증 ' + comma(S.cardLike) + '원 × ' + c.cr.txt, c.cardCredit) +
+    row('전자신고세액공제', '홈택스·손택스로 기한 안에 직접 신고하면', c.eCredit) +
+    row('예정부과(고지)세액', '7월 고지서로 미리 낸 돈 — 아래에서 입력', c.prepaid) +
+    (c.exempt ? row('납부의무 면제', '연 환산 매출 ' + comma(c.annual) + '원 < 4,800만원', 0) : '') +
+    row(c.due < 0 ? '돌려받을 세액' : '차가감 납부할 세액', '', Math.abs(c.due), 'final') +
+  '</table><div class="sub">공제는 납부세액을 넘을 수 없어요(간이과세자는 환급 없음). 반올림 때문에 홈택스와 몇 원 다를 수 있어요.</div></div>';
+
+  h += '<div class="sec">매출 나눠 보기 (홈택스 화면에서 확인용)</div><div class="card"><table>' +
+    row('신용카드 매출', '홈택스가 자동으로 불러와요', S.card) +
+    row('배달앱·온라인 결제', '홈택스 "결제대행업체 매출"에 나와요', S.online) +
+    row('현금영수증 매출', '홈택스가 자동으로 불러와요', S.cashReceipt) +
+    row('기타 매출 (영수증 없는 현금)', '직접 입력해야 하는 칸', S.cash) +
+  '</table></div>';
+
+  h += '<div class="sec">7월에 미리 낸 세금</div><div class="card"><div class="h" style="margin:0 0 8px">' + y + '년 7월에 예정부과 고지서를 받아 낸 금액. 고지서가 안 왔으면 0으로 두세요.</div><div class="money"><input inputmode="numeric" id="prepaid" value="' + (c.prepaid ? comma(c.prepaid) : '') + '" placeholder="0"><span>원</span></div></div>';
+
+  h += '<div class="sec">손택스(폰)로 신고하기 — 10분</div><div class="card"><ol class="steps">' +
+    '<li><b>손택스</b> 앱 설치 → 간편인증(카카오·네이버·PASS)으로 로그인</li>' +
+    '<li>홈 화면 <b>신고/납부 → 부가가치세 → 간이과세자 정기신고</b> (컴퓨터 홈택스도 같은 메뉴)</li>' +
+    '<li>과세기간 <b>' + y + '년 1월~12월</b> 확인 → 업종이 맞는지 확인 (' + rateName() + ')</li>' +
+    '<li><b>신용카드·현금영수증 매출은 자동</b>으로 채워져요. 위 "매출 나눠 보기"와 비슷한지만 보세요.</li>' +
+    '<li><b>기타 매출</b> 칸에 영수증 없는 현금 <b>' + comma(S.cash) + '원</b> 입력' + (S.online ? ', 배달앱 매출도 빠져 있으면 ' + comma(S.online) + '원 추가' : '') + '</li>' +
+    '<li><b>매입</b>: 사업용 카드·세금계산서 매입은 "불러오기"로 채우고, 합계가 ' + comma(S.buyProof) + '원 근처면 OK</li>' +
+    '<li>마지막 화면의 <b>납부할 세액</b>이 위 금액(' + comma(Math.max(0, c.due)) + '원)과 비슷하면 <b>제출</b></li>' +
+    '<li>' + (c.due > 0 ? '나오는 <b>가상계좌</b>로 ' + deadline + '까지 이체' : '낼 돈이 없으면 제출로 끝') + ' → 아래 버튼 누르기</li>' +
+  '</ol><div style="height:8px"></div><button class="btn ' + (DB.set.filed[y] ? 'ghost' : 'alt') + '" id="markFiled">' + (DB.set.filed[y] ? '신고 완료 표시 지우기' : y + '년분 신고 다 했어요') + '</button></div>';
+
+  h += '<div class="sec">5월 종합소득세는?</div><div class="note">5월에 국세청 <b>"모두채움 신고서"</b> 안내문(카톡·문자)이 오면, 손택스에서 <b>종합소득세 → 모두채움 신고</b>를 누르고 금액 확인 후 제출하면 끝이에요. 매출이 크지 않은 간이과세자는 대부분 이 방식이에요. 안내문의 수입금액이 이 앱의 ' + y + '년 매출(' + comma(S.sales) + '원)과 많이 다르면 제출 전에 물어보세요.</div>';
+  if (DB.set.invoice) h += '<div style="height:8px"></div><div class="note warn"><b>세금계산서 발급 간이과세자</b>라 7월 25일까지 상반기(1~6월) 예정신고를 직접 해야 해요. 같은 메뉴에서 "예정신고"를 고르고 1~6월 숫자를 넣으세요.</div>';
+  $('p-file').innerHTML = h;
+
+  document.querySelectorAll('.yr').forEach(function (b) { b.onclick = function () { fileYear = parseInt(b.dataset.y, 10); renderFile(); }; });
+  var gf = $('goFill'); if (gf) gf.onclick = function () { for (var m = 1; m <= 12; m++) if (!monthOf(ym(y, m)) && (!DB.set.open || ym(y, m) >= DB.set.open)) { openInput(y, m); return; } };
+  var pi = $('prepaid');
+  pi.oninput = function () { var n = numOf(pi.value); pi.value = n ? comma(n) : ''; };
+  pi.onchange = function () { DB.set.prepaid[y] = numOf(pi.value); save(); renderFile(); };
+  $('markFiled').onclick = function () { if (DB.set.filed[y]) delete DB.set.filed[y]; else DB.set.filed[y] = Date.now(); save(); toast(DB.set.filed[y] ? '신고 완료로 표시했어요' : '표시를 지웠어요'); renderFile(); };
+  document.querySelectorAll('#p-file .copy').forEach(function (el) {
+    el.onclick = function () { var v = el.dataset.c; (navigator.clipboard ? navigator.clipboard.writeText(v) : Promise.reject()).then(function () { toast(comma(v) + ' 복사됨'); }, function () { toast(comma(v)); }); };
+  });
+}
+
+// ---------- 설정 ----------
+function renderSet() {
+  $('sName').value = DB.set.name; $('sRate').value = DB.set.rate; $('sOpen').value = DB.set.open || ''; $('sInvoice').checked = DB.set.invoice;
+  $('lastBackup').textContent = DB.lastBackup ? '마지막 백업: ' + new Date(DB.lastBackup).toLocaleString('ko-KR') : '아직 백업한 적이 없어요.';
+}
+function dl(name, text, type) {
+  var b = new Blob([text], { type: type }), u = URL.createObjectURL(b), a = document.createElement('a');
+  a.href = u; a.download = name; document.body.appendChild(a); a.click(); setTimeout(function () { a.remove(); URL.revokeObjectURL(u); }, 1500);
+}
+
+// ---------- 탭 ----------
+var curTab = 'home';
+function tab(t) {
+  curTab = t;
+  ['home', 'input', 'file', 'set'].forEach(function (k) { $('p-' + k).classList.toggle('hidden', k !== t); });
+  document.querySelectorAll('nav button').forEach(function (b) { b.classList.toggle('on', b.dataset.tab === t); });
+  $('appTitle').textContent = t === 'home' ? DB.set.name + ' 세금노트' : t === 'input' ? '매출 적기' : t === 'file' ? '부가세 신고' : '설정';
+  if (t === 'home') renderHome(); if (t === 'input') renderInput(); if (t === 'file') renderFile(); if (t === 'set') renderSet();
+  window.scrollTo(0, 0);
+}
+
+// ---------- 이벤트 ----------
+document.querySelectorAll('nav button').forEach(function (b) { b.onclick = function () { if (b.dataset.tab === 'input') openInput(); else { if (b.dataset.tab === 'file') fileYear = filingYear(); tab(b.dataset.tab); } }; });
+$('mPrev').onclick = function () { curM--; if (curM < 1) { curM = 12; curY--; } renderInput(); };
+$('mNext').onclick = function () { if ($('mNext').disabled) return; curM++; if (curM > 12) { curM = 1; curY++; } renderInput(); };
+document.querySelectorAll('#p-input .money input').forEach(function (el) { el.addEventListener('input', function () { var n = numOf(el.value); el.value = n ? comma(n) : ''; updTotal(); }); });
+$('saveMonth').onclick = saveMonth;
+$('sName').onchange = function () { DB.set.name = this.value.trim() || '크림어스'; save(); };
+$('sRate').onchange = function () { DB.set.rate = this.value; save(); toast('업종을 바꿨어요'); };
+$('sOpen').onchange = function () { DB.set.open = this.value; save(); };
+$('sInvoice').onchange = function () { DB.set.invoice = this.checked; save(); };
+$('bBackup').onclick = function () {
+  var d = new Date();
+  dl(DB.set.name + '_세금노트_백업_' + d.getFullYear() + pad(d.getMonth() + 1) + pad(d.getDate()) + '.json', JSON.stringify({ app: 'creamus-tax', v: 1, data: DB }, null, 2), 'application/json');
+  DB.lastBackup = Date.now(); save(); renderSet(); toast('백업 파일을 저장했어요');
+};
+$('bRestore').onclick = function () { $('fRestore').click(); };
+$('fRestore').onchange = function () {
+  var f = this.files && this.files[0]; this.value = ''; if (!f) return;
+  var rd = new FileReader();
+  rd.onload = function () {
+    try {
+      var j = JSON.parse(rd.result), d = j && j.data;
+      if (!d || !d.months) throw 0;
+      if (!confirm('지금 기록을 백업 파일로 바꿀까요?')) return;
+      DB = d; norm(); save(); toast('불러오기 완료'); tab('home');
+    } catch (e) { toast('백업 파일을 읽을 수 없어요'); }
+  };
+  rd.readAsText(f);
+};
+$('bCsv').onclick = function () {
+  var rows = [['연월', '카드', '배달앱·온라인', '현금영수증', '영수증없는현금', '매출합계', '증빙매입', '증빙없는지출', '메모']];
+  Object.keys(DB.months).sort().forEach(function (k) {
+    var r = DB.months[k];
+    rows.push([k, r.card || 0, r.online || 0, r.cashReceipt || 0, r.cash || 0, saleSum(r), r.buyProof || 0, r.buyNone || 0, '"' + String(r.memo || '').replace(/"/g, '""') + '"']);
+  });
+  dl(DB.set.name + '_매출기록.csv', '﻿' + rows.map(function (r) { return r.join(','); }).join('\n'), 'text/csv;charset=utf-8');
+};
+
+$('today').textContent = (CM) + '월 ' + CD + '일 (' + '일월화수목금토'[NOW.getDay()] + ')';
+tab('home');
+</script>
+</body>
+</html>
