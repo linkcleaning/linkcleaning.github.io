@@ -1,0 +1,6 @@
+<!doctype html><meta charset="utf-8"><title>relay</title><body>사진 전달 중…<script>
+(async()=>{const q=new URLSearchParams(location.search);const names=(q.get('f')||'').split(',').filter(Boolean);
+const files=[];for(const n of names){const b=await (await fetch(n,{cache:'no-store'})).blob();files.push(new File([b],n,{type:b.type||'image/jpeg'}));}
+try{(window.opener||parent).postMessage({relayFiles:files},'*');document.body.textContent='완료 '+files.length;}catch(e){document.body.textContent='실패 '+e}
+setTimeout(()=>window.opener&&window.close(),1500);})();
+</script>
