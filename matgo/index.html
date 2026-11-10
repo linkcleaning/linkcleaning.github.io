@@ -364,6 +364,9 @@ small.zero,.seg small.mn.zero{color:#ff8a80!important}
 .s-fight .start{margin-top:14px}
 .bestbox{margin-top:0!important}
 .homebtns{margin-top:0!important}
+.t3rec{display:block;font-style:normal;font-size:10.5px;font-weight:800;color:#bfe5df;opacity:.9;margin-top:2px}
+.rkrec{display:block;font-size:11.5px;font-weight:800;color:#ffe08a;margin-top:2px}
+.merec{color:#ffe08a!important;font-weight:800}
 </style>
 </head>
 <body>
@@ -439,7 +442,7 @@ small.zero,.seg small.mn.zero{color:#ff8a80!important}
 
 <script>
 'use strict';
-const VER='v47';
+const VER='v48';
 const $=s=>document.querySelector(s);
 const sleep=ms=>new Promise(r=>setTimeout(r,ms));
 const rnd=n=>Math.floor(Math.random()*n);
@@ -509,6 +512,14 @@ async function settleMoney(wId,lId,pts){
   return {want,pay,allin:pay<want};
 }
 const statOf=id=>DB.stats[id]||(DB.stats[id]={g:0,w:0,l:0,net:0,best:0,maxGo:0});
+/* 공유 전적 (모든 기기 합산): matgo/rec */
+let RECS=null;
+function addRec(x){LG.req('matgo/rec','POST',x).then(()=>{if(RECS)tally(RECS,x)})}
+function tally(r,x){const add=(id,k)=>{(r[id]=r[id]||{w:0,l:0,d:0})[k]++};if(x.draw){add(x.a,'d');add(x.b,'d')}else if(x.w&&x.l){add(x.w,'w');add(x.l,'l')}}
+async function loadRecs(){const d=await LG.req('matgo/rec');if(d&&typeof d==='object'){const r={};Object.values(d).forEach(x=>x&&tally(r,x));RECS=r}else if(d===null&&!RECS)RECS={};return RECS}
+const recOf=id=>{const r=(RECS&&RECS[id])||{w:0,l:0,d:0};return {...r,g:r.w+r.l+r.d}};
+const recTxt=id=>{const r=recOf(id);return `${r.g}전 ${r.w}승 ${r.l}패${r.d?' '+r.d+'무':''}`};
+
 
 /* =====================================================
    화투 카드 정의
@@ -1341,6 +1352,7 @@ async function endGame(w,sp={}){
   const total=score*mul.reduce((m,x)=>m*x[1],1);
   DB.nagari=0;DB.first=w;
   const pl=curP(),st=statOf(pl.id);st.g++;
+  {const wi=w===0?pl.id:S.opp.id,li=w===0?S.opp.id:pl.id;addRec({w:wi,l:li,h:pl.id,ts:Date.now()})}
   qHit('play');if(w===0){qHit('win');if(a.ng>=3)qHit('gwang');if(S.opp.boss)qHit('tutu');if(S.go[0]>=1)qHit('gowin')}
   if(w===0){st.w++;st.net+=total;st.best=Math.max(st.best,total);st.maxGo=Math.max(st.maxGo,S.go[0])}else{st.l++;st.net-=total}
   const d=new Date();
@@ -1374,6 +1386,7 @@ async function endGame(w,sp={}){
 }
 async function nagari(){
   if(S.over)return;S.over=true;S.busy=true;render();
+  addRec({a:curP().id,b:S.opp.id,draw:1,h:curP().id,ts:Date.now()});
   qHit('play');DB.nagari=(DB.nagari||0)+1;useUpBuffs(curP().id);saveDB();BGM.stop();SFX.lose();
   const nd=S.inst[0]-S.inst[1];let nmsg='';if(nd){const pl=curP();const r=nd>0?await settleMoney(pl.id,S.opp.id,nd):await settleMoney(S.opp.id,pl.id,-nd);nmsg=`<br>🎁 즉시 보너스 정산: ${nd>0?'+':'-'}${won(r.pay)}`}
   await banner('나가리!','red',900);
@@ -1403,8 +1416,9 @@ function goHome(){if(window._pendingUpd){location.replace(location.pathname+'?v=
 function moneyRank(){return allPlayers().slice().sort((a,b)=>moneyOf(b.id)-moneyOf(a.id))}
 function renderHome(){
   const me=curP(),rk=moneyRank(),myRank=rk.findIndex(p=>p.id===me.id)+1;
-  $('#top3').innerHTML=`<div class="t3h"><span>TOP 3</span><small>전체 보기 ›</small></div><div class="t3r">${rk.slice(0,3).map((p,i)=>`<div class="t3 r${i+1}"><span class="md">${['🥇','🥈','🥉'][i]}</span><span class="av">${avaHTML(p)}</span><b>${esc(pName(p))}${p.id===me.id?' (나)':''}</b><small>${won(moneyOf(p.id))}</small></div>`).join('')}</div>`;
-  $('#meBtn').innerHTML=`<span class="mm">${avaHTML(me)}</span><span class="mecol"><span class="merow"><b>${esc(me.roster?me.name:pName(me))}</b><span class="mymoney ${moneyOf(me.id)<DB.cfg.start?'down':'up'}">💰${won(moneyOf(me.id))}</span></span>${me.roster?`<small>${me.nick} · 시작 ${won(DB.cfg.start)} 대비 ${moneyOf(me.id)>=DB.cfg.start?'+':''}${won(moneyOf(me.id)-DB.cfg.start)}</small>`:''}</span><span class="rk2">${['🥇','🥈','🥉'][myRank-1]||''} ${myRank}위 / ${rk.length}명<i>${DB.meLocked?'순위 보기 ▾':'나 고르기 ▾'}</i></span>`;
+  $('#top3').innerHTML=`<div class="t3h"><span>TOP 3</span><small>전체 보기 ›</small></div><div class="t3r">${rk.slice(0,3).map((p,i)=>`<div class="t3 r${i+1}"><span class="md">${['🥇','🥈','🥉'][i]}</span><span class="av">${avaHTML(p)}</span><b>${esc(pName(p))}${p.id===me.id?' (나)':''}</b><small>${won(moneyOf(p.id))}</small><i class="t3rec">${recTxt(p.id)}</i></div>`).join('')}</div>`;
+  if(!RECS&&!window._recL){window._recL=1;loadRecs().then(()=>renderHome())}
+  $('#meBtn').innerHTML=`<span class="mm">${avaHTML(me)}</span><span class="mecol"><span class="merow"><b>${esc(me.roster?me.name:pName(me))}</b><span class="mymoney ${moneyOf(me.id)<DB.cfg.start?'down':'up'}">💰${won(moneyOf(me.id))}</span></span>${me.roster?`<small>${me.nick} · 시작 ${won(DB.cfg.start)} 대비 ${moneyOf(me.id)>=DB.cfg.start?'+':''}${won(moneyOf(me.id)-DB.cfg.start)}</small>`:''}<small class="merec">📊 ${recTxt(me.id)}</small></span><span class="rk2">${['🥇','🥈','🥉'][myRank-1]||''} ${myRank}위 / ${rk.length}명<i>${DB.meLocked?'순위 보기 ▾':'나 고르기 ▾'}</i></span>`;
   {const v=vitOf(me.id);$('#shopBig').innerHTML=`<span class="sbi">🏪</span><span class="sbt"><b>링크 편의점 · 선수 업그레이드</b><small>${v<30?'⚠️ 활력이 낮아요! 드링크 한 병 어때요?':'활력이 높을수록 좋은 패가 잘 와요'}</small><span class="vit" style="width:100%"><i style="width:${v}%"></i><em>⚡ 활력 ${v}%${buffTxt(me.id)}</em></span></span><span class="sbgo">GO ›</span>`;$('#shopBig').classList.toggle('low',v<30)}
   if(DB.set.opp===DB.cur)DB.set.opp=OPP.find(o=>o.id!==DB.cur).id;
   const opps=OPP.filter(o=>o.id!==DB.cur).sort((a,b)=>moneyOf(b.id)-moneyOf(a.id));
@@ -1419,10 +1433,10 @@ function renderHome(){
   $('#ngNote').textContent=(DB.nagari?`🔥 지난 판 나가리! 이번 판 점수 ×${2**DB.nagari} · `:'')+`🏁 7점 나기 · 💰 점당 ${won(DB.cfg.per)} · 보너스패 ${DB.cfg.bonus}장${DB.cfg.event?' · 🎲 이벤트 ON':''}`;
 }
 async function pickMe(first){
-  await syncDown();
+  await syncDown();if(DB.meLocked&&!first)await loadRecs();
   const lock=DB.meLocked&&!first;
   const rk=moneyRank(),medal=['🥇','🥈','🥉'],top=moneyOf(rk[0].id)||1;
-  const v=await modal(`<h2>${lock?'💰 돈 순위':'🙋 나는 누구?'}</h2><p style="font-size:12px;margin-bottom:6px">${lock?'꼴찌는 분발하세요! 😤':'<b style="color:#ff8a80">한 번 고르면 바꿀 수 없어요!</b> 내 이름을 눌러 주세요'}</p><div class="rank pickme">${rk.map((p,i)=>`<div class="rk ${p.id===DB.cur&&lock?'on':''}" ${lock?'':`data-v="p:${p.id}"`}><div class="no">${medal[i]||i+1}</div><div class="em" style="width:38px;height:38px">${avaHTML(p)}</div><div class="nm"><b>${esc(p.roster?p.name:pName(p))}${p.roster?` <small style="opacity:.6">${p.nick}</small>`:''}${p.id===DB.cur&&lock?' (나)':''}</b><div style="height:5px;border-radius:3px;background:#ffffff18;margin-top:4px;overflow:hidden"><div style="height:100%;width:${Math.max(2,Math.round(moneyOf(p.id)/top*100))}%;background:${i===rk.length-1?'#ff5252':'linear-gradient(90deg,#8cc63f,#f5c24a)'}"></div></div></div><div class="pt ${moneyOf(p.id)<=0?'neg':''}" style="font-size:14px">${won(moneyOf(p.id))}${i===rk.length-1&&rk.length>1?'<small style="display:block;font-size:10px;color:#ff8a80">꼴찌 😱</small>':''}</div></div>`).join('')}</div>`,
+  const v=await modal(`<h2>${lock?'💰 돈 순위':'🙋 나는 누구?'}</h2><p style="font-size:12px;margin-bottom:6px">${lock?'꼴찌는 분발하세요! 😤':'<b style="color:#ff8a80">한 번 고르면 바꿀 수 없어요!</b> 내 이름을 눌러 주세요'}</p><div class="rank pickme">${rk.map((p,i)=>`<div class="rk ${p.id===DB.cur&&lock?'on':''}" ${lock?'':`data-v="p:${p.id}"`}><div class="no">${medal[i]||i+1}</div><div class="em" style="width:38px;height:38px">${avaHTML(p)}</div><div class="nm"><b>${esc(p.roster?p.name:pName(p))}${p.roster?` <small style="opacity:.6">${p.nick}</small>`:''}${p.id===DB.cur&&lock?' (나)':''}</b>${lock?`<small class="rkrec">${recTxt(p.id)} · 승률 ${(()=>{const r=recOf(p.id);return r.w+r.l?Math.round(r.w/(r.w+r.l)*100):0})()}%</small>`:''}<div style="height:5px;border-radius:3px;background:#ffffff18;margin-top:4px;overflow:hidden"><div style="height:100%;width:${Math.max(2,Math.round(moneyOf(p.id)/top*100))}%;background:${i===rk.length-1?'#ff5252':'linear-gradient(90deg,#8cc63f,#f5c24a)'}"></div></div></div><div class="pt ${moneyOf(p.id)<=0?'neg':''}" style="font-size:14px">${won(moneyOf(p.id))}${i===rk.length-1&&rk.length>1?'<small style="display:block;font-size:10px;color:#ff8a80">꼴찌 😱</small>':''}</div></div>`).join('')}</div>`,
     lock?[{t:'닫기',v:null}]:first?[{t:'＋ 목록에 없어요 (가족 추가)',cls:'gray',v:'add'}]:[{t:'＋ 다른 가족 추가',cls:'gray',v:'add'},{t:'닫기',cls:'alt',v:null}],{dismiss:first?undefined:null});
   if(!v)return;
   let id;
@@ -1689,10 +1703,10 @@ async function editPlayer(p){
   saveDB();
 }
 async function openRank(){
-  await syncDown();const list=allPlayers().map(p=>({p,s:statOf(p.id)})).sort((a,b)=>moneyOf(b.p.id)-moneyOf(a.p.id)||b.s.net-a.s.net);
+  await syncDown();await loadRecs();const list=allPlayers().map(p=>({p,s:statOf(p.id)})).sort((a,b)=>moneyOf(b.p.id)-moneyOf(a.p.id)||b.s.net-a.s.net);
   const medal=['🥇','🥈','🥉'];
   const hist=DB.history.slice(0,12).map(h=>`${h.t} ${esc(h.emoji||'')} ${esc(h.name)} vs ${h.opp?oppOf(h.opp).nick:'복돌이'} — ${h.win?'<b style="color:#8cc63f">승</b>':'<b style="color:#ff8a80">패</b>'} ${h.win?'+':'-'}${h.pts}점${h.go?' ('+h.go+'고)':''}`).join('<br>');
-  const v=await modal(`<h2>🏆 링크 가족 랭킹</h2><div class="rank">${list.map((x,i)=>`<div class="rk"><div class="no">${medal[i]||i+1}</div><div class="em" style="width:38px;height:38px">${avaHTML(x.p)}</div><div class="nm"><b>${esc(pName(x.p))}${x.p.roster?` <small style="opacity:.6">${x.p.name}</small>`:''}${x.p.id===DB.cur?' 👑':''}</b><small>${x.s.w}승 ${x.s.l}패 · 승률 ${x.s.g?Math.round(x.s.w/x.s.g*100):0}% · 최고 ${x.s.best}점${x.s.maxGo?' · 최대 '+x.s.maxGo+'고':''}</small></div><div class="pt ${moneyOf(x.p.id)<=0?'neg':''}" style="font-size:15px;text-align:right">${won(moneyOf(x.p.id))}<small style="display:block;font-size:10px;opacity:.7;color:#fff">점수 ${x.s.net>0?'+':''}${x.s.net}</small></div>${x.p.roster?'':`<button class="ed" data-v="e:${x.p.id}">✎</button>`}</div>`).join('')}</div>
+  const v=await modal(`<h2>🏆 링크 가족 랭킹</h2><div class="rank">${list.map((x,i)=>`<div class="rk"><div class="no">${medal[i]||i+1}</div><div class="em" style="width:38px;height:38px">${avaHTML(x.p)}</div><div class="nm"><b>${esc(pName(x.p))}${x.p.roster?` <small style="opacity:.6">${x.p.name}</small>`:''}${x.p.id===DB.cur?' 👑':''}</b><small><b style="color:#ffe08a">${recTxt(x.p.id)}</b> · 승률 ${(()=>{const r=recOf(x.p.id);return r.w+r.l?Math.round(r.w/(r.w+r.l)*100):0})()}%${x.s.best?' · 최고 '+x.s.best+'점':''}</small></div><div class="pt ${moneyOf(x.p.id)<=0?'neg':''}" style="font-size:15px;text-align:right">${won(moneyOf(x.p.id))}<small style="display:block;font-size:10px;opacity:.7;color:#fff">점수 ${x.s.net>0?'+':''}${x.s.net}</small></div>${x.p.roster?'':`<button class="ed" data-v="e:${x.p.id}">✎</button>`}</div>`).join('')}</div>
    <div class="lbl" style="margin-top:12px">📜 최근 경기</div><div class="hist">${hist||'아직 경기 기록이 없어요. 한 판 붙어보세요!'}</div>`,
    [{t:'기록 초기화',cls:'gray',v:'reset'},{t:'닫기',v:null}],{dismiss:null});
   if(v&&v.startsWith('e:')){await editPlayer(DB.players.find(p=>p.id===v.slice(2)));renderHome();return openRank()}
@@ -1883,7 +1897,7 @@ loadDB();
 $('#ver1').textContent=VER;$('#ver2').textContent=VER;
 fanArt();renderHome();setupPWA();homeLine();startHomeLines();renderBestBox();syncPlays().then(renderHome);syncDown().then(async ok=>{if(ok){renderHome();if(DB.meLocked)await checkAwards();renderBestBox()}if(!DB.meLocked)pickMe(true)});
 document.addEventListener('visibilitychange',()=>{if(!document.hidden&&$('#home').classList.contains('on'))syncDown().then(ok=>{if(ok){renderHome();renderBestBox()}})});
-setInterval(()=>{if(document.hidden||!$('#home').classList.contains('on')||document.querySelector('.mbg'))return;syncDown().then(ok=>{if(ok){renderHome();renderBestBox()}})},20000);
+setInterval(()=>{if(document.hidden||!$('#home').classList.contains('on')||document.querySelector('.mbg'))return;Promise.all([syncDown(),loadRecs()]).then(([ok])=>{if(ok){renderHome();renderBestBox()}})},20000);
 document.addEventListener('gesturestart',e=>e.preventDefault());
 document.addEventListener('dblclick',e=>e.preventDefault(),{passive:false});
 </script>
