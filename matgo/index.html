@@ -367,6 +367,23 @@ small.zero,.seg small.mn.zero{color:#ff8a80!important}
 .t3rec{display:block;font-style:normal;font-size:10.5px;font-weight:800;color:#bfe5df;opacity:.9;margin-top:2px}
 .rkrec{display:block;font-size:11.5px;font-weight:800;color:#ffe08a;margin-top:2px}
 .merec{color:#ffe08a!important;font-weight:800}
+
+/* v49 로또 추첨기 */
+.lotto{position:fixed;inset:0;z-index:90;display:flex;flex-direction:column;align-items:center;justify-content:center;background:#000d;animation:ltin .25s ease-out}
+.lotto.bye{opacity:0;transition:.25s}
+@keyframes ltin{from{opacity:0;transform:scale(.8)}}
+.lt-t{font-size:24px;font-weight:900;color:#ffe08a;text-shadow:0 2px 0 #7a3d00,0 0 18px #ffb800;margin-bottom:12px}
+.lt-glass{position:relative;width:190px;height:190px;border-radius:50%;background:radial-gradient(circle at 35% 30%,#ffffff50,#7fd4ee44 45%,#0b3b4ae6 100%);border:4px solid #e9f7ff;box-shadow:0 0 0 6px #f5c24a,0 0 30px #8fe3ff88,inset 0 -10px 30px #0006;overflow:hidden}
+.lt-shine{position:absolute;left:24px;top:16px;width:60px;height:28px;border-radius:50%;background:#ffffff55;transform:rotate(-25deg);z-index:3;pointer-events:none}
+.lt-ball{position:absolute;left:0;top:0;width:34px;height:34px;border-radius:50%;display:flex;align-items:center;justify-content:center;box-shadow:inset -3px -4px 6px #0005,0 2px 3px #0006}
+.lt-ball b{background:#fff;border-radius:50%;width:20px;height:20px;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:900;color:#222}
+.lt-pipe{width:22px;height:34px;background:linear-gradient(90deg,#c9d6dc,#fff,#9fb1b8);border:2px solid #e9f7ff;border-top:0;margin-top:-4px}
+.lt-leg{width:150px;height:16px;border-radius:8px 8px 4px 4px;background:linear-gradient(#f5c24a,#b37d10);box-shadow:0 4px 0 #6b4a00;order:9}
+.lt-out{min-height:110px;display:flex;flex-direction:column;align-items:center;justify-content:flex-start}
+.lt-ball.big{position:relative;width:70px;height:70px;animation:ltdrop .55s cubic-bezier(.3,1.6,.5,1)}
+.lt-ball.big b{width:42px;height:42px;font-size:18px}
+@keyframes ltdrop{from{transform:translateY(-60px) scale(.4)}}
+.lt-res{margin-top:8px;font-size:26px;font-weight:900;color:#fff;background:linear-gradient(90deg,#ff6b3d,#ffb800);padding:6px 18px;border-radius:30px;box-shadow:0 4px 0 #7a3d00,0 0 24px #ffb800aa;animation:ltdrop .4s cubic-bezier(.3,1.6,.5,1)}
 </style>
 </head>
 <body>
@@ -442,7 +459,7 @@ small.zero,.seg small.mn.zero{color:#ff8a80!important}
 
 <script>
 'use strict';
-const VER='v48';
+const VER='v49';
 const $=s=>document.querySelector(s);
 const sleep=ms=>new Promise(r=>setTimeout(r,ms));
 const rnd=n=>Math.floor(Math.random()*n);
@@ -547,7 +564,7 @@ CARDS.push(
  {id:'B-2',m:0,t:'B',sub:'2',i:1,say:['아싸','쌍피~'],lab:'쌍피'},
  {id:'B-S1',m:0,t:'B',sub:'1',i:2,steal:1,say:['피 한 장씩','주셔야겠는데요~'],lab:'피 1장 뺏기'},
  {id:'B-S2',m:0,t:'B',sub:'1',i:3,steal:2,say:['상대에게 피','두 장을 받으세요!!'],lab:'피 2장 뺏기'},
- {id:'B-L',m:0,t:'B',sub:'2',i:4,lucky:true,say:['Good','Luck!'],lab:'행운 룰렛'});
+ {id:'B-L',m:0,t:'B',sub:'2',i:4,lucky:true,say:['Good','Luck!'],lab:'행운 추첨'});
 const BONUS_ORDER=['B-3','B-2','B-S1','B-S2','B-L'];
 function piVal(c){if(c.t==='B')return +c.sub;if(c.t==='P')return c.sub==='ssang'?2:1;return 0}
 
@@ -766,7 +783,21 @@ const SFX={ctx:null,master:null,nb:null,
  stop(){this.slap(.7);this.bell(784,.04,.45,.11);this.bell(587,.16,.6,.11)},
  win(){const N=[[523,0,.4],[659,.14,.4],[784,.28,.4],[1047,.42,.9],[784,.72,.3],[1047,.86,1.2]];N.forEach(([f,s,d])=>this.bell(f,s,d,.1));[262,330,392].forEach(f=>this.tone(f,.86,1.3,'triangle',.05))},
  lose(){[[523,0],[466,.25],[415,.5],[349,.75]].forEach(([f,s])=>this.bell(f,s,.6,.09));this.tone(175,.75,.9,'sine',.08,130)},
- deal(){this.noise(0,.035,.3,'bandpass',2200,1.1);this.noise(.01,.05,.12,'lowpass',900,.7)}
+ deal(){this.noise(0,.035,.3,'bandpass',2200,1.1);this.noise(.01,.05,.12,'lowpass',900,.7)},
+ vacuum(dur=1.3){ // 청소기 '위이이잉~' — 모터 회전 + 빨아들이는 바람
+  if(!this.ok())return;const c=this.ctx,t=c.currentTime,up=.28,down=.45,end=t+dur;
+  const out=c.createGain();out.gain.setValueAtTime(.0001,t);out.gain.exponentialRampToValueAtTime(.55,t+up);out.gain.setValueAtTime(.55,end-down);out.gain.exponentialRampToValueAtTime(.0001,end);out.connect(this.master);
+  const mf=c.createBiquadFilter();mf.type='lowpass';mf.frequency.value=1600;mf.Q.value=2;mf.connect(out);
+  [[1,'sawtooth',.16],[2.01,'square',.05],[3.02,'sawtooth',.04]].forEach(([m,ty,v])=>{const o=c.createOscillator(),g=c.createGain();o.type=ty;
+    o.frequency.setValueAtTime(70*m,t);o.frequency.exponentialRampToValueAtTime(205*m,t+up);o.frequency.linearRampToValueAtTime(218*m,end-down);o.frequency.exponentialRampToValueAtTime(80*m,end);
+    const l=c.createOscillator(),lg=c.createGain();l.frequency.value=13;lg.gain.value=3*m;l.connect(lg).connect(o.frequency);
+    g.gain.value=v;o.connect(g).connect(mf);o.start(t);l.start(t);o.stop(end+.05);l.stop(end+.05)});
+  const s=c.createBufferSource(),f=c.createBiquadFilter(),g=c.createGain();s.buffer=this.nb;s.loop=true;f.type='bandpass';f.Q.value=.9;
+  f.frequency.setValueAtTime(600,t);f.frequency.exponentialRampToValueAtTime(2600,t+up);f.frequency.linearRampToValueAtTime(3200,end-down);f.frequency.exponentialRampToValueAtTime(700,end);
+  g.gain.value=.5;s.connect(f).connect(g).connect(out);s.start(t);s.stop(end+.05);
+  const h=c.createBufferSource(),hf=c.createBiquadFilter(),hg=c.createGain();h.buffer=this.nb;h.loop=true;hf.type='highpass';hf.frequency.value=6000;hg.gain.value=.12;h.connect(hf).connect(hg).connect(out);h.start(t);h.stop(end+.05)},
+ rattle(i){this.noise(0,.03,.18+Math.random()*.12,'bandpass',2500+Math.random()*2500,3);this.tone(1800+Math.random()*1500,0,.025,'sine',.025)},
+ pop(){this.noise(0,.06,.5,'bandpass',900,2);this.tone(420,0,.18,'sine',.25,900)}
 };
 const vib=p=>{if(DB.set.vib&&navigator.vibrate)try{navigator.vibrate(p)}catch(e){}};
 let audioUnlocked=false,silentEl=null;
@@ -1167,7 +1198,7 @@ async function cleanSweep(p,last){
   const b=document.createElement('div');b.className='banner gold';b.style.fontSize='40px';b.textContent='🧹 링크클린 출동!';document.body.appendChild(b);
   if(g.animate){const a=g.animate([{transform:`translateX(-140px) rotate(-8deg)`},{transform:`translateX(${innerWidth*.5-55}px) rotate(6deg)`,offset:.5},{transform:`translateX(${innerWidth+40}px) rotate(-6deg)`}],{duration:1300,easing:'ease-in-out'});
     for(let i=0;i<10;i++)setTimeout(()=>{const x=tb.left+tb.width*(i/10),y=tb.top+tb.height*(.3+Math.random()*.4);sparks(x,y,3,['✨','🫧','✦'])},100+i*110);
-    for(let i=0;i<5;i++)setTimeout(()=>SFX.noise(0,.12,.25,'bandpass',2400+i*200,.8),i*220);
+    SFX.vacuum(1.35);
     await new Promise(r=>a.onfinish=r)}else await sleep(1300);
   g.remove();b.remove();
   SFX.bonus();speak('청소 끝!');vib([20,40,20]);
@@ -1180,14 +1211,33 @@ async function instBonus(p,name,pts){
   say(p===1?`${name}! ${won(pts*DB.cfg.per)} 챙겼다~`:`앗 ${name}… ${won(pts*DB.cfg.per)} 드릴게요`);render();
 }
 async function luckyRoulette(p){
-  const opts=[['피 2장 뺏기','steal'],['이기면 점수 ×2','x2'],['용돈 보너스','cash'],['피 1장 + 용돈','combo']];
+  const opts=[['피 2장 뺏기','steal','#ff5a5a','피2'],['이기면 점수 ×2','x2','#ffd23f','×2'],['용돈 보너스','cash','#3ad07a','💰'],['피 1장 + 용돈','combo','#4aa8ff','🎁']];
   document.querySelectorAll('.banner').forEach(x=>x.remove());
-  const box=document.createElement('div');box.className='banner gold';box.style.fontSize='34px';document.body.appendChild(box);
-  SFX.event();
-  let k=0;const n=14+rnd(4);
-  for(let i=0;i<n;i++){k=(k+1)%opts.length;box.textContent='🎰 '+opts[k][0];fitBanner(box);SFX.tone(600+i*40,0,.05,'square',.06);await sleep(60+i*12)}
-  box.remove();const r=opts[k][1];
-  await banner('🎰 '+opts[k][0]+'!','go',950);
+  const k=rnd(opts.length),R=opts[k];
+  // 🎱 로또 추첨기
+  const ov=document.createElement('div');ov.className='lotto';
+  ov.innerHTML=`<div class="lt-t">🍀 링크의 행운 추첨!</div><div class="lt-glass"><div class="lt-shine"></div></div><div class="lt-pipe"></div><div class="lt-out"></div>`;
+  document.body.appendChild(ov);const gl=ov.querySelector('.lt-glass');SFX.event();vib(20);
+  const GR=95,balls=[];
+  for(let i=0;i<12;i++){const o=opts[i%4],el=document.createElement('div');el.className='lt-ball';el.style.background=`radial-gradient(circle at 35% 30%,#fff 0 8%,${o[2]} 40%,${o[2]}aa 100%)`;el.innerHTML=`<b>${o[3]}</b>`;gl.appendChild(el);
+    const a=Math.random()*6.28,r=Math.random()*55;balls.push({el,o,x:Math.cos(a)*r,y:40+Math.random()*30,vx:0,vy:0})}
+  let t0=performance.now(),last=t0,run=true,blow=1;
+  const step=now=>{if(!run)return;const dt=Math.min(.033,(now-last)/1000);last=now;
+    balls.forEach(b=>{b.vy+=600*dt;if(blow&&b.y>40&&Math.random()<.25){b.vy-=900*Math.random()*blow*dt*20;b.vx+=(Math.random()-.5)*700*dt*8}
+      b.x+=b.vx*dt;b.y+=b.vy*dt;const d=Math.hypot(b.x,b.y),lim=GR-17;
+      if(d>lim){const nx=b.x/d,ny=b.y/d;b.x=nx*lim;b.y=ny*lim;const dot=b.vx*nx+b.vy*ny;if(dot>0){b.vx-=1.8*dot*nx;b.vy-=1.8*dot*ny;if(Math.random()<.05)SFX.rattle()}}
+      b.vx*=.995;b.el.style.transform=`translate(${GR-17+b.x}px,${GR-17+b.y}px) rotate(${b.x*3}deg)`});
+    requestAnimationFrame(step)};
+  requestAnimationFrame(step);
+  const rt=setInterval(()=>SFX.rattle(),70);
+  await sleep(1900);blow=.25;await sleep(500);clearInterval(rt);
+  // 당첨 공이 관을 타고 나옴
+  const win=balls.find(b=>b.o===R);win.el.remove();
+  const out=ov.querySelector('.lt-out');out.innerHTML=`<div class="lt-ball big" style="background:radial-gradient(circle at 35% 30%,#fff 0 8%,${R[2]} 40%,${R[2]}cc 100%)"><b>${R[3]}</b></div>`;
+  SFX.pop();vib([20,40,20]);await sleep(650);run=false;
+  out.insertAdjacentHTML('beforeend',`<div class="lt-res">${R[0]}!</div>`);SFX.bonus();
+  await sleep(1100);ov.classList.add('bye');await sleep(250);ov.remove();
+  const r=R[1];
   if(r==='steal'){await act(()=>stealPi(1-p,p,2),{dur:520})}
   else if(r==='x2'){S.lucky[p]++}
   else if(r==='cash'){await instBonus(p,'황금카드',5)}
@@ -1717,9 +1767,9 @@ const RULES=`<div class="rules">
 <h3>🎴 기본 진행</h3>손패 1장을 내고, 더미에서 1장을 뒤집어요. 같은 <b>월(그림)</b>끼리 짝이 맞으면 먹어요. 낼 패를 한 번 누르면 <b>먹을 수 있는 바닥패가 빛나고</b>, 한 번 더 누르면(또는 빛나는 바닥패를 누르면) 내요.
 <h3>🧮 점수</h3><b>광</b> 3장 3점(비광 포함 시 2점), 4장 4점, 5장 15점<br><b>열끗</b> 5장 1점 + 1장마다 1점 · <b>고도리</b>(2·4·8월 새) 5점<br><b>띠</b> 5장 1점 + 1장마다 1점 · <b>홍단·청단·초단</b> 각 3점<br><b>피</b> 10장 1점 + 1장마다 1점 (쌍피·보너스는 2~3장으로 계산, 국진은 유리하게 자동 계산)
 <h3>🔥 고 / 스톱</h3>날 점수에 도달하면 고 또는 스톱! 1고 +1점, 2고 +2점, 3고부터 (+2점 후) ×2, ×4…
-<h3>💥 특수 상황</h3><b>쪽</b> 낸 패를 뒤집은 패로 바로 먹기 → 피 1장 뺏기<br><b>뻑 (쌌다, 뿌직~ 💩)</b> 낸 패로 먹었는데 뒤집은 패도 같은 월 → 3장이 바닥에 묶여요. 나중에 먹으면 피 1장(자기 뻑이면 2장)<br><b>따닥</b> 바닥 2장 + 낸 패 + 뒤집은 패 모두 같은 월 → 4장 다 먹고 피 1장<br><b>싹쓸 (🧹 링크클린 출동! 청소 끝!)</b> 바닥을 다 비우면 피 1장<br><b>폭탄</b> 같은 월 3장을 들고 바닥에 1장 → 한 번에 4장 먹고 피 1장, ×2, 빈패 2장 받음<br><b>흔들기</b> 같은 월 3장을 들고 바닥에 없을 때 선언 → ×2 (<b>💩 똥(11월)·🌼 국진(9월)을 흔들면 ×4</b>)<br><b>3뻑</b> 한 판에 뻑 3번이면 즉시 승리 · <b>총통</b> 처음에 같은 월 4장이면 10점 승리 + 총통 보너스 5천원<br><b>링크의 보너스 패</b> (최대 5장, 관리인이 장수 결정) 내면 바로 먹고 한 장 더 받아요 — 쓰리피 · 쌍피 · 피 1장 뺏기 · 피 2장 뺏기 · 행운 룰렛<br><b>미션</b> 판마다 정해지는 미션패 3장을 모두 먹고 나면 ×2 (내가 먹으면 ○, 상대가 먹으면 ✕)
+<h3>💥 특수 상황</h3><b>쪽</b> 낸 패를 뒤집은 패로 바로 먹기 → 피 1장 뺏기<br><b>뻑 (쌌다, 뿌직~ 💩)</b> 낸 패로 먹었는데 뒤집은 패도 같은 월 → 3장이 바닥에 묶여요. 나중에 먹으면 피 1장(자기 뻑이면 2장)<br><b>따닥</b> 바닥 2장 + 낸 패 + 뒤집은 패 모두 같은 월 → 4장 다 먹고 피 1장<br><b>싹쓸 (🧹 링크클린 출동! 청소 끝!)</b> 바닥을 다 비우면 청소기 소리와 함께 피 1장<br><b>폭탄</b> 같은 월 3장을 들고 바닥에 1장 → 한 번에 4장 먹고 피 1장, ×2, 빈패 2장 받음<br><b>흔들기</b> 같은 월 3장을 들고 바닥에 없을 때 선언 → ×2 (<b>💩 똥(11월)·🌼 국진(9월)을 흔들면 ×4</b>)<br><b>3뻑</b> 한 판에 뻑 3번이면 즉시 승리 · <b>총통</b> 처음에 같은 월 4장이면 10점 승리 + 총통 보너스 5천원<br><b>링크의 보너스 패</b> (최대 5장, 관리인이 장수 결정) 내면 바로 먹고 한 장 더 받아요 — 쓰리피 · 쌍피 · 피 1장 뺏기 · 피 2장 뺏기 · 행운 추첨(🎱 로또 추첨기)<br><b>미션</b> 판마다 정해지는 미션패 3장을 모두 먹고 나면 ×2 (내가 먹으면 ○, 상대가 먹으면 ✕)
 <h3>🎨 그림</h3>화투 그림은 무료 공개 화투 일러스트를 사용했어요.
-<h3>🎲 특수 이벤트 (관리인이 켜고 끔)</h3><b>첫뻑</b> 첫 턴에 뻑 → 상대가 5점어치 즉시 지급 · <b>연뻑</b> 두 턴 연속 뻑 → 10점어치<br><b>첫따닥</b> 5점어치 · <b>첫쪽</b> 3점어치 · <b>막쓸</b> 마지막 패로 싹쓸 → 피 1장 + 3점어치<br><b>보너스 대박</b> 보너스패 3장 이상 먹으면 5점어치 · <b>쓰리고 축하금</b> 3점어치<br><b>🍀 링크의 행운 패</b> 먹으면 룰렛! (피 2장 뺏기 / 이기면 ×2 / 5점어치 / 피 1장+3점어치)<br><b>🎰 잭팟 판</b> 가끔(15%) 판 전체 점수 ×2 · <b>완봉승</b> 상대 0점이면 +3점 · <b>초스피드 승</b> 각자 4턴 안에 나면 +2점<br><small>'점어치'는 점당 금액으로 바로 바꿔 판 끝에 함께 정산돼요 (나가리여도 정산)</small>
+<h3>🎲 특수 이벤트 (관리인이 켜고 끔)</h3><b>첫뻑</b> 첫 턴에 뻑 → 상대가 5점어치 즉시 지급 · <b>연뻑</b> 두 턴 연속 뻑 → 10점어치<br><b>첫따닥</b> 5점어치 · <b>첫쪽</b> 3점어치 · <b>막쓸</b> 마지막 패로 싹쓸 → 피 1장 + 3점어치<br><b>보너스 대박</b> 보너스패 3장 이상 먹으면 5점어치 · <b>쓰리고 축하금</b> 3점어치<br><b>🍀 링크의 행운 패</b> 먹으면 🎱 로또 추첨기가 돌아가요! (피 2장 뺏기 / 이기면 ×2 / 5점어치 / 피 1장+3점어치)<br><b>🎰 잭팟 판</b> 가끔(15%) 판 전체 점수 ×2 · <b>완봉승</b> 상대 0점이면 +3점 · <b>초스피드 승</b> 각자 4턴 안에 나면 +2점<br><small>'점어치'는 점당 금액으로 바로 바꿔 판 끝에 함께 정산돼요 (나가리여도 정산)</small>
 <h3>☕ 커피 · 📝 댓글 이벤트</h3>돈 100만원을 모으면 스타벅스 커피 1잔, 300만원이면 2잔 (1인 최대 2잔). 🎡 행운 룰렛은 하루 3번 (꽝·1천·3천·5천·1만·2만원)! 링크클린 블로그·앱에 댓글 달고 캡처를 올리면 관리인 확인 후 +3만원!
 <h3>🏅 주간·🏆 월간 최고 점수</h3>한 판에서 이겨서 받은 점수가 가장 높은 사람이 1등! 주간은 일요일 밤, 월간은 말일에 마감하고 1등에게 상금이 자동으로 들어가요 (월간 1등은 커피도!).
 <h3>🚫 하루 판수 제한</h3>한 사람만 계속 파산시키지 않도록, 같은 상대와는 하루 3판까지만 칠 수 있어요 (투투개구리는 제한 없음).
