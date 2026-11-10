@@ -1,5 +1,5 @@
 // 길쭈기 맞고 - 서비스워커 (오프라인 실행용 · 항상 최신 버전 우선)
-const CACHE='family-matgo-v46';
+const CACHE='family-matgo-v47';
 const ASSETS=['./','./index.html','./manifest.json','./icon-192.png','./icon-512.png','./fonts/jua.css','./title6.webp','./stone.webp'];
 self.addEventListener('install',e=>{e.waitUntil(caches.open(CACHE).then(c=>Promise.all(ASSETS.map(a=>c.add(new Request(a,{cache:'reload'})).catch(()=>{})))));self.skipWaiting()});
 self.addEventListener('activate',e=>{e.waitUntil(caches.keys().then(ks=>Promise.all(ks.filter(k=>k!==CACHE).map(k=>caches.delete(k)))).then(()=>self.clients.claim()))});
