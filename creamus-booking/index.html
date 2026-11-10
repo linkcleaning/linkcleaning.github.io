@@ -1,0 +1,1734 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, maximum-scale=1">
+<title>크림어스 예약노트</title>
+<meta name="theme-color" content="#F4EEE6">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="크림어스예약">
+<link rel="apple-touch-icon" id="appleIcon" href="">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Black+Han+Sans&family=IBM+Plex+Sans+KR:wght@400;500;600;700&display=swap" rel="stylesheet">
+<script src="https://cdn.tailwindcss.com"></script>
+<script>
+if (window.tailwind) tailwind.config = {
+  theme: {
+    extend: {
+      fontFamily: { brand: ['"IBM Plex Sans KR"', 'system-ui', 'sans-serif'], num: ['"Black Han Sans"', '"IBM Plex Sans KR"', 'sans-serif'], body: ['"IBM Plex Sans KR"', 'system-ui', 'sans-serif'] },
+      colors: {
+        cream: { 50: '#FFFDF9', 100: '#FAF5EE', 200: '#F3EADF', 300: '#EADFD3' },
+        cocoa: { DEFAULT: '#3A2B26', 600: '#5C4840', 400: '#8C7A70', 300: '#B3A399' },
+        berry: { 50: '#FCF1F1', 100: '#F7E1E2', 300: '#E9B4B8', 500: '#D98C93', 700: '#B5636D', 900: '#7E3A44' },
+        butter: { 100: '#FBF1DC', 300: '#F0DDB4', 700: '#9A6B2F' },
+        sage: { 100: '#E7EFE3', 500: '#8FAE8B', 700: '#4F6E4C' }
+      }
+    }
+  }
+};
+</script>
+<script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
+<style>
+  :root {
+    --bg: #F4EEE6; --surface: #FFFFFF; --leaf: #5E9A4E; --accent: #D9822B; --danger: #C0392B; --ink: #3A2B26; --muted: #8C7A70; --line: #EADFD3;
+    --berry: #D98C93; --berry-deep: #B5636D; --berry-soft: #F7E1E2;
+    --butter: #FBF1DC; --butter-ink: #9A6B2F; --sage: #E7EFE3; --sage-ink: #4F6E4C;
+    --sky: #E2EEF4; --sky-ink: #3F6A82; --lilac: #EEE8F6; --lilac-ink: #6C5A8E;
+    --naver: #E3F6EA; --naver-ink: #1E8A4C;
+    --safe-b: env(safe-area-inset-bottom, 0px); --safe-t: env(safe-area-inset-top, 0px);
+  }
+  * { -webkit-tap-highlight-color: transparent; }
+  html, body { background: var(--bg); color: var(--ink); }
+  body { font-family: "IBM Plex Sans KR", system-ui, -apple-system, sans-serif; -webkit-font-smoothing: antialiased; overscroll-behavior-y: none; }
+  .font-brand { font-family: "IBM Plex Sans KR", system-ui, sans-serif; font-weight: 700; }
+  .num, .font-num { font-family: "Black Han Sans", "IBM Plex Sans KR", sans-serif !important; font-weight: 400 !important; letter-spacing: 0; }
+  .num .u, .u { font-family: "IBM Plex Sans KR", sans-serif; font-size: 13px; font-weight: 500; margin-left: 3px; letter-spacing: 0; }
+  .lab { font-size: 12px; line-height: 16px; font-weight: 600; color: var(--muted); }
+  .sdot { width: 8px; height: 8px; border-radius: 999px; flex: none; display: inline-block; }
+  .sd-pending { background: var(--accent); } .sd-confirmed { background: var(--berry); } .sd-done { background: var(--leaf); } .sd-picked { background: #B9ADA3; } .sd-all { background: var(--ink); }
+  .sumgrid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+  .scard { background: #fff; border-radius: 14px; padding: 14px 16px; text-align: left; transition: transform .12s, box-shadow .2s; position: relative; }
+  .scard:active { transform: scale(.97); }
+  .scard.on { box-shadow: inset 0 0 0 2px var(--ink); }
+  .scard .num { font-size: 28px; line-height: 32px; margin-top: 6px; display: block; }
+  .scard.hero { grid-column: span 2; background: var(--ink); color: #FFF8F2; border-radius: 22px; padding: 18px 18px 16px; }
+  .scard.hero .lab { color: #FFF8F2; opacity: .8; }
+  .scard.hero .num { font-size: 48px; line-height: 52px; }
+  .scard.hero.on { box-shadow: inset 0 0 0 2px var(--berry); }
+  @media (min-width: 760px) { .sumgrid { grid-template-columns: 2fr 1fr 1fr 1fr 1fr; } .scard.hero { grid-column: auto; } .scard.hero .num { font-size: 40px; line-height: 44px; } }
+  input, textarea, select, button { font: inherit; color: inherit; }
+  input, textarea, select { font-size: 16px; }
+  .tnum { font-variant-numeric: tabular-nums; }
+  .ver { font-size: 9px; color: #C9B9AE; letter-spacing: .02em; }
+
+  /* layout */
+  #app { position: relative; z-index: 1; max-width: 1120px; margin: 0 auto; padding: calc(var(--safe-t) + 8px) 14px calc(96px + var(--safe-b)); }
+  .tab { display: none; animation: tabIn .28s ease both; }
+  .tab.active { display: block; }
+  @keyframes tabIn { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
+
+  .panel { background: var(--surface); border-radius: 14px; }
+  .sticky-top { position: sticky; top: 0; z-index: 20; padding-top: calc(var(--safe-t) + 6px); margin-top: calc(-1 * var(--safe-t) - 6px); background: linear-gradient(var(--bg) 88%, rgba(244,238,230,0)); }
+
+  /* buttons & chips */
+  .btn { display: inline-flex; align-items: center; justify-content: center; gap: 6px; min-height: 44px; padding: 0 16px; border-radius: 14px; font-weight: 600; transition: transform .12s ease, background .2s, box-shadow .2s; user-select: none; }
+  .btn:active { transform: scale(.96); }
+  .btn-primary { background: var(--ink); color: #FFF8F2; box-shadow: 0 8px 18px -10px rgba(58,43,38,.7); }
+  .btn-berry { background: var(--berry-deep); color: #fff; box-shadow: 0 8px 18px -10px rgba(181,99,109,.9); }
+  .btn-soft { background: var(--cream-200, #F3EADF); background: #F3EADF; color: var(--ink); }
+  .btn-ghost { background: transparent; color: var(--ink); border: 1px solid var(--line); }
+  .btn-danger { background: #FBE9E7; color: #A53B2F; }
+  .icon-btn { width: 44px; height: 44px; display: inline-flex; align-items: center; justify-content: center; border-radius: 14px; background: #F6EEE4; color: var(--ink); transition: transform .12s, background .2s; flex-shrink: 0; }
+  .icon-btn:active { transform: scale(.92); }
+  .icon-btn svg, .btn svg { width: 20px; height: 20px; stroke-width: 2; }
+  .chip { display: inline-flex; align-items: center; gap: 6px; min-height: 40px; padding: 0 14px; border-radius: 999px; font-weight: 600; font-size: 14px; background: #F3EADF; color: var(--muted); white-space: nowrap; transition: all .18s; border: 1px solid transparent; }
+  .chip .cnt { font-size: 12px; background: rgba(255,255,255,.7); border-radius: 999px; padding: 1px 7px; color: inherit; }
+  .chip.on { background: var(--ink); color: #FFF8F2; }
+  .chip.on .cnt { background: rgba(255,255,255,.18); }
+  .scroll-x { overflow-x: auto; scrollbar-width: none; -webkit-overflow-scrolling: touch; }
+  .scroll-x::-webkit-scrollbar { display: none; }
+
+  /* date bar */
+  .daybtn { position: relative; flex: 1; min-height: 52px; border-radius: 14px; display: flex; flex-direction: column; align-items: center; justify-content: center; background: var(--surface); }
+  .daybtn input[type=date] { position: absolute; inset: 0; opacity: 0; width: 100%; height: 100%; cursor: pointer; }
+  .week { display: grid; grid-template-columns: repeat(7, 1fr); gap: 6px; }
+  .wd { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; min-height: 60px; border-radius: 14px; background: transparent; transition: all .18s; }
+  .wd .n { font-family: "Black Han Sans", sans-serif; font-weight: 400; font-size: 20px; line-height: 1; }
+  .wd .w { font-size: 11px; color: var(--muted); }
+  .wd .dot { min-width: 18px; height: 16px; font-size: 10px; font-weight: 700; border-radius: 999px; display: flex; align-items: center; justify-content: center; padding: 0 4px; }
+  .wd .dot.has { background: var(--berry-soft); color: var(--berry-deep); }
+  .wd.sel { background: var(--ink); color: #FFF8F2; }
+  .wd.sel .w { color: #E6D8CC; }
+  .wd.sel .dot.has { background: var(--berry); color: #fff; }
+  .wd.today:not(.sel) .n { color: var(--berry-deep); }
+  .wd.sun .w { color: #C0646E; }
+
+  /* search */
+  .search { display: flex; align-items: center; gap: 8px; background: var(--surface); border-radius: 14px; padding: 0 6px 0 14px; min-height: 50px; }
+  .search input { flex: 1; background: transparent; outline: none; min-width: 0; }
+
+  /* cards */
+  .card { position: relative; display: grid; grid-template-columns: 96px 1fr; gap: 12px 14px; padding: 16px; background: var(--surface); border-radius: 14px; overflow: hidden; transition: opacity .25s, transform .25s; }
+  .card[data-status=pending] { --st: #E3B66F; }
+  .card[data-status=confirmed] { --st: var(--berry); }
+  .card[data-status=done] { --st: #8FAE8B; }
+  .card[data-status=picked] { --st: #C9BDB3; }
+  .card[data-status=picked] .c-main, .card[data-status=picked] .thumb { opacity: .55; }
+  .card.flash { animation: flash 1.8s ease; }
+  @keyframes flash { 0%, 30% { box-shadow: 0 0 0 4px rgba(217,140,147,.55); transform: scale(1.01); } 100% { box-shadow: 0 0 0 0 rgba(217,140,147,0); transform: none; } }
+  .thumb { position: relative; width: 96px; aspect-ratio: 1; border-radius: 12px; overflow: hidden; background: repeating-linear-gradient(45deg, #F6EEE4, #F6EEE4 8px, #F1E6DA 8px, #F1E6DA 16px); display: flex; align-items: center; justify-content: center; color: #C3AFA2; }
+  .thumb img { width: 100%; height: 100%; object-fit: cover; }
+  .thumb .multi { position: absolute; right: 6px; bottom: 6px; background: rgba(58,43,38,.72); color: #fff; font-size: 11px; font-weight: 700; padding: 2px 7px; border-radius: 999px; }
+  .thumb .zoom { position: absolute; left: 6px; top: 6px; width: 26px; height: 26px; border-radius: 9px; background: rgba(255,253,249,.88); display: flex; align-items: center; justify-content: center; color: var(--ink); }
+  .thumb .zoom svg { width: 15px; height: 15px; }
+  .c-main { min-width: 0; display: flex; flex-direction: column; gap: 8px; }
+  .c-time { font-family: "Black Han Sans", sans-serif; font-weight: 400; font-size: 32px; line-height: 1; }
+  .c-time.none { font-family: "IBM Plex Sans KR", sans-serif; font-weight: 700; font-size: 17px; color: var(--accent); }
+  .badge { display: inline-flex; align-items: center; gap: 4px; padding: 4px 10px; border-radius: 999px; font-size: 13px; font-weight: 700; line-height: 1.3; }
+  .b-size { background: var(--ink); color: #FFF8F2; }
+  .b-pos-top { background: var(--berry-soft); color: var(--berry-deep); }
+  .b-pos-board { background: var(--lilac); color: var(--lilac-ink); }
+  .b-pos-none { background: #F3EADF; color: var(--muted); }
+  .design { font-size: 15px; color: var(--cocoa-600, #5C4840); font-weight: 500; overflow-wrap: anywhere; }
+  .lettering { font-size: 19px; font-weight: 700; line-height: 1.45; white-space: pre-wrap; word-break: keep-all; overflow-wrap: anywhere; background: #FBF4EC; border-radius: 10px; padding: 10px 12px; }
+  .lettering.empty { font-weight: 500; font-size: 14px; color: var(--muted); background: #F7F2EC; }
+  .tag { display: inline-flex; align-items: center; padding: 4px 10px; border-radius: 10px; font-size: 13px; font-weight: 700; }
+  .t-sky { background: var(--sky); color: var(--sky-ink); }
+  .t-lilac { background: var(--lilac); color: var(--lilac-ink); }
+  .t-butter { background: var(--butter); color: var(--butter-ink); }
+  .t-naver { background: var(--naver); color: var(--naver-ink); }
+  .t-berry { background: var(--berry-soft); color: var(--berry-deep); }
+  .t-src { background: #F3EADF; color: var(--muted); }
+  .req { font-size: 14px; line-height: 1.5; color: var(--ink); background: #FBF7F1; border-radius: 12px; padding: 8px 10px; white-space: pre-wrap; overflow-wrap: anywhere; }
+  .req b { color: var(--berry-deep); margin-right: 4px; }
+  .c-right { grid-column: 1 / -1; display: flex; flex-wrap: wrap; align-items: center; gap: 8px 10px; border-top: 1px solid #EFE7DD; padding-top: 12px; }
+  .c-who { flex: 1; min-width: 140px; }
+  .c-name { font-size: 17px; font-weight: 700; overflow-wrap: anywhere; }
+  .c-phone { font-size: 15px; color: var(--muted); font-weight: 500; text-decoration: none; }
+  .c-price { font-family: "Black Han Sans", sans-serif; font-weight: 400; font-size: 26px; line-height: 1; white-space: nowrap; }
+  .c-contact { display: flex; gap: 6px; }
+  .c-status { display: flex; gap: 6px; width: 100%; }
+  .c-tools { display: flex; gap: 6px; width: 100%; justify-content: flex-end; }
+  .st-btn { flex: 1; min-height: 50px; border-radius: 999px; font-weight: 700; font-size: 16px; display: flex; flex-direction: column; align-items: center; justify-content: center; line-height: 1.15; transition: transform .12s, background .25s; }
+  .st-btn:active { transform: scale(.97); }
+  .st-btn small { font-size: 11px; font-weight: 600; opacity: .75; }
+  .st-pending { background: #FBEBD6; color: #8A4E14; }
+  .st-confirmed { background: var(--berry-soft); color: var(--berry-deep); }
+  .st-done { background: var(--sage); color: var(--sage-ink); }
+  .st-picked { background: #EFE8E1; color: #8C7A70; }
+  @media (min-width: 760px) {
+    .card { grid-template-columns: 136px minmax(0,1fr) 236px; gap: 14px 18px; padding: 16px; }
+    .thumb { width: 136px; }
+    .c-time { font-size: 34px; }
+    .c-right { grid-column: auto; flex-direction: column; align-items: stretch; flex-wrap: nowrap; border-top: 0; border-left: 1px solid #EFE7DD; padding: 0 0 0 16px; }
+    .c-who { flex: none; }
+    .c-tools { justify-content: space-between; }
+  }
+
+  /* form */
+  .label { display: block; font-size: 13px; font-weight: 700; color: var(--muted); margin-bottom: 6px; letter-spacing: .01em; }
+  .field { width: 100%; min-height: 50px; background: #F8F3ED; border: 1.5px solid transparent; border-radius: 12px; padding: 12px 14px; outline: none; transition: border .2s, box-shadow .2s, background .4s; }
+  .field:focus { border-color: var(--berry); background: #fff; box-shadow: 0 0 0 4px rgba(217,140,147,.18); }
+  textarea.field { resize: vertical; line-height: 1.5; }
+  .field.filled { background: #FFF1F2; border-color: #E9B4B8; }
+  .seg { display: grid; grid-auto-flow: column; grid-auto-columns: 1fr; gap: 4px; background: #F1EBE3; padding: 4px; border-radius: 15px; }
+  .seg label { position: relative; }
+  .seg input { position: absolute; opacity: 0; pointer-events: none; }
+  .seg span { display: flex; align-items: center; justify-content: center; min-height: 42px; border-radius: 11px; font-weight: 600; font-size: 14px; color: var(--muted); transition: all .18s; text-align: center; padding: 0 4px; }
+  .seg input:checked + span { background: #FFFDF9; color: var(--ink); box-shadow: 0 2px 8px -3px rgba(58,43,38,.3); }
+  .opt { display: flex; align-items: center; gap: 12px; min-height: 56px; padding: 10px 14px; border-radius: 12px; border: 1.5px solid transparent; background: #F8F3ED; transition: all .18s; }
+  .opt input { width: 22px; height: 22px; accent-color: var(--berry-deep); flex-shrink: 0; }
+  .opt:has(input:checked) { border-color: var(--berry); background: #FFF3F3; }
+  .opt .p { margin-left: auto; font-weight: 700; white-space: nowrap; font-size: 14px; }
+  .timechip { min-height: 38px; padding: 0 12px; border-radius: 11px; background: #F3EADF; font-weight: 600; font-size: 14px; color: var(--cocoa-600, #5C4840); }
+  .timechip.on { background: var(--ink); color: #fff; }
+  .imgs { display: grid; grid-template-columns: repeat(auto-fill, minmax(92px, 1fr)); gap: 8px; }
+  .imgs .it { position: relative; aspect-ratio: 1; border-radius: 14px; overflow: hidden; background: #F3EADF; }
+  .imgs .it img { width: 100%; height: 100%; object-fit: cover; }
+  .imgs .it .rm { position: absolute; top: 4px; right: 4px; width: 30px; height: 30px; border-radius: 10px; background: rgba(58,43,38,.75); color: #fff; display: flex; align-items: center; justify-content: center; }
+  .imgs .it .rep { position: absolute; left: 4px; bottom: 4px; font-size: 11px; font-weight: 700; padding: 3px 7px; border-radius: 8px; background: rgba(255,253,249,.92); color: var(--ink); }
+  .imgs .it .rep.is { background: var(--berry-deep); color: #fff; }
+  .imgs .add { aspect-ratio: 1; border-radius: 12px; border: 2px dashed #E3D3C3; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px; color: var(--muted); font-size: 12px; font-weight: 600; background: #FFFDF9; }
+  .imgs .add svg { width: 24px; height: 24px; }
+  .totalbar { position: sticky; bottom: calc(80px + var(--safe-b)); z-index: 15; }
+  .kakao-box { background: #FDF1DD; }
+  .kakao-box textarea { background: rgba(255,255,255,.75); }
+  .pulse-dot { width: 8px; height: 8px; border-radius: 99px; background: var(--berry); box-shadow: 0 0 0 0 rgba(217,140,147,.6); animation: pd 1.6s infinite; }
+  @keyframes pd { 70% { box-shadow: 0 0 0 10px rgba(217,140,147,0); } 100% { box-shadow: 0 0 0 0 rgba(217,140,147,0); } }
+
+  /* nav */
+  #nav { position: fixed; left: 0; right: 0; bottom: 0; z-index: 40; padding: 8px 14px calc(8px + var(--safe-b)); background: rgba(244,238,230,.9); backdrop-filter: saturate(1.4) blur(16px); -webkit-backdrop-filter: saturate(1.4) blur(16px); border-top: 1px solid rgba(234,223,211,.8); }
+  #nav .inner { max-width: 560px; margin: 0 auto; display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; }
+  .navbtn { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px; min-height: 58px; border-radius: 999px; color: var(--muted); font-size: 12px; font-weight: 700; transition: all .2s; }
+  .navbtn svg { width: 24px; height: 24px; stroke-width: 2; }
+  .navbtn.on { background: var(--ink); color: #FFF8F2; }
+  .navbtn:active { transform: scale(.95); }
+
+  /* toast */
+  #toasts { position: fixed; left: 0; right: 0; bottom: calc(92px + var(--safe-b)); z-index: 90; display: flex; flex-direction: column; align-items: center; gap: 8px; pointer-events: none; padding: 0 16px; }
+  .toast { pointer-events: auto; max-width: 520px; display: flex; align-items: center; gap: 10px; padding: 12px 16px; border-radius: 16px; background: rgba(58,43,38,.94); color: #FFF8F2; font-weight: 600; font-size: 15px; box-shadow: 0 14px 30px -12px rgba(0,0,0,.45); transform: translateY(16px) scale(.96); opacity: 0; transition: all .3s cubic-bezier(.2,.9,.3,1.2); }
+  .toast.show { transform: none; opacity: 1; }
+  .toast .ic { width: 22px; height: 22px; border-radius: 99px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; font-size: 13px; }
+  .toast.ok .ic { background: #8FAE8B; } .toast.warn .ic { background: #E3B66F; } .toast.err .ic { background: #D46A5E; }
+
+  /* modal */
+  .modal { position: fixed; inset: 0; z-index: 80; display: flex; align-items: flex-end; justify-content: center; background: rgba(40,28,24,0); visibility: hidden; transition: background .25s, visibility .25s; padding: 16px; padding-bottom: calc(16px + var(--safe-b)); }
+  .modal.open { background: rgba(40,28,24,.42); visibility: visible; }
+  .modal .sheet { width: 100%; max-width: 420px; background: var(--surface); border-radius: 26px; padding: 22px; transform: translateY(30px) scale(.97); opacity: 0; transition: all .3s cubic-bezier(.2,.9,.3,1.15); }
+  .modal.open .sheet { transform: none; opacity: 1; }
+  @media (min-width: 640px) { .modal { align-items: center; } }
+
+  /* viewer */
+  #viewer { position: fixed; inset: 0; z-index: 95; background: #120C0A; display: flex; flex-direction: column; opacity: 0; visibility: hidden; transition: opacity .25s, visibility .25s; }
+  #viewer.open { opacity: 1; visibility: visible; }
+  #viewer .vtop { display: flex; align-items: center; gap: 10px; padding: calc(var(--safe-t) + 10px) 14px 10px; color: #F3E6DA; }
+  #viewer .stage { position: relative; flex: 1; overflow: hidden; touch-action: none; display: flex; align-items: center; justify-content: center; }
+  #viewer .stage img { max-width: 100%; max-height: 100%; object-fit: contain; transform-origin: center center; will-change: transform; user-select: none; -webkit-user-drag: none; transition: transform .18s ease; }
+  #viewer .stage img.dragging { transition: none; }
+  #viewer .nav-l, #viewer .nav-r { position: absolute; top: 50%; transform: translateY(-50%); width: 48px; height: 64px; border-radius: 16px; background: rgba(255,255,255,.12); color: #fff; display: flex; align-items: center; justify-content: center; }
+  #viewer .nav-l { left: 10px; } #viewer .nav-r { right: 10px; }
+  #viewer .vbottom { padding: 14px 16px calc(14px + var(--safe-b)); background: linear-gradient(transparent, rgba(0,0,0,.5)); color: #FFF8F2; }
+  #viewer .vlet { font-size: 24px; font-weight: 700; white-space: pre-wrap; word-break: keep-all; overflow-wrap: anywhere; line-height: 1.4; }
+  #viewer .vbtn { width: 44px; height: 44px; border-radius: 14px; background: rgba(255,255,255,.12); display: flex; align-items: center; justify-content: center; color: #fff; flex-shrink: 0; }
+  #viewer .dots { display: flex; gap: 6px; justify-content: center; margin-bottom: 10px; }
+  #viewer .dots i { width: 7px; height: 7px; border-radius: 9px; background: rgba(255,255,255,.3); }
+  #viewer .dots i.on { background: #fff; width: 18px; }
+
+  /* stats */
+  .stat { padding: 16px; border-radius: 14px; background: #fff; }
+  .stat.hero { background: var(--ink); color: #FFF8F2; border-radius: 22px; }
+  .stat.hero .k { color: #FFF8F2; }
+  .stat .k { font-size: 12px; font-weight: 600; color: var(--muted); }
+  .stat .v { font-family: "Black Han Sans", sans-serif; font-weight: 400; font-size: 28px; line-height: 32px; margin-top: 6px; overflow-wrap: anywhere; }
+  .stat.hero .v { font-size: 48px; line-height: 52px; }
+  .stat .s { font-size: 12px; color: var(--muted); margin-top: 4px; display: flex; align-items: center; gap: 6px; }
+  .stat.hero .s { color: #E6D8CC; }
+  .bar { height: 8px; border-radius: 9px; background: #F3EADF; overflow: hidden; }
+  .bar > i { display: block; height: 100%; border-radius: 9px; background: linear-gradient(90deg, #E9B4B8, #B5636D); }
+  .dayrow { display: grid; grid-template-columns: 74px 1fr auto; gap: 10px; align-items: center; padding: 10px 6px; border-bottom: 1px solid #F3EADF; border-radius: 10px; }
+  .dayrow:active { background: #FBF5EE; }
+  .empty-illu { width: 92px; height: 92px; border-radius: 22px; background: #F7E1E2; display: flex; align-items: center; justify-content: center; color: var(--berry-deep); margin: 0 auto; }
+  .empty-illu svg { width: 42px; height: 42px; }
+  .fadein { animation: tabIn .3s ease both; }
+  .hidden { display: none !important; }
+  .hidden-input { position: absolute; width: 1px; height: 1px; opacity: 0; pointer-events: none; }
+</style>
+</head>
+<body>
+<div id="app">
+
+  <!-- 헤더 -->
+  <header class="flex items-end justify-between pt-2 pb-3">
+    <div>
+      <div class="flex items-baseline gap-2">
+        <h1 class="num text-[28px] leading-none">creamus<span class="text-berry-700">.</span></h1>
+        <span class="text-sm text-cocoa-400 font-semibold">cake</span>
+        <span class="ver" id="verTag"></span>
+      </div>
+      <p class="text-[12px] text-cocoa-400 mt-1 font-semibold">크림어스 예약노트</p>
+    </div>
+    <div class="text-right">
+      <div class="text-[12px] text-cocoa-400 font-semibold" id="hdrToday"></div>
+      <div class="text-[15px] font-bold" id="hdrTodayCount"></div>
+    </div>
+  </header>
+
+  <!-- ===================== 탭 1: 예약 목록 ===================== -->
+  <section id="tab-list" class="tab active">
+    <div class="sticky-top pb-2">
+      <div class="flex items-stretch gap-2">
+        <button class="icon-btn h-[52px] w-[52px]" data-act="day-prev" aria-label="이전날"><i data-lucide="chevron-left"></i></button>
+        <label class="daybtn" aria-label="날짜 선택">
+          <span class="font-brand font-bold text-[19px] leading-tight" id="dayLabel"></span>
+          <span class="text-[11px] text-cocoa-400 font-semibold" id="daySub"></span>
+          <input type="date" id="datePick">
+        </label>
+        <button class="icon-btn h-[52px] w-[52px]" data-act="day-next" aria-label="다음날"><i data-lucide="chevron-right"></i></button>
+        <button class="btn btn-primary h-[52px] px-4" data-act="day-today">오늘</button>
+      </div>
+      <div class="week mt-2" id="weekStrip"></div>
+    </div>
+    <div class="search mt-1 mb-2">
+        <i data-lucide="search" class="w-5 h-5 text-cocoa-400"></i>
+        <input id="searchInput" type="search" placeholder="고객명 · 연락처 · 레터링 · 케이크 검색" autocomplete="off" enterkeyhint="search">
+        <button class="icon-btn w-9 h-9 hidden" id="searchClear" aria-label="검색 지우기"><i data-lucide="x"></i></button>
+    </div>
+    <div class="sumgrid" id="sumCards"></div>
+    <div class="flex items-center justify-between mt-3 mb-2 px-1">
+      <div class="text-[13px] font-semibold text-cocoa-400" id="listSummary"></div>
+    </div>
+    <div id="orderList" class="flex flex-col gap-2"></div>
+  </section>
+
+  <!-- ===================== 탭 2: 주문 등록 ===================== -->
+  <section id="tab-new" class="tab">
+    <div id="editBanner" class="hidden panel p-3 mb-3 flex items-center gap-3 !bg-berry-50 !border-berry-300">
+      <i data-lucide="pencil" class="w-5 h-5 text-berry-700"></i>
+      <div class="flex-1 font-semibold text-[15px]" id="editBannerText">예약 수정 중</div>
+      <button class="btn btn-ghost min-h-[38px] px-3 text-sm" data-act="cancel-edit">수정 취소</button>
+    </div>
+
+    <div class="panel kakao-box p-4">
+      <div class="flex items-center gap-2 mb-2">
+        <div class="pulse-dot"></div>
+        <h2 class="font-brand font-bold text-[19px]">카카오톡 주문서 붙여넣기</h2>
+      </div>
+      <p class="text-[13px] text-cocoa-600 mb-3">고객이 보낸 주문서를 통째로 붙여넣으면 ✔️ 항목만 골라서 아래 칸을 채워요. 매장 안내문은 자동으로 걸러져요.</p>
+      <textarea id="kakaoText" class="field min-h-[150px]" placeholder="✔️성함/연락처 홍길동/01012345678&#10;✔️픽업날짜/시간 11/11 14시&#10;✔️케이크 사이즈 / 맛 생화1호&#10;..."></textarea>
+      <div class="grid grid-cols-[1fr_auto_auto] gap-2 mt-3">
+        <button class="btn btn-berry text-[16px]" data-act="parse"><i data-lucide="wand-2"></i>스마트 자동 추출</button>
+        <button class="btn btn-soft" data-act="paste-clip" aria-label="클립보드 붙여넣기"><i data-lucide="clipboard-paste"></i><span class="hidden sm:inline">붙여넣기</span></button>
+        <button class="icon-btn h-[44px]" data-act="clear-kakao" aria-label="지우기"><i data-lucide="eraser"></i></button>
+      </div>
+      <div id="parseResult" class="hidden mt-3"></div>
+    </div>
+
+    <form id="orderForm" class="mt-4 flex flex-col gap-4" autocomplete="off" novalidate>
+      <div class="flex items-center justify-between px-1">
+        <h2 class="font-brand font-bold text-[20px]" id="formTitle">주문 정보</h2>
+        <button type="button" class="btn btn-ghost min-h-[38px] px-3 text-sm" data-act="reset-form"><i data-lucide="rotate-ccw"></i>새로 작성</button>
+      </div>
+
+      <div class="panel p-4 grid gap-4 sm:grid-cols-2">
+        <div>
+          <label class="label" for="f-name">성함</label>
+          <input id="f-name" class="field" placeholder="고객 성함" enterkeyhint="next">
+        </div>
+        <div>
+          <label class="label" for="f-phone">연락처</label>
+          <input id="f-phone" class="field tnum" inputmode="tel" placeholder="010-0000-0000" enterkeyhint="next">
+        </div>
+        <div>
+          <label class="label" for="f-date">픽업 날짜</label>
+          <input id="f-date" type="date" class="field">
+        </div>
+        <div>
+          <label class="label" for="f-time">픽업 시간</label>
+          <input id="f-time" type="time" class="field tnum" step="600">
+        </div>
+        <div class="sm:col-span-2 scroll-x -mx-1 px-1">
+          <div class="flex gap-2 w-max" id="timeChips"></div>
+        </div>
+        <div class="sm:col-span-2">
+          <label class="label">주문 경로</label>
+          <div class="seg" id="srcSeg">
+            <label><input type="radio" name="src" value="kakao" checked><span>카카오톡</span></label>
+            <label><input type="radio" name="src" value="naver"><span>네이버예약</span></label>
+            <label><input type="radio" name="src" value="phone"><span>전화</span></label>
+            <label><input type="radio" name="src" value="visit"><span>방문</span></label>
+          </div>
+        </div>
+      </div>
+
+      <div class="panel p-4 grid gap-4">
+        <div>
+          <label class="label" for="f-size">케이크 사이즈 / 맛</label>
+          <input id="f-size" class="field" list="sizeList" placeholder="예) 생화1호, 스탠딩하트, 발로나2구">
+          <datalist id="sizeList"></datalist>
+        </div>
+        <div>
+          <label class="label" for="f-design">컬러감 / 디자인</label>
+          <input id="f-design" class="field" placeholder="예) 핑크, 레드 하트, 진주 데코">
+        </div>
+        <div>
+          <div class="flex items-center justify-between">
+            <label class="label" for="f-letter">레터링 문구</label>
+            <span class="text-[12px] font-bold text-cocoa-400 tnum" id="letterCount">0자</span>
+          </div>
+          <textarea id="f-letter" class="field min-h-[84px] text-[18px] font-bold" placeholder="케이크에 들어갈 문구"></textarea>
+        </div>
+        <div>
+          <label class="label">문구 위치</label>
+          <div class="seg">
+            <label><input type="radio" name="pos" value="top" checked><span>케이크 위</span></label>
+            <label><input type="radio" name="pos" value="board"><span>케이크 하판</span></label>
+            <label><input type="radio" name="pos" value=""><span>미정</span></label>
+          </div>
+        </div>
+        <div>
+          <label class="label">도안 사진 <span class="font-medium">(첫 번째 사진이 대표 썸네일 · 자동 압축 저장)</span></label>
+          <div class="imgs" id="formImgs"></div>
+          <input type="file" id="f-images" accept="image/*" multiple class="hidden-input">
+        </div>
+        <div>
+          <label class="label" for="f-request">요청사항</label>
+          <textarea id="f-request" class="field min-h-[70px]" placeholder="초, 카드, 픽업 관련 요청 등"></textarea>
+        </div>
+      </div>
+
+      <div class="panel p-4 grid gap-3">
+        <h3 class="font-brand font-bold text-[18px]">스마트 금액 계산</h3>
+        <div>
+          <label class="label" for="f-base">기본 케이크 가격 (원)</label>
+          <input id="f-base" class="field tnum text-[18px] font-bold" inputmode="numeric" placeholder="0">
+          <p class="text-[12px] text-cocoa-400 mt-1 hidden" id="baseHint"></p>
+        </div>
+        <label class="opt"><input type="checkbox" id="o-long"><div><div class="font-semibold">레터링 15자 이상</div><div class="text-[12px] text-cocoa-400">글자 수에 맞춰 자동 체크</div></div><span class="p">+1,000원</span></label>
+        <label class="opt"><input type="checkbox" id="o-cooler"><div><div class="font-semibold">보냉백 (아이스팩 포함)</div></div><span class="p">+4,000원</span></label>
+        <label class="opt"><input type="checkbox" id="o-clear"><div><div class="font-semibold">투명상자</div><div class="text-[12px] text-cocoa-400">체크 안 하면 기본상자(아이보리)</div></div><span class="p">+4,000원</span></label>
+        <label class="opt"><input type="checkbox" id="o-review"><div><div class="font-semibold">네이버리뷰 이벤트 보냉백</div><div class="text-[12px] text-cocoa-400">리뷰 이벤트로 보냉백 무료 제공</div></div><span class="p text-sage-700">0원</span></label>
+        <div>
+          <label class="label">예약 상태</label>
+          <div class="seg">
+            <label><input type="radio" name="status" value="pending" checked><span>입금대기</span></label>
+            <label><input type="radio" name="status" value="confirmed"><span>예약확정</span></label>
+            <label><input type="radio" name="status" value="done"><span>제작완료</span></label>
+            <label><input type="radio" name="status" value="picked"><span>픽업완료</span></label>
+          </div>
+        </div>
+      </div>
+
+      <div class="totalbar">
+        <div class="panel p-3 flex flex-col gap-2 !bg-[#3A2B26] !border-[#3A2B26] text-[#FFF8F2]">
+          <div class="flex items-center justify-between px-1">
+            <div>
+              <div class="text-[12px] text-[#E6D8CC] font-semibold" id="totalBreak">기본 0원</div>
+              <div class="num text-[36px] leading-[40px]"><span id="f-total">0</span><span class="u">원</span></div>
+            </div>
+            <button type="button" class="btn bg-[#FFF8F2] text-[#3A2B26]" data-act="copy-pay"><i data-lucide="copy"></i>입금 안내 복사</button>
+          </div>
+          <button type="submit" class="btn btn-berry w-full min-h-[54px] text-[17px]" id="submitBtn"><i data-lucide="calendar-check"></i><span>예약 등록하기</span></button>
+        </div>
+      </div>
+    </form>
+  </section>
+
+  <!-- ===================== 탭 3: 매출 & 데이터 금고 ===================== -->
+  <section id="tab-stats" class="tab">
+    <div class="flex items-center gap-2 mb-3">
+      <button class="icon-btn" data-act="month-prev" aria-label="이전달"><i data-lucide="chevron-left"></i></button>
+      <div class="flex-1 text-center font-brand font-bold text-[21px]" id="monthLabel"></div>
+      <button class="icon-btn" data-act="month-next" aria-label="다음달"><i data-lucide="chevron-right"></i></button>
+    </div>
+    <div class="grid grid-cols-2 lg:grid-cols-6 gap-2" id="statCards"></div>
+    <div class="grid lg:grid-cols-2 gap-2 mt-2">
+      <div class="panel p-4">
+        <div class="flex items-center justify-between mb-2">
+          <h3 class="font-brand font-bold text-[18px]">일별 매출</h3>
+          <span class="text-[12px] text-cocoa-400 font-semibold">날짜를 누르면 예약 목록으로</span>
+        </div>
+        <div id="dailyList"></div>
+      </div>
+      <div class="flex flex-col gap-2">
+        <div class="panel p-4">
+          <h3 class="font-brand font-bold text-[18px] mb-2">이달의 인기 케이크</h3>
+          <div id="topSizes"></div>
+        </div>
+        <div class="panel p-4">
+          <h3 class="font-brand font-bold text-[18px] mb-1">입금 안내 계좌</h3>
+          <p class="text-[12px] text-cocoa-400 mb-3">입금 안내 복사 문구에 들어가는 정보예요.</p>
+          <div class="grid grid-cols-2 gap-2">
+            <input id="s-bank" class="field" placeholder="은행">
+            <input id="s-holder" class="field" placeholder="예금주">
+            <input id="s-account" class="field col-span-2 tnum" inputmode="numeric" placeholder="계좌번호">
+          </div>
+          <button class="btn btn-soft w-full mt-2" data-act="save-account"><i data-lucide="check"></i>계좌 정보 저장</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="panel p-4 mt-2">
+      <div class="flex items-center gap-2 mb-1">
+        <i data-lucide="shield-check" class="w-5 h-5 text-sage-700"></i>
+        <h3 class="font-brand font-bold text-[18px]">데이터 금고</h3>
+      </div>
+      <p class="text-[13px] text-cocoa-600 mb-3">모든 예약과 도안 사진은 이 기기 안에만 저장돼요. 기기를 바꾸거나 사파리 데이터를 지우기 전에 꼭 백업 파일을 받아두세요.</p>
+      <div class="grid grid-cols-2 sm:grid-cols-4 gap-2 mb-3 text-[13px]" id="vaultInfo"></div>
+      <div class="grid sm:grid-cols-2 gap-2">
+        <button class="btn btn-primary min-h-[52px]" data-act="backup"><i data-lucide="download"></i>전체 백업 파일 받기</button>
+        <button class="btn btn-ghost min-h-[52px]" data-act="restore"><i data-lucide="upload"></i>백업 파일로 복원</button>
+      </div>
+      <input type="file" id="restoreFile" accept="application/json,.json" class="hidden-input">
+      <div class="grid sm:grid-cols-2 gap-2 mt-2">
+        <button class="btn btn-soft" data-act="clear-samples"><i data-lucide="sparkles"></i>샘플 예약 지우기</button>
+        <button class="btn btn-danger" data-act="wipe"><i data-lucide="trash-2"></i>전체 데이터 초기화</button>
+      </div>
+    </div>
+  </section>
+</div>
+
+<!-- 하단 네비게이션 -->
+<nav id="nav">
+  <div class="inner">
+    <button class="navbtn on" data-tab="list"><i data-lucide="calendar-days"></i>예약 목록</button>
+    <button class="navbtn" data-tab="new"><i data-lucide="wand-2"></i>주문 등록</button>
+    <button class="navbtn" data-tab="stats"><i data-lucide="piggy-bank"></i>매출·금고</button>
+  </div>
+</nav>
+
+<div id="toasts"></div>
+
+<!-- 확인 모달 -->
+<div class="modal" id="confirmModal" role="dialog" aria-modal="true">
+  <div class="sheet">
+    <h3 class="font-brand font-bold text-[20px]" id="cmTitle"></h3>
+    <p class="text-[15px] text-cocoa-600 mt-2 whitespace-pre-line" id="cmMsg"></p>
+    <div class="grid grid-cols-2 gap-2 mt-5">
+      <button class="btn btn-soft" id="cmCancel">취소</button>
+      <button class="btn btn-primary" id="cmOk">확인</button>
+    </div>
+  </div>
+</div>
+
+<!-- 풀스크린 도안 뷰어 -->
+<div id="viewer" aria-hidden="true">
+  <div class="vtop">
+    <button class="vbtn" data-act="viewer-close" aria-label="닫기"><i data-lucide="x"></i></button>
+    <div class="flex-1 min-w-0">
+      <div class="font-brand font-bold text-[20px] leading-tight" id="vTitle"></div>
+      <div class="text-[13px] text-[#CDBBAE]" id="vSub"></div>
+    </div>
+    <div class="text-[13px] font-bold text-[#CDBBAE] tnum" id="vCount"></div>
+  </div>
+  <div class="stage" id="vStage">
+    <img id="vImg" alt="케이크 도안">
+    <button class="nav-l" data-act="viewer-prev" aria-label="이전 사진"><i data-lucide="chevron-left"></i></button>
+    <button class="nav-r" data-act="viewer-next" aria-label="다음 사진"><i data-lucide="chevron-right"></i></button>
+  </div>
+  <div class="vbottom">
+    <div class="dots" id="vDots"></div>
+    <div class="flex items-center gap-2 mb-1 flex-wrap" id="vBadges"></div>
+    <div class="vlet" id="vLetter"></div>
+    <div class="text-[12px] text-[#CDBBAE] mt-2">두 손가락으로 확대 · 두 번 탭하면 2.5배 · 보는 동안 화면이 꺼지지 않아요</div>
+  </div>
+</div>
+
+<script>
+'use strict';
+/* =========================================================
+   크림어스 예약노트 — 기본 유틸
+   ========================================================= */
+const APP_VERSION = 'v2';
+const $ = (s, el = document) => el.querySelector(s);
+const $$ = (s, el = document) => [...el.querySelectorAll(s)];
+const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+const won = n => (Math.round(Number(n) || 0)).toLocaleString('ko-KR');
+const uid = p => p + '_' + Date.now().toString(36) + Math.random().toString(36).slice(2, 8);
+const pad = n => String(n).padStart(2, '0');
+const ymd = d => `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
+const fromYmd = s => { const [y, m, d] = String(s).split('-').map(Number); return new Date(y, (m || 1) - 1, d || 1); };
+const addDays = (s, n) => { const d = fromYmd(s); d.setDate(d.getDate() + n); return ymd(d); };
+const todayStr = () => ymd(new Date());
+const WD = ['일', '월', '화', '수', '목', '금', '토'];
+const kDate = s => { const d = fromYmd(s); return `${d.getMonth() + 1}월 ${d.getDate()}일 (${WD[d.getDay()]})`; };
+const digits = s => String(s || '').replace(/\D/g, '');
+const icons = () => { try { if (window.lucide) lucide.createIcons(); } catch (e) { /* 아이콘 CDN 미로딩 시 텍스트로 동작 */ } };
+const haptic = () => { try { navigator.vibrate && navigator.vibrate(8); } catch (e) {} };
+
+function fmtPhone(p) {
+  const d = digits(p);
+  if (/^01\d{8,9}$/.test(d)) return d.length === 11 ? `${d.slice(0, 3)}-${d.slice(3, 7)}-${d.slice(7)}` : `${d.slice(0, 3)}-${d.slice(3, 6)}-${d.slice(6)}`;
+  if (/^02\d{7,8}$/.test(d)) return d.length === 10 ? `02-${d.slice(2, 6)}-${d.slice(6)}` : `02-${d.slice(2, 5)}-${d.slice(5)}`;
+  if (/^0\d{9,10}$/.test(d)) return d.length === 11 ? `${d.slice(0, 3)}-${d.slice(3, 7)}-${d.slice(7)}` : `${d.slice(0, 3)}-${d.slice(3, 6)}-${d.slice(6)}`;
+  return String(p || '').trim();
+}
+const letterLen = s => String(s || '').replace(/\s/g, '').length;
+
+/* =========================================================
+   IndexedDB 래퍼 (비동기 · 트랜잭션 완료 시점에 resolve → 유실 방지)
+   ========================================================= */
+const DB = {
+  name: 'creamus-booking-db', ver: 1, db: null,
+  open() {
+    return new Promise((resolve, reject) => {
+      if (!('indexedDB' in window)) { reject(new Error('이 브라우저는 IndexedDB를 지원하지 않아요')); return; }
+      const req = indexedDB.open(this.name, this.ver);
+      req.onupgradeneeded = () => {
+        const db = req.result;
+        if (!db.objectStoreNames.contains('orders')) { const s = db.createObjectStore('orders', { keyPath: 'id' }); s.createIndex('date', 'date'); }
+        if (!db.objectStoreNames.contains('images')) db.createObjectStore('images', { keyPath: 'id' });
+        if (!db.objectStoreNames.contains('meta')) db.createObjectStore('meta', { keyPath: 'key' });
+      };
+      req.onsuccess = () => {
+        this.db = req.result;
+        this.db.onversionchange = () => { this.db.close(); location.reload(); };
+        resolve(this.db);
+      };
+      req.onerror = () => reject(req.error);
+      req.onblocked = () => toast('다른 창에 앱이 열려 있어요. 닫고 다시 열어주세요.', 'warn');
+    });
+  },
+  run(stores, mode, fn) {
+    return new Promise((resolve, reject) => {
+      let tx;
+      try { tx = this.db.transaction(stores, mode); } catch (e) { reject(e); return; }
+      let out;
+      const r = fn(tx);
+      if (r && 'onsuccess' in r) r.onsuccess = () => { out = r.result; };
+      tx.oncomplete = () => resolve(out);
+      tx.onerror = () => reject(tx.error);
+      tx.onabort = () => reject(tx.error || new Error('저장이 취소되었어요 (용량 부족일 수 있어요)'));
+    });
+  },
+  get(store, key) { return this.run(store, 'readonly', tx => tx.objectStore(store).get(key)); },
+  getAll(store) { return this.run(store, 'readonly', tx => tx.objectStore(store).getAll()); },
+  put(store, val) { return this.run(store, 'readwrite', tx => tx.objectStore(store).put(val)); },
+  del(store, key) { return this.run(store, 'readwrite', tx => tx.objectStore(store).delete(key)); },
+  clear(store) { return this.run(store, 'readwrite', tx => tx.objectStore(store).clear()); },
+  async getMeta(key, def) { const r = await this.get('meta', key); return r === undefined ? def : r.value; },
+  setMeta(key, value) { return this.put('meta', { key, value }); }
+};
+
+/* =========================================================
+   이미지 최적화 파이프라인 (Canvas · 가로 최대 800px · JPEG 0.75)
+   ========================================================= */
+function loadImageFromFile(file) {
+  return new Promise((resolve, reject) => {
+    const url = URL.createObjectURL(file);
+    const img = new Image();
+    img.onload = () => { URL.revokeObjectURL(url); resolve(img); };
+    img.onerror = () => { URL.revokeObjectURL(url); reject(new Error('이미지를 읽을 수 없어요')); };
+    img.src = url;
+  });
+}
+function resizeToDataURL(src, maxW, quality) {
+  const w0 = src.naturalWidth || src.width, h0 = src.naturalHeight || src.height;
+  const scale = Math.min(1, maxW / w0);
+  const w = Math.max(1, Math.round(w0 * scale)), h = Math.max(1, Math.round(h0 * scale));
+  const c = document.createElement('canvas');
+  c.width = w; c.height = h;
+  const ctx = c.getContext('2d');
+  ctx.fillStyle = '#ffffff'; ctx.fillRect(0, 0, w, h);
+  ctx.imageSmoothingEnabled = true; ctx.imageSmoothingQuality = 'high';
+  ctx.drawImage(src, 0, 0, w, h);
+  return { data: c.toDataURL('image/jpeg', quality), w, h };
+}
+function makeImageRecord(src) {
+  const full = resizeToDataURL(src, 800, 0.75);
+  const thumb = resizeToDataURL(src, 280, 0.72);
+  return { id: uid('img'), full: full.data, thumb: thumb.data, w: full.w, h: full.h, createdAt: Date.now() };
+}
+async function processImageFile(file) { const img = await loadImageFromFile(file); return makeImageRecord(img); }
+
+const thumbCache = new Map();
+async function getThumb(id) {
+  if (thumbCache.has(id)) return thumbCache.get(id);
+  const r = await DB.get('images', id);
+  const t = r ? r.thumb : '';
+  thumbCache.set(id, t);
+  return t;
+}
+
+/* =========================================================
+   상태 & 상수
+   ========================================================= */
+const STATUS = ['pending', 'confirmed', 'done', 'picked'];
+const STATUS_LABEL = { pending: '입금대기', confirmed: '예약확정', done: '제작완료', picked: '픽업완료' };
+const SRC_LABEL = { kakao: '카톡', naver: '네이버', phone: '전화', visit: '방문' };
+const PRICE = { longLetter: 1000, cooler: 4000, clearBox: 4000, review: 0 };
+const DEFAULT_SIZES = ['생화1호', '생화2호', '스탠딩하트', '발로나1구', '발로나2구', '다섯입케이크', '도시락케이크', '미니케이크'];
+const TIME_CHIPS = ['11:00', '12:00', '13:00', '14:00', '15:00', '16:00', '17:00', '18:00', '19:00', '19:30', '20:00'];
+
+const state = {
+  orders: [], date: todayStr(), filter: 'all', query: '', tab: 'list',
+  editingId: null, formImages: [], originalImageIds: [], longManual: false,
+  statsMonth: todayStr().slice(0, 7), flashId: null,
+  account: { bank: '새마을금고', account: '9003266486478', holder: '박시은' }
+};
+
+function calcTotal(base, o) {
+  return (Number(base) || 0) + (o.longLetter ? PRICE.longLetter : 0) + (o.cooler && !o.review ? PRICE.cooler : 0) + (o.clearBox ? PRICE.clearBox : 0);
+}
+function payText(total) {
+  const a = state.account;
+  return `${won(total)}원 입니다!\n${a.bank} ${a.account} (예금주:${a.holder})\n최종입금 확인 후 자동예약 확정됩니다☺️`;
+}
+async function copyText(text) {
+  try {
+    if (navigator.clipboard && window.isSecureContext) { await navigator.clipboard.writeText(text); return true; }
+  } catch (e) { /* 아래 대체 방식 사용 */ }
+  const ta = document.createElement('textarea');
+  ta.value = text; ta.setAttribute('readonly', ''); ta.style.position = 'fixed'; ta.style.top = '-1000px'; ta.style.fontSize = '16px';
+  document.body.appendChild(ta);
+  ta.select(); ta.setSelectionRange(0, text.length);
+  let ok = false;
+  try { ok = document.execCommand('copy'); } catch (e) { ok = false; }
+  ta.remove();
+  return ok;
+}
+
+/* =========================================================
+   토스트 & 확인 모달
+   ========================================================= */
+function toast(msg, type = 'ok', ms = 2300) {
+  const wrap = $('#toasts');
+  const el = document.createElement('div');
+  el.className = `toast ${type}`;
+  el.innerHTML = `<span class="ic">${type === 'ok' ? '✓' : type === 'warn' ? '!' : '×'}</span><span>${esc(msg)}</span>`;
+  wrap.appendChild(el);
+  requestAnimationFrame(() => requestAnimationFrame(() => el.classList.add('show')));
+  setTimeout(() => { el.classList.remove('show'); setTimeout(() => el.remove(), 350); }, ms);
+}
+function confirmBox({ title, message = '', ok = '확인', danger = false }) {
+  return new Promise(resolve => {
+    const m = $('#confirmModal');
+    $('#cmTitle').textContent = title;
+    $('#cmMsg').textContent = message;
+    const okBtn = $('#cmOk'), cancelBtn = $('#cmCancel');
+    okBtn.textContent = ok;
+    okBtn.className = 'btn ' + (danger ? 'btn-danger' : 'btn-primary');
+    m.classList.add('open');
+    const done = v => { m.classList.remove('open'); okBtn.onclick = cancelBtn.onclick = m.onclick = null; resolve(v); };
+    okBtn.onclick = () => done(true);
+    cancelBtn.onclick = () => done(false);
+    m.onclick = e => { if (e.target === m) done(false); };
+  });
+}
+
+/* =========================================================
+   카카오톡 주문서 파싱 엔진
+   ========================================================= */
+/*PARSER-START*/
+const KakaoParser = (() => {
+  const MARK_G = /✔️?|✔︎|✅|☑️?|✓|☑/g;
+  const SEP = /^[\-=_~─━·•.＊*\s]{4,}$/;
+  const NOISE_START = /^(픽업\s*가능|네이버\s*리뷰|리뷰\s*이벤트|상담\s*후|주문\s*전|주문\s*시\s*유의|입금\s*순|입금\s*확인\s*후|유의\s*사항|안내\s*사항|영업\s*시간|운영\s*시간|정기\s*휴무|휴무|계좌|예금주|당일\s*(주문|취소)|취소\s*(및|시|규정)|환불|노쇼|※)/;
+  const NOISE_ANY = /픽업\s*가능\s*시간|상담\s*후\s*예약이|주문\s*전\s*유의\s*사항|입금\s*순으로|예약이\s*확정|자동\s*예약|순차\s*적으로\s*답|양해\s*부탁|새마을금고|예금주\s*[:：]/;
+  const stripLead = s => s.replace(/^[^\p{L}\p{N}]+/u, '').trim();
+  const cleanVal = s => String(s || '').replace(/^[\s:：\-–=→>~]+/, '').replace(/\s+$/, '').trim();
+
+  function detect(s, allowAll) {
+    const raw = s.trim();
+    if (/^[-–—~·•]/.test(raw) && /(케이크\s*(위|하판)|하판|문구\s*위치)/.test(raw)) return 'pos';
+    if (/케이크\s*위\s*(or|OR|또는|\/|,)\s*케이크\s*하판/.test(raw)) return 'pos';
+    if (!allowAll) return null;
+    const t = stripLead(raw);
+    if (/^(성함|이름|주문자|고객\s*명|연락처|전화\s*번호)/.test(t)) return 'name';
+    if (/^픽업\s*(날짜|일자|일시|날|일|시간)(?!\s*가능)/.test(t) || /^(날짜|일시)\s*[\/,]?\s*시간/.test(t)) return 'datetime';
+    if (/^케이크\s*(사이즈|종류|크기|맛)/.test(t) || /^사이즈/.test(t)) return 'size';
+    if (/^(컬러|색상|디자인)/.test(t)) return 'design';
+    if (/^레터링/.test(t) || /^문구/.test(t)) return 'lettering';
+    if (/^보냉/.test(t)) return 'cooler';
+    if (/^(기본\s*상자|투명\s*상자|상자|박스)/.test(t)) return 'box';
+    if (/^(기타\s*|추가\s*)?요청/.test(t)) return 'request';
+    return null;
+  }
+
+  function isNoise(raw, field) {
+    const tr = raw.trim();
+    if (!tr) return false;
+    if (SEP.test(tr)) return true;
+    const s = stripLead(tr);
+    if (!s) return false;
+    if (field === 'cooler' && /리뷰/.test(s) && s.length <= 22 && !/[:：]/.test(s) && !/(작성\s*시|증정|무료\s*제공|이벤트\s*안내)/.test(s)) return false;
+    return NOISE_START.test(s) || NOISE_ANY.test(s);
+  }
+
+  function parseDate(s, now) {
+    now = now || new Date();
+    const base = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+    let m, y, mo, d, matched = '';
+    if ((m = s.match(/(20\d{2})\s*[.\-\/년]\s*(\d{1,2})\s*[.\-\/월]\s*(\d{1,2})\s*일?/))) { y = +m[1]; mo = +m[2]; d = +m[3]; matched = m[0]; }
+    else if ((m = s.match(/(\d{1,2})\s*월\s*(\d{1,2})\s*일?/))) { mo = +m[1]; d = +m[2]; matched = m[0]; }
+    else if ((m = s.match(/(?<!\d)(\d{1,2})\s*[\/.\-]\s*(\d{1,2})(?!\d)(\s*일)?/))) { mo = +m[1]; d = +m[2]; matched = m[0]; }
+    else if ((m = s.match(/오늘|내일|모레|글피/))) {
+      const add = { 오늘: 0, 내일: 1, 모레: 2, 글피: 3 }[m[0]];
+      const t = new Date(base); t.setDate(t.getDate() + add);
+      return { date: ymd(t), rest: s.replace(m[0], ' ') };
+    }
+    if (!mo || mo < 1 || mo > 12 || !d || d < 1 || d > 31) return { date: '', rest: s };
+    if (!y) {
+      y = base.getFullYear();
+      const cand = new Date(y, mo - 1, d);
+      if ((base - cand) / 86400000 > 45) y += 1;
+    }
+    const dt = new Date(y, mo - 1, d);
+    if (dt.getMonth() !== mo - 1) return { date: '', rest: s };
+    return { date: ymd(dt), rest: s.replace(matched, ' ') };
+  }
+
+  function parseTime(s) {
+    const str = String(s || '').replace(/\(.*?\)/g, ' ');
+    const m = str.match(/(오전|오후|낮|저녁|밤|아침|am|pm|AM|PM)?\s*(\d{1,2})\s*(?:[:：]\s*(\d{2})|시\s*(?:(반)|(\d{1,2})\s*분?)?)/);
+    if (!m) return '';
+    let h = +m[2];
+    const mi = m[3] ? +m[3] : m[4] ? 30 : m[5] ? +m[5] : 0;
+    const ap = (m[1] || '').toLowerCase();
+    if (h > 24 || mi > 59) return '';
+    if (/오후|저녁|밤|pm/.test(ap)) { if (h < 12) h += 12; }
+    else if (/오전|아침|am/.test(ap)) { if (h === 12) h = 0; }
+    else if (ap === '낮') { if (h < 7) h += 12; }
+    else if (h >= 1 && h <= 8) h += 12;
+    if (h === 24) h = 0;
+    return `${pad(h)}:${pad(mi)}`;
+  }
+
+  function decideCooler(v) {
+    const s = String(v || '').trim();
+    if (!s) return 'none';
+    if (/리뷰/.test(s)) return 'review';
+    if (/(^|\s)(x|X|ㄴ|노|no|NO|No)(\s|$)|아니|없|안\s*(해|함|할)|필요\s*없|미신청|불필요|괜찮/.test(s)) return 'none';
+    if (/(^|\s)(o|O|ㅇ|ㅇㅇ|v|V|yes|YES|Yes)(\s|$)|[⭕○●✓]|네|예|넵|추가|필요|신청|할게|해\s*주|해주|포함|원해|부탁|\d+\s*개/.test(s)) return 'paid';
+    return 'none';
+  }
+
+  function parse(text, now) {
+    const src = String(text || '').replace(/\r\n?/g, '\n');
+    const hasMarks = new RegExp(MARK_G.source).test(src);
+    const lines = src.split('\n');
+    const blocks = [];
+    let cur = null;
+    for (const line of lines) {
+      const marked = new RegExp(MARK_G.source).test(line);
+      const clean = line.replace(MARK_G, ' ').replace(/ /g, ' ').trim();
+      if (marked || !hasMarks) {
+        const f = detect(clean, true);
+        if (f) { cur = { f, first: clean, rest: [] }; blocks.push(cur); continue; }
+        if (marked) {
+          if (!clean || isNoise(clean)) { cur = { f: null, stop: true, rest: [] }; continue; }
+          cur = { f: 'extra', first: clean, rest: [] }; blocks.push(cur); continue;
+        }
+      } else {
+        const f = detect(clean, false);
+        if (f === 'pos') { cur = { f, first: clean, rest: [] }; blocks.push(cur); continue; }
+      }
+      if (!cur || cur.stop) continue;
+      if (isNoise(clean, cur.f)) { cur.stop = true; continue; }
+      if (clean) cur.rest.push(clean);
+    }
+
+    const out = { name: '', phone: '', date: '', time: '', size: '', design: '', lettering: '', pos: '', cooler: 'none', review: false, clearBox: false, boxKnown: false, request: '' };
+    const found = new Set();
+    const extras = [];
+    const joinVal = (first, rest) => [cleanVal(first), ...rest.map(cleanVal)].filter(Boolean).join('\n').trim();
+
+    for (const b of blocks) {
+      const t = stripLead(b.first || '');
+      if (b.f === 'name') {
+        const v = joinVal(t.replace(/^(성함|이름|주문자|고객\s*명)?\s*[\/,|]?\s*(연락처|전화\s*번호|번호)?\s*[:：]?/, ''), b.rest);
+        const pm = v.match(/(0\d{1,2})[\s.\-]?(\d{3,4})[\s.\-]?(\d{4})/);
+        if (pm) { out.phone = fmtPhone(pm[0]); found.add('phone'); }
+        const nm = (pm ? v.replace(pm[0], ' ') : v).replace(/[\/,|:：\-()]/g, ' ').replace(/\s+/g, ' ').trim();
+        if (nm) { out.name = nm; found.add('name'); }
+      } else if (b.f === 'datetime') {
+        const v = joinVal(t.replace(/^(픽업\s*)?(날짜|일자|일시|날|일)?\s*[\/,]?\s*(시간)?\s*[:：]?/, ''), b.rest);
+        const pd = parseDate(v, now);
+        if (pd.date) { out.date = pd.date; found.add('date'); }
+        const tm = parseTime(pd.rest);
+        if (tm) { out.time = tm; found.add('time'); }
+      } else if (b.f === 'size') {
+        const v = joinVal(t.replace(/^(케이크\s*)?(사이즈|종류|크기)?\s*[\/,]?\s*(맛)?\s*(\([^)]*\))?\s*[:：]?/, ''), b.rest);
+        if (v) { out.size = v.replace(/\n/g, ' '); found.add('size'); }
+      } else if (b.f === 'design') {
+        const v = joinVal(t.replace(/^(컬러감?|색상)?\s*(or|OR|또는|\/|,)?\s*(디자인)?\s*(or|OR|또는|\/|,)?\s*(사진\s*첨부)?\s*[:：]?/, ''), b.rest);
+        if (v) { out.design = v.replace(/\n/g, ' / '); found.add('design'); }
+      } else if (b.f === 'lettering') {
+        const v = joinVal(t.replace(/^(레터링\s*)?(문구)?\s*(\d+\s*자\s*이내)?\s*(\([^)]*\))?\s*[:：]?/, ''), b.rest);
+        const lv = v.replace(/^["'“”‘’「『]+|["'“”‘’」』]+$/g, '').trim();
+        if (lv) { out.lettering = lv; found.add('lettering'); }
+      } else if (b.f === 'pos') {
+        const all = [b.first, ...b.rest].join(' ');
+        const tmpl = /케이크\s*위\s*(or|OR|또는|\/|,)\s*케이크\s*하판/;
+        let judge = tmpl.test(all) ? all.replace(tmpl, ' ') : all;
+        judge = judge.replace(/^[\s\-–—~·•]+/, '').replace(/문구\s*위치\s*[:：]?/, '');
+        if (/하판|아래|밑판|판에/.test(judge)) { out.pos = 'board'; found.add('pos'); }
+        else if (/위|상단|윗면|윗쪽|위쪽/.test(judge)) { out.pos = 'top'; found.add('pos'); }
+      } else if (b.f === 'cooler') {
+        const v = joinVal(t.replace(/^보냉\s*백?\s*(\[[^\]]*\]|\([^)]*아이스팩[^)]*\))?\s*(\(\s*\+?\s*[\d,.]+\s*(원)?\s*\))?\s*[:：]?/, ''), b.rest);
+        const c = decideCooler(v);
+        out.cooler = c; if (c === 'review') out.review = true;
+        if (v) found.add('cooler');
+      } else if (b.f === 'box') {
+        const all = [b.first, ...b.rest].join(' ');
+        const tmpl = /기본\s*상자\s*(\([^)]*\))?\s*(or|OR|또는|\/|,)\s*투명\s*상자\s*(\(\s*\+?\s*[\d,.]+\s*(원)?\s*\))?/;
+        if (tmpl.test(all)) {
+          const rem = cleanVal(all.replace(tmpl, ' '));
+          if (/투명/.test(rem)) { out.clearBox = true; out.boxKnown = true; }
+          else if (/기본|아이보리/.test(rem)) { out.clearBox = false; out.boxKnown = true; }
+        } else {
+          const hasClear = /투명/.test(all), hasBasic = /기본|아이보리/.test(all);
+          if (hasClear && !hasBasic) { out.clearBox = true; out.boxKnown = true; }
+          else if (hasBasic && !hasClear) { out.clearBox = false; out.boxKnown = true; }
+        }
+        if (out.boxKnown) found.add('box');
+      } else if (b.f === 'request') {
+        const v = joinVal(t.replace(/^(기타\s*|추가\s*)?요청\s*사항?\s*[:：]?/, ''), b.rest);
+        if (v && !/^(없음|없어요|x|X|-|없습니다)$/.test(v)) { out.request = v; found.add('request'); }
+      } else if (b.f === 'extra') {
+        const v = joinVal(t, b.rest);
+        if (v) extras.push(v.replace(/\n/g, ' '));
+      }
+    }
+    if (extras.length) { out.request = [out.request, ...extras].filter(Boolean).join('\n'); found.add('request'); }
+    if (!out.review) {
+      const customerText = blocks.filter(b => b.f && b.f !== 'extra').map(b => [b.first, ...b.rest].join(' ')).join(' ');
+      if (/리뷰\s*이벤트\s*(참여|할게|신청|로|해)/.test(customerText)) { out.review = true; out.cooler = 'review'; }
+    }
+    return { data: out, found: [...found], blocks: blocks.length };
+  }
+  return { parse, parseTime, parseDate, isNoise };
+})();
+/*PARSER-END*/
+
+/* =========================================================
+   예약 데이터 처리
+   ========================================================= */
+function sortOrders(arr) {
+  return arr.sort((a, b) => (a.date || '').localeCompare(b.date || '') || (a.time || '99:99').localeCompare(b.time || '99:99') || (a.createdAt || 0) - (b.createdAt || 0));
+}
+async function saveOrder(o) {
+  o.updatedAt = Date.now();
+  await DB.put('orders', o);
+  const i = state.orders.findIndex(x => x.id === o.id);
+  if (i >= 0) state.orders[i] = o; else state.orders.push(o);
+  sortOrders(state.orders);
+}
+async function deleteOrder(id) {
+  const o = state.orders.find(x => x.id === id);
+  if (!o) return;
+  await DB.run(['orders', 'images'], 'readwrite', tx => {
+    tx.objectStore('orders').delete(id);
+    (o.imageIds || []).forEach(im => tx.objectStore('images').delete(im));
+  });
+  (o.imageIds || []).forEach(im => thumbCache.delete(im));
+  state.orders = state.orders.filter(x => x.id !== id);
+}
+function orderTags(o) {
+  const op = o.options || {};
+  const t = [];
+  if (op.cooler || op.review) t.push(['보냉백+아이스팩', 't-sky']);
+  if (op.review) t.push(['네이버리뷰이벤트', 't-naver']);
+  t.push(op.clearBox ? ['투명상자', 't-lilac'] : ['기본상자', 't-butter']);
+  if (op.longLetter) t.push(['레터링 15자+', 't-berry']);
+  return t;
+}
+const normQ = s => String(s || '').toLowerCase().replace(/[\s\-]/g, '');
+function matchesQuery(o, q) {
+  const hay = normQ([o.name, o.phone, o.lettering, o.size, o.design, o.request].join('|'));
+  return hay.includes(q);
+}
+
+/* =========================================================
+   탭 1: 예약 목록 렌더링
+   ========================================================= */
+function renderHeader() {
+  const t = todayStr();
+  const n = state.orders.filter(o => o.date === t && o.status !== 'picked').length;
+  $('#hdrToday').textContent = '오늘 ' + kDate(t);
+  $('#hdrTodayCount').textContent = n ? `남은 픽업 ${n}건` : '오늘 픽업 완료';
+  $('#verTag').textContent = APP_VERSION;
+}
+function renderDateBar() {
+  const t = todayStr();
+  $('#dayLabel').textContent = kDate(state.date);
+  const diff = Math.round((fromYmd(state.date) - fromYmd(t)) / 86400000);
+  $('#daySub').textContent = diff === 0 ? '오늘' : diff === 1 ? '내일' : diff === -1 ? '어제' : diff > 0 ? `${diff}일 뒤` : `${-diff}일 전`;
+  $('#datePick').value = state.date;
+  const counts = {};
+  state.orders.forEach(o => { counts[o.date] = (counts[o.date] || 0) + 1; });
+  let html = '';
+  for (let i = -3; i <= 3; i++) {
+    const d = addDays(state.date, i);
+    const dt = fromYmd(d);
+    const c = counts[d] || 0;
+    html += `<button class="wd ${d === state.date ? 'sel' : ''} ${d === t ? 'today' : ''} ${dt.getDay() === 0 ? 'sun' : ''}" data-date="${d}">
+      <span class="w">${WD[dt.getDay()]}</span><span class="n">${dt.getDate()}</span><span class="dot ${c ? 'has' : ''}">${c || ''}</span></button>`;
+  }
+  $('#weekStrip').innerHTML = html;
+}
+function renderList() {
+  renderHeader();
+  renderDateBar();
+  const q = normQ(state.query);
+  const base = q ? state.orders.filter(o => matchesQuery(o, q)) : state.orders.filter(o => o.date === state.date);
+  const counts = { all: base.length, pending: 0, confirmed: 0, done: 0, picked: 0 };
+  base.forEach(o => { counts[o.status] = (counts[o.status] || 0) + 1; });
+  const sum = st => base.filter(o => st === 'all' || o.status === st).reduce((a, o) => a + (o.total || 0), 0);
+  const revenue = base.filter(o => o.status !== 'pending').reduce((a, o) => a + (o.total || 0), 0);
+  const heroLab = q ? '검색 결과' : (state.date === todayStr() ? '오늘 예약' : kDate(state.date) + ' 예약');
+  const small = [['pending', '입금대기'], ['confirmed', '예약확정'], ['done', '제작완료'], ['picked', '픽업완료']];
+  $('#sumCards').innerHTML = `<button class="scard hero ${state.filter === 'all' ? 'on' : ''}" data-filter="all">
+      <div class="lab">${heroLab}</div><span class="num">${base.length}<span class="u">건</span></span>
+      <div class="text-[13px] mt-1" style="color:#E6D8CC">확정 매출 <b class="text-white">${won(revenue)}원</b></div></button>`
+    + small.map(([k, l]) => `<button class="scard ${state.filter === k ? 'on' : ''}" data-filter="${k}">
+      <div class="lab flex items-center gap-1.5"><span class="sdot sd-${k}"></span>${l}</div>
+      <span class="num" style="${k === 'pending' && counts[k] ? 'color:var(--accent)' : ''}">${counts[k] || 0}<span class="u">건</span></span>
+      <div class="text-[11px] text-cocoa-400 font-semibold mt-0.5 tnum">${counts[k] ? won(sum(k)) + '원' : '-'}</div></button>`).join('');
+  const list = sortOrders(base.filter(o => state.filter === 'all' || o.status === state.filter));
+  $('#listSummary').textContent = q ? '모든 날짜에서 찾은 결과' : (state.filter === 'all' ? '픽업 시간순' : `${STATUS_LABEL[state.filter]}만 보는 중 · 위 큰 카드를 누르면 전체`);
+
+  const box = $('#orderList');
+  if (!list.length) {
+    box.innerHTML = `<div class="panel p-8 text-center fadein">
+      <div class="empty-illu"><i data-lucide="cake"></i></div>
+      <p class="font-brand font-bold text-[19px] mt-4">${q ? '검색 결과가 없어요' : state.filter !== 'all' ? '해당 상태의 예약이 없어요' : '이 날은 아직 예약이 없어요'}</p>
+      <p class="text-[13px] text-cocoa-400 mt-1">${q ? '다른 단어로 검색해 보세요' : '카톡 주문서를 붙여넣으면 1초 만에 등록돼요'}</p>
+      ${q ? '' : `<button class="btn btn-berry mt-4" data-act="goto-new"><i data-lucide="plus"></i>주문 등록하기</button>`}
+    </div>`;
+    icons();
+    return;
+  }
+  let html = '', lastDate = '';
+  for (const o of list) {
+    if (q && o.date !== lastDate) { lastDate = o.date; html += `<div class="font-bold text-[15px] mt-2 px-1 text-cocoa-600">${kDate(o.date)}</div>`; }
+    html += cardHTML(o);
+  }
+  box.innerHTML = html;
+  icons();
+  list.forEach(async o => {
+    const id = (o.imageIds || [])[0];
+    if (!id) return;
+    const t = await getThumb(id);
+    const el = box.querySelector(`[data-thumb="${o.id}"]`);
+    if (el && t) el.src = t;
+  });
+  if (state.flashId) {
+    const el = box.querySelector(`[data-id="${state.flashId}"]`);
+    state.flashId = null;
+    if (el) { el.classList.add('flash'); setTimeout(() => el.scrollIntoView({ behavior: 'smooth', block: 'center' }), 60); }
+  }
+}
+function cardHTML(o) {
+  const imgs = o.imageIds || [];
+  const pos = o.pos === 'top' ? ['케이크 위', 'b-pos-top'] : o.pos === 'board' ? ['하판', 'b-pos-board'] : ['위치 미정', 'b-pos-none'];
+  const idx = STATUS.indexOf(o.status);
+  const next = STATUS[idx + 1];
+  const tel = digits(o.phone);
+  return `<article class="card fadein" data-id="${o.id}" data-status="${o.status}">
+    <button class="thumb" data-act="view" data-id="${o.id}" aria-label="도안 크게 보기">
+      ${imgs.length ? `<img data-thumb="${o.id}" alt="">` : `<i data-lucide="image" class="w-7 h-7"></i>`}
+      ${imgs.length ? `<span class="zoom"><i data-lucide="maximize-2"></i></span>` : ''}
+      ${imgs.length > 1 ? `<span class="multi">+${imgs.length - 1}</span>` : ''}
+    </button>
+    <div class="c-main">
+      <div class="flex flex-wrap items-center gap-x-2 gap-y-1.5">
+        <span class="c-time tnum ${o.time ? '' : 'none'}">${o.time ? esc(o.time) : '시간 미정'}</span>
+        ${o.size ? `<span class="badge b-size">${esc(o.size)}</span>` : ''}
+        ${o.design ? `<span class="design">${esc(o.design)}</span>` : ''}
+      </div>
+      <div class="flex flex-col gap-1.5">
+        <div class="lettering ${o.lettering ? '' : 'empty'}">${o.lettering ? esc(o.lettering) : '레터링 없음'}</div>
+        <div class="flex flex-wrap gap-1.5"><span class="badge ${pos[1]}">${pos[0]}</span>${orderTags(o).map(([l, c]) => `<span class="tag ${c}">${l}</span>`).join('')}${o.source ? `<span class="tag t-src">${SRC_LABEL[o.source] || ''}</span>` : ''}</div>
+      </div>
+      ${o.request ? `<div class="req"><b>요청</b>${esc(o.request)}</div>` : ''}
+    </div>
+    <div class="c-right">
+      <div class="c-who">
+        <div class="c-name">${esc(o.name || '이름 없음')}</div>
+        ${o.phone ? `<a class="c-phone tnum" href="tel:${tel}">${esc(o.phone)}</a>` : ''}
+      </div>
+      <div class="c-price">${won(o.total)}<span class="u">원</span></div>
+      ${tel ? `<div class="c-contact"><a class="icon-btn" href="tel:${tel}" aria-label="전화"><i data-lucide="phone"></i></a><a class="icon-btn" href="sms:${tel}" aria-label="문자"><i data-lucide="message-circle"></i></a></div>` : ''}
+      <div class="c-status">
+        <button class="st-btn st-${o.status}" data-act="status" data-id="${o.id}"><span class="flex items-center gap-1.5"><span class="sdot sd-${o.status}"></span>${STATUS_LABEL[o.status]}</span><small>${next ? `탭 → ${STATUS_LABEL[next]}` : '완료된 주문'}</small></button>
+        ${idx > 0 ? `<button class="icon-btn h-[50px]" data-act="status-back" data-id="${o.id}" aria-label="이전 상태로"><i data-lucide="undo-2"></i></button>` : ''}
+      </div>
+      <div class="c-tools">
+        ${o.status === 'pending' ? `<button class="btn btn-soft min-h-[40px] px-3 text-[13px] flex-1" data-act="paycopy" data-id="${o.id}"><i data-lucide="copy"></i>입금안내</button>` : '<span class="flex-1"></span>'}
+        <button class="icon-btn h-[40px] w-[40px]" data-act="edit" data-id="${o.id}" aria-label="수정"><i data-lucide="pencil"></i></button>
+        <button class="icon-btn h-[40px] w-[40px] !bg-[#FBE9E7] !text-[#A53B2F]" data-act="del" data-id="${o.id}" aria-label="삭제"><i data-lucide="trash-2"></i></button>
+      </div>
+    </div>
+  </article>`;
+}
+
+/* =========================================================
+   풀스크린 작업용 뷰어 (핀치 줌 · 스와이프 · 화면 꺼짐 방지)
+   ========================================================= */
+const viewer = { order: null, index: 0, scale: 1, x: 0, y: 0, wake: null, lastTap: 0 };
+async function openViewer(id) {
+  const o = state.orders.find(x => x.id === id);
+  if (!o) return;
+  if (!(o.imageIds || []).length) { toast('도안 사진이 없어요. 수정에서 사진을 추가해 주세요.', 'warn'); return; }
+  viewer.order = o; viewer.index = 0;
+  $('#vTitle').textContent = `${o.time || '시간 미정'} · ${o.name || ''}`;
+  $('#vSub').textContent = [o.size, o.design].filter(Boolean).join(' · ');
+  const pos = o.pos === 'top' ? '케이크 위' : o.pos === 'board' ? '하판' : '위치 미정';
+  $('#vBadges').innerHTML = `<span class="badge b-pos-top">${pos}</span>` + orderTags(o).map(([l, c]) => `<span class="tag ${c}">${l}</span>`).join('');
+  $('#vLetter').textContent = o.lettering || '';
+  $('#viewer').classList.add('open');
+  $('#viewer').setAttribute('aria-hidden', 'false');
+  await showViewerImage();
+  try { if ('wakeLock' in navigator) viewer.wake = await navigator.wakeLock.request('screen'); } catch (e) { viewer.wake = null; }
+}
+async function showViewerImage() {
+  const o = viewer.order; const ids = o.imageIds || [];
+  const rec = await DB.get('images', ids[viewer.index]);
+  const img = $('#vImg');
+  img.src = rec ? rec.full : '';
+  resetZoom();
+  $('#vCount').textContent = ids.length > 1 ? `${viewer.index + 1} / ${ids.length}` : '';
+  $('#vDots').innerHTML = ids.length > 1 ? ids.map((_, i) => `<i class="${i === viewer.index ? 'on' : ''}"></i>`).join('') : '';
+  $$('#viewer .nav-l, #viewer .nav-r').forEach(b => b.style.display = ids.length > 1 ? 'flex' : 'none');
+}
+function closeViewer() {
+  $('#viewer').classList.remove('open');
+  $('#viewer').setAttribute('aria-hidden', 'true');
+  try { viewer.wake && viewer.wake.release(); } catch (e) {}
+  viewer.wake = null;
+  setTimeout(() => { $('#vImg').src = ''; }, 260);
+}
+function stepViewer(d) {
+  const n = (viewer.order.imageIds || []).length;
+  if (n < 2) return;
+  viewer.index = (viewer.index + d + n) % n;
+  showViewerImage();
+}
+function applyZoom() { $('#vImg').style.transform = `translate(${viewer.x}px, ${viewer.y}px) scale(${viewer.scale})`; }
+function resetZoom() { viewer.scale = 1; viewer.x = 0; viewer.y = 0; applyZoom(); }
+(function bindViewerGestures() {
+  const stage = document.getElementById('vStage');
+  const img = document.getElementById('vImg');
+  let pinch = null, pan = null;
+  const dist = t => Math.hypot(t[0].clientX - t[1].clientX, t[0].clientY - t[1].clientY);
+  stage.addEventListener('touchstart', e => {
+    if (e.target.closest('button')) return;
+    img.classList.add('dragging');
+    if (e.touches.length === 2) { pinch = { d: dist(e.touches), s: viewer.scale }; pan = null; }
+    else if (e.touches.length === 1) {
+      const t = e.touches[0];
+      pan = { sx: t.clientX, sy: t.clientY, ox: viewer.x, oy: viewer.y, at: Date.now() };
+      const now = Date.now();
+      if (now - viewer.lastTap < 280) {
+        if (viewer.scale > 1) resetZoom(); else { viewer.scale = 2.5; applyZoom(); }
+        viewer.lastTap = 0; pan = null; img.classList.remove('dragging');
+      } else viewer.lastTap = now;
+    }
+  }, { passive: true });
+  stage.addEventListener('touchmove', e => {
+    if (e.target.closest('button')) return;
+    e.preventDefault();
+    if (pinch && e.touches.length === 2) {
+      viewer.scale = Math.min(5, Math.max(1, pinch.s * dist(e.touches) / pinch.d));
+      if (viewer.scale === 1) { viewer.x = 0; viewer.y = 0; }
+      applyZoom();
+    } else if (pan && e.touches.length === 1) {
+      const t = e.touches[0];
+      const dx = t.clientX - pan.sx, dy = t.clientY - pan.sy;
+      if (viewer.scale > 1) { viewer.x = pan.ox + dx; viewer.y = pan.oy + dy; }
+      else { viewer.x = dx * 0.6; }
+      applyZoom();
+    }
+  }, { passive: false });
+  stage.addEventListener('touchend', e => {
+    img.classList.remove('dragging');
+    if (pinch && e.touches.length < 2) { pinch = null; if (viewer.scale <= 1.02) resetZoom(); return; }
+    if (pan && viewer.scale === 1) {
+      const dx = viewer.x / 0.6;
+      if (Math.abs(dx) > 60) stepViewer(dx < 0 ? 1 : -1); else resetZoom();
+    }
+    pan = null;
+  });
+  stage.addEventListener('wheel', e => {
+    e.preventDefault();
+    viewer.scale = Math.min(5, Math.max(1, viewer.scale * (e.deltaY < 0 ? 1.12 : 0.89)));
+    if (viewer.scale === 1) { viewer.x = 0; viewer.y = 0; }
+    applyZoom();
+  }, { passive: false });
+  stage.addEventListener('dblclick', () => { if (viewer.scale > 1) resetZoom(); else { viewer.scale = 2.5; applyZoom(); } });
+  document.addEventListener('keydown', e => {
+    if (!$('#viewer').classList.contains('open')) return;
+    if (e.key === 'Escape') closeViewer();
+    if (e.key === 'ArrowRight') stepViewer(1);
+    if (e.key === 'ArrowLeft') stepViewer(-1);
+  });
+})();
+
+/* =========================================================
+   탭 2: 주문 등록 폼
+   ========================================================= */
+const F = id => document.getElementById(id);
+function getRadio(name) { const el = $(`input[name="${name}"]:checked`); return el ? el.value : ''; }
+function setRadio(name, v) { const el = $(`input[name="${name}"][value="${v}"]`); if (el) el.checked = true; }
+
+function readForm() {
+  const options = { longLetter: F('o-long').checked, cooler: F('o-cooler').checked, clearBox: F('o-clear').checked, review: F('o-review').checked };
+  const basePrice = Number(digits(F('f-base').value)) || 0;
+  return {
+    name: F('f-name').value.trim(), phone: fmtPhone(F('f-phone').value), date: F('f-date').value, time: F('f-time').value,
+    size: F('f-size').value.trim(), design: F('f-design').value.trim(), lettering: F('f-letter').value.trim(), pos: getRadio('pos'),
+    request: F('f-request').value.trim(), basePrice, options, total: calcTotal(basePrice, options), status: getRadio('status') || 'pending', source: getRadio('src') || 'kakao'
+  };
+}
+function updateTotal() {
+  const d = readForm();
+  F('f-total').textContent = won(d.total);
+  const parts = [`기본 ${won(d.basePrice)}원`];
+  if (d.options.longLetter) parts.push('레터링 +1,000');
+  if (d.options.cooler && !d.options.review) parts.push('보냉백 +4,000');
+  if (d.options.review) parts.push('리뷰 보냉백 0');
+  if (d.options.clearBox) parts.push('투명상자 +4,000');
+  F('totalBreak').textContent = parts.join(' · ');
+}
+function updateLetterCount() {
+  const n = letterLen(F('f-letter').value);
+  const el = F('letterCount');
+  el.textContent = `${n}자 / 15자`;
+  el.style.color = n > 15 ? '#B5636D' : '';
+  if (!state.longManual) F('o-long').checked = n > 15;
+  updateTotal();
+}
+function renderTimeChips() {
+  const cur = F('f-time').value;
+  F('timeChips').innerHTML = TIME_CHIPS.map(t => `<button type="button" class="timechip tnum ${cur === t ? 'on' : ''}" data-time="${t}">${t}</button>`).join('');
+}
+function renderSizeList() {
+  const set = new Set(DEFAULT_SIZES);
+  state.orders.forEach(o => o.size && set.add(o.size));
+  F('sizeList').innerHTML = [...set].map(s => `<option value="${esc(s)}">`).join('');
+}
+function lastPriceForSize(size) {
+  const s = normQ(size);
+  if (!s) return 0;
+  const hit = [...state.orders].filter(o => normQ(o.size) === s && o.basePrice).sort((a, b) => (b.updatedAt || 0) - (a.updatedAt || 0))[0];
+  return hit ? hit.basePrice : 0;
+}
+function suggestBase() {
+  const p = lastPriceForSize(F('f-size').value);
+  const hint = F('baseHint');
+  if (p && !digits(F('f-base').value)) {
+    F('f-base').value = won(p);
+    hint.textContent = `지난번 같은 케이크 가격(${won(p)}원)을 불러왔어요`;
+    hint.classList.remove('hidden');
+    updateTotal();
+  } else if (!p) hint.classList.add('hidden');
+}
+function renderFormImages() {
+  const box = F('formImgs');
+  box.innerHTML = state.formImages.map((im, i) => `<div class="it"><img src="${im.thumb}" alt="">
+      <button type="button" class="rm" data-act="img-rm" data-i="${i}" aria-label="사진 삭제"><i data-lucide="x" class="w-4 h-4"></i></button>
+      <button type="button" class="rep ${i === 0 ? 'is' : ''}" data-act="img-rep" data-i="${i}">${i === 0 ? '대표' : '대표로'}</button></div>`).join('')
+    + `<button type="button" class="add" data-act="img-add"><i data-lucide="image-plus"></i>사진 추가</button>`;
+  icons();
+}
+function resetForm(keepDate) {
+  F('orderForm').reset();
+  state.editingId = null; state.formImages = []; state.originalImageIds = []; state.longManual = false;
+  F('f-date').value = keepDate || state.date || todayStr();
+  setRadio('pos', 'top'); setRadio('status', 'pending'); setRadio('src', 'kakao');
+  $$('.field.filled').forEach(el => el.classList.remove('filled'));
+  F('baseHint').classList.add('hidden');
+  F('editBanner').classList.add('hidden');
+  F('formTitle').textContent = '주문 정보';
+  $('#submitBtn span').textContent = '예약 등록하기';
+  renderFormImages(); renderTimeChips(); updateLetterCount(); updateTotal();
+}
+async function fillFormFromOrder(o) {
+  resetForm(o.date);
+  state.editingId = o.id;
+  F('f-name').value = o.name || ''; F('f-phone').value = o.phone || ''; F('f-date').value = o.date || ''; F('f-time').value = o.time || '';
+  F('f-size').value = o.size || ''; F('f-design').value = o.design || ''; F('f-letter').value = o.lettering || ''; F('f-request').value = o.request || '';
+  F('f-base').value = o.basePrice ? won(o.basePrice) : '';
+  setRadio('pos', o.pos || ''); setRadio('status', o.status || 'pending'); setRadio('src', o.source || 'kakao');
+  const op = o.options || {};
+  F('o-long').checked = !!op.longLetter; F('o-cooler').checked = !!op.cooler; F('o-clear').checked = !!op.clearBox; F('o-review').checked = !!op.review;
+  state.longManual = true;
+  state.originalImageIds = [...(o.imageIds || [])];
+  const recs = await Promise.all(state.originalImageIds.map(id => DB.get('images', id)));
+  state.formImages = recs.filter(Boolean).map(r => ({ ...r, isNew: false }));
+  F('editBanner').classList.remove('hidden');
+  F('editBannerText').textContent = `예약 수정 중 · ${o.name || ''} ${o.time || ''}`;
+  F('formTitle').textContent = '예약 수정';
+  $('#submitBtn span').textContent = '수정 내용 저장';
+  renderFormImages(); renderTimeChips(); updateLetterCount(); updateTotal();
+}
+function flashField(id) { const el = F(id); el.classList.add('filled'); setTimeout(() => el.classList.remove('filled'), 2600); }
+
+function runParse() {
+  const text = F('kakaoText').value;
+  if (!text.trim()) { toast('주문서를 먼저 붙여넣어 주세요', 'warn'); return; }
+  const { data, found } = KakaoParser.parse(text);
+  if (!found.length) { toast('주문서 항목을 찾지 못했어요. 양식을 확인해 주세요', 'err'); return; }
+  const set = (id, v) => { if (v) { F(id).value = v; flashField(id); } };
+  set('f-name', data.name); set('f-phone', data.phone); set('f-date', data.date); set('f-time', data.time);
+  set('f-size', data.size); set('f-design', data.design); set('f-letter', data.lettering); set('f-request', data.request);
+  if (data.pos) setRadio('pos', data.pos);
+  F('o-review').checked = data.review;
+  F('o-cooler').checked = data.cooler === 'paid';
+  if (data.boxKnown) F('o-clear').checked = data.clearBox;
+  setRadio('src', 'kakao');
+  state.longManual = false;
+  updateLetterCount(); renderTimeChips(); suggestBase(); updateTotal();
+  const labels = { name: '성함', phone: '연락처', date: '날짜', time: '시간', size: '케이크', design: '디자인', lettering: '레터링', pos: '문구위치', cooler: '보냉백', box: '상자', request: '요청사항' };
+  const must = ['name', 'phone', 'date', 'time', 'size', 'lettering'];
+  const missing = must.filter(k => !found.includes(k));
+  const pr = F('parseResult');
+  pr.classList.remove('hidden');
+  pr.innerHTML = `<div class="flex flex-wrap gap-1.5">${found.map(k => `<span class="tag t-naver">✓ ${labels[k]}</span>`).join('')}${missing.map(k => `<span class="tag" style="background:#FBE9E7;color:#A53B2F">확인 필요 · ${labels[k]}</span>`).join('')}</div>
+    ${data.date ? `<p class="text-[13px] text-cocoa-600 mt-2">픽업 <b>${kDate(data.date)} ${data.time || '시간 미정'}</b>${data.review ? ' · 네이버리뷰 이벤트 신청' : ''}</p>` : ''}`;
+  toast(`${found.length}개 항목을 자동으로 채웠어요`, missing.length ? 'warn' : 'ok');
+  setTimeout(() => F('orderForm').scrollIntoView({ behavior: 'smooth', block: 'start' }), 250);
+}
+
+async function submitForm(e) {
+  e.preventDefault();
+  const d = readForm();
+  if (!d.date) { toast('픽업 날짜를 입력해 주세요', 'warn'); F('f-date').focus(); return; }
+  if (!d.name && !d.phone) { toast('성함이나 연락처 중 하나는 입력해 주세요', 'warn'); F('f-name').focus(); return; }
+  const btn = F('submitBtn'); btn.disabled = true;
+  try {
+    const existing = state.editingId ? state.orders.find(o => o.id === state.editingId) : null;
+    const keepIds = state.formImages.map(im => im.id);
+    const newImgs = state.formImages.filter(im => im.isNew);
+    const removed = state.originalImageIds.filter(id => !keepIds.includes(id));
+    const o = { ...(existing || {}), ...d, id: existing ? existing.id : uid('o'), imageIds: keepIds, createdAt: existing ? existing.createdAt : Date.now(), updatedAt: Date.now() };
+    await DB.run(['orders', 'images'], 'readwrite', tx => {
+      newImgs.forEach(im => { const { isNew, ...rec } = im; tx.objectStore('images').put(rec); });
+      removed.forEach(id => tx.objectStore('images').delete(id));
+      tx.objectStore('orders').put(o);
+    });
+    newImgs.forEach(im => thumbCache.set(im.id, im.thumb));
+    removed.forEach(id => thumbCache.delete(id));
+    const i = state.orders.findIndex(x => x.id === o.id);
+    if (i >= 0) state.orders[i] = o; else state.orders.push(o);
+    sortOrders(state.orders);
+    toast(existing ? '예약을 수정했어요' : `${kDate(o.date)} ${o.time || ''} 예약 등록 완료!`);
+    state.date = o.date; state.filter = 'all'; state.query = ''; F('searchInput').value = ''; F('searchClear').classList.add('hidden');
+    state.flashId = o.id;
+    F('kakaoText').value = ''; F('parseResult').classList.add('hidden');
+    resetForm(o.date);
+    renderSizeList();
+    switchTab('list');
+  } catch (err) {
+    console.error(err);
+    toast('저장하지 못했어요: ' + (err && err.message ? err.message : '알 수 없는 오류'), 'err', 4000);
+  } finally { btn.disabled = false; }
+}
+
+/* =========================================================
+   탭 3: 매출 정산 & 데이터 금고
+   ========================================================= */
+function renderStats() {
+  const ym = state.statsMonth;
+  const [y, m] = ym.split('-').map(Number);
+  $('#monthLabel').textContent = `${y}년 ${m}월`;
+  const mon = state.orders.filter(o => (o.date || '').startsWith(ym));
+  const confirmed = mon.filter(o => o.status !== 'pending');
+  const revenue = confirmed.reduce((s, o) => s + (o.total || 0), 0);
+  const pend = mon.filter(o => o.status === 'pending');
+  const pendAmt = pend.reduce((s, o) => s + (o.total || 0), 0);
+  const picked = mon.filter(o => o.status === 'picked').length;
+  const t = todayStr();
+  const today = state.orders.filter(o => o.date === t);
+  const todayRev = today.filter(o => o.status !== 'pending').reduce((s, o) => s + (o.total || 0), 0);
+  const avg = confirmed.length ? Math.round(revenue / confirmed.length) : 0;
+  $('#statCards').innerHTML = `
+    <div class="stat hero col-span-2"><div class="k">${m}월 확정 매출</div><div class="v">${won(revenue)}<span class="u">원</span></div><div class="s">확정 ${confirmed.length}건 · 평균 ${won(avg)}원</div></div>
+    <div class="stat"><div class="k">총 예약</div><div class="v">${mon.length}<span class="u">건</span></div><div class="s"><span class="sdot sd-done"></span>픽업완료 ${picked}건</div></div>
+    <div class="stat"><div class="k">입금대기</div><div class="v" style="${pend.length ? 'color:var(--accent)' : ''}">${pend.length}<span class="u">건</span></div><div class="s"><span class="sdot sd-pending"></span>${won(pendAmt)}원</div></div>
+    <div class="stat col-span-2"><div class="k">오늘 ${new Date().getDate()}일 확정 매출</div><div class="v">${won(todayRev)}<span class="u">원</span></div><div class="s">예약 ${today.length}건</div></div>`;
+  const byDay = {};
+  mon.forEach(o => { const d = byDay[o.date] || (byDay[o.date] = { n: 0, rev: 0, pend: 0 }); d.n++; if (o.status === 'pending') d.pend++; else d.rev += o.total || 0; });
+  const days = Object.keys(byDay).sort();
+  const max = Math.max(1, ...days.map(d => byDay[d].rev));
+  $('#dailyList').innerHTML = days.length ? days.map(d => {
+    const v = byDay[d]; const dt = fromYmd(d);
+    return `<button class="dayrow w-full text-left" data-goto-date="${d}">
+      <div><div class="num text-[18px]">${dt.getDate()}일 <span class="text-[12px] ${dt.getDay() === 0 ? 'text-[#C0646E]' : 'text-cocoa-400'}">${WD[dt.getDay()]}</span></div><div class="text-[11px] text-cocoa-400">${v.n}건${v.pend ? ` · 대기 ${v.pend}` : ''}</div></div>
+      <div class="bar"><i style="width:${Math.max(3, v.rev / max * 100)}%"></i></div>
+      <div class="num text-[17px] text-right min-w-[84px]">${won(v.rev)}<span class="u">원</span></div></button>`;
+  }).join('') : `<p class="text-center text-cocoa-400 text-[14px] py-8">이 달에는 예약이 없어요</p>`;
+  const sizes = {};
+  mon.forEach(o => { if (o.size) sizes[o.size] = (sizes[o.size] || 0) + 1; });
+  const top = Object.entries(sizes).sort((a, b) => b[1] - a[1]).slice(0, 5);
+  const tmax = top.length ? top[0][1] : 1;
+  $('#topSizes').innerHTML = top.length ? top.map(([s, n], i) => `<div class="flex items-center gap-3 py-1.5">
+      <span class="w-6 h-6 rounded-full flex items-center justify-center text-[12px] font-bold ${i === 0 ? 'bg-[#B5636D] text-white' : 'bg-[#F3EADF] text-cocoa-600'}">${i + 1}</span>
+      <span class="font-semibold text-[15px] min-w-0 flex-1" style="overflow-wrap:anywhere">${esc(s)}</span>
+      <div class="bar w-20"><i style="width:${n / tmax * 100}%"></i></div><span class="text-[13px] font-bold tnum w-8 text-right">${n}</span></div>`).join('')
+    : `<p class="text-center text-cocoa-400 text-[14px] py-4">아직 데이터가 없어요</p>`;
+  renderVault();
+}
+async function renderVault() {
+  const lastBackup = await DB.getMeta('lastBackup', 0);
+  const persisted = navigator.storage && navigator.storage.persisted ? await navigator.storage.persisted().catch(() => false) : false;
+  let used = '-';
+  try { if (navigator.storage && navigator.storage.estimate) { const e = await navigator.storage.estimate(); used = (e.usage / 1048576).toFixed(1) + 'MB'; } } catch (e) {}
+  const imgCount = state.orders.reduce((s, o) => s + (o.imageIds || []).length, 0);
+  const days = lastBackup ? Math.floor((Date.now() - lastBackup) / 86400000) : null;
+  const cell = (k, v, warn) => `<div class="rounded-2xl p-3 ${warn ? 'bg-[#FBE9E7] text-[#A53B2F]' : 'bg-[#F6EEE4]'}"><div class="text-[11px] font-bold opacity-75">${k}</div><div class="font-bold text-[15px] mt-0.5">${v}</div></div>`;
+  $('#vaultInfo').innerHTML = cell('저장된 예약', `${state.orders.length}건`) + cell('도안 사진', `${imgCount}장 · ${used}`) +
+    cell('마지막 백업', days === null ? '아직 없음' : days === 0 ? '오늘' : `${days}일 전`, days === null || days >= 7) +
+    cell('삭제 보호', persisted ? '켜짐 ✓' : '기본', false);
+}
+async function doBackup() {
+  try {
+    const [orders, images, meta] = await Promise.all([DB.getAll('orders'), DB.getAll('images'), DB.getAll('meta')]);
+    const data = { app: 'creamus-booking', schema: 1, appVersion: APP_VERSION, exportedAt: new Date().toISOString(), orders, images, meta: meta.filter(m => m.key !== 'lastBackup') };
+    const json = JSON.stringify(data);
+    const n = new Date();
+    const fname = `creamus-backup-${ymd(n).replace(/-/g, '')}-${pad(n.getHours())}${pad(n.getMinutes())}.json`;
+    const blob = new Blob([json], { type: 'application/json' });
+    let shared = false;
+    const isTouchApple = /iPhone|iPad|iPod/.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+    if (isTouchApple && navigator.canShare) {
+      const file = new File([blob], fname, { type: 'application/json' });
+      if (navigator.canShare({ files: [file] })) {
+        try { await navigator.share({ files: [file], title: '크림어스 예약 백업' }); shared = true; }
+        catch (err) { if (err && err.name === 'AbortError') { toast('백업을 취소했어요', 'warn'); return; } }
+      }
+    }
+    if (!shared) {
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url; a.download = fname; document.body.appendChild(a); a.click(); a.remove();
+      setTimeout(() => URL.revokeObjectURL(url), 4000);
+    }
+    await DB.setMeta('lastBackup', Date.now());
+    toast(`백업 완료 · 예약 ${orders.length}건, 사진 ${images.length}장 (${(json.length / 1048576).toFixed(1)}MB)`, 'ok', 3200);
+    renderVault();
+  } catch (err) { console.error(err); toast('백업에 실패했어요: ' + err.message, 'err', 4000); }
+}
+async function doRestore(file) {
+  try {
+    const text = await file.text();
+    const data = JSON.parse(text);
+    if (!data || !Array.isArray(data.orders) || !Array.isArray(data.images)) throw new Error('크림어스 백업 파일이 아니에요');
+    const ok = await confirmBox({ title: '백업으로 복원할까요?', message: `백업 시각: ${data.exportedAt ? new Date(data.exportedAt).toLocaleString('ko-KR') : '알 수 없음'}\n예약 ${data.orders.length}건 · 사진 ${data.images.length}장\n\n지금 기기에 있는 데이터는 백업 내용으로 바뀌어요.`, ok: '복원하기', danger: true });
+    if (!ok) return;
+    await DB.run(['orders', 'images', 'meta'], 'readwrite', tx => {
+      const os = tx.objectStore('orders'), is = tx.objectStore('images'), ms = tx.objectStore('meta');
+      os.clear(); is.clear(); ms.clear();
+      data.orders.forEach(o => o && o.id && os.put(o));
+      data.images.forEach(im => im && im.id && is.put(im));
+      (data.meta || []).forEach(m => m && m.key && ms.put(m));
+      ms.put({ key: 'seeded', value: true });
+      ms.put({ key: 'lastBackup', value: Date.now() });
+    });
+    thumbCache.clear();
+    await loadAll();
+    toast(`복원 완료 · 예약 ${state.orders.length}건`, 'ok', 3000);
+    renderStats(); renderList(); renderSizeList();
+  } catch (err) { console.error(err); toast('복원 실패: ' + err.message, 'err', 4000); }
+}
+
+/* =========================================================
+   샘플 데이터 (처음 실행 시 3건 · 캔버스로 도안 이미지 생성)
+   ========================================================= */
+function heartPath(ctx, cx, cy, s) {
+  ctx.beginPath();
+  ctx.moveTo(cx, cy + s * 0.75);
+  ctx.bezierCurveTo(cx - s * 1.25, cy - s * 0.05, cx - s * 0.7, cy - s * 0.95, cx, cy - s * 0.42);
+  ctx.bezierCurveTo(cx + s * 0.7, cy - s * 0.95, cx + s * 1.25, cy - s * 0.05, cx, cy + s * 0.75);
+  ctx.closePath();
+}
+function drawSampleCake({ cream, edge, ink, text, shape, deco }) {
+  const c = document.createElement('canvas'); c.width = 800; c.height = 800;
+  const x = c.getContext('2d');
+  const g = x.createLinearGradient(0, 0, 800, 800); g.addColorStop(0, '#F7F0E7'); g.addColorStop(1, '#E8D9C7');
+  x.fillStyle = g; x.fillRect(0, 0, 800, 800);
+  x.fillStyle = 'rgba(90,60,45,.14)'; x.beginPath(); x.ellipse(412, 428, 335, 330, 0, 0, Math.PI * 2); x.fill();
+  x.fillStyle = '#FFFFFF'; x.beginPath(); x.arc(400, 410, 330, 0, Math.PI * 2); x.fill();
+  if (shape === 'heart') heartPath(x, 400, 430, 290); else { x.beginPath(); x.arc(400, 410, 265, 0, Math.PI * 2); }
+  x.fillStyle = cream; x.fill();
+  x.lineWidth = 10; x.strokeStyle = edge; x.stroke();
+  x.fillStyle = edge;
+  const pts = shape === 'heart' ? 46 : 40;
+  for (let i = 0; i < pts; i++) {
+    const a = (i / pts) * Math.PI * 2;
+    let px, py;
+    if (shape === 'heart') { const tt = a; px = 400 + 16 * Math.pow(Math.sin(tt), 3) * 15.2; py = 410 - (13 * Math.cos(tt) - 5 * Math.cos(2 * tt) - 2 * Math.cos(3 * tt) - Math.cos(4 * tt)) * 15.2; }
+    else { px = 400 + Math.cos(a) * 252; py = 410 + Math.sin(a) * 252; }
+    x.beginPath(); x.arc(px, py, 13, 0, Math.PI * 2); x.fill();
+  }
+  if (deco === 'flower') {
+    const fl = [[250, 250], [560, 270], [610, 520], [215, 545]];
+    fl.forEach(([fx, fy], k) => {
+      for (let p = 0; p < 6; p++) { const a = p / 6 * Math.PI * 2; x.fillStyle = k % 2 ? '#F4B7C0' : '#FFFFFF'; x.beginPath(); x.ellipse(fx + Math.cos(a) * 22, fy + Math.sin(a) * 22, 20, 14, a, 0, Math.PI * 2); x.fill(); }
+      x.fillStyle = '#F2C96B'; x.beginPath(); x.arc(fx, fy, 11, 0, Math.PI * 2); x.fill();
+      x.fillStyle = '#9DB59A'; x.beginPath(); x.ellipse(fx + 34, fy + 18, 16, 7, .6, 0, Math.PI * 2); x.fill();
+    });
+  } else if (deco === 'pearl') {
+    for (let i = 0; i < 9; i++) { x.fillStyle = '#FFF6E8'; x.beginPath(); x.arc(250 + i * 37, 600 + Math.sin(i) * 6, 9, 0, Math.PI * 2); x.fill(); }
+  } else if (deco === 'choco') {
+    for (let i = 0; i < 8; i++) { const a = i / 8 * Math.PI * 2; x.fillStyle = '#5B3424'; x.beginPath(); x.arc(400 + Math.cos(a) * 200, 410 + Math.sin(a) * 200, 16, 0, Math.PI * 2); x.fill(); x.fillStyle = '#C9302C'; x.beginPath(); x.arc(400 + Math.cos(a) * 200, 398 + Math.sin(a) * 200, 9, 0, Math.PI * 2); x.fill(); }
+  }
+  x.fillStyle = ink; x.textAlign = 'center'; x.textBaseline = 'middle';
+  const lines = text.split('\n');
+  const fs = lines.length > 2 ? 46 : 56;
+  x.font = `400 ${fs}px "Black Han Sans", "Apple SD Gothic Neo", sans-serif`;
+  lines.forEach((ln, i) => x.fillText(ln, 400, 410 + (i - (lines.length - 1) / 2) * (fs * 1.25)));
+  return c;
+}
+async function seedSamples() {
+  try { if (document.fonts && document.fonts.ready) await Promise.race([document.fonts.ready, new Promise(r => setTimeout(r, 1500))]); } catch (e) {}
+  const t = todayStr();
+  const defs = [
+    { time: '11:00', name: '김하늘', phone: '010-1234-5678', size: '생화1호', design: '연핑크 + 생화 장식', lettering: '하늘아 생일 축하해💗', pos: 'top', options: { longLetter: false, cooler: false, clearBox: false, review: true }, request: '숫자초 2, 7 부탁드려요', basePrice: 45000, status: 'confirmed',
+      art: { cream: '#F9D9DD', edge: '#F1B6BE', ink: '#9C4553', text: '하늘아\n생일 축하해', shape: 'circle', deco: 'flower' } },
+    { time: '14:00', name: '이도윤', phone: '010-2345-6789', size: '스탠딩하트', design: '레드 벨벳 하트 + 골드 진주', lettering: '결혼 3주년 사랑해 여보\n앞으로도 잘 부탁해', pos: 'board', options: { longLetter: true, cooler: true, clearBox: true, review: false }, request: '하판 문구는 금색으로 써주세요', basePrice: 42000, status: 'pending',
+      art: { cream: '#C8313E', edge: '#9E1F2B', ink: '#FFF3E6', text: '사랑해\n여보', shape: 'heart', deco: 'pearl' } },
+    { time: '19:30', name: '최유나', phone: '010-3456-7890', size: '발로나2구', design: '진초코 + 화이트 크림 레터링', lettering: '합격 축하해 🎓', pos: 'top', options: { longLetter: false, cooler: false, clearBox: false, review: false }, request: '사진 찍기 좋게 깔끔하게 부탁드려요', basePrice: 38000, status: 'done',
+      art: { cream: '#6B4030', edge: '#4A2A1E', ink: '#FFF6EC', text: '합격\n축하해', shape: 'circle', deco: 'choco' } }
+  ];
+  const now = Date.now();
+  await DB.run(['orders', 'images', 'meta'], 'readwrite', tx => {
+    defs.forEach((d, i) => {
+      const rec = makeImageRecord(drawSampleCake(d.art));
+      tx.objectStore('images').put(rec);
+      const { art, ...rest } = d;
+      tx.objectStore('orders').put({ ...rest, id: uid('o'), date: t, total: calcTotal(d.basePrice, d.options), imageIds: [rec.id], source: i === 1 ? 'naver' : 'kakao', sample: true, createdAt: now + i, updatedAt: now + i });
+    });
+    tx.objectStore('meta').put({ key: 'seeded', value: true });
+  });
+}
+
+/* =========================================================
+   탭 전환 & 이벤트
+   ========================================================= */
+function switchTab(tab) {
+  state.tab = tab;
+  $$('.tab').forEach(s => s.classList.toggle('active', s.id === 'tab-' + tab));
+  $$('.navbtn').forEach(b => b.classList.toggle('on', b.dataset.tab === tab));
+  if (tab === 'list') renderList();
+  if (tab === 'stats') renderStats();
+  if (tab === 'new') { renderTimeChips(); if (!state.editingId && !F('f-date').value) F('f-date').value = state.date; }
+  if (!state.flashId) window.scrollTo({ top: 0, behavior: 'instant' in window ? 'instant' : 'auto' });
+  icons();
+}
+
+async function onAction(act, el) {
+  const id = el.dataset.id;
+  switch (act) {
+    case 'day-prev': state.date = addDays(state.date, -1); renderList(); break;
+    case 'day-next': state.date = addDays(state.date, 1); renderList(); break;
+    case 'day-today': state.date = todayStr(); renderList(); break;
+    case 'goto-new': resetForm(state.date); switchTab('new'); break;
+    case 'view': openViewer(id); break;
+    case 'viewer-close': closeViewer(); break;
+    case 'viewer-prev': stepViewer(-1); break;
+    case 'viewer-next': stepViewer(1); break;
+    case 'status': {
+      const o = state.orders.find(x => x.id === id); if (!o) return;
+      const i = STATUS.indexOf(o.status);
+      if (i >= STATUS.length - 1) { toast('이미 픽업완료된 주문이에요. ↶ 버튼으로 되돌릴 수 있어요', 'warn'); return; }
+      o.status = STATUS[i + 1]; haptic();
+      await saveOrder(o); renderList(); toast(`${o.name || '주문'} · ${STATUS_LABEL[o.status]}`);
+      break;
+    }
+    case 'status-back': {
+      const o = state.orders.find(x => x.id === id); if (!o) return;
+      const i = STATUS.indexOf(o.status); if (i <= 0) return;
+      o.status = STATUS[i - 1]; haptic();
+      await saveOrder(o); renderList(); toast(`${STATUS_LABEL[o.status]}(으)로 되돌렸어요`, 'warn');
+      break;
+    }
+    case 'paycopy': {
+      const o = state.orders.find(x => x.id === id); if (!o) return;
+      const ok = await copyText(payText(o.total));
+      toast(ok ? `입금 안내 복사됨 · ${won(o.total)}원` : '복사하지 못했어요', ok ? 'ok' : 'err');
+      break;
+    }
+    case 'edit': { const o = state.orders.find(x => x.id === id); if (o) { await fillFormFromOrder(o); switchTab('new'); } break; }
+    case 'del': {
+      const o = state.orders.find(x => x.id === id); if (!o) return;
+      const ok = await confirmBox({ title: '예약을 삭제할까요?', message: `${kDate(o.date)} ${o.time || ''}\n${o.name || ''} · ${o.size || ''}\n\n도안 사진도 함께 삭제되며 되돌릴 수 없어요.`, ok: '삭제', danger: true });
+      if (!ok) return;
+      await deleteOrder(id); renderList(); toast('삭제했어요', 'warn');
+      break;
+    }
+    case 'cancel-edit': resetForm(state.date); toast('수정을 취소했어요', 'warn'); break;
+    case 'reset-form': {
+      if (state.editingId || F('f-name').value || F('f-letter').value) {
+        const ok = await confirmBox({ title: '입력 내용을 지울까요?', message: '작성 중인 주문 정보가 모두 지워져요.', ok: '지우기' });
+        if (!ok) return;
+      }
+      resetForm(state.date); F('kakaoText').value = ''; F('parseResult').classList.add('hidden');
+      break;
+    }
+    case 'parse': runParse(); break;
+    case 'paste-clip': {
+      try {
+        const t = await navigator.clipboard.readText();
+        if (!t) { toast('클립보드가 비어 있어요', 'warn'); return; }
+        F('kakaoText').value = t; runParse();
+      } catch (e) { toast('입력칸을 길게 눌러 붙여넣기 해주세요', 'warn'); F('kakaoText').focus(); }
+      break;
+    }
+    case 'clear-kakao': F('kakaoText').value = ''; F('parseResult').classList.add('hidden'); break;
+    case 'copy-pay': {
+      const d = readForm();
+      if (!d.total) { toast('기본 케이크 가격을 먼저 입력해 주세요', 'warn'); F('f-base').focus(); return; }
+      const ok = await copyText(payText(d.total));
+      toast(ok ? `입금 안내 복사됨 · ${won(d.total)}원` : '복사하지 못했어요', ok ? 'ok' : 'err');
+      break;
+    }
+    case 'img-add': F('f-images').click(); break;
+    case 'img-rm': state.formImages.splice(Number(el.dataset.i), 1); renderFormImages(); break;
+    case 'img-rep': { const i = Number(el.dataset.i); if (i > 0) { const [im] = state.formImages.splice(i, 1); state.formImages.unshift(im); renderFormImages(); } break; }
+    case 'month-prev': case 'month-next': {
+      const [y, m] = state.statsMonth.split('-').map(Number);
+      const d = new Date(y, m - 1 + (act === 'month-next' ? 1 : -1), 1);
+      state.statsMonth = `${d.getFullYear()}-${pad(d.getMonth() + 1)}`; renderStats();
+      break;
+    }
+    case 'save-account': {
+      state.account = { bank: F('s-bank').value.trim() || '새마을금고', account: digits(F('s-account').value) || '9003266486478', holder: F('s-holder').value.trim() || '박시은' };
+      await DB.setMeta('account', state.account); fillAccount(); toast('계좌 정보를 저장했어요');
+      break;
+    }
+    case 'backup': doBackup(); break;
+    case 'restore': F('restoreFile').click(); break;
+    case 'clear-samples': {
+      const samples = state.orders.filter(o => o.sample);
+      if (!samples.length) { toast('지울 샘플 예약이 없어요', 'warn'); return; }
+      const ok = await confirmBox({ title: '샘플 예약을 지울까요?', message: `처음에 들어있던 샘플 ${samples.length}건만 삭제돼요.`, ok: '지우기' });
+      if (!ok) return;
+      for (const o of samples) await deleteOrder(o.id);
+      toast('샘플 예약을 지웠어요'); renderStats();
+      break;
+    }
+    case 'wipe': {
+      const ok = await confirmBox({ title: '정말 전체 초기화할까요?', message: '모든 예약과 도안 사진이 영구 삭제돼요.\n먼저 백업 파일을 받아두는 걸 권장해요.', ok: '전체 삭제', danger: true });
+      if (!ok) return;
+      const ok2 = await confirmBox({ title: '마지막 확인', message: '삭제 후에는 백업 파일 없이 되살릴 수 없어요.', ok: '네, 삭제할게요', danger: true });
+      if (!ok2) return;
+      await DB.run(['orders', 'images', 'meta'], 'readwrite', tx => { tx.objectStore('orders').clear(); tx.objectStore('images').clear(); const ms = tx.objectStore('meta'); ms.clear(); ms.put({ key: 'seeded', value: true }); ms.put({ key: 'account', value: state.account }); });
+      thumbCache.clear(); state.orders = []; toast('모든 데이터를 지웠어요', 'warn'); renderStats();
+      break;
+    }
+  }
+}
+
+function fillAccount() {
+  F('s-bank').value = state.account.bank; F('s-account').value = state.account.account; F('s-holder').value = state.account.holder;
+}
+async function loadAll() {
+  state.orders = sortOrders(await DB.getAll('orders'));
+  state.account = await DB.getMeta('account', state.account);
+  fillAccount();
+}
+
+function bindEvents() {
+  document.addEventListener('click', e => {
+    const a = e.target.closest('[data-act]');
+    if (a) { e.preventDefault(); onAction(a.dataset.act, a); return; }
+    const f = e.target.closest('[data-filter]');
+    if (f) { state.filter = f.dataset.filter; renderList(); return; }
+    const d = e.target.closest('[data-date]');
+    if (d) { state.date = d.dataset.date; renderList(); return; }
+    const gd = e.target.closest('[data-goto-date]');
+    if (gd) { state.date = gd.dataset.gotoDate; state.query = ''; F('searchInput').value = ''; state.filter = 'all'; switchTab('list'); return; }
+    const tc = e.target.closest('[data-time]');
+    if (tc) { F('f-time').value = tc.dataset.time; renderTimeChips(); return; }
+    const nb = e.target.closest('[data-tab]');
+    if (nb) { switchTab(nb.dataset.tab); }
+  });
+  F('datePick').addEventListener('change', e => { if (e.target.value) { state.date = e.target.value; renderList(); } });
+  let st;
+  F('searchInput').addEventListener('input', e => {
+    clearTimeout(st);
+    F('searchClear').classList.toggle('hidden', !e.target.value);
+    st = setTimeout(() => { state.query = e.target.value.trim(); renderList(); }, 120);
+  });
+  F('searchClear').addEventListener('click', () => { F('searchInput').value = ''; state.query = ''; F('searchClear').classList.add('hidden'); renderList(); });
+  F('kakaoText').addEventListener('paste', () => setTimeout(() => { if (F('kakaoText').value.trim()) runParse(); }, 60));
+  F('orderForm').addEventListener('submit', submitForm);
+  F('f-letter').addEventListener('input', updateLetterCount);
+  F('o-long').addEventListener('change', () => { state.longManual = true; updateTotal(); });
+  F('o-cooler').addEventListener('change', () => { if (F('o-cooler').checked) F('o-review').checked = false; updateTotal(); });
+  F('o-review').addEventListener('change', () => { if (F('o-review').checked) F('o-cooler').checked = false; updateTotal(); });
+  F('o-clear').addEventListener('change', updateTotal);
+  F('f-base').addEventListener('input', e => {
+    const d = digits(e.target.value);
+    e.target.value = d ? won(Number(d)) : '';
+    F('baseHint').classList.add('hidden');
+    updateTotal();
+  });
+  F('f-size').addEventListener('change', suggestBase);
+  F('f-size').addEventListener('blur', suggestBase);
+  F('f-phone').addEventListener('blur', e => { e.target.value = fmtPhone(e.target.value); });
+  F('f-time').addEventListener('change', renderTimeChips);
+  F('f-images').addEventListener('change', async e => {
+    const files = [...e.target.files];
+    e.target.value = '';
+    if (!files.length) return;
+    toast(`사진 ${files.length}장 압축 중…`, 'ok', 1200);
+    let ok = 0;
+    for (const f of files) {
+      try { const rec = await processImageFile(f); state.formImages.push({ ...rec, isNew: true }); ok++; renderFormImages(); }
+      catch (err) { console.error(err); toast(`${f.name}: 읽을 수 없는 사진이에요`, 'err'); }
+    }
+    if (ok) toast(`사진 ${ok}장 추가 (가로 800px로 자동 압축)`);
+  });
+  F('restoreFile').addEventListener('change', e => { const f = e.target.files[0]; e.target.value = ''; if (f) doRestore(f); });
+  document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible' && state.tab === 'list') renderList(); });
+}
+
+function makeAppIcon() {
+  try {
+    const c = document.createElement('canvas'); c.width = c.height = 180;
+    const x = c.getContext('2d');
+    x.fillStyle = '#FAF5EE'; x.fillRect(0, 0, 180, 180);
+    x.fillStyle = '#F7E1E2'; x.beginPath(); x.arc(90, 96, 62, 0, Math.PI * 2); x.fill();
+    x.fillStyle = '#3A2B26'; x.font = '400 72px "Black Han Sans", sans-serif'; x.textAlign = 'center'; x.textBaseline = 'middle'; x.fillText('c', 84, 92);
+    x.fillStyle = '#B5636D'; x.beginPath(); x.arc(118, 112, 9, 0, Math.PI * 2); x.fill();
+    const url = c.toDataURL('image/png');
+    F('appleIcon').href = url;
+    const manifest = { name: '크림어스 예약노트', short_name: '크림어스예약', start_url: location.href.split('#')[0], display: 'standalone', background_color: '#FAF5EE', theme_color: '#FAF5EE', icons: [{ src: url, sizes: '180x180', type: 'image/png' }] };
+    const link = document.createElement('link'); link.rel = 'manifest';
+    link.href = 'data:application/manifest+json,' + encodeURIComponent(JSON.stringify(manifest));
+    document.head.appendChild(link);
+  } catch (e) {}
+}
+
+async function init() {
+  bindEvents();
+  try {
+    await DB.open();
+    if (navigator.storage && navigator.storage.persist) navigator.storage.persist().catch(() => {});
+    const seeded = await DB.getMeta('seeded', false);
+    if (!seeded) await seedSamples();
+    await loadAll();
+  } catch (err) {
+    console.error(err);
+    toast('저장소를 열 수 없어요. 사파리 개인정보 보호 모드를 꺼주세요.', 'err', 6000);
+  }
+  resetForm(state.date);
+  renderSizeList();
+  renderList();
+  makeAppIcon();
+  icons();
+  const lastBackup = await DB.getMeta('lastBackup', 0).catch(() => 0);
+  if (state.orders.filter(o => !o.sample).length >= 5 && (!lastBackup || Date.now() - lastBackup > 7 * 86400000)) {
+    setTimeout(() => toast('백업한 지 일주일이 넘었어요 · 매출·금고 탭에서 백업해 주세요', 'warn', 4200), 1200);
+  }
+  if ('serviceWorker' in navigator && location.protocol === 'https:') navigator.serviceWorker.register('sw.js').catch(() => {});
+}
+document.addEventListener('DOMContentLoaded', init);
+</script>
+</body>
+</html>
