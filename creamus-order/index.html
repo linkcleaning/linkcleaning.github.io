@@ -63,6 +63,11 @@
   .bar .sum .v small { font-family: "IBM Plex Sans KR", sans-serif; font-size: 13px; }
   .go { min-height: 52px; padding: 0 18px; border-radius: 999px; border: 0; background: var(--berry); color: #fff; font-weight: 700; font-size: 16px; white-space: nowrap; }
   .go:active, .item:active, .chip:active, .tab:active { transform: scale(.97); }
+  .szbtn { display: inline-flex; align-items: center; margin-left: 6px; padding: 3px 9px; border-radius: 999px; background: #fff; color: var(--deep); font-size: 12px; font-weight: 700; box-shadow: inset 0 0 0 1.5px #E9B4B8; vertical-align: 1px; }
+  .sizeall { width: 100%; min-height: 46px; margin-top: 8px; border: 0; border-radius: 12px; background: var(--ink); color: #FFF8F2; font-weight: 700; font-size: 14px; }
+  .szcap { font-size: 14px; line-height: 1.6; color: #5C4840; margin-top: 10px; }
+  .szcap b { color: var(--deep); }
+  .szpick { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 10px; }
   .hide { display: none !important; }
   .err { outline: 2px solid #D46A5E; }
   .sheet { position: fixed; inset: 0; z-index: 50; background: rgba(40,28,24,.45); display: flex; align-items: flex-end; justify-content: center; padding: 12px; padding-bottom: calc(12px + var(--safe-b)); opacity: 0; visibility: hidden; transition: .25s; }
@@ -210,8 +215,18 @@
     <button class="btn b-soft" id="closeSheet">닫고 수정하기</button>
   </div>
 </div>
+<div class="sheet" id="sizeSheet">
+  <div class="box">
+    <div style="display:flex;align-items:center;justify-content:space-between"><h2 id="szTitle">사이즈 비교</h2><button class="chip" id="szClose">닫기</button></div>
+    <p class="hint" style="margin:4px 0 0">위에서 내려다본 모습이에요. 모든 그림은 같은 비율로 그렸어요.</p>
+    <div id="szSvg" style="margin-top:10px"></div>
+    <div class="szpick" id="szPick"></div>
+    <div class="szcap" id="szCap"></div>
+    <button class="btn b-ink" id="szChoose">이 사이즈로 고르기</button>
+  </div>
+</div>
 <div class="toast" id="toast"></div>
-<span class="ver">v1</span>
+<span class="ver">v2</span>
 
 <script>
 'use strict';
@@ -221,18 +236,18 @@ const PICKUP_START = '11:00', PICKUP_END = '20:00', PICKUP_STEP = 30;
 
 const MENU = [
   { id: 'flower', name: '생화케이크', prefix: '생화', flavor: true, design: true, letter: true, box: 'choose', items: [
-    ['초미니', '지름 약 10cm', 35000], ['미니', '지름 약 12cm', 42000], ['1호', '지름 약 16cm', 51000], ['2호', '지름 약 19cm', 64000], ['직사각1호', '직사각형', 49000], ['직사각2호', '직사각형', 62000]],
+    ['초미니', '지름 약 10cm', 35000, { cm: 10 }], ['미니', '지름 약 12cm', 42000, { cm: 12 }], ['1호', '지름 약 16cm', 51000, { cm: 16 }], ['2호', '지름 약 19cm', 64000, { cm: 19 }], ['직사각1호', '직사각형', 49000], ['직사각2호', '직사각형', 62000]],
     note: '생화케이크 특성상 풍성함에 따라 금액이 달라질 수 있어요.' },
   { id: 'basic', name: '레터링케이크', prefix: '', flavor: true, design: true, letter: true, box: 'choose', items: [
-    ['도시락', '2단샌딩 · 지름 약 10cm · 1~2인', 20000, { noFlavor: true }], ['초미니', '3단샌딩 · 지름 약 10cm · 1~2인', 31000], ['미니', '지름 약 12cm · 1~2인', 39000], ['1호', '지름 약 16cm · 2~4인', 46000], ['2호', '지름 약 19cm · 4~6인', 57000],
-    ['직사각 8×17', '2~3인', 33000], ['직사각 10×20', '3~4인', 48000], ['2단케이크', '2호+미니 / 2호+초미니(권장) · 상담 후 금액 안내', 0]] },
+    ['도시락', '2단샌딩 · 지름 약 10cm · 1~2인', 20000, { noFlavor: true, cm: 10, ppl: '1~2인' }], ['초미니', '3단샌딩 · 지름 약 10cm · 1~2인', 31000, { cm: 10, ppl: '1~2인' }], ['미니', '지름 약 12cm · 1~2인', 39000, { cm: 12, ppl: '1~2인' }], ['1호', '지름 약 16cm · 2~4인', 46000, { cm: 16, ppl: '2~4인' }], ['2호', '지름 약 19cm · 4~6인', 57000, { cm: 19, ppl: '4~6인' }],
+    ['직사각 8×17', '2~3인', 33000, { w: 17, h: 8, ppl: '2~3인' }], ['직사각 10×20', '3~4인', 48000, { w: 20, h: 10, ppl: '3~4인' }], ['2단케이크', '2호+미니 / 2호+초미니(권장) · 상담 후 금액 안내', 0]] },
   { id: 'roll', name: '롤케이크', prefix: '롤', flavor: true, design: true, letter: true, box: 'choose', items: [
-    ['미니', '지름 약 8cm', 27000], ['1호', '지름 약 12cm', 37000], ['2호', '지름 약 23cm', 53000], ['생화미니', '생화 장식', 49000], ['생화1호', '생화 장식', 59000]] },
+    ['미니', '지름 약 8cm', 27000, { cm: 8 }], ['1호', '지름 약 12cm', 37000, { cm: 12 }], ['2호', '지름 약 23cm', 53000, { cm: 23 }], ['생화미니', '생화 장식', 49000], ['생화1호', '생화 장식', 59000]] },
   { id: 'cup', name: '생화 컵케이크', prefix: '생화컵케이크 ', flavor: false, design: false, letter: false, box: 'clear', items: [
-    ['1구', '바닐라블루베리 15,000 · 발로나초코 17,000', 15000, { cup1: true }], ['2구', '', 30000], ['4구', '', 58000], ['6구', '', 87000]],
+    ['1구', '바닐라블루베리 15,000 · 발로나초코 17,000', 15000, { cup1: true, cm: 5.5, n: 1 }], ['2구', '', 30000, { cm: 5.5, n: 2 }], ['4구', '', 58000, { cm: 5.5, n: 4 }], ['6구', '', 87000, { cm: 5.5, n: 6 }]],
     note: '지름 55mm 컵케이크에 생화가 올라가요. 꽃·글씨는 컬러감만 지정할 수 있고 꽃 종류 지정은 어려워요. 투명상자 기본 포장(추가금 없음).' },
   { id: 'five', name: '다섯입케이크', prefix: '', flavor: false, design: false, letter: true, box: 'five', items: [
-    ['다섯입케이크', '지름 약 10cm 초미니 · 종이박스 기본 포장', 27000]],
+    ['다섯입케이크', '지름 약 10cm 초미니 · 종이박스 기본 포장', 27000, { cm: 10 }]],
     note: '단일 맛(플레인시트 + 100% 동물성 생크림 샌딩 + 크림치즈 아이싱)이라 맛 변경은 어려워요. 꽃 종류 지정 불가, 컬러감만 선택할 수 있어요.' }
 ];
 const FLAVORS = [['플레인', 0, '바닐라시트 + 100% 동물성 생크림 샌딩 + 크림치즈크림 아이싱'], ['쿠앤크', 2000, '쿠앤크크림 샌딩 + 쿠앤크분태'], ['고구마', 3000, '고구마크림 샌딩'], ['초코크림', 4000, '초코크림 샌딩 + 초코크런치']];
@@ -254,9 +269,12 @@ function renderCats() {
   const c = cat();
   $('items').innerHTML = c.items.map((it, i) => {
     const price = it[2] ? `${won(it[2])}<small>원~</small>` : '<small>상담</small>';
-    return `<button type="button" class="item ${S.item === i ? 'on' : ''}" data-item="${i}"><div><div class="t">${it[0]}</div>${it[1] ? `<div class="d">${it[1]}</div>` : ''}</div><div class="p">${price}</div></button>`;
+    const o = it[3] || {};
+    const sz = (o.cm || o.w) ? `<span class="szbtn" data-size="${i}">크기 보기</span>` : '';
+    return `<button type="button" class="item ${S.item === i ? 'on' : ''}" data-item="${i}"><div><div class="t">${it[0]} ${sz}</div>${it[1] ? `<div class="d">${it[1]}</div>` : ''}</div><div class="p">${price}</div></button>`;
   }).join('');
-  $('catNote').innerHTML = c.note ? `<div class="note">${c.note}</div>` : '';
+  const hasSize = c.items.some(it => it[3] && (it[3].cm || it[3].w));
+  $('catNote').innerHTML = (hasSize ? `<button type="button" class="sizeall" data-sizeall="1">사이즈 한눈에 비교하기 · 휴대폰·종이컵과 비교</button>` : '') + (c.note ? `<div class="note">${c.note}</div>` : '');
   renderFlavor(); renderDesign(); renderSections(); calc();
 }
 function renderFlavor() {
@@ -384,6 +402,72 @@ async function go() {
   $('sheet').classList.add('open');
 }
 
+/* ===== 사이즈 비교 (위에서 본 실제 비율) ===== */
+let szSel = null;
+function openSize(i) {
+  szSel = i;
+  renderSize();
+  $('sizeSheet').classList.add('open');
+}
+function renderSize() {
+  const c = cat();
+  const list = c.items.map((it, i) => ({ i, name: it[0], o: it[3] || {} })).filter(x => x.o.cm || x.o.w);
+  if (szSel === null || !list.find(x => x.i === szSel)) szSel = list[0].i;
+  const sel = list.find(x => x.i === szSel);
+  $('szTitle').textContent = `${c.name} 사이즈`;
+  $('szPick').innerHTML = list.map(x => `<button type="button" class="chip ${x.i === szSel ? 'on' : ''}" data-szpick="${x.i}">${x.name}</button>`).join('');
+  // 그림: 왼쪽 비교 물건(휴대폰 7×15cm, 종이컵 윗지름 7cm), 오른쪽 선택한 케이크
+  const W = 340, pad = 14;
+  const o = sel.o;
+  let cakeW, cakeH;
+  if (o.n) { const cols = o.n === 1 ? 1 : o.n === 2 ? 2 : o.n === 4 ? 2 : 3; const rows = Math.ceil(o.n / cols); cakeW = cols * 6.2; cakeH = rows * 6.2; }
+  else if (o.w) { cakeW = o.w; cakeH = o.h; }
+  else { cakeW = cakeH = o.cm; }
+  const maxCake = Math.max(...list.map(x => x.o.n ? 18.6 : x.o.w ? x.o.w : x.o.cm));
+  const totalCm = 7 + 3 + Math.max(maxCake, 10);
+  const k = (W - pad * 2) / totalCm;
+  const H = Math.max(15, maxCake, cakeH) * k + 64;
+  const phoneX = pad, phoneY = 26, cupCx = pad + 3.5 * k, cupCy = phoneY + 15 * k + 0;
+  const cakeX0 = pad + 10 * k;
+  const cy = 26 + Math.max(15, maxCake) * k / 2;
+  let cake = '';
+  const fill = '#F7D3D7', stroke = '#B5636D';
+  if (o.n) {
+    const cols = o.n === 1 ? 1 : o.n === 2 ? 2 : o.n === 4 ? 2 : 3;
+    const r = 2.75 * k, gap = 6.2 * k;
+    const x0 = cakeX0 + (Math.max(maxCake, 10) * k - cakeW * k) / 2 + gap / 2, y0 = cy - cakeH * k / 2 + gap / 2;
+    for (let j = 0; j < o.n; j++) { const cx = x0 + (j % cols) * gap, yy = y0 + Math.floor(j / cols) * gap; cake += `<circle cx="${cx}" cy="${yy}" r="${r}" fill="${fill}" stroke="${stroke}" stroke-width="2"/><circle cx="${cx}" cy="${yy}" r="${r * .45}" fill="#fff" opacity=".8"/>`; }
+  } else if (o.w) {
+    const x = cakeX0 + (Math.max(maxCake, 10) * k - cakeW * k) / 2;
+    cake = `<rect x="${x}" y="${cy - cakeH * k / 2}" width="${cakeW * k}" height="${cakeH * k}" rx="10" fill="${fill}" stroke="${stroke}" stroke-width="2.5"/>`;
+  } else {
+    const cx = cakeX0 + Math.max(maxCake, 10) * k / 2;
+    list.filter(x => x.o.cm && !x.o.n && x.i !== szSel).forEach(x => { cake += `<circle cx="${cx}" cy="${cy}" r="${x.o.cm * k / 2}" fill="none" stroke="#D9C6BE" stroke-width="1.5" stroke-dasharray="4 4"/>`; });
+    cake += `<circle cx="${cx}" cy="${cy}" r="${o.cm * k / 2}" fill="${fill}" stroke="${stroke}" stroke-width="2.5"/>`;
+  }
+  const label = o.n ? `1개 지름 5.5cm` : o.w ? `${o.h} × ${o.w}cm` : `지름 ${o.cm}cm`;
+  const svg = `<svg viewBox="0 0 ${W} ${H}" width="100%" style="background:#FBF4F1;border-radius:14px;display:block">
+    <rect x="${phoneX}" y="${phoneY}" width="${7 * k}" height="${15 * k}" rx="${1 * k}" fill="#3A2B26"/>
+    <rect x="${phoneX + .35 * k}" y="${phoneY + .35 * k}" width="${6.3 * k}" height="${14.3 * k}" rx="${.8 * k}" fill="#6B5A52"/>
+    <text x="${phoneX + 3.5 * k}" y="${phoneY - 8}" text-anchor="middle" font-size="12" font-weight="700" fill="#8C7A70">휴대폰 (폭 7cm)</text>
+    ${cake}
+    <text x="${cakeX0 + Math.max(maxCake, 10) * k / 2}" y="${H - 14}" text-anchor="middle" font-size="15" font-weight="700" fill="#B5636D">${sel.name} · ${label}</text>
+  </svg>`;
+  $('szSvg').innerHTML = svg;
+  const phoneRatio = o.cm && !o.n ? (o.cm / 7).toFixed(1) : null;
+  const cup = o.cm && !o.n ? (o.cm / 7).toFixed(1) : null;
+  let cap = '';
+  if (o.n) cap = `컵케이크 1개는 지름 <b>5.5cm</b>예요. 종이컵 윗부분(약 7cm)보다 조금 작아요.`;
+  else if (o.w) cap = `가로 <b>${o.w}cm</b> × 세로 <b>${o.h}cm</b>. 휴대폰을 가로로 놓은 크기와 비슷하거나 조금 커요.${o.ppl ? ` 권장 <b>${o.ppl}</b>.` : ''}`;
+  else cap = `지름 <b>${o.cm}cm</b> · 휴대폰 가로 폭(약 7cm)의 <b>${phoneRatio}배</b>, 종이컵 윗지름(약 7cm)의 ${cup}배예요.${o.ppl ? ` 권장 <b>${o.ppl}</b>.` : ''}`;
+  cap += `<br><span style="color:#8C7A70;font-size:12px">점선 동그라미는 같은 종류의 다른 사이즈예요. 높이와 실제 모양은 디자인에 따라 달라요.</span>`;
+  $('szCap').innerHTML = cap;
+}
+document.addEventListener('click', e => {
+  const b = e.target.closest('[data-szpick]');
+  if (b) { szSel = Number(b.dataset.szpick); renderSize(); }
+});
+
 function initTimes() {
   const [sh, sm] = PICKUP_START.split(':').map(Number), [eh, em] = PICKUP_END.split(':').map(Number);
   let html = '';
@@ -395,7 +479,10 @@ function initTimes() {
 }
 
 document.addEventListener('click', e => {
+  const sz = e.target.closest('[data-size]');
+  if (sz) { e.stopPropagation(); openSize(Number(sz.dataset.size)); return; }
   const t = e.target.closest('button'); if (!t) return;
+  if (t.dataset.sizeall) { openSize(S.item !== null && (cat().items[S.item][3] || {}).cm ? S.item : null); return; }
   if (t.dataset.cat) { S.cat = t.dataset.cat; S.item = null; S.designs.clear(); renderCats(); return; }
   if (t.dataset.item !== undefined) { S.item = Number(t.dataset.item); renderCats(); return; }
   if (t.dataset.flavor) { S.flavor = t.dataset.flavor; renderFlavor(); calc(); return; }
@@ -410,6 +497,9 @@ document.addEventListener('click', e => {
 $('letter').addEventListener('input', calc);
 $('go').addEventListener('click', go);
 $('copyAgain').addEventListener('click', async () => { toast((await copy(lastText)) ? '다시 복사했어요' : '주문서를 길게 눌러 복사해 주세요'); });
+$('szChoose').addEventListener('click', () => { S.item = szSel; renderCats(); $('sizeSheet').classList.remove('open'); toast(`${cat().items[szSel][0]} 선택했어요`); });
+$('szClose').addEventListener('click', () => $('sizeSheet').classList.remove('open'));
+$('sizeSheet').addEventListener('click', e => { if (e.target.id === 'sizeSheet') $('sizeSheet').classList.remove('open'); });
 $('closeSheet').addEventListener('click', () => $('sheet').classList.remove('open'));
 $('sheet').addEventListener('click', e => { if (e.target.id === 'sheet') $('sheet').classList.remove('open'); });
 if (KAKAO_CHAT_URL) { $('openChat').href = KAKAO_CHAT_URL; $('openChat').classList.remove('hide'); }
