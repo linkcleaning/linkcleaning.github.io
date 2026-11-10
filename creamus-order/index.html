@@ -68,6 +68,11 @@
   .szcap { font-size: 14px; line-height: 1.6; color: #5C4840; margin-top: 10px; }
   .szcap b { color: var(--deep); }
   .szpick { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 10px; }
+  .item.flav { align-items: flex-start; gap: 12px; padding: 12px; }
+  .item.flav .t { font-size: 17px; }
+  .fp { font-size: 13px; font-weight: 700; color: var(--deep); margin-left: 4px; }
+  .easy { font-size: 14px; line-height: 1.5; margin-top: 4px; color: var(--ink); }
+  .ftag { display: inline-block; margin-top: 6px; font-size: 12px; font-weight: 700; color: var(--deep); background: #fff; border-radius: 999px; padding: 3px 9px; }
   .hide { display: none !important; }
   .err { outline: 2px solid #D46A5E; }
   .sheet { position: fixed; inset: 0; z-index: 50; background: rgba(40,28,24,.45); display: flex; align-items: flex-end; justify-content: center; padding: 12px; padding-bottom: calc(12px + var(--safe-b)); opacity: 0; visibility: hidden; transition: .25s; }
@@ -226,7 +231,7 @@
   </div>
 </div>
 <div class="toast" id="toast"></div>
-<span class="ver">v2</span>
+<span class="ver">v3</span>
 
 <script>
 'use strict';
@@ -251,6 +256,35 @@ const MENU = [
     note: '단일 맛(플레인시트 + 100% 동물성 생크림 샌딩 + 크림치즈 아이싱)이라 맛 변경은 어려워요. 꽃 종류 지정 불가, 컬러감만 선택할 수 있어요.' }
 ];
 const FLAVORS = [['플레인', 0, '바닐라시트 + 100% 동물성 생크림 샌딩 + 크림치즈크림 아이싱'], ['쿠앤크', 2000, '쿠앤크크림 샌딩 + 쿠앤크분태'], ['고구마', 3000, '고구마크림 샌딩'], ['초코크림', 4000, '초코크림 샌딩 + 초코크런치']];
+const FLAVOR_INFO = {
+  '플레인': { easy: '부드러운 바닐라 빵 사이에 우유맛 생크림. 가장 깔끔하고 누구나 좋아하는 기본 맛이에요.', tag: '깔끔 · 무난 · 아이들도 좋아해요', fill: '#FFFDF6', dots: '' },
+  '쿠앤크': { easy: '쿠키앤크림의 줄임말이에요. 초코쿠키를 잘게 부숴 섞은 크림이라 달콤하고 오독오독 씹혀요.', tag: '달콤 · 씹는 맛 · 초코쿠키 좋아하면', fill: '#F4F1EE', dots: '#2E2523' },
+  '고구마': { easy: '달콤하고 고소한 고구마크림을 빵 사이에 넣었어요. 부드럽고 든든한 맛이에요.', tag: '고소 · 달달 · 어른들이 좋아해요', fill: '#EDB866', dots: '' },
+  '초코크림': { easy: '초코크림 사이에 바삭한 초코크런치를 넣었어요. 진한 초코 맛을 좋아하시는 분께 추천해요.', tag: '진한 초코 · 바삭', fill: '#6B3F2A', dots: '#C9A27E' }
+};
+function sliceSVG(name, choco) {
+  const f = FLAVOR_INFO[name] || FLAVOR_INFO['플레인'];
+  const sheet = choco ? '#7A4B33' : '#F2D49B', sheetLine = choco ? '#5E3826' : '#E3BD7A';
+  const icing = '#FFFBF4';
+  const ys = [[18, 14, 'S'], [32, 9, 'F'], [41, 14, 'S'], [55, 9, 'F'], [64, 14, 'S']];
+  let layers = '';
+  ys.forEach(([y, h, t]) => {
+    if (t === 'S') layers += `<rect x="8" y="${y}" width="72" height="${h}" fill="${sheet}"/><line x1="8" y1="${y + h / 2}" x2="80" y2="${y + h / 2}" stroke="${sheetLine}" stroke-width=".6" stroke-dasharray="2 3"/>`;
+    else {
+      layers += `<rect x="8" y="${y}" width="72" height="${h}" fill="${f.fill}"/>`;
+      if (f.dots) for (let i = 0; i < 9; i++) layers += `<circle cx="${12 + i * 8 + (i % 2) * 2}" cy="${y + 3 + (i % 3) * 2}" r="1.3" fill="${f.dots}"/>`;
+    }
+  });
+  let top = '';
+  if (name === '쿠앤크') for (let i = 0; i < 7; i++) top += `<rect x="${14 + i * 9}" y="${9 + (i % 2) * 2}" width="4" height="3" rx="1" fill="#2E2523"/>`;
+  if (name === '초코크림') for (let i = 0; i < 7; i++) top += `<circle cx="${15 + i * 9}" cy="${11 + (i % 2)}" r="2" fill="#6B3F2A"/>`;
+  if (name === '고구마') for (let i = 0; i < 6; i++) top += `<circle cx="${17 + i * 10}" cy="11" r="2.2" fill="#EDB866"/>`;
+  return `<svg viewBox="0 0 88 86" width="76" height="74" aria-hidden="true" style="flex:none">
+    <ellipse cx="44" cy="82" rx="40" ry="3.5" fill="#EADAD0"/>
+    <rect x="4" y="6" width="80" height="76" rx="7" fill="${icing}" stroke="#EADFD3"/>
+    ${layers}${top}
+  </svg>`;
+}
 const DESIGNS = [['스탠딩케이크', 3000], ['하트디자인', 3000], ['사각디자인', 3000], ['단추가', 2000], ['시트모양성형', 2000], ['실타래아이싱', 4000], ['그라데이션아이싱', 3000], ['진한 컬러변경', 2000], ['겉면레이스', 6000]];
 
 const S = { cat: 'flower', item: null, flavor: '플레인', chocoSheet: false, designs: new Set(), cupFlavor: '바닐라블루베리', cupCream: '크림치즈', fiveBoard: '화이트', fiveRibbon: '1개', pos: 'top', cooler: 'none', box: 'basic' };
@@ -282,8 +316,8 @@ function renderFlavor() {
   const card = $('flavorCard');
   if (c.id === 'cup') {
     card.classList.remove('hide');
-    $('flavorBox').innerHTML = `<span class="label">컵케이크 맛</span><div class="chips" data-group="cupFlavor">${['바닐라블루베리', '발로나초코'].map(v => `<button type="button" class="chip ${S.cupFlavor === v ? 'on' : ''}" data-v="${v}">${v}</button>`).join('')}</div>
-      <span class="label">크림 맛</span><div class="chips" data-group="cupCream">${['크림치즈', '라즈베리생크림'].map(v => `<button type="button" class="chip ${S.cupCream === v ? 'on' : ''}" data-v="${v}">${v === '라즈베리생크림' ? '동물성 100% 라즈베리생크림' : '크림치즈크림'}</button>`).join('')}</div>
+    $('flavorBox').innerHTML = `<span class="label">컵케이크 맛 · 바닐라블루베리: 바닐라 빵에 상큼한 블루베리 / 발로나초코: 프랑스 발로나 초콜릿으로 만든 진한 초코 빵</span><div class="chips" data-group="cupFlavor">${['바닐라블루베리', '발로나초코'].map(v => `<button type="button" class="chip ${S.cupFlavor === v ? 'on' : ''}" data-v="${v}">${v}</button>`).join('')}</div>
+      <span class="label">크림 맛 · 크림치즈: 꾸덕하고 살짝 짭짤 고소 / 라즈베리생크림: 산딸기 향 새콤달콤 분홍 크림</span><div class="chips" data-group="cupCream">${['크림치즈', '라즈베리생크림'].map(v => `<button type="button" class="chip ${S.cupCream === v ? 'on' : ''}" data-v="${v}">${v === '라즈베리생크림' ? '동물성 100% 라즈베리생크림' : '크림치즈크림'}</button>`).join('')}</div>
       <p class="hint" style="margin:8px 0 0">2구 이상은 컨셉과 맛에 따라 금액이 달라지니 상담 후 최종 금액을 안내드려요.</p>`;
     return;
   }
@@ -300,7 +334,7 @@ function renderFlavor() {
     return;
   }
   card.classList.remove('hide');
-  $('flavorBox').innerHTML = `<div class="list" style="margin-top:4px">${FLAVORS.map(([n, p, d]) => `<button type="button" class="item ${S.flavor === n ? 'on' : ''}" data-flavor="${n}"><div><div class="t">${n}</div><div class="d">${d}</div></div><div class="p">${p ? '+' + won(p) : '<small>기본</small>'}</div></button>`).join('')}</div>
+  $('flavorBox').innerHTML = `<p class="hint" style="margin:0 0 8px">케이크를 잘랐을 때 단면 모습이에요. 빵 사이에 들어가는 크림이 맛을 결정해요.</p><div class="list" style="margin-top:4px">${FLAVORS.map(([n, p, d]) => { const fi = FLAVOR_INFO[n]; return `<button type="button" class="item flav ${S.flavor === n ? 'on' : ''}" data-flavor="${n}">${sliceSVG(n, S.chocoSheet)}<div style="min-width:0"><div class="t">${n} <span class="fp">${p ? '+' + won(p) + '원' : '기본'}</span></div><div class="easy">${fi.easy}</div><div class="ftag">${fi.tag}</div><div class="d">${d}</div></div></button>`; }).join('')}</div>
     <div class="chips" style="margin-top:8px"><button type="button" class="chip ${S.chocoSheet ? 'on' : ''}" id="chocoSheet">초코시트로 변경 <small>+1,000</small></button></div>`;
 }
 function renderDesign() {
