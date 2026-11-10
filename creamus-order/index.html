@@ -1,0 +1,420 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>크림어스 케이크 주문서</title>
+<meta name="description" content="부산 광안리 크림어스 생화케이크·레터링케이크 주문서">
+<meta name="theme-color" content="#F6E1E3">
+<meta property="og:title" content="크림어스 케이크 주문서">
+<meta property="og:description" content="케이크를 고르고 주문서를 만들어 카톡으로 보내주세요">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Black+Han+Sans&family=IBM+Plex+Sans+KR:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root { --bg: #F6E1E3; --card: #FFFFFF; --ink: #3A2B26; --muted: #8C7A70; --soft: #FBF4F1; --berry: #D98C93; --deep: #B5636D; --pink: #FCEDEE; --line: #F0E4DE; --safe-b: env(safe-area-inset-bottom, 0px); }
+  * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+  html, body { margin: 0; background: var(--bg); color: var(--ink); }
+  body { font-family: "IBM Plex Sans KR", "Apple SD Gothic Neo", system-ui, sans-serif; -webkit-font-smoothing: antialiased; }
+  input, textarea, select, button { font: inherit; color: inherit; }
+  input, textarea, select { font-size: 16px; }
+  .num { font-family: "Black Han Sans", "IBM Plex Sans KR", sans-serif; font-weight: 400; }
+  .wrap { max-width: 560px; margin: 0 auto; padding: 14px 12px calc(130px + var(--safe-b)); }
+  .hero { background: var(--ink); color: #FFF8F2; border-radius: 22px; padding: 22px 20px; }
+  .hero h1 { margin: 0; font-family: "Black Han Sans", sans-serif; font-weight: 400; font-size: 34px; line-height: 1.1; }
+  .hero p { margin: 8px 0 0; font-size: 14px; color: #E6D8CC; line-height: 1.55; }
+  .card { background: var(--card); border-radius: 14px; padding: 16px; margin-top: 8px; }
+  .step { display: flex; align-items: center; gap: 8px; font-weight: 700; font-size: 17px; margin-bottom: 4px; }
+  .step b { width: 24px; height: 24px; border-radius: 99px; background: var(--deep); color: #fff; font-size: 13px; display: inline-flex; align-items: center; justify-content: center; flex: none; }
+  .hint { font-size: 13px; color: var(--muted); margin: 2px 0 12px; line-height: 1.5; }
+  .tabs { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; }
+  .tab { min-height: 54px; border-radius: 12px; border: 0; background: var(--soft); font-weight: 700; font-size: 14px; padding: 6px; line-height: 1.25; }
+  .tab.on { background: var(--ink); color: #FFF8F2; }
+  .list { display: grid; gap: 6px; margin-top: 10px; }
+  .item { display: flex; align-items: center; gap: 10px; min-height: 56px; padding: 10px 14px; border-radius: 12px; background: var(--soft); border: 2px solid transparent; text-align: left; width: 100%; }
+  .item.on { border-color: var(--deep); background: var(--pink); }
+  .item .t { font-weight: 700; font-size: 15px; }
+  .item .d { font-size: 12px; color: var(--muted); margin-top: 2px; }
+  .item .p { margin-left: auto; font-family: "Black Han Sans", sans-serif; font-size: 18px; white-space: nowrap; }
+  .item .p small { font-family: "IBM Plex Sans KR", sans-serif; font-size: 12px; color: var(--muted); }
+  .chips { display: flex; flex-wrap: wrap; gap: 6px; }
+  .chip { min-height: 42px; padding: 0 14px; border-radius: 999px; border: 2px solid transparent; background: var(--soft); font-weight: 600; font-size: 14px; }
+  .chip.on { border-color: var(--deep); background: var(--pink); color: var(--deep); }
+  .chip small { color: var(--muted); font-weight: 500; margin-left: 2px; }
+  .label { display: block; font-size: 13px; font-weight: 700; color: var(--muted); margin: 14px 0 6px; }
+  .label:first-child { margin-top: 0; }
+  .field { width: 100%; min-height: 50px; border-radius: 12px; border: 2px solid transparent; background: var(--soft); padding: 12px 14px; outline: none; }
+  .field:focus { border-color: var(--berry); background: #fff; }
+  textarea.field { resize: vertical; min-height: 80px; line-height: 1.5; }
+  .row2 { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+  .count { float: right; font-size: 12px; font-weight: 700; color: var(--muted); }
+  .count.over { color: var(--deep); }
+  .note { background: var(--pink); color: var(--deep); border-radius: 12px; padding: 10px 12px; font-size: 13px; line-height: 1.5; margin-top: 10px; }
+  details { background: var(--soft); border-radius: 12px; padding: 12px 14px; margin-top: 8px; }
+  details summary { font-weight: 700; cursor: pointer; font-size: 15px; }
+  details div { font-size: 13px; line-height: 1.65; color: #5C4840; margin-top: 8px; }
+  .agree { display: flex; gap: 10px; align-items: flex-start; margin-top: 12px; font-weight: 600; font-size: 15px; }
+  .agree input { width: 22px; height: 22px; accent-color: var(--deep); flex: none; margin-top: 1px; }
+  .bar { position: fixed; left: 0; right: 0; bottom: 0; z-index: 20; padding: 10px 12px calc(10px + var(--safe-b)); background: rgba(246,225,227,.92); backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px); }
+  .bar .in { max-width: 560px; margin: 0 auto; background: var(--ink); color: #FFF8F2; border-radius: 22px; padding: 12px 12px 12px 18px; display: flex; align-items: center; gap: 12px; }
+  .bar .sum { flex: 1; min-width: 0; }
+  .bar .sum .k { font-size: 12px; color: #E6D8CC; }
+  .bar .sum .v { font-family: "Black Han Sans", sans-serif; font-size: 26px; line-height: 1.1; }
+  .bar .sum .v small { font-family: "IBM Plex Sans KR", sans-serif; font-size: 13px; }
+  .go { min-height: 52px; padding: 0 18px; border-radius: 999px; border: 0; background: var(--berry); color: #fff; font-weight: 700; font-size: 16px; white-space: nowrap; }
+  .go:active, .item:active, .chip:active, .tab:active { transform: scale(.97); }
+  .hide { display: none !important; }
+  .err { outline: 2px solid #D46A5E; }
+  .sheet { position: fixed; inset: 0; z-index: 50; background: rgba(40,28,24,.45); display: flex; align-items: flex-end; justify-content: center; padding: 12px; padding-bottom: calc(12px + var(--safe-b)); opacity: 0; visibility: hidden; transition: .25s; }
+  .sheet.open { opacity: 1; visibility: visible; }
+  .sheet .box { width: 100%; max-width: 520px; background: #fff; border-radius: 22px; padding: 20px; transform: translateY(24px); transition: .3s; max-height: 90vh; overflow: auto; }
+  .sheet.open .box { transform: none; }
+  .sheet h2 { margin: 0; font-size: 21px; }
+  .sheet pre { white-space: pre-wrap; word-break: keep-all; background: var(--soft); border-radius: 12px; padding: 12px; font-family: inherit; font-size: 14px; line-height: 1.6; margin: 12px 0; }
+  .btn { width: 100%; min-height: 52px; border-radius: 999px; border: 0; font-weight: 700; font-size: 16px; margin-top: 8px; display: flex; align-items: center; justify-content: center; text-decoration: none; }
+  .b-kakao { background: #FEE500; color: #191600; }
+  .b-ink { background: var(--ink); color: #fff; }
+  .b-soft { background: var(--soft); color: var(--ink); }
+  .toast { position: fixed; left: 50%; bottom: calc(110px + var(--safe-b)); transform: translate(-50%, 10px); background: rgba(58,43,38,.94); color: #fff; padding: 11px 16px; border-radius: 14px; font-weight: 600; font-size: 14px; opacity: 0; transition: .3s; z-index: 60; max-width: 90vw; text-align: center; }
+  .toast.show { opacity: 1; transform: translate(-50%, 0); }
+  .foot { text-align: center; font-size: 12px; color: var(--muted); margin-top: 18px; line-height: 1.6; }
+  .ver { position: fixed; left: 5px; bottom: 2px; font-size: 9px; color: #888; opacity: .4; pointer-events: none; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="hero">
+    <h1>creamus<span style="color:#E9B4B8">.</span> 주문서</h1>
+    <p>부산 광안리 크림어스 · 생화케이크 · 레터링케이크<br>골라서 채우면 주문서가 완성돼요. 카톡 채팅방에 붙여넣어 보내주세요.</p>
+  </div>
+
+  <!-- 1. 케이크 -->
+  <div class="card">
+    <div class="step"><b>1</b>케이크 고르기</div>
+    <p class="hint">표시된 금액은 기본가예요. 디자인에 따라 추가금이 있고, 최종 금액은 상담 후 안내드려요.</p>
+    <div class="tabs" id="cats"></div>
+    <div class="list" id="items"></div>
+    <div id="catNote"></div>
+  </div>
+
+  <!-- 2. 맛 -->
+  <div class="card" id="flavorCard">
+    <div class="step"><b>2</b>맛 고르기</div>
+    <div id="flavorBox"></div>
+  </div>
+
+  <!-- 3. 디자인 -->
+  <div class="card" id="designCard">
+    <div class="step"><b>3</b>디자인</div>
+    <div id="designOpts"></div>
+    <label class="label" for="color">컬러감 · 원하는 디자인</label>
+    <input class="field" id="color" placeholder="예) 연핑크, 화이트+블루 꽃, 사진처럼">
+    <div class="note">참고 사진이 있으면 주문서를 보낼 때 채팅방에 사진도 같이 보내주세요.</div>
+  </div>
+
+  <!-- 4. 레터링 -->
+  <div class="card" id="letterCard">
+    <div class="step"><b>4</b>레터링 문구</div>
+    <label class="label" for="letter">문구 <span class="count" id="lcount">0 / 15자</span></label>
+    <textarea class="field" id="letter" placeholder="예) 지은아 생일 축하해"></textarea>
+    <p class="hint" style="margin-top:6px">15자 이내 (넘으면 +1,000원)</p>
+    <div id="posBox">
+      <span class="label">문구 위치</span>
+      <div class="chips" id="pos">
+        <button type="button" class="chip on" data-v="top">케이크 위</button>
+        <button type="button" class="chip" data-v="board">케이크 하판</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 5. 포장 -->
+  <div class="card">
+    <div class="step"><b>5</b>포장</div>
+    <span class="label">보냉백 (아이스팩 포함)</span>
+    <div class="chips" id="cooler">
+      <button type="button" class="chip on" data-v="none">필요 없어요</button>
+      <button type="button" class="chip" data-v="paid">추가할게요 <small>+4,000</small></button>
+      <button type="button" class="chip" data-v="review">네이버 리뷰 이벤트 <small>무료</small></button>
+    </div>
+    <p class="hint hide" id="reviewHint" style="margin:8px 0 0">픽업 후 네이버 리뷰를 남겨주시는 조건으로 보냉백을 무료로 드려요.</p>
+    <div id="boxBox">
+      <span class="label">상자</span>
+      <div class="chips" id="box">
+        <button type="button" class="chip on" data-v="basic" id="boxBasic">기본상자 (아이보리)</button>
+        <button type="button" class="chip" data-v="clear">투명상자 <small>+4,000</small></button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 6. 픽업 & 연락처 -->
+  <div class="card">
+    <div class="step"><b>6</b>픽업 날짜 · 주문자</div>
+    <div class="row2">
+      <div><label class="label" for="date">픽업 날짜</label><input class="field" type="date" id="date"></div>
+      <div><label class="label" for="time">픽업 시간</label><select class="field" id="time"></select></div>
+    </div>
+    <label class="label" for="name">성함</label>
+    <input class="field" id="name" placeholder="주문자 성함" autocomplete="name">
+    <label class="label" for="phone">연락처</label>
+    <input class="field" id="phone" inputmode="tel" placeholder="010-0000-0000" autocomplete="tel">
+    <label class="label" for="req">요청사항</label>
+    <textarea class="field" id="req" placeholder="초, 카드, 알레르기 등"></textarea>
+  </div>
+
+  <!-- 7. 안내 -->
+  <div class="card">
+    <div class="step"><b>7</b>주문 전 확인</div>
+    <details>
+      <summary>생화케이크 유의사항</summary>
+      <div>
+        ① 생화는 전처리 후 1차 소독, 생화 전용 소독수까지 소독해서 사용해요.<br>
+        ② 생화는 랩으로 마감 처리해요. 드실 때는 꼭 제거 후 확인하고 드세요.<br>
+        ③ 요청하신 꽃이 없을 수도 있어요. 최대한 비슷한 색감과 모양으로 준비하는 점 양해 부탁드려요.<br>
+        ④ 특수한 꽃이나 풍성함을 올리는 경우 추가금이 최대 +10,000원 이상 발생할 수 있어요.<br>
+        · 픽업 후 30분 이내 냉장 보관을 권장드려요. 냉장 보관 기준 2일 이내 섭취를 권해드려요.
+      </div>
+    </details>
+    <details>
+      <summary>환불규정</summary>
+      <div>
+        ① 예약 변경은 최소 3일 전까지 가능해요. 예약 전날·당일 시간 변경 불가, 기존 예약일보다 이른 날로 변경 불가.<br>
+        ② 상담 및 예약 결제 후 환불 시 5,000원 제외 후 환불돼요.<br>
+        ③ 미리 연락 없이 픽업일 내에 픽업하지 않으시면 당일 폐기되며, 이미 제작된 건으로 환불이 불가해요.<br>
+        ④ 천재지변 및 사업자 귀책사유로 인한 취소 시 전액 환불돼요.<br>
+        · 예약일 기준 7일 이내: 예약 변경 가능 / 50% 제외 후 환불<br>
+        · 예약일 기준 2일 전 ~ 당일: 예약 변경 & 환불 불가<br>
+        · 환불은 안내 후 3일 이내 계좌정보를 전달해 주셔야 진행돼요.<br>
+        주문제작 케이크 특성상 100% 수작업으로 소량만 제작돼요. 신중한 주문 부탁드려요.
+      </div>
+    </details>
+    <label class="agree"><input type="checkbox" id="agree">유의사항과 환불규정을 확인했어요</label>
+  </div>
+
+  <p class="foot">크림어스 · 부산 수영구 광안로41번길 14 1층<br>상담 후 최종 금액과 입금 안내를 드려요. 입금 확인 후 예약이 확정돼요.</p>
+</div>
+
+<div class="bar">
+  <div class="in">
+    <div class="sum"><div class="k" id="sumK">케이크를 골라주세요</div><div class="v"><span id="sumV">0</span><small>원~</small></div></div>
+    <button class="go" id="go">주문서 만들기</button>
+  </div>
+</div>
+
+<div class="sheet" id="sheet">
+  <div class="box">
+    <h2>주문서가 복사됐어요</h2>
+    <p class="hint" style="margin-top:6px">크림어스 카톡 채팅방에 <b>붙여넣기</b> 해서 보내주세요. 참고 사진도 함께 보내주시면 좋아요.</p>
+    <pre id="preview"></pre>
+    <a class="btn b-kakao hide" id="openChat" target="_blank" rel="noopener">크림어스 채팅방 열기</a>
+    <button class="btn b-ink" id="copyAgain">한 번 더 복사하기</button>
+    <button class="btn b-soft" id="closeSheet">닫고 수정하기</button>
+  </div>
+</div>
+<div class="toast" id="toast"></div>
+<span class="ver">v1</span>
+
+<script>
+'use strict';
+/* 크림어스 카카오톡 채널 채팅 주소 (예: http://pf.kakao.com/_abcde/chat) — 넣으면 '채팅방 열기' 버튼이 생겨요 */
+const KAKAO_CHAT_URL = '';
+const PICKUP_START = '11:00', PICKUP_END = '20:00', PICKUP_STEP = 30;
+
+const MENU = [
+  { id: 'flower', name: '생화케이크', prefix: '생화', flavor: true, design: true, letter: true, box: 'choose', items: [
+    ['초미니', '지름 약 10cm', 35000], ['미니', '지름 약 12cm', 42000], ['1호', '지름 약 16cm', 51000], ['2호', '지름 약 19cm', 64000], ['직사각1호', '직사각형', 49000], ['직사각2호', '직사각형', 62000]],
+    note: '생화케이크 특성상 풍성함에 따라 금액이 달라질 수 있어요.' },
+  { id: 'basic', name: '레터링케이크', prefix: '', flavor: true, design: true, letter: true, box: 'choose', items: [
+    ['도시락', '2단샌딩 · 지름 약 10cm · 1~2인', 20000, { noFlavor: true }], ['초미니', '3단샌딩 · 지름 약 10cm · 1~2인', 31000], ['미니', '지름 약 12cm · 1~2인', 39000], ['1호', '지름 약 16cm · 2~4인', 46000], ['2호', '지름 약 19cm · 4~6인', 57000],
+    ['직사각 8×17', '2~3인', 33000], ['직사각 10×20', '3~4인', 48000], ['2단케이크', '2호+미니 / 2호+초미니(권장) · 상담 후 금액 안내', 0]] },
+  { id: 'roll', name: '롤케이크', prefix: '롤', flavor: true, design: true, letter: true, box: 'choose', items: [
+    ['미니', '지름 약 8cm', 27000], ['1호', '지름 약 12cm', 37000], ['2호', '지름 약 23cm', 53000], ['생화미니', '생화 장식', 49000], ['생화1호', '생화 장식', 59000]] },
+  { id: 'cup', name: '생화 컵케이크', prefix: '생화컵케이크 ', flavor: false, design: false, letter: false, box: 'clear', items: [
+    ['1구', '바닐라블루베리 15,000 · 발로나초코 17,000', 15000, { cup1: true }], ['2구', '', 30000], ['4구', '', 58000], ['6구', '', 87000]],
+    note: '지름 55mm 컵케이크에 생화가 올라가요. 꽃·글씨는 컬러감만 지정할 수 있고 꽃 종류 지정은 어려워요. 투명상자 기본 포장(추가금 없음).' },
+  { id: 'five', name: '다섯입케이크', prefix: '', flavor: false, design: false, letter: true, box: 'five', items: [
+    ['다섯입케이크', '지름 약 10cm 초미니 · 종이박스 기본 포장', 27000]],
+    note: '단일 맛(플레인시트 + 100% 동물성 생크림 샌딩 + 크림치즈 아이싱)이라 맛 변경은 어려워요. 꽃 종류 지정 불가, 컬러감만 선택할 수 있어요.' }
+];
+const FLAVORS = [['플레인', 0, '바닐라시트 + 100% 동물성 생크림 샌딩 + 크림치즈크림 아이싱'], ['쿠앤크', 2000, '쿠앤크크림 샌딩 + 쿠앤크분태'], ['고구마', 3000, '고구마크림 샌딩'], ['초코크림', 4000, '초코크림 샌딩 + 초코크런치']];
+const DESIGNS = [['스탠딩케이크', 3000], ['하트디자인', 3000], ['사각디자인', 3000], ['단추가', 2000], ['시트모양성형', 2000], ['실타래아이싱', 4000], ['그라데이션아이싱', 3000], ['진한 컬러변경', 2000], ['겉면레이스', 6000]];
+
+const S = { cat: 'flower', item: null, flavor: '플레인', chocoSheet: false, designs: new Set(), cupFlavor: '바닐라블루베리', cupCream: '크림치즈', fiveBoard: '화이트', fiveRibbon: '1개', pos: 'top', cooler: 'none', box: 'basic' };
+const $ = id => document.getElementById(id);
+const won = n => (Number(n) || 0).toLocaleString('ko-KR');
+const pad = n => String(n).padStart(2, '0');
+const WD = ['일', '월', '화', '수', '목', '금', '토'];
+const cat = () => MENU.find(c => c.id === S.cat);
+const item = () => S.item !== null ? cat().items[S.item] : null;
+const letterLen = s => s.replace(/\s/g, '').length;
+
+function toast(m) { const t = $('toast'); t.textContent = m; t.classList.add('show'); clearTimeout(t._h); t._h = setTimeout(() => t.classList.remove('show'), 2200); }
+
+function renderCats() {
+  $('cats').innerHTML = MENU.map(c => `<button type="button" class="tab ${c.id === S.cat ? 'on' : ''}" data-cat="${c.id}">${c.name}</button>`).join('');
+  const c = cat();
+  $('items').innerHTML = c.items.map((it, i) => {
+    const price = it[2] ? `${won(it[2])}<small>원~</small>` : '<small>상담</small>';
+    return `<button type="button" class="item ${S.item === i ? 'on' : ''}" data-item="${i}"><div><div class="t">${it[0]}</div>${it[1] ? `<div class="d">${it[1]}</div>` : ''}</div><div class="p">${price}</div></button>`;
+  }).join('');
+  $('catNote').innerHTML = c.note ? `<div class="note">${c.note}</div>` : '';
+  renderFlavor(); renderDesign(); renderSections(); calc();
+}
+function renderFlavor() {
+  const c = cat(), it = item();
+  const card = $('flavorCard');
+  if (c.id === 'cup') {
+    card.classList.remove('hide');
+    $('flavorBox').innerHTML = `<span class="label">컵케이크 맛</span><div class="chips" data-group="cupFlavor">${['바닐라블루베리', '발로나초코'].map(v => `<button type="button" class="chip ${S.cupFlavor === v ? 'on' : ''}" data-v="${v}">${v}</button>`).join('')}</div>
+      <span class="label">크림 맛</span><div class="chips" data-group="cupCream">${['크림치즈', '라즈베리생크림'].map(v => `<button type="button" class="chip ${S.cupCream === v ? 'on' : ''}" data-v="${v}">${v === '라즈베리생크림' ? '동물성 100% 라즈베리생크림' : '크림치즈크림'}</button>`).join('')}</div>
+      <p class="hint" style="margin:8px 0 0">2구 이상은 컨셉과 맛에 따라 금액이 달라지니 상담 후 최종 금액을 안내드려요.</p>`;
+    return;
+  }
+  if (c.id === 'five') {
+    card.classList.remove('hide');
+    $('flavorBox').innerHTML = `<p class="hint">맛 선택은 없어요. 대신 아래를 골라주세요.</p>
+      <span class="label">케이크 판 색</span><div class="chips" data-group="fiveBoard">${[['화이트', 0], ['블랙', 0], ['핑크', 1000], ['블루', 1000]].map(([v, p]) => `<button type="button" class="chip ${S.fiveBoard === v ? 'on' : ''}" data-v="${v}">${v}${p ? ' <small>+1,000</small>' : ''}</button>`).join('')}</div>
+      <span class="label">리본 개수</span><div class="chips" data-group="fiveRibbon">${['1개', '3개'].map(v => `<button type="button" class="chip ${S.fiveRibbon === v ? 'on' : ''}" data-v="${v}">${v}</button>`).join('')}</div>`;
+    return;
+  }
+  if (!c.flavor || (it && it[3] && it[3].noFlavor)) {
+    card.classList.remove('hide');
+    $('flavorBox').innerHTML = `<p class="hint" style="margin:0">도시락케이크는 맛 선택이 어려워요 (플레인).</p>`;
+    return;
+  }
+  card.classList.remove('hide');
+  $('flavorBox').innerHTML = `<div class="list" style="margin-top:4px">${FLAVORS.map(([n, p, d]) => `<button type="button" class="item ${S.flavor === n ? 'on' : ''}" data-flavor="${n}"><div><div class="t">${n}</div><div class="d">${d}</div></div><div class="p">${p ? '+' + won(p) : '<small>기본</small>'}</div></button>`).join('')}</div>
+    <div class="chips" style="margin-top:8px"><button type="button" class="chip ${S.chocoSheet ? 'on' : ''}" id="chocoSheet">초코시트로 변경 <small>+1,000</small></button></div>`;
+}
+function renderDesign() {
+  const c = cat();
+  $('designOpts').innerHTML = c.design ? `<span class="label">디자인 추가 (선택)</span><div class="chips">${DESIGNS.map(([n, p]) => `<button type="button" class="chip ${S.designs.has(n) ? 'on' : ''}" data-design="${n}">${n} <small>+${won(p)}~</small></button>`).join('')}</div>` : '';
+}
+function renderSections() {
+  const c = cat();
+  $('letterCard').classList.toggle('hide', !c.letter);
+  $('posBox').classList.toggle('hide', c.id === 'five');
+  $('boxBox').classList.toggle('hide', c.box === 'clear');
+  $('boxBasic').innerHTML = c.box === 'five' ? '종이박스 (기본)' : '기본상자 (아이보리)';
+  if (c.box === 'clear') S.box = 'clear';
+  else if (S.box === 'clear' && !$('box').querySelector('[data-v="clear"]').classList.contains('on')) S.box = 'basic';
+  syncChips('box', S.box);
+}
+function syncChips(id, v) { document.querySelectorAll(`#${id} .chip`).forEach(b => b.classList.toggle('on', b.dataset.v === v)); }
+
+function calc() {
+  const c = cat(), it = item();
+  let base = 0;
+  if (it) {
+    base = it[2];
+    if (c.id === 'cup' && it[3] && it[3].cup1 && S.cupFlavor === '발로나초코') base = 17000;
+    if (c.flavor && !(it[3] && it[3].noFlavor)) {
+      base += (FLAVORS.find(f => f[0] === S.flavor) || [0, 0])[1];
+      if (S.chocoSheet) base += 1000;
+    }
+    if (c.design) S.designs.forEach(d => { base += (DESIGNS.find(x => x[0] === d) || [0, 0])[1]; });
+    if (c.id === 'five' && (S.fiveBoard === '핑크' || S.fiveBoard === '블루')) base += 1000;
+  }
+  const long = c.letter && letterLen($('letter').value) > 15;
+  const total = base + (long ? 1000 : 0) + (S.cooler === 'paid' ? 4000 : 0) + (S.box === 'clear' && c.box !== 'clear' ? 4000 : 0);
+  $('sumV').textContent = won(total);
+  $('sumK').textContent = it ? `${c.name} ${it[0]} · 예상 금액` : '케이크를 골라주세요';
+  const n = letterLen($('letter').value);
+  $('lcount').textContent = `${n} / 15자`;
+  $('lcount').classList.toggle('over', n > 15);
+  return { base, total, long };
+}
+
+function sizeText() {
+  const c = cat(), it = item();
+  let s = c.id === 'basic' ? `레터링 ${it[0]}` : c.id === 'five' ? '다섯입케이크' : `${c.prefix}${it[0]}`;
+  if (c.id === 'cup') s += ` / ${S.cupFlavor} · ${S.cupCream}`;
+  else if (c.flavor && !(it[3] && it[3].noFlavor)) s += ` / ${S.flavor}${S.chocoSheet ? ' (초코시트)' : ''}`;
+  return s;
+}
+function buildOrder() {
+  const c = cat(), { base, total } = calc();
+  const d = new Date($('date').value + 'T00:00:00');
+  const design = [$('color').value.trim(), ...(c.design ? [...S.designs] : []), ...(c.id === 'five' ? [`판 ${S.fiveBoard}`, `리본 ${S.fiveRibbon}`] : [])].filter(Boolean).join(', ');
+  const lines = [
+    `✔️성함/연락처 ${$('name').value.trim()}/${$('phone').value.trim()}`,
+    `✔️픽업날짜/시간 ${d.getMonth() + 1}/${d.getDate()}(${WD[d.getDay()]}) ${$('time').value}`,
+    `✔️케이크 사이즈 / 맛 (다섯입케이크는 맛선택 불가) ${sizeText()}`,
+    `✔️컬러감 or 디자인 or 사진 첨부 ${design || '어울리게 맡길게요'}`
+  ];
+  if (c.letter) {
+    lines.push(`✔️레터링문구 15자 이내(이상 요청시 추가금 +1,0) ${$('letter').value.trim() || '없음'}`);
+    if (c.id !== 'five' && $('letter').value.trim()) lines.push(`-${S.pos === 'board' ? '케이크 하판' : '케이크 위'}`);
+  }
+  lines.push(`✔️보냉백[아이스팩포함] (+4,0) ${S.cooler === 'paid' ? '추가' : S.cooler === 'review' ? '네이버 리뷰이벤트 참여' : '필요 없어요'}`);
+  lines.push(`✔️기본상자(아이보리색) or 투명상자(+4,0) ${S.box === 'clear' ? '투명상자' : c.box === 'five' ? '기본 종이박스' : '기본상자'}`);
+  lines.push(`✔️요청사항 ${$('req').value.trim() || '없음'}`);
+  lines.push(`✔️기본가격 ${won(base)}원~ (사이즈·맛·디자인 포함)`);
+  lines.push(`예상 총액 ${won(total)}원~ · 최종 금액은 상담 후 안내`);
+  return lines.join('\n');
+}
+function validate() {
+  const need = [];
+  if (S.item === null) need.push(['케이크를 골라주세요', $('items')]);
+  if (!$('date').value) need.push(['픽업 날짜를 골라주세요', $('date')]);
+  if (!$('name').value.trim()) need.push(['성함을 적어주세요', $('name')]);
+  if (!/^0\d{1,2}[\s.\-]?\d{3,4}[\s.\-]?\d{4}$/.test($('phone').value.trim())) need.push(['연락처를 확인해주세요', $('phone')]);
+  if (!$('agree').checked) need.push(['유의사항·환불규정 확인에 체크해주세요', $('agree').parentElement]);
+  document.querySelectorAll('.err').forEach(e => e.classList.remove('err'));
+  if (need.length) {
+    need.forEach(([, el]) => el.classList.add('err'));
+    toast(need[0][0]);
+    need[0][1].scrollIntoView({ behavior: 'smooth', block: 'center' });
+    return false;
+  }
+  return true;
+}
+async function copy(text) {
+  try { if (navigator.clipboard && window.isSecureContext) { await navigator.clipboard.writeText(text); return true; } } catch (e) {}
+  const ta = document.createElement('textarea'); ta.value = text; ta.style.position = 'fixed'; ta.style.top = '-999px'; ta.style.fontSize = '16px';
+  document.body.appendChild(ta); ta.select(); ta.setSelectionRange(0, text.length);
+  let ok = false; try { ok = document.execCommand('copy'); } catch (e) {} ta.remove(); return ok;
+}
+let lastText = '';
+async function go() {
+  if (!validate()) return;
+  lastText = buildOrder();
+  const ok = await copy(lastText);
+  $('preview').textContent = lastText;
+  $('sheet').querySelector('h2').textContent = ok ? '주문서가 복사됐어요' : '주문서를 길게 눌러 복사해 주세요';
+  $('sheet').classList.add('open');
+}
+
+function initTimes() {
+  const [sh, sm] = PICKUP_START.split(':').map(Number), [eh, em] = PICKUP_END.split(':').map(Number);
+  let html = '';
+  for (let m = sh * 60 + sm; m <= eh * 60 + em; m += PICKUP_STEP) html += `<option>${pad(Math.floor(m / 60))}:${pad(m % 60)}</option>`;
+  $('time').innerHTML = html;
+  $('time').value = '14:00';
+  const t = new Date(); t.setDate(t.getDate() + 1);
+  $('date').min = `${t.getFullYear()}-${pad(t.getMonth() + 1)}-${pad(t.getDate())}`;
+}
+
+document.addEventListener('click', e => {
+  const t = e.target.closest('button'); if (!t) return;
+  if (t.dataset.cat) { S.cat = t.dataset.cat; S.item = null; S.designs.clear(); renderCats(); return; }
+  if (t.dataset.item !== undefined) { S.item = Number(t.dataset.item); renderCats(); return; }
+  if (t.dataset.flavor) { S.flavor = t.dataset.flavor; renderFlavor(); calc(); return; }
+  if (t.id === 'chocoSheet') { S.chocoSheet = !S.chocoSheet; renderFlavor(); calc(); return; }
+  if (t.dataset.design) { const d = t.dataset.design; S.designs.has(d) ? S.designs.delete(d) : S.designs.add(d); renderDesign(); calc(); return; }
+  const grp = t.parentElement && (t.parentElement.dataset.group || t.parentElement.id);
+  if (t.classList.contains('chip') && t.dataset.v && grp) {
+    if (['cupFlavor', 'cupCream', 'fiveBoard', 'fiveRibbon'].includes(grp)) { S[grp] = t.dataset.v; renderFlavor(); calc(); return; }
+    if (['pos', 'cooler', 'box'].includes(grp)) { S[grp] = t.dataset.v; syncChips(grp, t.dataset.v); if (grp === 'cooler') $('reviewHint').classList.toggle('hide', t.dataset.v !== 'review'); calc(); return; }
+  }
+});
+$('letter').addEventListener('input', calc);
+$('go').addEventListener('click', go);
+$('copyAgain').addEventListener('click', async () => { toast((await copy(lastText)) ? '다시 복사했어요' : '주문서를 길게 눌러 복사해 주세요'); });
+$('closeSheet').addEventListener('click', () => $('sheet').classList.remove('open'));
+$('sheet').addEventListener('click', e => { if (e.target.id === 'sheet') $('sheet').classList.remove('open'); });
+if (KAKAO_CHAT_URL) { $('openChat').href = KAKAO_CHAT_URL; $('openChat').classList.remove('hide'); }
+initTimes();
+renderCats();
+</script>
+</body>
+</html>

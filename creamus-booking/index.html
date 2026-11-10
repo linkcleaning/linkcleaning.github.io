@@ -323,6 +323,7 @@ if (window.tailwind) tailwind.config = {
         <button class="btn btn-soft" data-act="paste-clip" aria-label="클립보드 붙여넣기"><i data-lucide="clipboard-paste"></i><span class="hidden sm:inline">붙여넣기</span></button>
         <button class="icon-btn h-[44px]" data-act="clear-kakao" aria-label="지우기"><i data-lucide="eraser"></i></button>
       </div>
+      <button class="btn btn-ghost w-full mt-2 min-h-[42px] text-[14px]" data-act="copy-order-link"><i data-lucide="link"></i>손님용 주문서 링크 복사</button>
       <div id="parseResult" class="hidden mt-3"></div>
     </div>
 
@@ -541,7 +542,7 @@ if (window.tailwind) tailwind.config = {
 /* =========================================================
    크림어스 예약노트 — 기본 유틸
    ========================================================= */
-const APP_VERSION = 'v2';
+const APP_VERSION = 'v3';
 const $ = (s, el = document) => el.querySelector(s);
 const $$ = (s, el = document) => [...el.querySelectorAll(s)];
 const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
@@ -659,7 +660,8 @@ const STATUS = ['pending', 'confirmed', 'done', 'picked'];
 const STATUS_LABEL = { pending: '입금대기', confirmed: '예약확정', done: '제작완료', picked: '픽업완료' };
 const SRC_LABEL = { kakao: '카톡', naver: '네이버', phone: '전화', visit: '방문' };
 const PRICE = { longLetter: 1000, cooler: 4000, clearBox: 4000, review: 0 };
-const DEFAULT_SIZES = ['생화1호', '생화2호', '스탠딩하트', '발로나1구', '발로나2구', '다섯입케이크', '도시락케이크', '미니케이크'];
+const DEFAULT_SIZES = ['생화초미니', '생화미니', '생화1호', '생화2호', '생화직사각1호', '생화직사각2호', '레터링 도시락', '레터링 초미니', '레터링 미니', '레터링 1호', '레터링 2호', '레터링 직사각 8×17', '레터링 직사각 10×20', '2단케이크', '롤미니', '롤1호', '롤2호', '롤생화미니', '롤생화1호', '생화컵케이크 1구', '생화컵케이크 2구', '생화컵케이크 4구', '생화컵케이크 6구', '다섯입케이크'];
+const ORDER_PAGE_URL = 'https://linkcleaning.github.io/creamus-order/';
 const TIME_CHIPS = ['11:00', '12:00', '13:00', '14:00', '15:00', '16:00', '17:00', '18:00', '19:00', '19:30', '20:00'];
 
 const state = {
@@ -744,6 +746,7 @@ const KakaoParser = (() => {
     if (/^보냉/.test(t)) return 'cooler';
     if (/^(기본\s*상자|투명\s*상자|상자|박스)/.test(t)) return 'box';
     if (/^(기타\s*|추가\s*)?요청/.test(t)) return 'request';
+    if (/^(기본\s*가격|예상\s*금액|케이크\s*금액)/.test(t)) return 'price';
     return null;
   }
 
@@ -830,7 +833,7 @@ const KakaoParser = (() => {
       if (clean) cur.rest.push(clean);
     }
 
-    const out = { name: '', phone: '', date: '', time: '', size: '', design: '', lettering: '', pos: '', cooler: 'none', review: false, clearBox: false, boxKnown: false, request: '' };
+    const out = { price: 0, name: '', phone: '', date: '', time: '', size: '', design: '', lettering: '', pos: '', cooler: 'none', review: false, clearBox: false, boxKnown: false, request: '' };
     const found = new Set();
     const extras = [];
     const joinVal = (first, rest) => [cleanVal(first), ...rest.map(cleanVal)].filter(Boolean).join('\n').trim();
@@ -858,7 +861,7 @@ const KakaoParser = (() => {
       } else if (b.f === 'lettering') {
         const v = joinVal(t.replace(/^(레터링\s*)?(문구)?\s*(\d+\s*자\s*이내)?\s*(\([^)]*\))?\s*[:：]?/, ''), b.rest);
         const lv = v.replace(/^["'“”‘’「『]+|["'“”‘’」』]+$/g, '').trim();
-        if (lv) { out.lettering = lv; found.add('lettering'); }
+        if (lv && !/^(없음|없어요|x|X|-)$/.test(lv)) { out.lettering = lv; found.add('lettering'); }
       } else if (b.f === 'pos') {
         const all = [b.first, ...b.rest].join(' ');
         const tmpl = /케이크\s*위\s*(or|OR|또는|\/|,)\s*케이크\s*하판/;
@@ -887,6 +890,9 @@ const KakaoParser = (() => {
       } else if (b.f === 'request') {
         const v = joinVal(t.replace(/^(기타\s*|추가\s*)?요청\s*사항?\s*[:：]?/, ''), b.rest);
         if (v && !/^(없음|없어요|x|X|-|없습니다)$/.test(v)) { out.request = v; found.add('request'); }
+      } else if (b.f === 'price') {
+        const pm = t.match(/(\d{1,3}(?:,\d{3})+|\d{4,})\s*원/);
+        if (pm) { out.price = Number(pm[1].replace(/,/g, '')); found.add('price'); }
       } else if (b.f === 'extra') {
         const v = joinVal(t, b.rest);
         if (v) extras.push(v.replace(/\n/g, ' '));
@@ -1281,8 +1287,9 @@ function runParse() {
   if (data.boxKnown) F('o-clear').checked = data.clearBox;
   setRadio('src', 'kakao');
   state.longManual = false;
-  updateLetterCount(); renderTimeChips(); suggestBase(); updateTotal();
-  const labels = { name: '성함', phone: '연락처', date: '날짜', time: '시간', size: '케이크', design: '디자인', lettering: '레터링', pos: '문구위치', cooler: '보냉백', box: '상자', request: '요청사항' };
+  if (data.price) { F('f-base').value = won(data.price); F('baseHint').textContent = '손님 주문서의 기본가격을 불러왔어요'; F('baseHint').classList.remove('hidden'); flashField('f-base'); }
+  updateLetterCount(); renderTimeChips(); if (!data.price) suggestBase(); updateTotal();
+  const labels = { price: '기본가격', name: '성함', phone: '연락처', date: '날짜', time: '시간', size: '케이크', design: '디자인', lettering: '레터링', pos: '문구위치', cooler: '보냉백', box: '상자', request: '요청사항' };
   const must = ['name', 'phone', 'date', 'time', 'size', 'lettering'];
   const missing = must.filter(k => !found.includes(k));
   const pr = F('parseResult');
@@ -1578,6 +1585,7 @@ async function onAction(act, el) {
       } catch (e) { toast('입력칸을 길게 눌러 붙여넣기 해주세요', 'warn'); F('kakaoText').focus(); }
       break;
     }
+    case 'copy-order-link': { const ok = await copyText(ORDER_PAGE_URL); toast(ok ? '손님용 주문서 링크를 복사했어요' : '복사하지 못했어요', ok ? 'ok' : 'err'); break; }
     case 'clear-kakao': F('kakaoText').value = ''; F('parseResult').classList.add('hidden'); break;
     case 'copy-pay': {
       const d = readForm();
