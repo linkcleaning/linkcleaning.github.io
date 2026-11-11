@@ -395,6 +395,7 @@ small.zero,.seg small.mn.zero{color:#ff8a80!important}
 .pvin{width:100%;font-size:40px;font-weight:900;text-align:center;letter-spacing:12px;padding:10px;border-radius:14px;border:2px solid #f5c24a;background:#00000040;color:#fff;margin-top:8px;font-family:inherit}
 #pvWait{position:fixed;left:50%;top:calc(env(safe-area-inset-top) + 118px);transform:translateX(-50%);z-index:70;background:#000c;color:#ffe08a;font-size:12px;font-weight:800;padding:0 12px;border-radius:14px;pointer-events:none;white-space:nowrap}
 #pvWait:not(:empty){padding:6px 12px}
+.pverr{position:fixed;left:8px;right:8px;bottom:calc(env(safe-area-inset-bottom) + 8px);z-index:9999;background:#7a0010;color:#fff;font-size:11px;padding:8px 10px;border-radius:10px;word-break:break-all}
 </style>
 </head>
 <body>
@@ -471,7 +472,7 @@ small.zero,.seg small.mn.zero{color:#ff8a80!important}
 
 <script>
 'use strict';
-const VER='v52';
+const VER='v53';
 const $=s=>document.querySelector(s);
 const sleep=ms=>new Promise(r=>setTimeout(r,ms));
 const rnd=n=>Math.floor(Math.random()*n);
@@ -1662,6 +1663,8 @@ async function openQuest(msg=''){
    matgo/rooms/{번호}: host, guest, per, seed, cfg, m/{A|B}/q0001…, hb/{A|B}, end, res/{판}
 ===================================================== */
 const PV={on:false};
+function pvErr(msg){try{if(!PV.on&&!/pv|PV|room/i.test(msg))return;const d=document.createElement('div');d.className='pverr';d.textContent='⚠️ '+VER+' '+String(msg).slice(0,140);document.body.appendChild(d);setTimeout(()=>d.remove(),9000);LG.req('matgo/errs','POST',{v:VER,m:String(msg).slice(0,300),u:DB.cur,pv:PV.on?PV.code+PV.me:'',ts:Date.now()})}catch(e){}}
+window.addEventListener('error',e=>pvErr(e.message+' @'+(e.lineno||'')));window.addEventListener('unhandledrejection',e=>pvErr((e.reason&&(e.reason.stack||e.reason.message))||e.reason));
 const PV_TIMEOUT=60000;
 const pvIdx=i=>PV.on&&PV.me==='B'?1-i:i;
 const qk=n=>'q'+String(n).padStart(4,'0');
@@ -1811,7 +1814,7 @@ async function pvJoin(pre){
   const bad=t=>modal(`<h2>${t}</h2>`,[{t:'확인',v:1}]);
   if(r===null)return bad('📶 서버 연결이 안 돼요');
   if(!r.host||Date.now()-(r.ts||0)>3*3600e3)return bad('🤔 없는 방 번호예요');
-  if(r.host===DB.cur)return bad('내가 만든 방이에요 😅');
+  if(r.host===DB.cur)return modal(`<h2>😅 같은 사람끼리는 못 쳐요</h2><p>이 폰도 <b>${esc(pName(curP()))}</b>(으)로 되어 있어요.<br>방을 만든 사람과 들어오는 사람이 달라야 해요.<br><small style="opacity:.75">다른 가족 폰으로 들어오거나, 이 폰의 '나는 누구'를 바꿔 주세요</small></p>`,[{t:'확인',v:1}]);
   if(r.guest&&r.guest!==DB.cur)return bad('🚪 이미 시작된 방이에요');
   await syncDown();
   if(moneyOf(DB.cur)<=0)return bad('💸 내 지갑이 비었어요');
