@@ -586,7 +586,7 @@ small.zero,.seg small.mn.zero{color:#ff8a80!important}
 
 <script>
 'use strict';
-const VER='v58';
+const VER='v59';
 const $=s=>document.querySelector(s);
 const sleep=ms=>new Promise(r=>setTimeout(r,ms));
 const rnd=n=>Math.floor(Math.random()*n);
@@ -2373,17 +2373,17 @@ async function checkUpdate(){
     const r=await fetch(location.pathname.replace(/[^/]*$/,'')+'index.html?u='+Date.now(),{cache:'no-store'});
     const t=await r.text(),m=t.match(/const VER='(v\d+)'/);
     if(m&&m[1]!==VER){
-      const inGame=$('#game').classList.contains('on')&&S&&!S.over;
+      const inGame=$('#game').classList.contains('on')||!!S||PV.on||!!document.querySelector('.mbg,.slotov,.sdov,.lotto');   // 게임 화면·결과 화면·창이 떠 있으면 절대 새로고침 안 함
       let tried=0;try{tried=+sessionStorage.getItem('upd_'+m[1])||0}catch(e){}
       if(tried>=2){updBusy=false;return}   // 반복 새로고침 방지
-      try{sessionStorage.setItem('upd_'+m[1],tried+1)}catch(e){}
-      if(!inGame){location.replace(location.pathname+'?v='+m[1]+'&t='+Date.now());return}
-      if(!document.getElementById('updBar')){const b=document.createElement('div');b.id='updBar';b.textContent=`🔄 새 버전 ${m[1]} — 이 판 끝나면 자동 업데이트`;b.style.cssText='position:fixed;left:50%;bottom:calc(env(safe-area-inset-bottom) + 4px);transform:translateX(-50%);z-index:5000;background:#e8661c;color:#fff;font-weight:800;font-size:12px;padding:5px 12px;border-radius:12px;pointer-events:none';document.body.appendChild(b)}
+      if(!inGame){try{sessionStorage.setItem('upd_'+m[1],tried+1)}catch(e){}location.replace(location.pathname+'?v='+m[1]+'&t='+Date.now());return}
+      if(!document.getElementById('updBar')&&$('#game').classList.contains('on')){const b=document.createElement('div');b.id='updBar';b.textContent=`🔄 새 버전 ${m[1]} — 이 판 끝나면 자동 업데이트`;b.style.cssText='position:fixed;left:50%;bottom:calc(env(safe-area-inset-bottom) + 4px);transform:translateX(-50%);z-index:5000;background:#e8661c;color:#fff;font-weight:800;font-size:12px;padding:5px 12px;border-radius:12px;pointer-events:none';document.body.appendChild(b)}
       window._pendingUpd=m[1];
     }
   }catch(e){}
   updBusy=false;
 }
+setInterval(()=>{if(window._pendingUpd&&!S&&!PV.on&&$('#home').classList.contains('on')&&!document.querySelector('.mbg'))location.replace(location.pathname+'?v='+window._pendingUpd+'&t='+Date.now())},5000);
 function setupPWA(){
   try{$('#ati').href=makeIcon(180)}catch(e){}
   (location.protocol==='file:'?Promise.reject():fetch('manifest.json',{cache:'no-store'}).then(r=>{if(!r.ok)throw 0})).catch(()=>{
