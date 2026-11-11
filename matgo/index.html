@@ -461,6 +461,18 @@ small.zero,.seg small.mn.zero{color:#ff8a80!important}
 .sl-lever:after{content:'';position:absolute;left:-7px;bottom:-12px;width:26px;height:22px;border-radius:6px;background:linear-gradient(#ffe08a,#b37d10);box-shadow:0 3px 0 #6b4300,inset 0 1px 0 #fff8}
 .sl-lever i{width:30px!important;height:30px!important;left:-9px!important;top:-10px!important;box-shadow:0 4px 6px #0009,inset -3px -4px 6px #0006}
 .sl-dots i{background:radial-gradient(circle at 35% 35%,#ffe9b0,#a77a2a 60%)}
+
+/* v57 선물상자 */
+.gifts{display:flex;gap:10px;justify-content:center;margin:10px 0 4px}
+.gbox{flex:1;max-width:96px;min-height:110px;border-radius:14px;background:linear-gradient(#d81b60,#880e4f);border:3px solid #ffd23f;box-shadow:0 5px 0 #4a0024,0 0 14px #ff80ab66;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;cursor:pointer;padding:6px;color:#fff}
+.gbox .gl{font-size:42px;filter:drop-shadow(0 3px 2px #0006)}
+.gbox:not(.open){animation:gwig 1.2s ease-in-out infinite}.gbox:nth-child(2):not(.open){animation-delay:.2s}.gbox:nth-child(3):not(.open){animation-delay:.4s}
+@keyframes gwig{0%,100%{transform:rotate(0)}10%{transform:rotate(-6deg)}20%{transform:rotate(6deg)}30%{transform:rotate(0)}}
+.gbox.open{background:linear-gradient(#37474f,#263238);opacity:.65}.gbox.open .gl{font-size:24px}
+.gbox.pick{opacity:1;background:linear-gradient(#ffb300,#e65100);transform:scale(1.08);animation:ltdrop .45s cubic-bezier(.3,1.6,.5,1)}
+.gbox b{font-size:14px}.gbox small{font-size:10.5px;opacity:.9;text-align:center}
+.pick.many{flex-wrap:wrap;gap:8px}
+.pick.many .pc{width:60px;height:93px;flex:none}
 </style>
 </head>
 <body>
@@ -537,7 +549,7 @@ small.zero,.seg small.mn.zero{color:#ff8a80!important}
 
 <script>
 'use strict';
-const VER='v56';
+const VER='v57';
 const $=s=>document.querySelector(s);
 const sleep=ms=>new Promise(r=>setTimeout(r,ms));
 const rnd=n=>Math.floor(Math.random()*n);
@@ -579,7 +591,7 @@ const avaHTML=p=>p.roster?oppSVG(oppOf(p.id)):esc(p.emoji||'🙂');
 /* ---------- 돈(게임머니) · 관리자 — 링크 더비와 같은 온라인 저장소 공유 ---------- */
 const ADMIN_ID='link';                 // 관리인: 한승우(링크돌이)
 const LEAGUE_URL='https://link-derby-default-rtdb.asia-southeast1.firebasedatabase.app';
-const CFG_DEF={start:30000,per:100,bonus:5,event:true,tutuX:3,dailyMax:3,wMoney:50000,mMoney:100000,mCoffee:true};
+const CFG_DEF={start:30000,per:100,bonus:6,event:true,tutuX:3,dailyMax:3,wMoney:50000,mMoney:100000,mCoffee:true};
 const SEASON_V=2;   // 시작 금액 3만원 새 시즌
 const LG={online:false,
   async req(path,method,body){const ac=window.AbortController?new AbortController():null,tm=setTimeout(()=>ac&&ac.abort(),6000);try{const r=await fetch(`${LEAGUE_URL}/derby/${path}.json`,{signal:ac?ac.signal:undefined,method:method||'GET',cache:'no-store',headers:{'Content-Type':'application/json'},body:body===undefined?undefined:JSON.stringify(body)});if(!r.ok)return null;this.online=true;const j=await r.json();return j===null?{}:j}catch(e){this.online=false;return null}finally{clearTimeout(tm)}}};
@@ -642,11 +654,13 @@ for(let m=1;m<=12;m++)DEF[m].forEach(([t,sub],i)=>CARDS.push({id:m+'-'+i,m,t,sub
 // 링크의 보너스 패 5장 (말풍선 대사 + 효과)
 CARDS.push(
  {id:'B-3',m:0,t:'B',sub:'3',i:0,say:['아싸','쓰리피~'],lab:'쓰리피'},
- {id:'B-2',m:0,t:'B',sub:'2',i:1,say:['아싸','쌍피~'],lab:'쌍피'},
- {id:'B-S1',m:0,t:'B',sub:'1',i:2,steal:1,say:['피 한 장씩','주셔야겠는데요~'],lab:'피 1장 뺏기'},
- {id:'B-S2',m:0,t:'B',sub:'1',i:3,steal:2,say:['상대에게 피','두 장을 받으세요!!'],lab:'피 2장 뺏기'},
- {id:'B-L',m:0,t:'B',sub:'2',i:4,lucky:true,say:['Good','Luck!'],lab:'행운 슬롯'});
-const BONUS_ORDER=['B-3','B-2','B-S1','B-S2','B-L'];
+ {id:'B-S2',m:0,t:'B',sub:'1',i:1,steal:2,say:['상대에게 피','두 장을 받으세요!!'],lab:'피 2장 뺏기'},
+ {id:'B-L',m:0,t:'B',sub:'2',i:2,lucky:true,say:['Good','Luck!'],lab:'행운 슬롯'},
+ {id:'B-CL',m:0,t:'B',sub:'1',i:3,act:'clean',ic:'🧹',col:'#00796b',say:['바닥 패 하나','골라 가져가요~'],lab:'대청소'},
+ {id:'B-CH',m:0,t:'B',sub:'1',i:4,act:'swap',ic:'🔄',col:'#1565c0',say:['상대 패랑','한 장 바꿔요!'],lab:'체인지'},
+ {id:'B-SH',m:0,t:'B',sub:'1',i:5,act:'shield',ic:'🛡️',col:'#455a64',say:['이번 판','피박·광박 면제!'],lab:'방패'},
+ {id:'B-GF',m:0,t:'B',sub:'1',i:6,act:'gift',ic:'🎁',col:'#c2185b',say:['선물상자','골라 보세요!'],lab:'선물상자'});
+const BONUS_ORDER=['B-3','B-S2','B-L','B-CL','B-CH','B-SH','B-GF'];
 function piVal(c){if(c.t==='B')return +c.sub;if(c.t==='P')return c.sub==='ssang'?2:1;return 0}
 
 /* =====================================================
@@ -760,8 +774,8 @@ function bonusSVG(c){
    +`<rect x="6" y="14" width="48" height="17" rx="6" fill="#fff" stroke="#222" stroke-width=".7"/><path d="M36 30.6 l3 5 1-5z" fill="#fff" stroke="#222" stroke-width=".7"/><rect x="35.6" y="29.6" width="5" height="1.6" fill="#fff"/>`
    +`<text x="30" y="21.4" font-size="${sw?4.6:5.6}" font-weight="800" fill="#222" text-anchor="middle">${c.say[0]}</text><text x="30" y="28" font-size="${sw?4.6:5.6}" font-weight="800" fill="#222" text-anchor="middle">${c.say[1]}</text>`
    +`<circle cx="30" cy="54" r="17" fill="#fff" stroke="${L?'#fff3b0':'#b8860b'}" stroke-width="1.4"/>`+(LOGO_URL?`<image href="${LOGO_URL}" x="14" y="38" width="32" height="32"/>`:'')
-   +`<rect x="6" y="73" width="48" height="14" rx="7" fill="${c.steal?'#b71c1c':L?'#6a1b9a':'#7a3500'}" stroke="#fff" stroke-width=".8"/><text x="30" y="83.2" font-size="${c.lab.length>4?7.6:9.5}" fill="#fff" text-anchor="middle">${c.lab}</text>`
-   +(L?emo(9,40,6,'🍀')+emo(51,40,6,'🎰'):'')+`</svg>`;
+   +`<rect x="6" y="73" width="48" height="14" rx="7" fill="${c.col||(c.steal?'#b71c1c':L?'#6a1b9a':'#7a3500')}" stroke="#fff" stroke-width=".8"/><text x="30" y="83.2" font-size="${c.lab.length>4?7.6:9.5}" fill="#fff" text-anchor="middle">${c.lab}</text>`
+   +(L?emo(9,40,6,'🍀')+emo(51,40,6,'🎰'):c.ic?emo(9,40,6.5,c.ic)+emo(51,40,6.5,c.ic):'')+`</svg>`;
 }
 function cardSVG(c){
   const open='<svg viewBox="0 0 60 92" xmlns="http://www.w3.org/2000/svg">';
@@ -960,7 +974,7 @@ function scoreOf(cap){const a=calc(cap,false);if(!cap.some(c=>c.sub==='gukjin'))
    게임 상태
 ===================================================== */
 let S=null;
-function newState(){return{vital:vitOf(DB.cur),buff:Object.assign({},(DB.buff||{})[DB.cur]||{}),vitHits:0,inst:[0,0],instLog:[],turnN:[0,0],lastPpuk:[false,false],lucky:[0,0],bonusFlag:[false,false],jackpot:false,deck:[],floor:[],hands:[[],[]],caps:[[],[]],turn:0,go:[0,0],lastGo:[0,0],shakes:[0,0],shakeX:[1,1],shakeTxt:[[],[]],bombs:[0,0],shook:[[],[]],ppuk:[0,0],ppukOwner:{},slot:{},
+function newState(){return{shield:[false,false],vital:vitOf(DB.cur),buff:Object.assign({},(DB.buff||{})[DB.cur]||{}),vitHits:0,inst:[0,0],instLog:[],turnN:[0,0],lastPpuk:[false,false],lucky:[0,0],bonusFlag:[false,false],jackpot:false,deck:[],floor:[],hands:[[],[]],caps:[[],[]],turn:0,go:[0,0],lastGo:[0,0],shakes:[0,0],shakeX:[1,1],shakeTxt:[[],[]],bombs:[0,0],shook:[[],[]],ppuk:[0,0],ppukOwner:{},slot:{},
   busy:true,sel:null,opp:oppOf(DB.set.opp),level:isBoss(DB.set.opp)?tutu().lv:oppOf(DB.set.opp).lv,target:7,nagari:DB.nagari||0,over:false,dn:0,gid:Date.now()}}
 const dummy=()=>({id:'D-'+(S.dn++),m:-1,t:'D',sub:'',i:0});
 const SLOT_ORDER=[6,8,1,3,11,13,0,4,10,14,12,5,9];
@@ -1138,7 +1152,7 @@ function modal(html,btns=[],opt={}){
   });
 }
 async function chooseCard(cards,title,cancel){
-  const v=await modal(`<h2>${title}</h2><p>먹을 패를 눌러주세요</p><div class="pick">${cards.map(c=>`<div class="pc" data-v="${c.id}">${svgOf(c)}</div>`).join('')}</div>`,cancel?[{t:'취소',cls:'gray',v:null}]:[],cancel?{dismiss:null}:{});
+  const v=await modal(`<h2>${title}</h2><p>먹을 패를 눌러주세요</p><div class="pick${cards.length>3?' many':''}">${cards.map(c=>`<div class="pc" data-v="${c.id}">${svgOf(c)}</div>`).join('')}</div>`,cancel?[{t:'취소',cls:'gray',v:null}]:[],cancel?{dismiss:null}:{});
   return v?cards.find(c=>c.id===v):null;
 }
 
@@ -1153,7 +1167,8 @@ async function startGame(){
 }
 async function beginDeal(){
   S=newState();if(PV.on)pvState();show('game');layout();
-  const cards=gshuffle(CARDS.filter(c=>c.t!=='B'||BONUS_ORDER.indexOf(c.id)<(DB.cfg.bonus??5)));S.ncards=cards.length;
+  const bon=gshuffle(BONUS_ORDER.slice()).slice(0,Math.min(BONUS_ORDER.length,DB.cfg.bonus??6));
+  const cards=gshuffle(CARDS.filter(c=>c.t!=='B'||bon.includes(c.id)));S.ncards=cards.length;
   S.deck=cards;
   {const pool=gshuffle(CARDS.filter(c=>c.t!=='B'));const ms=[],mm=new Set();for(const c of pool){if(!mm.has(c.m)){ms.push(c);mm.add(c.m)}if(ms.length===3)break}S.mission=ms}
   render();BGM.start();await sleep(250);
@@ -1343,7 +1358,50 @@ async function luckyRoulette(p){
   if(E.pts)await instBonus(p,'🎰 슬롯',E.pts);
   render();
 }
+
+/* ---------- 🎴 새 보너스패 효과: 대청소 · 체인지 · 방패 · 선물상자 ---------- */
+async function decideV(p,k,local,ai){if(p===0){const v=await local();if(PV.on)send(k,v);return v}if(PV.on)return await recv(k);return ai()}
+async function bonusAct(p,c){
+  const o=1-p,me=p===0,who=me?'':S.opp.nick+' ';
+  if(c.act==='clean'){
+    const fl=S.floor.filter(x=>x.t!=='B'&&S.ppukOwner[x.m]===undefined);if(!fl.length)return;
+    SFX.vacuum(.9);await banner('🧹 '+who+'대청소!','gold',800);
+    const ch=await decideCard(p,'clean',fl,()=>chooseCard(fl,'🧹 대청소! 바닥에서 가져올 패를 고르세요'),()=>fl.slice().sort((a,b)=>(val(b,p)+val(b,o)*.4)-(val(a,p)+val(a,o)*.4))[0]);
+    if(!ch||!S.floor.includes(ch))return;
+    await act(()=>{rm(S.floor,ch);S.caps[p].push(ch)},{dur:480,wait:420});SFX.capture();capSparkle(p);
+    if(!me)await banner(`${MNAME[ch.m]||''} 가져갔어요`,'small',650);
+  }else if(c.act==='swap'){
+    const mine=S.hands[p].filter(x=>x.t!=='B'&&x.t!=='D'),theirs=S.hands[o].filter(x=>x.t!=='B'&&x.t!=='D');
+    if(!mine.length||!theirs.length)return;
+    const a=mine[grnd(mine.length)],b=theirs[grnd(theirs.length)];
+    SFX.shake();await banner('🔄 '+who+'체인지!','gold',800);
+    await act(()=>{rm(S.hands[p],a);rm(S.hands[o],b);S.hands[p].push(b);S.hands[o].push(a)},{dur:520,wait:420});SFX.flip();
+    const got=me?b:a,lost=me?a:b;
+    await banner(`${MNAME[lost.m]} 주고 ${MNAME[got.m]} 받았어요`,'small',1100);
+  }else if(c.act==='shield'){
+    S.shield[p]=true;SFX.bonus();await banner('🛡️ '+who+'방패!\n이번 판 피박·광박 면제','gold',1000);render();
+  }else if(c.act==='gift'){
+    const box=gshuffle([['🎉 대박!','5점어치 + 피 1장',5,1],['🙂 보통','2점어치',2,0],['😝 꽝!','다음 기회에',0,0]]);
+    const k=+(await decideV(p,'gift',()=>giftPick(box),()=>rnd(3)))||0;
+    if(!me)await giftShow(box,k,S.opp.nick+'의 선물상자');
+    const g=box[k];
+    if(g[3])await act(()=>stealPi(o,p,g[3]),{dur:520});
+    if(g[2])await instBonus(p,'🎁 선물상자',g[2]);
+  }
+  render();
+}
+function giftHTML(box,k,title){return `<h2>${title}</h2><div class="gifts">${box.map((g,i)=>`<div class="gbox ${k==null?'':i===k?'open pick':'open'}" data-v="${i}"><div class="gl">🎁</div>${k==null?'':`<b>${g[0]}</b><small>${g[1]}</small>`}</div>`).join('')}</div>`}
+async function giftPick(box){
+  SFX.event();const v=await modal(giftHTML(box,null,'🎁 선물상자를 골라 보세요!')+'<p style="font-size:12px;opacity:.8">셋 중 하나는 대박, 하나는 꽝!</p>');
+  const k=+v||0;await giftShow(box,k,'🎁 선물상자');return k;
+}
+async function giftShow(box,k,title){
+  const g=box[k];g[2]?(g[2]>=5?SFX.win():SFX.coin()):SFX.lose();if(g[2]>=5){confetti();vib([30,40,30])}
+  const bg=document.createElement('div');bg.className='mbg';bg.innerHTML=`<div class="modal">${giftHTML(box,k,title)}</div>`;document.body.appendChild(bg);
+  await sleep(1500);bg.remove();
+}
 async function afterCaptureEvents(p,cards){
+  for(const c of cards)if(c.act&&!S.over)await bonusAct(p,c);
   for(const c of cards){if(c.steal){say(p===1?c.say.join(' '):'');await banner(c.lab+'!','gold',700);await act(()=>stealPi(1-p,p,c.steal),{dur:520});SFX.coin()}}
   if(!DB.cfg.event)return;
   if(cards.some(c=>c.lucky))await luckyRoulette(p);
@@ -1488,8 +1546,8 @@ async function endGame(w,sp={}){
   S.shakeTxt[w].forEach(t=>{const x=+t.split('×')[1];mul.push([t.split(' ×')[0],x])});
   if(!sp.chongtong&&!sp.ppuk3){
     if(a.meong)mul.push(['멍따',2]);
-    if(a.pp>0&&lPi<=5)mul.push(['피박',2]);
-    if(a.gp>0&&lG===0)mul.push(['광박',2]);
+    if(a.pp>0&&lPi<=5)mul.push(S.shield[L]?['피박 🛡️방패로 면제',1]:['피박',2]);
+    if(a.gp>0&&lG===0)mul.push(S.shield[L]?['광박 🛡️방패로 면제',1]:['광박',2]);
   }
   if(S.mission&&S.mission.every(c=>S.caps[w].includes(c)))mul.push(['미션 성공',2]);
   if(S.go[L]>0)mul.push(['고박',2]);
@@ -1750,7 +1808,7 @@ async function pvPut(p,v,tries=6){for(let i=0;i<tries;i++){try{const r=await fet
 async function pvGet(p,q=''){const ac=window.AbortController?new AbortController():null,tm=setTimeout(()=>ac&&ac.abort(),6000);try{const r=await fetch(pvUrl(p)+q,{cache:'no-store',signal:ac?ac.signal:undefined});if(!r.ok)return undefined;return await r.json()}catch(e){return undefined}finally{clearTimeout(tm)}}
 function oppTurn(){return PV.on?remoteTurn():aiTurn()}
 function pvState(){
-  DB.cfg.bonus=PV.cfg.bonus??5;DB.cfg.event=PV.cfg.event!==false;DB.cfg.per=PV.per;
+  DB.cfg.bonus=PV.cfg.bonus??6;DB.cfg.event=PV.cfg.event!==false;DB.cfg.per=PV.per;
   const o=oppOf(PV.oppId);S.opp=Object.assign({},o,{pvp:true,boss:false});S.pvp=true;S.vital=0;S.buff={};S.level=2;S.nagari=PV.nag;S.target=7;
 }
 function send(k,v){PV.out++;pvPut('m/'+PV.me+'/'+qk(PV.out),{k,v:v===undefined?null:v},12)}
@@ -1876,7 +1934,7 @@ async function pvMake(target){
   let code=null;
   for(let i=0;i<8&&!code;i++){const c=String(1000+rnd(9000)),r=await LG.req('matgo/rooms/'+c);if(r===null)return modal('<h2>📶 서버 연결이 안 돼요</h2><p>인터넷 연결을 확인해 주세요.</p>',[{t:'확인',v:1}]);if(!r.host||Date.now()-(r.ts||0)>3*3600e3)code=c}
   if(!code)return;
-  const seed=(Math.random()*2147483647)|0,cfg={bonus:DB.cfg.bonus??5,event:DB.cfg.event!==false};
+  const seed=(Math.random()*2147483647)|0,cfg={bonus:DB.cfg.bonus??6,event:DB.cfg.event!==false};
   if(!(await LG.req('matgo/rooms/'+code,'PUT',{host:DB.cur,per,seed,cfg,ts:Date.now()})))return modal('<h2>📶 방을 못 만들었어요</h2><p>잠시 뒤 다시 해 주세요.</p>',[{t:'확인',v:1}]);
   const url=location.origin+location.pathname+'?room='+code,me=curP();
   const shareTxt=`🎴 길쭈기 맞고 한 판 붙자!\n${pName(me)}의 방 번호: ${code} (점당 ${won(per)})\n길쭈기 맞고 앱을 켜면 신청 팝업이 떠요 (안 뜨면 '방 번호로 들어가기')\n${url}`;
@@ -2080,7 +2138,7 @@ const RULES=`<div class="rules">
 <h3>🎴 기본 진행</h3>손패 1장을 내고, 더미에서 1장을 뒤집어요. 같은 <b>월(그림)</b>끼리 짝이 맞으면 먹어요. 낼 패를 한 번 누르면 <b>먹을 수 있는 바닥패가 빛나고</b>, 한 번 더 누르면(또는 빛나는 바닥패를 누르면) 내요.
 <h3>🧮 점수</h3><b>광</b> 3장 3점(비광 포함 시 2점), 4장 4점, 5장 15점<br><b>열끗</b> 5장 1점 + 1장마다 1점 · <b>고도리</b>(2·4·8월 새) 5점<br><b>띠</b> 5장 1점 + 1장마다 1점 · <b>홍단·청단·초단</b> 각 3점<br><b>피</b> 10장 1점 + 1장마다 1점 (쌍피·보너스는 2~3장으로 계산, 국진은 유리하게 자동 계산)
 <h3>🔥 고 / 스톱</h3>날 점수에 도달하면 고 또는 스톱! 1고 +1점, 2고 +2점, 3고부터 (+2점 후) ×2, ×4…
-<h3>💥 특수 상황</h3><b>쪽</b> 낸 패를 뒤집은 패로 바로 먹기 → 피 1장 뺏기<br><b>뻑 (쌌다, 뿌직~ 💩)</b> 낸 패로 먹었는데 뒤집은 패도 같은 월 → 3장이 바닥에 묶여요. 나중에 먹으면 피 1장(자기 뻑이면 2장)<br><b>따닥</b> 바닥 2장 + 낸 패 + 뒤집은 패 모두 같은 월 → 4장 다 먹고 피 1장<br><b>싹쓸 (🧹 링크클린 출동! 청소 끝!)</b> 바닥을 다 비우면 청소기 소리와 함께 피 1장<br><b>폭탄</b> 같은 월 3장을 들고 바닥에 1장 → 한 번에 4장 먹고 피 1장, ×2, 빈패 2장 받음<br><b>흔들기</b> 같은 월 3장을 들고 바닥에 없을 때 선언 → ×2 (<b>💩 똥(11월)·🌼 국진(9월)을 흔들면 ×4</b>)<br><b>3뻑</b> 한 판에 뻑 3번이면 즉시 승리 · <b>총통</b> 처음에 같은 월 4장이면 10점 승리 + 총통 보너스 5천원<br><b>링크의 보너스 패</b> (최대 5장, 관리인이 장수 결정) 내면 바로 먹고 한 장 더 받아요 — 쓰리피 · 쌍피 · 피 1장 뺏기 · 피 2장 뺏기 · 행운 슬롯(🎰 슬롯머신)<br><b>미션</b> 판마다 정해지는 미션패 3장을 모두 먹고 나면 ×2 (내가 먹으면 ○, 상대가 먹으면 ✕)
+<h3>💥 특수 상황</h3><b>쪽</b> 낸 패를 뒤집은 패로 바로 먹기 → 피 1장 뺏기<br><b>뻑 (쌌다, 뿌직~ 💩)</b> 낸 패로 먹었는데 뒤집은 패도 같은 월 → 3장이 바닥에 묶여요. 나중에 먹으면 피 1장(자기 뻑이면 2장)<br><b>따닥</b> 바닥 2장 + 낸 패 + 뒤집은 패 모두 같은 월 → 4장 다 먹고 피 1장<br><b>싹쓸 (🧹 링크클린 출동! 청소 끝!)</b> 바닥을 다 비우면 청소기 소리와 함께 피 1장<br><b>폭탄</b> 같은 월 3장을 들고 바닥에 1장 → 한 번에 4장 먹고 피 1장, ×2, 빈패 2장 받음<br><b>흔들기</b> 같은 월 3장을 들고 바닥에 없을 때 선언 → ×2 (<b>💩 똥(11월)·🌼 국진(9월)을 흔들면 ×4</b>)<br><b>3뻑</b> 한 판에 뻑 3번이면 즉시 승리 · <b>총통</b> 처음에 같은 월 4장이면 10점 승리 + 총통 보너스 5천원<br><b>링크의 보너스 패</b> (7종 중 판마다 6장이 무작위로 들어가요, 관리인이 장수 결정) 내면 바로 먹고 한 장 더 받아요 — 쓰리피 · 피 2장 뺏기 · 🎰 행운 슬롯 · 🧹 대청소(바닥 패 1장 골라 가져오기) · 🔄 체인지(상대 손패와 1장 무작위 교환) · 🛡️ 방패(이번 판 피박·광박 면제) · 🎁 선물상자(3개 중 하나: 대박 5점어치+피1장 / 보통 2점어치 / 꽝)<br><b>미션</b> 판마다 정해지는 미션패 3장을 모두 먹고 나면 ×2 (내가 먹으면 ○, 상대가 먹으면 ✕)
 <h3>🎨 그림</h3>화투 그림은 무료 공개 화투 일러스트를 사용했어요.
 <h3>🎲 특수 이벤트 (관리인이 켜고 끔)</h3><b>첫뻑</b> 첫 턴에 뻑 → 상대가 5점어치 즉시 지급 · <b>연뻑</b> 두 턴 연속 뻑 → 10점어치<br><b>첫따닥</b> 5점어치 · <b>첫쪽</b> 3점어치 · <b>막쓸</b> 마지막 패로 싹쓸 → 피 1장 + 3점어치<br><b>보너스 대박</b> 보너스패 3장 이상 먹으면 5점어치 · <b>쓰리고 축하금</b> 3점어치<br><b>🍀 링크의 행운 패</b> 먹으면 🎰 슬롯머신이 돌아가요! (777 이기면 ×2+5점어치 · BAR 피2장+3점어치 · 🍒 피2장 · 🍉 5점어치 · 🍇 3점어치 · 🍋 피1장 · 두 개 맞으면 1점어치 · 꽝) (피 2장 뺏기 / 이기면 ×2 / 5점어치 / 피 1장+3점어치)<br><b>🎰 잭팟 판</b> 가끔(15%) 판 전체 점수 ×2 · <b>완봉승</b> 상대 0점이면 +3점 · <b>초스피드 승</b> 각자 4턴 안에 나면 +2점<br><small>'점어치'는 점당 금액으로 바로 바꿔 판 끝에 함께 정산돼요 (나가리여도 정산)</small>
 <h3>☕ 커피 · 📝 댓글 이벤트</h3>돈 100만원을 모으면 스타벅스 커피 1잔, 300만원이면 2잔 (1인 최대 2잔). 🎡 행운 룰렛은 하루 3번 (꽝·1천·3천·5천·1만·2만원)! 링크클린 블로그·앱에 댓글 달고 캡처를 올리면 관리인 확인 후 +3만원!
@@ -2134,7 +2192,7 @@ async function adminPanel(msg=''){
     <div class="lbl" style="margin-top:10px">☕ 커피 교환 신청</div>${cls.length?`<div class="rank">${cls.map(([k,c])=>`<div class="rk"><div class="em">${'☕'.repeat(c.cups)}</div><div class="nm"><b>${esc(c.name)}</b><small>${c.code}</small></div>${c.done?'<span style="font-size:12px">지급 ✅</span>':`<div class="adm"><button data-v="cf:${k}" style="background:#00704a">지급함</button></div>`}</div>`).join('')}</div>`:'<p style="font-size:12px">신청이 없어요</p>'}
     <div class="lbl" style="margin-top:10px">💰 지갑 관리 (모든 기기에 함께 반영)</div><div class="rank">${rows}</div>
     <div class="lbl" style="margin-top:12px">🪙 점당 금액</div>${seg('per',[10,50,100,500,1000],won)}
-    <div class="lbl">🎴 보너스패 장수</div>${seg('bonus',[0,1,2,3,4,5],v=>v+'장')}
+    <div class="lbl">🎴 보너스패 장수</div>${seg('bonus',[0,2,4,5,6,7],v=>v+'장')}
     <div class="lbl">🎲 특수 이벤트 (첫뻑·연뻑·잭팟 판·황금카드 룰렛 등)</div>${seg('event',[true,false],v=>v?'켜기':'끄기')}
     <div class="lbl">👹 일런마스크 배수 (높을수록 강해져요)</div>${seg('tutuX',[2,3,4,5],v=>v+'배')}<p style="font-size:11px;opacity:.75;margin:4px 0 0">2배 쉬움 · 3배 뒤집기 운 30% · 4배 45% · 5배 60%</p>
     <div class="lbl">🚫 같은 상대와 하루 최대 판수 (파산 방지)</div>${seg('dailyMax',[3,5,10],v=>v+'판')}
