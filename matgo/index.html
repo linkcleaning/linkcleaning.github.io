@@ -473,6 +473,43 @@ small.zero,.seg small.mn.zero{color:#ff8a80!important}
 .gbox b{font-size:14px}.gbox small{font-size:10.5px;opacity:.9;text-align:center}
 .pick.many{flex-wrap:wrap;gap:8px}
 .pick.many .pc{width:60px;height:93px;flex:none}
+
+/* v58 빙고 · 밀기 · 섯다 · 캐릭터 */
+.mission.bingo{padding:2px 3px 3px}
+.bingo .bg3{display:grid;grid-template-columns:repeat(3,var(--bw));gap:2px}
+.bingo .mcard{width:var(--bw);height:var(--bh);border-radius:2px}
+.bingo .mcard.o:after,.bingo .mcard.x:after{font-size:calc(var(--bw)*.95)}
+.bingo .mcard.bl0{box-shadow:0 0 0 1.5px #4fc3f7,0 0 6px #4fc3f7}.bingo .mcard.bl1{box-shadow:0 0 0 1.5px #ff5c9a,0 0 6px #ff5c9a}
+.bd.push{background:#7a3d00;color:#ffe08a;border:1px solid #ffb74d}
+.boss[data-st]:not([data-st="0"]):after{content:'🔥 ' attr(data-st) '연승 중';position:absolute;right:8px;top:6px;font-size:11px;font-weight:900;color:#ffb74d;background:#000a;border-radius:8px;padding:2px 6px}
+.sdov{position:fixed;inset:0;z-index:90;background:#000c;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;animation:ltin .25s}
+.sdov.bye{opacity:0;transition:.25s}
+.sdt{font-size:18px;font-weight:900;color:#ffe08a}
+.sdc{display:flex;gap:12px}.sdc .pc{width:80px;height:124px;border-radius:8px;overflow:hidden;box-shadow:0 0 0 3px #f5c24a,0 8px 20px #000;animation:ltdrop .45s cubic-bezier(.3,1.6,.5,1)}.sdc .pc:nth-child(2){animation-delay:.15s}.sdc svg{width:100%;height:100%;display:block}
+.sdn{font-size:40px;font-weight:900;color:#fff;text-shadow:0 3px 0 #b23c00,0 0 20px #ffb800;animation:ltdrop .5s .3s both cubic-bezier(.3,1.6,.5,1)}
+.sdp{font-size:20px;font-weight:900;color:#7fe0b5}
+.cha{position:fixed;inset:0;z-index:88;pointer-events:none;overflow:hidden}
+.cha.bye{opacity:0;transition:.2s}
+.cha .cap{position:absolute;left:0;right:0;top:62%;text-align:center;font-size:34px;font-weight:900;color:#fff;text-shadow:0 3px 0 #b23c00,0 0 18px #ffb800;animation:ltdrop .45s cubic-bezier(.3,1.6,.5,1)}
+.cha img{width:100%;height:100%;border-radius:50%;background:#fff;box-shadow:0 0 0 4px #f5c24a,0 8px 18px #000a}
+.cha-godori .hero{position:absolute;width:96px;height:96px;top:38%;left:-120px;animation:fly 1.3s ease-in-out forwards}
+.cha-godori .hero i{position:absolute;right:-18px;top:-14px;font-size:40px;font-style:normal}
+@keyframes fly{to{left:calc(100% + 30px);top:22%}}
+.cha-godori .brd{position:absolute;font-size:34px;top:36%;left:-60px;animation:fly2 1.3s ease-in-out forwards}
+.cha-godori .brd.b2{top:44%;animation-delay:.1s}.cha-godori .brd.b3{top:30%;animation-delay:.2s}
+@keyframes fly2{to{left:calc(100% + 120px);top:18%}}
+.cha-jjok .av{position:absolute;top:36%;width:92px;height:92px}
+.cha-jjok .av.l{left:-100px;animation:kissL 1.1s ease-out forwards}.cha-jjok .av.r{right:-100px;animation:kissR 1.1s ease-out forwards}
+@keyframes kissL{60%,100%{left:calc(50% - 88px)}}@keyframes kissR{60%,100%{right:calc(50% - 88px)}}
+.cha-jjok .kiss{position:absolute;left:50%;top:38%;font-size:54px;transform:translate(-50%,0) scale(0);animation:pop .4s .55s forwards}
+.cha-jjok .ht{position:absolute;left:50%;top:34%;font-size:28px;opacity:0;animation:up 1s .6s forwards}.cha-jjok .h2{margin-left:-50px;animation-delay:.75s}
+@keyframes pop{to{transform:translate(-50%,0) scale(1)}}@keyframes up{0%{opacity:1}100%{opacity:0;transform:translateY(-90px)}}
+.cha-ttadak .hero{position:absolute;left:50%;top:34%;width:110px;height:110px;margin-left:-55px;animation:shakeX .5s .4s}
+.cha-ttadak .mop{position:absolute;left:62%;top:28%;font-size:70px;transform-origin:20% 90%;animation:swat .5s .1s ease-in}
+@keyframes swat{0%{transform:rotate(60deg)}60%{transform:rotate(-40deg)}100%{transform:rotate(-30deg)}}
+.cha-ttadak .pow{position:absolute;left:50%;top:26%;font-size:38px;font-weight:900;color:#ffeb3b;-webkit-text-stroke:2px #b71c1c;transform:translateX(-50%) scale(0);animation:pop2 .3s .45s forwards}
+@keyframes pop2{to{transform:translateX(-50%) scale(1) rotate(-8deg)}}
+@keyframes shakeX{20%,60%{transform:translateX(-10px)}40%,80%{transform:translateX(10px)}}
 </style>
 </head>
 <body>
@@ -549,7 +586,7 @@ small.zero,.seg small.mn.zero{color:#ff8a80!important}
 
 <script>
 'use strict';
-const VER='v57';
+const VER='v58';
 const $=s=>document.querySelector(s);
 const sleep=ms=>new Promise(r=>setTimeout(r,ms));
 const rnd=n=>Math.floor(Math.random()*n);
@@ -974,7 +1011,7 @@ function scoreOf(cap){const a=calc(cap,false);if(!cap.some(c=>c.sub==='gukjin'))
    게임 상태
 ===================================================== */
 let S=null;
-function newState(){return{shield:[false,false],vital:vitOf(DB.cur),buff:Object.assign({},(DB.buff||{})[DB.cur]||{}),vitHits:0,inst:[0,0],instLog:[],turnN:[0,0],lastPpuk:[false,false],lucky:[0,0],bonusFlag:[false,false],jackpot:false,deck:[],floor:[],hands:[[],[]],caps:[[],[]],turn:0,go:[0,0],lastGo:[0,0],shakes:[0,0],shakeX:[1,1],shakeTxt:[[],[]],bombs:[0,0],shook:[[],[]],ppuk:[0,0],ppukOwner:{},slot:{},
+function newState(){return{shield:[false,false],bl:[0,0],vital:vitOf(DB.cur),buff:Object.assign({},(DB.buff||{})[DB.cur]||{}),vitHits:0,inst:[0,0],instLog:[],turnN:[0,0],lastPpuk:[false,false],lucky:[0,0],bonusFlag:[false,false],jackpot:false,deck:[],floor:[],hands:[[],[]],caps:[[],[]],turn:0,go:[0,0],lastGo:[0,0],shakes:[0,0],shakeX:[1,1],shakeTxt:[[],[]],bombs:[0,0],shook:[[],[]],ppuk:[0,0],ppukOwner:{},slot:{},
   busy:true,sel:null,opp:oppOf(DB.set.opp),level:isBoss(DB.set.opp)?tutu().lv:oppOf(DB.set.opp).lv,target:7,nagari:DB.nagari||0,over:false,dn:0,gid:Date.now()}}
 const dummy=()=>({id:'D-'+(S.dn++),m:-1,t:'D',sub:'',i:0});
 const SLOT_ORDER=[6,8,1,3,11,13,0,4,10,14,12,5,9];
@@ -994,7 +1031,7 @@ function layout(){
     if(fw>=Math.floor(fwW*.88)||hw<=44)break;hw-=2}
   const r=document.documentElement.style;
   const set=(k,v)=>r.setProperty(k,v+'px');
-  set('--hw',hw);set('--hh',hh);set('--fw',fw);set('--fh',Math.round(fw*1.55));set('--mw',mw);set('--mh',mh);
+  set('--hw',hw);set('--hh',hh);set('--fw',fw);set('--fh',Math.round(fw*1.55));set('--mw',mw);set('--mh',mh);{const bw=Math.max(12,Math.round(mw*.74));set('--bw',bw);set('--bh',Math.round(bw*1.55))}
   set('--caph',caph);set('--handh',handh);const ow=Math.max(11,Math.round(mw*.7));set('--ow',ow);set('--oh',Math.round(ow*1.55));
   S&&(S._W=W,S._mw=mw);
 }
@@ -1024,7 +1061,7 @@ function render(){
   const bySlot={};order.forEach(m=>bySlot[S.slot[m]]=m);
   let fh='';
   for(let i=0;i<15;i++){
-    if(i===2){fh+=`<div class="cell">${S.mission?`<div class="mission" id="mission"><div class="mt">MISSION · 3장 ×2</div><div class="mc">${S.mission.map(c=>`<div class="mcard ${S.caps[0].includes(c)?'o':S.caps[1].includes(c)?'x':''}">${svgOf(c)}</div>`).join('')}</div></div>`:''}</div>`;continue}
+    if(i===2){fh+=`<div class="cell">${S.mission?`<div class="mission bingo" id="mission"><div class="mt">🎯 BINGO · 줄마다 ×2</div><div class="bg3">${S.mission.map((c,i)=>`<div class="mcard ${S.caps[0].includes(c)?'o':S.caps[1].includes(c)?'x':''}${bingoCell(i)}">${svgOf(c)}</div>`).join('')}</div></div>`:''}</div>`;continue}
     if(i===7){const L=Math.min(7,Math.ceil(S.deck.length/3));fh+=`<div class="cell"><div class="deck" data-cid="deck">${S.deck.length?Array.from({length:L},(_,k)=>L-1-k).map(k=>`<div class="dk" style="transform:translate(${k*.9}px,${k*1.2}px);filter:brightness(${1-k*.07})">${BACK}</div>`).join(''):''}<span class="dn">${S.deck.length}장</span></div></div>`;continue}
     const m=bySlot[i];
     if(m===undefined){fh+='<div class="cell"></div>';continue}
@@ -1039,7 +1076,7 @@ function render(){
   // 나
   const p=curP(),s0=scoreOf(S.caps[0]);
   const hint=S.over?'게임 종료':myTurn?(S.sel?'한 번 더 누르면 내요 · 빛나는 바닥패를 눌러도 돼요':DB.set.twoTap?'내 차례! 낼 패를 고르세요':'내 차례! 낼 패를 눌러요 (빛나는 패는 먹을 수 있어요)'):S.turn===1?`${S.opp.nick} 생각 중…`:'…';
-  $('#mybar').innerHTML=`<div class="ava">${avaHTML(p)}</div><div class="pinfo"><div class="pname">${esc(pName(p))} <span class="bd money">💰${won(moneyOf(p.id))}</span>${p.roster?` <small style="opacity:.6;font-size:10px">${p.name}</small>`:''} <span class="bd tg">${S.target}점 나기${S.nagari?' · ×'+2**S.nagari:''}</span>${S.vital?`<span class="bd vt">⚡${S.vital}%</span>`:''}</div><div class="badges">${badges(0)}<span class="myhint">${hint}</span></div></div><div class="pscore ${S.turn===0&&!S.over?'turn':''}"><b>${s0.total}</b><small>점</small></div><button class="menu" id="menuBtn" aria-label="메뉴">☰</button>`;
+  $('#mybar').innerHTML=`<div class="ava">${avaHTML(p)}</div><div class="pinfo"><div class="pname">${esc(pName(p))} <span class="bd money">💰${won(moneyOf(p.id))}</span>${p.roster?` <small style="opacity:.6;font-size:10px">${p.name}</small>`:''} <span class="bd tg">${S.target}점 나기${S.nagari?' · ×'+2**S.nagari:''}</span>${S.vital?`<span class="bd vt">⚡${S.vital}%</span>`:''}</div><div class="badges">${(()=>{const pk=pushGet();return pk?`<span class="bd push">➡️ ${pk.who===0?'내':'상대'} 밀기 ${pk.pts}점</span>`:''})()}${badges(0)}<span class="myhint">${hint}</span></div></div><div class="pscore ${S.turn===0&&!S.over?'turn':''}"><b>${s0.total}</b><small>점</small></div><button class="menu" id="menuBtn" aria-label="메뉴">☰</button>`;
   // 손패
   const hand=S.hands[0].slice().sort((a,b)=>(a.m<=0?99:a.m)-(b.m<=0?99:b.m)||TORD[a.t]-TORD[b.t]);
   $('#hand').innerHTML=hand.map(c=>{
@@ -1170,7 +1207,7 @@ async function beginDeal(){
   const bon=gshuffle(BONUS_ORDER.slice()).slice(0,Math.min(BONUS_ORDER.length,DB.cfg.bonus??6));
   const cards=gshuffle(CARDS.filter(c=>c.t!=='B'||bon.includes(c.id)));S.ncards=cards.length;
   S.deck=cards;
-  {const pool=gshuffle(CARDS.filter(c=>c.t!=='B'));const ms=[],mm=new Set();for(const c of pool){if(!mm.has(c.m)){ms.push(c);mm.add(c.m)}if(ms.length===3)break}S.mission=ms}
+  {const pool=gshuffle(CARDS.filter(c=>c.t!=='B'));const ms=[],mm=new Set();for(const c of pool){if(!mm.has(c.m)){ms.push(c);mm.add(c.m)}if(ms.length===9)break}S.mission=ms}
   render();BGM.start();await sleep(250);
   const seq=[['f',4],['h0',5],['h1',5],['f',4],['h0',5],['h1',5]];
   for(const [w,n] of seq){
@@ -1193,7 +1230,8 @@ async function beginDeal(){
     const tm=Object.keys(c2).find(m=>c2[m]===4);
     if(tm){S.turn=p;render();SFX.event();await banner('총통! ('+MNAME[tm]+')','gold',1300);return endGame(p,{chongtong:true})}
   }
-  {const mb=$('#mission');mb&&mb.classList.add('pulse');SFX.event();await banner(PV.on?'실시간 대전 시작!':'오늘의 미션!','small gold',800);mb&&mb.classList.remove('pulse')}
+  {const mb=$('#mission');mb&&mb.classList.add('pulse');SFX.event();await banner(PV.on?'실시간 대전 시작! 🎯 빙고 미션':'🎯 빙고 미션! 줄마다 ×2','small gold',900);mb&&mb.classList.remove('pulse')}
+  if(DB.cfg.event)for(const p of [first,1-first]){const cs=S.hands[p].slice(0,2),j=seotda(cs);if(j){await seotdaShow(p,cs,j);await instBonus(p,'🎴 섯다 '+j[0],j[1])}}
   if(DB.cfg.event&&GR()<.15){S.jackpot=true;SFX.win();await banner('🎰 잭팟 판! 점수 ×2','gold',1200)}
   S.turn=first;S.busy=first===1;render();
   if(PV.on)await banner(first===0?'내가 먼저!':S.opp.nick+' 먼저!','small',700);
@@ -1268,6 +1306,7 @@ async function playCard(p,card,pick){
   }
   if(p===0){if(ev.includes('뻑 먹기')||ev.includes('자뻑'))qHit('ppukEat');if(ev.includes('쪽')||ev.includes('따닥'))qHit('jjok')}
   for(const e of ev){
+    if(e==='쪽')await charAnim('jjok',p);if(e==='따닥')await charAnim('ttadak',p);
     if(e==='뻑'){SFX.ppuk();vib([40,40,40]);speak('뻑!');say(p===1?pickT('ppuk'):pickT('ppukMe'))}else{SFX.event();vib(25);speak({'쪽':'쪽!','따닥':'따닥!','자뻑':'자뻑이다!','뻑 먹기':'뻑 먹었다!'}[e]||e)}
     await banner(e+'!',e==='뻑'?'red':'gold',700);
     if(e==='뻑'){SFX.pujik();setTimeout(()=>speak('뿌직'),450);vib([60,30,90]);await banner('뿌직~ 쌌다! 💩','red small',850)}
@@ -1279,7 +1318,9 @@ async function playCard(p,card,pick){
   if(took.length){
     await act(()=>took.forEach(c=>{rm(S.floor,c);S.caps[p].push(c)}),{dur:460,wait:400});SFX.capture();vib(20);capSparkle(p);
     const mhit=S.mission?took.filter(c=>S.mission.includes(c)):[];
-    if(mhit.length){SFX.coin();const mb=$('#mission');mb&&mb.classList.add('pulse');await banner(p===0?'미션 ○ '+S.mission.filter(c=>S.caps[0].includes(c)).length+'/3':'미션 ✕','small '+(p===0?'gold':'red'),650)}
+    if(mhit.length){SFX.coin();const mb=$('#mission');mb&&mb.classList.add('pulse');const nl=bingoLines(p);
+      if(nl>S.bl[p]){S.bl[p]=nl;SFX.win();vib([30,40,30]);await banner(`🎯 ${p===0?'':S.opp.nick+' '}빙고! ${nl}줄\n이기면 ×${2*nl}`,p===0?'go':'red',1100)}
+      else await banner(p===0?'빙고 ○':'빙고 ✕','small '+(p===0?'gold':'red'),550)}
     if(p===1&&took.some(c=>c.t==='G'||c.sub==='godori'))say(pickT('big'));
     await afterCaptureEvents(p,took);
   }
@@ -1400,6 +1441,40 @@ async function giftShow(box,k,title){
   const bg=document.createElement('div');bg.className='mbg';bg.innerHTML=`<div class="modal">${giftHTML(box,k,title)}</div>`;document.body.appendChild(bg);
   await sleep(1500);bg.remove();
 }
+
+/* ---------- 🎯 빙고 · ➡️ 밀기 · 🎴 섯다 · 🧹 캐릭터 연출 ---------- */
+const BLINES=[[0,1,2],[3,4,5],[6,7,8],[0,3,6],[1,4,7],[2,5,8],[0,4,8],[2,4,6]];
+function bingoLines(p){if(!S||!S.mission||S.mission.length<9)return 0;return BLINES.filter(L=>L.every(i=>S.caps[p].includes(S.mission[i]))).length}
+function bingoCell(i){if(!S||!S.mission)return '';for(const p of [0,1])if(BLINES.some(L=>L.includes(i)&&L.every(j=>S.caps[p].includes(S.mission[j]))))return p===0?' bl0':' bl1';return ''}
+function pushGet(){if(!S)return null;if(PV.on){const q=PV.push;return q?{who:q.who===PV.me?0:1,pts:q.pts}:null}const q=DB.push;return q&&q.opp===S.opp.id?{who:q.who,pts:q.pts}:null}
+function pushSet(w,pts){if(PV.on)PV.push={who:w===0?PV.me:PV.op,pts};else{DB.push={opp:S.opp.id,who:w,pts};saveDB()}}
+function pushClear(){if(PV.on)PV.push=null;else{DB.push=null;saveDB()}}
+async function askPush(total,carry){
+  const v=await modal(`<div style="font-size:44px">🎉</div><h2>${total}점으로 이겼어요!</h2><p>지금 받을까요, 다음 판으로 <b style="color:#ffe08a">밀까요?</b><br><small style="opacity:.8">밀면 다음 판도 이길 때 (그 판 점수 + ${total}점) × 2를 받아요.<br>지면 ${total}점은 날아가요!</small></p>`,
+    [{t:`💰 지금 받기 (${won(total*(PV.on?PV.per:DB.cfg.per))})`,v:0},{t:'➡️ 밀기! 다음 판 ×2',cls:'alt',v:1}],{cls:'vbtn'});
+  return !!v;
+}
+function seotda(cs){
+  if(cs.length<2||cs.some(c=>c.m<=0))return null;const [a,b]=cs,ms=[a.m,b.m].sort((x,y)=>x-y),G=a.t==='G'&&b.t==='G';
+  if(G&&ms[0]===3&&ms[1]===8)return ['38광땡',10];
+  if(G&&ms[0]===1&&(ms[1]===3||ms[1]===8))return ['광땡',7];
+  if(a.m===b.m)return a.m===10?['장땡',5]:[a.m+'땡',3];
+  if(ms[0]===1&&ms[1]===2)return ['알리',2];
+  if(ms[0]===1&&ms[1]===4)return ['독사',1];
+  return null;
+}
+async function seotdaShow(p,cs,j){
+  const d=document.createElement('div');d.className='sdov';
+  d.innerHTML=`<div class="sdt">🎴 ${p===0?'내':esc(S.opp.nick)} 첫 두 장 섯다 족보!</div><div class="sdc">${cs.map(c=>`<div class="pc">${svgOf(c)}</div>`).join('')}</div><div class="sdn">${j[0]}!</div><div class="sdp">+${j[1]}점어치</div>`;
+  document.body.appendChild(d);j[1]>=7?(SFX.win(),confetti()):SFX.bonus();vib([30,40,30]);await sleep(1600);d.classList.add('bye');await sleep(250);d.remove();
+}
+async function charAnim(kind,p){
+  const d=document.createElement('div');d.className='cha cha-'+kind+(p===1?' opp':'');const logo=LOGO_URL?`<img src="${LOGO_URL}">`:'🧹';
+  if(kind==='godori'){d.innerHTML=`<div class="hero">${logo}<i>🦸</i></div><b class="brd b1">🐦</b><b class="brd b2">🐦</b><b class="brd b3">🐦</b><div class="cap">고도리 날아간다~!</div>`;[0,180,360].forEach(t=>setTimeout(()=>{SFX.tone(2600,0,.06,'sine',.06,3400);SFX.tone(3100,.07,.05,'sine',.05,2600)},t))}
+  if(kind==='jjok'){d.innerHTML=`<div class="av l">${avaHTML(curP())}</div><div class="av r">${oppSVG(S.opp)}</div><b class="kiss">💋</b><b class="ht h1">💗</b><b class="ht h2">💕</b><div class="cap">쪽~♡</div>`;setTimeout(()=>{SFX.noise(0,.05,.3,'highpass',3000);SFX.tone(1200,0,.12,'sine',.08,1800)},520)}
+  if(kind==='ttadak'){d.innerHTML=`<div class="hero">${logo}</div><b class="mop">🧹</b><b class="pow">철썩!</b><div class="cap">따닥!</div>`;setTimeout(()=>{SFX.slap(1.3);SFX.noise(0,.1,.6,'bandpass',1200,.7)},420);setTimeout(()=>SFX.slap(1.1),620);setTimeout(()=>vib([40,30,60]),420)}
+  document.body.appendChild(d);await sleep(1350);d.classList.add('bye');await sleep(200);d.remove();
+}
 async function afterCaptureEvents(p,cards){
   for(const c of cards)if(c.act&&!S.over)await bonusAct(p,c);
   for(const c of cards){if(c.steal){say(p===1?c.say.join(' '):'');await banner(c.lab+'!','gold',700);await act(()=>stealPi(1-p,p,c.steal),{dur:520});SFX.coin()}}
@@ -1418,7 +1493,7 @@ async function afterTurn(p,before0,again){
   const now=scoreOf(S.caps[p]);
   const had=new Set(before0.d.map(x=>x[0]));
   if(p===0)for(const [n] of now.d){if(had.has(n))continue;if(n==='고도리')qHit('godori');if(/홍단|청단|초단/.test(n))qHit('dan')}
-  for(const [n] of now.d)if(!had.has(n)&&/광|고도리|홍단|청단|초단/.test(n)){SFX.event();await banner(n+'!','gold',800)}
+  for(const [n] of now.d)if(!had.has(n)&&/광|고도리|홍단|청단|초단/.test(n)){if(n==='고도리')await charAnim('godori',p);SFX.event();await banner(n+'!','gold',800)}
   if(S.ppuk[p]>=3){await banner('3뻑!','red',1000);return endGame(p,{ppuk3:true})}
   const sc=now.total;
   if(sc>=S.target&&sc>S.lastGo[p]){
@@ -1549,14 +1624,21 @@ async function endGame(w,sp={}){
     if(a.pp>0&&lPi<=5)mul.push(S.shield[L]?['피박 🛡️방패로 면제',1]:['피박',2]);
     if(a.gp>0&&lG===0)mul.push(S.shield[L]?['광박 🛡️방패로 면제',1]:['광박',2]);
   }
-  if(S.mission&&S.mission.every(c=>S.caps[w].includes(c)))mul.push(['미션 성공',2]);
+  {const bl=S.mission?bingoLines(w):0;if(bl)mul.push(['🎯 빙고 '+bl+'줄',2*bl])}
   if(S.go[L]>0)mul.push(['고박',2]);
   if(S.nagari)mul.push(['나가리 판',2**S.nagari]);
   if(S.jackpot)mul.push(['🎰 잭팟 판',2]);
   if(S.lucky[w])mul.push(['황금카드',2**S.lucky[w]]);
   if(!sp.chongtong&&!sp.ppuk3&&DB.cfg.event&&scoreOf(S.caps[L]).total===0){score+=3;lines.push(['완봉승 (상대 0점)','+3'])}
   if(!sp.chongtong&&!sp.ppuk3&&DB.cfg.event&&S.turnN[w]+S.turnN[L]<=8){score+=2;lines.push(['초스피드 승','+2'])}
-  const total=score*mul.reduce((m,x)=>m*x[1],1);
+  let total=score*mul.reduce((m,x)=>m*x[1],1);
+  // ➡️ 밀기 정산
+  let pushLine='';{const pk=pushGet();if(pk){pushClear();if(pk.who===w){total=(total+pk.pts)*2;lines.push([`➡️ 밀기 성공! (+${pk.pts}점 후 ×2)`,'×2'])}else pushLine=`<p style="font-size:12px;color:#ffb3b3">➡️ ${pk.who===0?'내':esc(S.opp.nick)+'의'} 밀기 ${pk.pts}점은 날아갔어요</p>`}}
+  let pushed=false;
+  if(!sp.chongtong&&!S.opp.boss)pushed=!!(await decide(w,'push',()=>askPush(total),()=>Math.random()<.3));
+  if(pushed){pushSet(w,total);SFX.go();await banner(`➡️ ${w===0?'':S.opp.nick+' '}밀기!\n다음 판 이기면 ×2`,'go',1000)}
+  // 🔥 일런마스크 연승
+  let smul=1,streak=0;if(S.opp.boss&&!PV.on){if(w===0){streak=DB.bossStreak=(DB.bossStreak||0)+1;smul=Math.min(3,1+.5*(streak-1))}else DB.bossStreak=0}
   if(PV.on){PV.nag=0;PV.first=w===0?PV.me:PV.op}else{DB.nagari=0;DB.first=w}
   const pl=curP(),st=statOf(pl.id);st.g++;
   {const wi=w===0?pl.id:S.opp.id,li=w===0?S.opp.id:pl.id;if(!PV.on||PV.me==='A')addRec({w:wi,l:li,h:pl.id,pv:PV.on?1:0,ts:Date.now()})}
@@ -1574,13 +1656,13 @@ async function endGame(w,sp={}){
    <h2>${w===0?'🎉 '+esc(pName(pl))+' 승리!':'😢 '+S.opp.nick+' 승리'}</h2>${S.pvp?'<p style="margin:-4px 0 4px">📱 실시간 대전</p>':`<p style="margin:-4px 0 4px">“${w===0?S.opp.lose:S.opp.win}”</p>`}
    <div class="res-lines">${lines.map(([n,v])=>`<div><span>${n}</span><b>${typeof v==='number'?v+'점':v}</b></div>`).join('')||'<div><span>기본 점수</span><b>'+base+'점</b></div>'}</div>
    ${mul.length?`<div class="mult">${mul.map(([n,x])=>`<span>${n} ×${x}</span>`).join('')}</div>`:''}
-   <div class="total ${w===0?'':'neg'}">${w===0?'+':'-'}${total}점</div>
+   <div class="total ${w===0?'':'neg'}">${w===0?'+':'-'}${total}점${pushed?' <small style="font-size:14px">➡️ 밀기</small>':''}</div>${pushed?`<p style="font-size:12px;color:#ffe08a">➡️ ${w===0?'내가':esc(S.opp.nick)+'님이'} ${total}점을 다음 판으로 밀었어요. 다음 판도 이기면 ×2!</p>`:''}${pushLine}${streak?`<p style="font-size:13px;color:#ffb74d">🔥 일런마스크 ${streak}연승! 상금 ×${smul}</p>`:''}
    <p style="font-size:12px;opacity:.8">${esc(pName(pl))} 누적 ${st.net>=0?'+':''}${st.net}점 · ${st.w}승 ${st.l}패</p>`;
-  let d0=(w===0?total:-total)+S.inst[0]-S.inst[1];
+  let d0=(pushed?0:(w===0?total:-total))+S.inst[0]-S.inst[1];
   const charm=d0<0&&S.buff.charm;if(charm)d0=-Math.ceil(-d0/2);
   const instHtml=S.instLog.length?`<div class="res-lines">${S.instLog.map(([q,n,v])=>`<div><span>🎁 ${n} (${q===0?esc(pName(pl)):S.opp.nick})</span><b>${q===0?'+':'-'}${v}점어치</b></div>`).join('')}</div>`:'';
   window.__fin=[S.caps[0].map(c=>c.id).sort().join(','),S.caps[1].map(c=>c.id).sort().join(','),total,w];
-  const mr=await settleGame(d0);
+  const mr=await settleGame(d0,smul);
   let ctBonus=0;if(sp.chongtong&&!isBoss(w===0?pl.id:S.opp.id)&&(!PV.on||PV.me==='A')){const wid=w===0?pl.id:S.opp.id;ctBonus=5000;DB.money[wid]=moneyOf(wid)+ctBonus;await pushMoney([wid]);LG.req('matgo/log','POST',{w:wid,l:'총통 보너스',pts:0,pay:ctBonus,ts:Date.now()})}
   let extra=0;if(d0>0&&S.buff.choco&&mr.pay>0){extra=Math.round(mr.pay*.2);DB.money[pl.id]=moneyOf(pl.id)+extra;await pushMoney([pl.id])}
   if(!PV.on)useUpBuffs(pl.id);
@@ -1635,7 +1717,7 @@ function renderHome(){
   const top=opps.find(o=>moneyOf(o.id)>0);
   const oppBtn=o=>{const r=DB.vs[DB.cur+'|'+o.id];return `<button class="${DB.set.opp===o.id?'on':''} ${moneyOf(o.id)<=0||playsWith(o.id)>=(DB.cfg.dailyMax||3)?'broke':''}" data-op="${o.id}">${top&&o.id===top.id?'<span class="tgt">🎯 최고 부자</span>':''}<span class="mm">${oppSVG(o)}</span>${o.nick}<small>${o.real} · ${LV[o.lv].st}</small><small class="mn ${moneyOf(o.id)<=0?'zero':''}">${moneyOf(o.id)<=0?'파산':won(moneyOf(o.id))}</small>${(()=>{const n=playsWith(o.id),mx=DB.cfg.dailyMax||3;return `<small class="cnt3 ${n>=mx?'full':''}">${n>=mx?'오늘 끝':`오늘 ${n}/${mx}판`}</small>`})()}</button>`};
   const rich=top||opps[0];$('#richBox').innerHTML=oppBtn(rich);$('#lvSeg').innerHTML=opps.filter(o=>o!==rich).map(oppBtn).join('');
-  {const B=BOSS,r=DB.vs[DB.cur+'|tutu'];$('#bossBtn').className='boss'+(DB.set.opp==='tutu'?' on':'');$('#bossBtn').innerHTML=`<span class="bm">${oppSVG(B)}</span><span class="bt"><b>👹 일런마스크 <em>보스</em></b><span class="en">ILLUN MASK · BOSS</span><small>${tutu().st} ${tutu().tx}</small><span class="x2">이기면 딴 돈 ×${tutuX()}!</span>${r?`<small>${r.w}승 ${r.l}패</small>`:''}</span>`}
+  {const B=BOSS,r=DB.vs[DB.cur+'|tutu'];$('#bossBtn').className='boss'+(DB.set.opp==='tutu'?' on':'');$('#bossBtn').dataset.st=DB.bossStreak||0;$('#bossBtn').innerHTML=`<span class="bm">${oppSVG(B)}</span><span class="bt"><b>👹 일런마스크 <em>보스</em></b><span class="en">ILLUN MASK · BOSS</span><small>${tutu().st} ${tutu().tx}</small><span class="x2">이기면 딴 돈 ×${tutuX()}!</span>${r?`<small>${r.w}승 ${r.l}패</small>`:''}</span>`}
   $('#tgSeg').innerHTML=[3,5,7].map(t=>`<button class="${DB.set.target===t?'on':''}" data-tg="${t}">${t}점<small>${t===3?'빠른 판':t===5?'적당히':'정식 맞고'}</small></button>`).join('');
   {const a=(DB.att||{})[DB.cur],ok=a&&a.last===dayKey();$('#attSub').textContent=ok?'오늘 출석 완료 ✅':'매일 +1천원 · 7일 +1만';
    const q=qState(),L=todayQuests(),dn=L.filter(x=>(q.prog[x.id]||0)>=x.goal).length,cl=L.filter(x=>q.claimed[x.id]).length;$('#qSub').textContent=dn>cl?`🎁 보상 받기 ${dn-cl}개!`:`오늘 ${dn}/3 달성`;
@@ -1849,7 +1931,7 @@ async function pvLoop(){
 }
 function pvStart(o){
   Object.assign(PV,{on:true,id:Date.now()+Math.random(),code:o.code,me:o.me,op:o.me==='A'?'B':'A',oppId:o.oppId,per:+o.per||100,seed:o.seed|0,cfg:o.cfg||{},
-    out:0,inn:0,buf:{},waits:[],hbVal:null,hbAt:Date.now(),tick:Date.now(),gno:0,nag:0,first:'A',endSeen:false});
+    out:0,inn:0,buf:{},waits:[],hbVal:null,hbAt:Date.now(),tick:Date.now(),gno:0,nag:0,first:'A',endSeen:false,push:null});
   GR=mulberry32(PV.seed);
   clearInterval(PV.hbT);const beat=()=>pvPut('hb/'+PV.me,Date.now(),1);beat();PV.hbT=setInterval(()=>{if(PV.on)beat()},4000);
   if(!$('#pvWait')){const d=document.createElement('div');d.id='pvWait';document.body.appendChild(d)}
@@ -1857,9 +1939,9 @@ function pvStart(o){
 }
 function pvClose(){PV.on=false;clearInterval(PV.hbT);PV.waits=[];GR=Math.random;const wb=$('#pvWait');if(wb)wb.textContent=''}
 function closeModals(){document.querySelectorAll('.mbg,.lotto,.banner').forEach(x=>x.remove())}
-async function settleGame(d0){
+async function settleGame(d0,mult=1){
   const pl=curP();
-  if(!PV.on)return d0>=0?await settleMoney(pl.id,S.opp.id,d0):await settleMoney(S.opp.id,pl.id,-d0);
+  if(!PV.on){const per=mult!==1?DB.cfg.per*mult:undefined;return d0>=0?await settleMoney(pl.id,S.opp.id,d0,per):await settleMoney(S.opp.id,pl.id,-d0,per)}
   const g=PV.gno,per=PV.per,want=Math.abs(d0)*per;
   if(PV.me==='A'){const r=d0>=0?await settleMoney(pl.id,S.opp.id,d0,per):await settleMoney(S.opp.id,pl.id,-d0,per);pvPut('res/'+g,{pay:r.pay,allin:!!r.allin});return r}
   const key=String(g);
@@ -2138,7 +2220,7 @@ const RULES=`<div class="rules">
 <h3>🎴 기본 진행</h3>손패 1장을 내고, 더미에서 1장을 뒤집어요. 같은 <b>월(그림)</b>끼리 짝이 맞으면 먹어요. 낼 패를 한 번 누르면 <b>먹을 수 있는 바닥패가 빛나고</b>, 한 번 더 누르면(또는 빛나는 바닥패를 누르면) 내요.
 <h3>🧮 점수</h3><b>광</b> 3장 3점(비광 포함 시 2점), 4장 4점, 5장 15점<br><b>열끗</b> 5장 1점 + 1장마다 1점 · <b>고도리</b>(2·4·8월 새) 5점<br><b>띠</b> 5장 1점 + 1장마다 1점 · <b>홍단·청단·초단</b> 각 3점<br><b>피</b> 10장 1점 + 1장마다 1점 (쌍피·보너스는 2~3장으로 계산, 국진은 유리하게 자동 계산)
 <h3>🔥 고 / 스톱</h3>날 점수에 도달하면 고 또는 스톱! 1고 +1점, 2고 +2점, 3고부터 (+2점 후) ×2, ×4…
-<h3>💥 특수 상황</h3><b>쪽</b> 낸 패를 뒤집은 패로 바로 먹기 → 피 1장 뺏기<br><b>뻑 (쌌다, 뿌직~ 💩)</b> 낸 패로 먹었는데 뒤집은 패도 같은 월 → 3장이 바닥에 묶여요. 나중에 먹으면 피 1장(자기 뻑이면 2장)<br><b>따닥</b> 바닥 2장 + 낸 패 + 뒤집은 패 모두 같은 월 → 4장 다 먹고 피 1장<br><b>싹쓸 (🧹 링크클린 출동! 청소 끝!)</b> 바닥을 다 비우면 청소기 소리와 함께 피 1장<br><b>폭탄</b> 같은 월 3장을 들고 바닥에 1장 → 한 번에 4장 먹고 피 1장, ×2, 빈패 2장 받음<br><b>흔들기</b> 같은 월 3장을 들고 바닥에 없을 때 선언 → ×2 (<b>💩 똥(11월)·🌼 국진(9월)을 흔들면 ×4</b>)<br><b>3뻑</b> 한 판에 뻑 3번이면 즉시 승리 · <b>총통</b> 처음에 같은 월 4장이면 10점 승리 + 총통 보너스 5천원<br><b>링크의 보너스 패</b> (7종 중 판마다 6장이 무작위로 들어가요, 관리인이 장수 결정) 내면 바로 먹고 한 장 더 받아요 — 쓰리피 · 피 2장 뺏기 · 🎰 행운 슬롯 · 🧹 대청소(바닥 패 1장 골라 가져오기) · 🔄 체인지(상대 손패와 1장 무작위 교환) · 🛡️ 방패(이번 판 피박·광박 면제) · 🎁 선물상자(3개 중 하나: 대박 5점어치+피1장 / 보통 2점어치 / 꽝)<br><b>미션</b> 판마다 정해지는 미션패 3장을 모두 먹고 나면 ×2 (내가 먹으면 ○, 상대가 먹으면 ✕)
+<h3>💥 특수 상황</h3><b>쪽</b> 낸 패를 뒤집은 패로 바로 먹기 → 피 1장 뺏기<br><b>뻑 (쌌다, 뿌직~ 💩)</b> 낸 패로 먹었는데 뒤집은 패도 같은 월 → 3장이 바닥에 묶여요. 나중에 먹으면 피 1장(자기 뻑이면 2장)<br><b>따닥</b> 바닥 2장 + 낸 패 + 뒤집은 패 모두 같은 월 → 4장 다 먹고 피 1장<br><b>싹쓸 (🧹 링크클린 출동! 청소 끝!)</b> 바닥을 다 비우면 청소기 소리와 함께 피 1장<br><b>폭탄</b> 같은 월 3장을 들고 바닥에 1장 → 한 번에 4장 먹고 피 1장, ×2, 빈패 2장 받음<br><b>흔들기</b> 같은 월 3장을 들고 바닥에 없을 때 선언 → ×2 (<b>💩 똥(11월)·🌼 국진(9월)을 흔들면 ×4</b>)<br><b>3뻑</b> 한 판에 뻑 3번이면 즉시 승리 · <b>총통</b> 처음에 같은 월 4장이면 10점 승리 + 총통 보너스 5천원<br><b>링크의 보너스 패</b> (7종 중 판마다 6장이 무작위로 들어가요, 관리인이 장수 결정) 내면 바로 먹고 한 장 더 받아요 — 쓰리피 · 피 2장 뺏기 · 🎰 행운 슬롯 · 🧹 대청소(바닥 패 1장 골라 가져오기) · 🔄 체인지(상대 손패와 1장 무작위 교환) · 🛡️ 방패(이번 판 피박·광박 면제) · 🎁 선물상자(3개 중 하나: 대박 5점어치+피1장 / 보통 2점어치 / 꽝)<br><b>🎯 빙고 미션</b> 판마다 빙고판(화투 9장)이 떠요. 먹은 패가 ○로 칠해지고 가로·세로·대각선 한 줄마다 ×2 (2줄 ×4, 3줄 ×6…)<br><b>➡️ 밀기</b> 이기면 돈을 바로 받지 않고 다음 판으로 밀 수 있어요. 다음 판도 이기면 (그 판 점수+민 점수)×2, 지면 날아가요<br><b>🎴 섯다 족보</b> 처음 받은 두 장이 38광땡 10점어치 · 광땡 7 · 장땡 5 · 땡 3 · 알리 2 · 독사 1<br><b>🔥 일런마스크 연승</b> 연속으로 이길 때마다 상금이 ×1.5, ×2 … 최대 ×3 (지면 0연승)
 <h3>🎨 그림</h3>화투 그림은 무료 공개 화투 일러스트를 사용했어요.
 <h3>🎲 특수 이벤트 (관리인이 켜고 끔)</h3><b>첫뻑</b> 첫 턴에 뻑 → 상대가 5점어치 즉시 지급 · <b>연뻑</b> 두 턴 연속 뻑 → 10점어치<br><b>첫따닥</b> 5점어치 · <b>첫쪽</b> 3점어치 · <b>막쓸</b> 마지막 패로 싹쓸 → 피 1장 + 3점어치<br><b>보너스 대박</b> 보너스패 3장 이상 먹으면 5점어치 · <b>쓰리고 축하금</b> 3점어치<br><b>🍀 링크의 행운 패</b> 먹으면 🎰 슬롯머신이 돌아가요! (777 이기면 ×2+5점어치 · BAR 피2장+3점어치 · 🍒 피2장 · 🍉 5점어치 · 🍇 3점어치 · 🍋 피1장 · 두 개 맞으면 1점어치 · 꽝) (피 2장 뺏기 / 이기면 ×2 / 5점어치 / 피 1장+3점어치)<br><b>🎰 잭팟 판</b> 가끔(15%) 판 전체 점수 ×2 · <b>완봉승</b> 상대 0점이면 +3점 · <b>초스피드 승</b> 각자 4턴 안에 나면 +2점<br><small>'점어치'는 점당 금액으로 바로 바꿔 판 끝에 함께 정산돼요 (나가리여도 정산)</small>
 <h3>☕ 커피 · 📝 댓글 이벤트</h3>돈 100만원을 모으면 스타벅스 커피 1잔, 300만원이면 2잔 (1인 최대 2잔). 🎡 행운 룰렛은 하루 3번 (꽝·1천·3천·5천·1만·2만원)! 링크클린 블로그·앱에 댓글 달고 캡처를 올리면 관리인 확인 후 +3만원!
