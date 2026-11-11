@@ -459,7 +459,7 @@ small.zero,.seg small.mn.zero{color:#ff8a80!important}
 
 <script>
 'use strict';
-const VER='v50';
+const VER='v51';
 const $=s=>document.querySelector(s);
 const sleep=ms=>new Promise(r=>setTimeout(r,ms));
 const rnd=n=>Math.floor(Math.random()*n);
@@ -1065,7 +1065,7 @@ async function chooseCard(cards,title,cancel){
    게임 진행
 ===================================================== */
 async function startGame(){
-  if(!(await moneyCheck()))return;
+  if(!(await moneyCheck())){if(S&&S.over)goHome();return}
   SFX.init();
   if(!isBoss(DB.set.opp))addPlay(DB.set.opp);
   S=newState();show('game');layout();
