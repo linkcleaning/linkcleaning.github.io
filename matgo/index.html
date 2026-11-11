@@ -401,6 +401,39 @@ small.zero,.seg small.mn.zero{color:#ff8a80!important}
 .invpop{animation:ltdrop .45s cubic-bezier(.3,1.6,.5,1)}
 .modal.vbtn .mbtns{flex-direction:column}
 .modal.vbtn .mbtns .btn{width:100%}
+
+/* v55 슬롯머신 */
+.slotov{position:fixed;inset:0;z-index:90;background:#000d;display:flex;flex-direction:column;align-items:center;justify-content:center;animation:ltin .25s ease-out}
+.slotov.bye{opacity:0;transition:.25s}
+.slotm{position:relative;width:min(340px,90vw);padding:10px 14px 10px;border-radius:26px;background:radial-gradient(ellipse at 50% 0%,#8a1c2a,#4a0a14 70%);border:5px solid #d9a441;box-shadow:0 0 0 3px #6b4a00,0 0 40px #ffb80055,inset 0 2px 0 #ffe9a8}
+.sl-dots{display:flex;justify-content:space-between;padding:2px 6px}
+.sl-dots i{width:9px;height:9px;border-radius:50%;background:#7a5a2a;box-shadow:0 0 0 1px #3a2000}
+.sl-dots i:nth-child(odd){animation:sldot .5s steps(1) infinite}
+.sl-dots i:nth-child(even){animation:sldot .5s steps(1) infinite .25s}
+@keyframes sldot{0%{background:#ffe08a;box-shadow:0 0 8px #ffd23f}50%{background:#7a5a2a;box-shadow:none}}
+.won .sl-dots i{animation-duration:.18s}
+.sl-title{display:flex;align-items:center;justify-content:center;gap:6px;margin:4px 0 8px;font-family:Georgia,serif;font-weight:700;letter-spacing:3px;color:#f5d58a;font-size:14px;text-shadow:0 1px 0 #3a1500}
+.sl-title em{font-style:italic;width:28px;height:30px;border-radius:7px;background:linear-gradient(#fff6d8,#f5c24a);color:#d41f1f;font-size:20px;font-weight:900;display:flex;align-items:center;justify-content:center;letter-spacing:0;box-shadow:0 0 10px #ffd23f99;-webkit-text-stroke:.5px #7a0000}
+.sl-win{position:relative;border-radius:16px;background:#111;border:4px solid #c9952f;box-shadow:inset 0 0 18px #000;padding:8px}
+.sl-reels{display:flex;gap:7px}
+.sl-reel{flex:1;height:198px;overflow:hidden;border-radius:10px;background:linear-gradient(90deg,#bdbdbd,#fff 30%,#fff 70%,#bdbdbd);position:relative}
+.sl-reel:after{content:'';position:absolute;inset:0;background:linear-gradient(#0008,transparent 30%,transparent 70%,#0008);pointer-events:none}
+.sl-strip{will-change:transform}
+.sl-c{height:66px;display:flex;align-items:center;justify-content:center;font-size:40px;border-bottom:1px solid #0001}
+.sy7{font-family:Georgia,serif;font-style:italic;font-weight:900;font-size:50px;color:#d41f1f;-webkit-text-stroke:2px #f5c24a;text-shadow:0 2px 0 #7a0000;line-height:1}
+.sybar{font-family:Arial Black,Arial,sans-serif;font-size:17px;font-weight:900;color:#fff;background:#111;border:3px solid #d9a441;border-radius:7px;padding:4px 7px;letter-spacing:1px}
+.sl-line{position:absolute;left:8px;right:8px;top:50%;height:2px;background:#ff5a5a;box-shadow:0 0 8px #ff5a5a;opacity:.75;pointer-events:none}
+.sl-ar{position:absolute;top:50%;transform:translateY(-50%);color:#ff6b6b;font-size:18px}
+.sl-ar.l{left:-12px}.sl-ar.r{right:-12px}
+.sl-lever{position:absolute;right:-26px;top:70px;width:12px;height:110px;transform-origin:50% 100%}
+.sl-lever:before{content:'';position:absolute;left:3px;top:14px;width:6px;height:96px;border-radius:3px;background:linear-gradient(90deg,#999,#fff,#888)}
+.sl-lever i{position:absolute;left:-7px;top:-6px;width:26px;height:26px;border-radius:50%;background:radial-gradient(circle at 35% 30%,#fff 0 10%,#e53935 40%,#7a0000)}
+.sl-lever.pull{animation:lever .55s ease-in-out}
+@keyframes lever{45%{transform:scaleY(-.6)}}
+.won .sl-win{animation:slglow .4s ease-in-out 4 alternate}
+@keyframes slglow{to{box-shadow:inset 0 0 18px #000,0 0 26px 6px #ffd23f}}
+.sl-msg{margin-top:18px;font-size:26px;font-weight:900;color:#f3e3c0;text-align:center;padding:0 16px;text-shadow:0 2px 4px #000}
+.sl-msg .w{display:inline-block;background:linear-gradient(90deg,#ff6b3d,#ffb800);color:#fff;padding:6px 16px;border-radius:30px;box-shadow:0 4px 0 #7a3d00,0 0 24px #ffb800aa;font-size:22px;animation:ltdrop .4s cubic-bezier(.3,1.6,.5,1)}
 </style>
 </head>
 <body>
@@ -477,7 +510,7 @@ small.zero,.seg small.mn.zero{color:#ff8a80!important}
 
 <script>
 'use strict';
-const VER='v54';
+const VER='v55';
 const $=s=>document.querySelector(s);
 const sleep=ms=>new Promise(r=>setTimeout(r,ms));
 const rnd=n=>Math.floor(Math.random()*n);
@@ -585,7 +618,7 @@ CARDS.push(
  {id:'B-2',m:0,t:'B',sub:'2',i:1,say:['아싸','쌍피~'],lab:'쌍피'},
  {id:'B-S1',m:0,t:'B',sub:'1',i:2,steal:1,say:['피 한 장씩','주셔야겠는데요~'],lab:'피 1장 뺏기'},
  {id:'B-S2',m:0,t:'B',sub:'1',i:3,steal:2,say:['상대에게 피','두 장을 받으세요!!'],lab:'피 2장 뺏기'},
- {id:'B-L',m:0,t:'B',sub:'2',i:4,lucky:true,say:['Good','Luck!'],lab:'행운 추첨'});
+ {id:'B-L',m:0,t:'B',sub:'2',i:4,lucky:true,say:['Good','Luck!'],lab:'행운 슬롯'});
 const BONUS_ORDER=['B-3','B-2','B-S1','B-S2','B-L'];
 function piVal(c){if(c.t==='B')return +c.sub;if(c.t==='P')return c.sub==='ssang'?2:1;return 0}
 
@@ -1237,38 +1270,49 @@ async function instBonus(p,name,pts){
   await banner(`${name}!\n+${won(pts*DB.cfg.per)} 받기`,'gold',900);
   say(p===1?`${name}! ${won(pts*DB.cfg.per)} 챙겼다~`:`앗 ${name}… ${won(pts*DB.cfg.per)} 드릴게요`);render();
 }
+// 🎰 행운 슬롯머신 — 세 개가 맞으면 상! (결과는 같은 씨앗 난수로 정해서 실시간 대전에서도 두 폰이 똑같아요)
+const SLOT_SYM={s7:'<b class="sy7">7</b>',bar:'<b class="sybar">BAR</b>',ch:'🍒',wm:'🍉',gr:'🍇',lm:'🍋'};
+const SLOT_PAY=[ // [그림, 확률, 이름, 효과]
+  ['s7',6,'777 잭팟! 이기면 ×2 + 5점어치',{x2:1,pts:5}],
+  ['bar',10,'BAR 3개! 피 2장 + 3점어치',{steal:2,pts:3}],
+  ['ch',12,'체리 3개! 피 2장 뺏기',{steal:2}],
+  ['wm',12,'수박 3개! 5점어치',{pts:5}],
+  ['gr',14,'포도 3개! 3점어치',{pts:3}],
+  ['lm',14,'레몬 3개! 피 1장 뺏기',{steal:1}],
+  ['two',20,'두 개 맞음! 1점어치',{pts:1}],
+  ['miss',12,'꽝… 다음 기회에',{}]];
 async function luckyRoulette(p){
-  const opts=[['피 2장 뺏기','steal','#ff5a5a','피2'],['이기면 점수 ×2','x2','#ffd23f','×2'],['용돈 보너스','cash','#3ad07a','💰'],['피 1장 + 용돈','combo','#4aa8ff','🎁']];
   document.querySelectorAll('.banner').forEach(x=>x.remove());
-  const k=grnd(opts.length),R=opts[k];
-  // 🎱 로또 추첨기
-  const ov=document.createElement('div');ov.className='lotto';
-  ov.innerHTML=`<div class="lt-t">🍀 링크의 행운 추첨!</div><div class="lt-glass"><div class="lt-shine"></div></div><div class="lt-pipe"></div><div class="lt-out"></div>`;
-  document.body.appendChild(ov);const gl=ov.querySelector('.lt-glass');SFX.event();vib(20);
-  const GR=95,balls=[];
-  for(let i=0;i<12;i++){const o=opts[i%4],el=document.createElement('div');el.className='lt-ball';el.style.background=`radial-gradient(circle at 35% 30%,#fff 0 8%,${o[2]} 40%,${o[2]}aa 100%)`;el.innerHTML=`<b>${o[3]}</b>`;gl.appendChild(el);
-    const a=Math.random()*6.28,r=Math.random()*55;balls.push({el,o,x:Math.cos(a)*r,y:40+Math.random()*30,vx:0,vy:0})}
-  let t0=performance.now(),last=t0,run=true,blow=1;
-  const step=now=>{if(!run)return;const dt=Math.min(.033,(now-last)/1000);last=now;
-    balls.forEach(b=>{b.vy+=600*dt;if(blow&&b.y>40&&Math.random()<.25){b.vy-=900*Math.random()*blow*dt*20;b.vx+=(Math.random()-.5)*700*dt*8}
-      b.x+=b.vx*dt;b.y+=b.vy*dt;const d=Math.hypot(b.x,b.y),lim=GR-17;
-      if(d>lim){const nx=b.x/d,ny=b.y/d;b.x=nx*lim;b.y=ny*lim;const dot=b.vx*nx+b.vy*ny;if(dot>0){b.vx-=1.8*dot*nx;b.vy-=1.8*dot*ny;if(Math.random()<.05)SFX.rattle()}}
-      b.vx*=.995;b.el.style.transform=`translate(${GR-17+b.x}px,${GR-17+b.y}px) rotate(${b.x*3}deg)`});
-    requestAnimationFrame(step)};
-  requestAnimationFrame(step);
-  const rt=setInterval(()=>SFX.rattle(),70);
-  await sleep(1900);blow=.25;await sleep(500);clearInterval(rt);
-  // 당첨 공이 관을 타고 나옴
-  const win=balls.find(b=>b.o===R);win.el.remove();
-  const out=ov.querySelector('.lt-out');out.innerHTML=`<div class="lt-ball big" style="background:radial-gradient(circle at 35% 30%,#fff 0 8%,${R[2]} 40%,${R[2]}cc 100%)"><b>${R[3]}</b></div>`;
-  SFX.pop();vib([20,40,20]);await sleep(650);run=false;
-  out.insertAdjacentHTML('beforeend',`<div class="lt-res">${R[0]}!</div>`);SFX.bonus();
-  await sleep(1100);ov.classList.add('bye');await sleep(250);ov.remove();
-  const r=R[1];
-  if(r==='steal'){await act(()=>stealPi(1-p,p,2),{dur:520})}
-  else if(r==='x2'){S.lucky[p]++}
-  else if(r==='cash'){await instBonus(p,'황금카드',5)}
-  else{await act(()=>stealPi(1-p,p,1),{dur:520});await instBonus(p,'황금카드',3)}
+  let r=grnd(100),R=SLOT_PAY[SLOT_PAY.length-1];for(const x of SLOT_PAY){if(r<x[1]){R=x;break}r-=x[1]}
+  const keys=Object.keys(SLOT_SYM),pick=()=>keys[grnd(keys.length)];
+  let tgt;
+  if(R[0]==='two'){const a=pick();let b=pick();while(b===a)b=pick();tgt=[a,a,b];const k=grnd(3);[tgt[k],tgt[2]]=[tgt[2],tgt[k]]}
+  else if(R[0]==='miss'){tgt=[pick()];let b=pick();while(b===tgt[0])b=pick();tgt.push(b);let c=pick();while(c===tgt[0]||c===tgt[1])c=pick();tgt.push(c)}
+  else tgt=[R[0],R[0],R[0]];
+  const H=66,N=22;
+  const ov=document.createElement('div');ov.className='slotov';
+  ov.innerHTML=`<div class="slotm"><div class="sl-dots">${'<i></i>'.repeat(11)}</div>
+    <div class="sl-title"><span>LUCKY</span><em>7</em><em>7</em><em>7</em><span>JACKPOT</span></div>
+    <div class="sl-win"><div class="sl-reels">${tgt.map((t,i)=>{const strip=[];for(let k=0;k<N;k++)strip.push(k===N-2?t:keys[Math.floor(Math.random()*keys.length)]);return `<div class="sl-reel"><div class="sl-strip" id="slS${i}">${strip.map(k=>`<div class="sl-c">${SLOT_SYM[k]}</div>`).join('')}</div></div>`}).join('')}</div>
+      <div class="sl-line"></div><b class="sl-ar l">▶</b><b class="sl-ar r">◀</b></div>
+    <div class="sl-dots">${'<i></i>'.repeat(11)}</div><div class="sl-lever" id="slLev"><i></i></div></div>
+    <div class="sl-msg" id="slMsg">${p===0?'두근두근…':esc(S.opp.nick)+'의 슬롯!'}</div>`;
+  document.body.appendChild(ov);SFX.event();vib(20);
+  await sleep(350);$('#slLev').classList.add('pull');SFX.noise(0,.12,.4,'lowpass',500,.8);await sleep(250);
+  const tick=setInterval(()=>SFX.tone(900+Math.random()*500,0,.03,'square',.03),70);
+  for(let i=0;i<3;i++){const el=$('#slS'+i);el.style.transition=`transform ${1.1+i*.55}s cubic-bezier(.15,.6,.25,1.02)`;el.style.transform=`translateY(${-(N-3)*H}px)`;}
+  for(let i=0;i<3;i++){await sleep(i===0?1100:550);SFX.slap(.9);vib(15);
+    if(i===1&&tgt[0]===tgt[1]){$('#slMsg').textContent='하나만 더…!';SFX.tone(660,0,.25,'triangle',.12,990)}}
+  clearInterval(tick);await sleep(250);
+  const win=!['miss','two'].includes(R[0]),big=R[0]==='s7';
+  ov.querySelector('.slotm').classList.add(win?'won':R[0]==='two'?'half':'lost');
+  $('#slMsg').innerHTML=`<span class="${win?'w':''}">${R[2]}</span>`;
+  if(win){SFX.win();if(big){confetti();vib([40,40,40,40,120])}else vib([30,40,30]);for(let k=0;k<6;k++)setTimeout(()=>SFX.coin(),k*120)}else if(R[0]==='two')SFX.coin();else SFX.lose();
+  await sleep(win?1500:1100);ov.classList.add('bye');await sleep(250);ov.remove();
+  const E=R[3];
+  if(E.steal)await act(()=>stealPi(1-p,p,E.steal),{dur:520});
+  if(E.x2)S.lucky[p]++;
+  if(E.pts)await instBonus(p,'🎰 슬롯',E.pts);
   render();
 }
 async function afterCaptureEvents(p,cards){
@@ -2008,9 +2052,9 @@ const RULES=`<div class="rules">
 <h3>🎴 기본 진행</h3>손패 1장을 내고, 더미에서 1장을 뒤집어요. 같은 <b>월(그림)</b>끼리 짝이 맞으면 먹어요. 낼 패를 한 번 누르면 <b>먹을 수 있는 바닥패가 빛나고</b>, 한 번 더 누르면(또는 빛나는 바닥패를 누르면) 내요.
 <h3>🧮 점수</h3><b>광</b> 3장 3점(비광 포함 시 2점), 4장 4점, 5장 15점<br><b>열끗</b> 5장 1점 + 1장마다 1점 · <b>고도리</b>(2·4·8월 새) 5점<br><b>띠</b> 5장 1점 + 1장마다 1점 · <b>홍단·청단·초단</b> 각 3점<br><b>피</b> 10장 1점 + 1장마다 1점 (쌍피·보너스는 2~3장으로 계산, 국진은 유리하게 자동 계산)
 <h3>🔥 고 / 스톱</h3>날 점수에 도달하면 고 또는 스톱! 1고 +1점, 2고 +2점, 3고부터 (+2점 후) ×2, ×4…
-<h3>💥 특수 상황</h3><b>쪽</b> 낸 패를 뒤집은 패로 바로 먹기 → 피 1장 뺏기<br><b>뻑 (쌌다, 뿌직~ 💩)</b> 낸 패로 먹었는데 뒤집은 패도 같은 월 → 3장이 바닥에 묶여요. 나중에 먹으면 피 1장(자기 뻑이면 2장)<br><b>따닥</b> 바닥 2장 + 낸 패 + 뒤집은 패 모두 같은 월 → 4장 다 먹고 피 1장<br><b>싹쓸 (🧹 링크클린 출동! 청소 끝!)</b> 바닥을 다 비우면 청소기 소리와 함께 피 1장<br><b>폭탄</b> 같은 월 3장을 들고 바닥에 1장 → 한 번에 4장 먹고 피 1장, ×2, 빈패 2장 받음<br><b>흔들기</b> 같은 월 3장을 들고 바닥에 없을 때 선언 → ×2 (<b>💩 똥(11월)·🌼 국진(9월)을 흔들면 ×4</b>)<br><b>3뻑</b> 한 판에 뻑 3번이면 즉시 승리 · <b>총통</b> 처음에 같은 월 4장이면 10점 승리 + 총통 보너스 5천원<br><b>링크의 보너스 패</b> (최대 5장, 관리인이 장수 결정) 내면 바로 먹고 한 장 더 받아요 — 쓰리피 · 쌍피 · 피 1장 뺏기 · 피 2장 뺏기 · 행운 추첨(🎱 로또 추첨기)<br><b>미션</b> 판마다 정해지는 미션패 3장을 모두 먹고 나면 ×2 (내가 먹으면 ○, 상대가 먹으면 ✕)
+<h3>💥 특수 상황</h3><b>쪽</b> 낸 패를 뒤집은 패로 바로 먹기 → 피 1장 뺏기<br><b>뻑 (쌌다, 뿌직~ 💩)</b> 낸 패로 먹었는데 뒤집은 패도 같은 월 → 3장이 바닥에 묶여요. 나중에 먹으면 피 1장(자기 뻑이면 2장)<br><b>따닥</b> 바닥 2장 + 낸 패 + 뒤집은 패 모두 같은 월 → 4장 다 먹고 피 1장<br><b>싹쓸 (🧹 링크클린 출동! 청소 끝!)</b> 바닥을 다 비우면 청소기 소리와 함께 피 1장<br><b>폭탄</b> 같은 월 3장을 들고 바닥에 1장 → 한 번에 4장 먹고 피 1장, ×2, 빈패 2장 받음<br><b>흔들기</b> 같은 월 3장을 들고 바닥에 없을 때 선언 → ×2 (<b>💩 똥(11월)·🌼 국진(9월)을 흔들면 ×4</b>)<br><b>3뻑</b> 한 판에 뻑 3번이면 즉시 승리 · <b>총통</b> 처음에 같은 월 4장이면 10점 승리 + 총통 보너스 5천원<br><b>링크의 보너스 패</b> (최대 5장, 관리인이 장수 결정) 내면 바로 먹고 한 장 더 받아요 — 쓰리피 · 쌍피 · 피 1장 뺏기 · 피 2장 뺏기 · 행운 슬롯(🎰 슬롯머신)<br><b>미션</b> 판마다 정해지는 미션패 3장을 모두 먹고 나면 ×2 (내가 먹으면 ○, 상대가 먹으면 ✕)
 <h3>🎨 그림</h3>화투 그림은 무료 공개 화투 일러스트를 사용했어요.
-<h3>🎲 특수 이벤트 (관리인이 켜고 끔)</h3><b>첫뻑</b> 첫 턴에 뻑 → 상대가 5점어치 즉시 지급 · <b>연뻑</b> 두 턴 연속 뻑 → 10점어치<br><b>첫따닥</b> 5점어치 · <b>첫쪽</b> 3점어치 · <b>막쓸</b> 마지막 패로 싹쓸 → 피 1장 + 3점어치<br><b>보너스 대박</b> 보너스패 3장 이상 먹으면 5점어치 · <b>쓰리고 축하금</b> 3점어치<br><b>🍀 링크의 행운 패</b> 먹으면 🎱 로또 추첨기가 돌아가요! (피 2장 뺏기 / 이기면 ×2 / 5점어치 / 피 1장+3점어치)<br><b>🎰 잭팟 판</b> 가끔(15%) 판 전체 점수 ×2 · <b>완봉승</b> 상대 0점이면 +3점 · <b>초스피드 승</b> 각자 4턴 안에 나면 +2점<br><small>'점어치'는 점당 금액으로 바로 바꿔 판 끝에 함께 정산돼요 (나가리여도 정산)</small>
+<h3>🎲 특수 이벤트 (관리인이 켜고 끔)</h3><b>첫뻑</b> 첫 턴에 뻑 → 상대가 5점어치 즉시 지급 · <b>연뻑</b> 두 턴 연속 뻑 → 10점어치<br><b>첫따닥</b> 5점어치 · <b>첫쪽</b> 3점어치 · <b>막쓸</b> 마지막 패로 싹쓸 → 피 1장 + 3점어치<br><b>보너스 대박</b> 보너스패 3장 이상 먹으면 5점어치 · <b>쓰리고 축하금</b> 3점어치<br><b>🍀 링크의 행운 패</b> 먹으면 🎰 슬롯머신이 돌아가요! (777 이기면 ×2+5점어치 · BAR 피2장+3점어치 · 🍒 피2장 · 🍉 5점어치 · 🍇 3점어치 · 🍋 피1장 · 두 개 맞으면 1점어치 · 꽝) (피 2장 뺏기 / 이기면 ×2 / 5점어치 / 피 1장+3점어치)<br><b>🎰 잭팟 판</b> 가끔(15%) 판 전체 점수 ×2 · <b>완봉승</b> 상대 0점이면 +3점 · <b>초스피드 승</b> 각자 4턴 안에 나면 +2점<br><small>'점어치'는 점당 금액으로 바로 바꿔 판 끝에 함께 정산돼요 (나가리여도 정산)</small>
 <h3>☕ 커피 · 📝 댓글 이벤트</h3>돈 100만원을 모으면 스타벅스 커피 1잔, 300만원이면 2잔 (1인 최대 2잔). 🎡 행운 룰렛은 하루 3번 (꽝·1천·3천·5천·1만·2만원)! 링크클린 블로그·앱에 댓글 달고 캡처를 올리면 관리인 확인 후 +3만원!
 <h3>🏅 주간·🏆 월간 최고 점수</h3>한 판에서 이겨서 받은 점수가 가장 높은 사람이 1등! 주간은 일요일 밤, 월간은 말일에 마감하고 1등에게 상금이 자동으로 들어가요 (월간 1등은 커피도!).
 <h3>🚫 하루 판수 제한</h3>한 사람만 계속 파산시키지 않도록, 같은 상대와는 하루 3판까지만 칠 수 있어요 (일런마스크는 제한 없음).
