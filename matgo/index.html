@@ -384,6 +384,17 @@ small.zero,.seg small.mn.zero{color:#ff8a80!important}
 .lt-ball.big b{width:42px;height:42px;font-size:18px}
 @keyframes ltdrop{from{transform:translateY(-60px) scale(.4)}}
 .lt-res{margin-top:8px;font-size:26px;font-weight:900;color:#fff;background:linear-gradient(90deg,#ff6b3d,#ffb800);padding:6px 18px;border-radius:30px;box-shadow:0 4px 0 #7a3d00,0 0 24px #ffb800aa;animation:ltdrop .4s cubic-bezier(.3,1.6,.5,1)}
+
+/* v52 실시간 대전 */
+.pvpbtn{width:100%;margin-top:12px;display:flex;align-items:center;gap:10px;padding:12px 14px;border-radius:16px;border:2px solid #7fd4ff;background:linear-gradient(100deg,#123a6b,#1d5fa8 55%,#0f7a8a);color:#fff;text-align:left;box-shadow:0 4px 0 #0a2443,0 0 18px #4fc3ff44;cursor:pointer}
+.pvpbtn .pvi{font-size:22px;flex:none}
+.pvpbtn b{display:block;font-size:17px;font-weight:900}
+.pvpbtn small{display:block;font-size:11.5px;opacity:.85;font-weight:700}
+.pvpbtn .go{margin-left:auto;font-size:26px;font-weight:900;color:#ffe08a}
+.pvcode{font-size:56px;font-weight:900;letter-spacing:10px;color:#ffe08a;text-shadow:0 3px 0 #7a3d00;margin:6px 0;font-variant-numeric:tabular-nums}
+.pvin{width:100%;font-size:40px;font-weight:900;text-align:center;letter-spacing:12px;padding:10px;border-radius:14px;border:2px solid #f5c24a;background:#00000040;color:#fff;margin-top:8px;font-family:inherit}
+#pvWait{position:fixed;left:50%;top:calc(env(safe-area-inset-top) + 118px);transform:translateX(-50%);z-index:70;background:#000c;color:#ffe08a;font-size:12px;font-weight:800;padding:0 12px;border-radius:14px;pointer-events:none;white-space:nowrap}
+#pvWait:not(:empty){padding:6px 12px}
 </style>
 </head>
 <body>
@@ -429,6 +440,7 @@ small.zero,.seg small.mn.zero{color:#ff8a80!important}
    <div class="seg" id="tgSeg" style="display:none"></div>
    <div class="nagari-note" id="ngNote"></div>
    <button class="start" id="startBtn">게임 시작 ▶</button>
+   <button class="pvpbtn" id="pvpBtn"><span class="pvi">📱⚔️📱</span><span><b>가족과 실시간 대전</b><small>방 만들어서 진짜 사람이랑 한 판!</small></span><span class="go">›</span></button>
   </div>
   <div class="shd purple"><span>🏅 이번 주 · 이번 달 최고 점수</span></div>
   <div class="bestbox" id="bestBox"></div>
@@ -459,11 +471,14 @@ small.zero,.seg small.mn.zero{color:#ff8a80!important}
 
 <script>
 'use strict';
-const VER='v51';
+const VER='v52';
 const $=s=>document.querySelector(s);
 const sleep=ms=>new Promise(r=>setTimeout(r,ms));
 const rnd=n=>Math.floor(Math.random()*n);
 const rm=(a,x)=>{const i=a.indexOf(x);if(i>=0)a.splice(i,1)};
+let GR=Math.random;const grnd=n=>Math.floor(GR()*n);
+function gshuffle(a){for(let i=a.length-1;i>0;i--){const j=grnd(i+1);[a[i],a[j]]=[a[j],a[i]]}return a}
+function mulberry32(a){return function(){a|=0;a=a+0x6D2B79F5|0;let t=Math.imul(a^a>>>15,1|a);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296}}
 function shuffle(a){for(let i=a.length-1;i>0;i--){const j=rnd(i+1);[a[i],a[j]]=[a[j],a[i]]}return a}
 const esc=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 
@@ -517,9 +532,9 @@ async function syncDown(){
   saveDB();return true;
 }
 async function pushMoney(ids){const o={};ids.forEach(id=>o[id]=moneyOf(id));await LG.req('matgo/money','PATCH',o)}
-async function settleMoney(wId,lId,pts){
+async function settleMoney(wId,lId,pts,per){
   await syncDown();
-  const want=pts*DB.cfg.per;
+  const want=pts*(per||DB.cfg.per);
   if(isBoss(lId)){const pay=want*tutuX();DB.money[wId]=moneyOf(wId)+pay;saveDB();await pushMoney([wId]);LG.req('matgo/log','POST',{w:wId,l:lId,pts,pay,ts:Date.now()});return {want,pay,allin:false,boss:true}}
   const have=Math.max(0,moneyOf(lId)),pay=Math.min(want,have);
   if(isBoss(wId)){DB.money[lId]=have-pay;saveDB();await pushMoney([lId]);LG.req('matgo/log','POST',{w:wId,l:lId,pts,pay,ts:Date.now()});return {want,pay,allin:pay<want}}
@@ -917,7 +932,7 @@ function render(){
   const myTurn=S.turn===0&&!S.busy&&!S.over;
   // 상대
   const s1=scoreOf(S.caps[1]),O=S.opp;
-  $('#oppbar').innerHTML=`<div class="ava">${oppSVG(O)}</div><div class="pinfo"><div class="pname">${O.nick}${O.boss?' <small style="font-size:9px;opacity:.7">ILLUN MASK</small>':''} <span class="bd money">${O.boss?'👹 이기면 ×'+tutuX():'💰'+won(moneyOf(O.id))}</span><em>${O.boss?tutu().st:LV[O.lv].st}</em></div><div class="ohand">${S.hands[1].map(c=>backDiv(c,'o')).join('')}</div></div><div class="badges" style="flex:none;max-width:38%;justify-content:flex-end">${badges(1)}</div><div class="pscore ${S.turn===1&&!S.over?'turn':''}"><b>${s1.total}</b><small>점</small></div>`;
+  $('#oppbar').innerHTML=`<div class="ava">${oppSVG(O)}</div><div class="pinfo"><div class="pname">${O.nick}${O.boss?' <small style="font-size:9px;opacity:.7">ILLUN MASK</small>':''} <span class="bd money">${O.boss?'👹 이기면 ×'+tutuX():'💰'+won(moneyOf(O.id))}</span><em>${S.pvp?'👤 실시간':O.boss?tutu().st:LV[O.lv].st}</em></div><div class="ohand">${S.hands[1].map(c=>backDiv(c,'o')).join('')}</div></div><div class="badges" style="flex:none;max-width:38%;justify-content:flex-end">${badges(1)}</div><div class="pscore ${S.turn===1&&!S.over?'turn':''}"><b>${s1.total}</b><small>점</small></div>`;
   renderCaps(1,s1);
   // 바닥
   const selC=S.sel?S.hands[0].find(c=>c.id===S.sel):null;
@@ -1029,7 +1044,7 @@ function confetti(){
     if(d.animate)d.animate([{transform:'translateY(0) rotate(0)'},{transform:`translate(${rnd(160)-80}px,${innerHeight+60}px) rotate(${rnd(900)}deg)`}],{duration:1800+rnd(1600),delay:rnd(600),easing:'cubic-bezier(.3,.1,.7,1)'}).onfinish=()=>d.remove();else d.remove()}
 }
 let bubT;
-function say(t){const b=$('#bub');b.textContent=t;b.classList.add('on');clearTimeout(bubT);bubT=setTimeout(()=>b.classList.remove('on'),1700)}
+function say(t){if(S&&S.pvp)return;const b=$('#bub');b.textContent=t;b.classList.add('on');clearTimeout(bubT);bubT=setTimeout(()=>b.classList.remove('on'),1700)}
 const TALK={
  ppuk:['아이고 뻑이네~','이런 뻑이라니!','흑흑 뻑…'],
  ppukMe:['뻑이다! 히히','그 패 내가 먹을 거야~'],
@@ -1068,19 +1083,23 @@ async function startGame(){
   if(!(await moneyCheck())){if(S&&S.over)goHome();return}
   SFX.init();
   if(!isBoss(DB.set.opp))addPlay(DB.set.opp);
-  S=newState();show('game');layout();
-  const cards=shuffle(CARDS.filter(c=>c.t!=='B'||BONUS_ORDER.indexOf(c.id)<(DB.cfg.bonus??5)));S.ncards=cards.length;
+  return beginDeal();
+}
+async function beginDeal(){
+  S=newState();if(PV.on)pvState();show('game');layout();
+  const cards=gshuffle(CARDS.filter(c=>c.t!=='B'||BONUS_ORDER.indexOf(c.id)<(DB.cfg.bonus??5)));S.ncards=cards.length;
   S.deck=cards;
-  {const pool=shuffle(CARDS.filter(c=>c.t!=='B'));const ms=[],mm=new Set();for(const c of pool){if(!mm.has(c.m)){ms.push(c);mm.add(c.m)}if(ms.length===3)break}S.mission=ms}
+  {const pool=gshuffle(CARDS.filter(c=>c.t!=='B'));const ms=[],mm=new Set();for(const c of pool){if(!mm.has(c.m)){ms.push(c);mm.add(c.m)}if(ms.length===3)break}S.mission=ms}
   render();BGM.start();await sleep(250);
   const seq=[['f',4],['h0',5],['h1',5],['f',4],['h0',5],['h1',5]];
   for(const [w,n] of seq){
-    await act(()=>{for(let i=0;i<n;i++){const c=S.deck.pop();if(w==='f')S.floor.push(c);else S.hands[+w[1]].push(c)}},{fromDeck:true,dur:330,wait:260});SFX.deal();
+    const hi=w==='f'?-1:pvIdx(+w[1]);
+    await act(()=>{for(let i=0;i<n;i++){const c=S.deck.pop();if(hi<0)S.floor.push(c);else S.hands[hi].push(c)}},{fromDeck:true,dur:330,wait:260});SFX.deal();
   }
   // 바닥에 같은 월 4장 → 재배분
   const cnt={};S.floor.forEach(c=>{if(c.m>0)cnt[c.m]=(cnt[c.m]||0)+1});
-  if(Object.values(cnt).some(v=>v===4)){await banner('같은 월 4장! 다시 섞어요','small',1100);return startGame()}
-  const first=DB.first===1?1:0;
+  if(Object.values(cnt).some(v=>v===4)){await banner('같은 월 4장! 다시 섞어요','small',1100);return beginDeal()}
+  const first=PV.on?(PV.first===PV.me?0:1):(DB.first===1?1:0);
   // 바닥 보너스패 → 선 플레이어
   while(S.floor.some(c=>c.t==='B')){
     const b=S.floor.find(c=>c.t==='B');
@@ -1093,14 +1112,16 @@ async function startGame(){
     const tm=Object.keys(c2).find(m=>c2[m]===4);
     if(tm){S.turn=p;render();SFX.event();await banner('총통! ('+MNAME[tm]+')','gold',1300);return endGame(p,{chongtong:true})}
   }
-  {const mb=$('#mission');mb&&mb.classList.add('pulse');SFX.event();await banner('오늘의 미션!','small gold',800);mb&&mb.classList.remove('pulse')}
-  if(DB.cfg.event&&Math.random()<.15){S.jackpot=true;SFX.win();await banner('🎰 잭팟 판! 점수 ×2','gold',1200)}
+  {const mb=$('#mission');mb&&mb.classList.add('pulse');SFX.event();await banner(PV.on?'실시간 대전 시작!':'오늘의 미션!','small gold',800);mb&&mb.classList.remove('pulse')}
+  if(DB.cfg.event&&GR()<.15){S.jackpot=true;SFX.win();await banner('🎰 잭팟 판! 점수 ×2','gold',1200)}
   S.turn=first;S.busy=first===1;render();
-  say(S.opp.hi);if(first===1){aiTurn()}
+  if(PV.on)await banner(first===0?'내가 먼저!':S.opp.nick+' 먼저!','small',700);
+  say(S.opp.hi);if(first===1){oppTurn()}
 }
 
 async function playCard(p,card,pick){
   S.busy=true;S.sel=null;S.turn=p;
+  if(PV.on&&p===0)send('play',{c:card.id,p:pick?pick.id:null});
   const hand=S.hands[p],o=1-p;
   const before0=scoreOf(S.caps[p]);
   // 보너스패: 바로 먹고 한 장 더 받은 뒤 다시 냄
@@ -1119,7 +1140,7 @@ async function playCard(p,card,pick){
     const same=hand.filter(c=>c.m===H.m);
     if(same.length===3&&kH===1)bomb=true;
     else if(same.length>=3&&kH===0&&!S.shook[p].includes(H.m)){
-      const yes=p===0?await askShake(same):aiShake();
+      const yes=await decide(p,'shake',()=>askShake(same),()=>aiShake());
       if(yes){if(p===0)qHit('bomb');S.shakes[p]++;S.shook[p].push(H.m);const big=H.m===9||H.m===11;S.shakeX[p]*=big?4:2;S.shakeTxt[p].push((big?(H.m===11?'똥':'국진')+' 흔들기':'흔들기')+' ×'+(big?4:2));SFX.shake();vib([15,30,15]);speak('흔들어!');if(p===1)say('흔들어 볼까~?');await banner(big?(H.m===11?'💩 똥':'🌼 국진')+' 흔들기!\n점수 ×4':'흔들기!',big?'go':'gold',big?1000:700);render()}
     }
     if(bomb){
@@ -1154,13 +1175,13 @@ async function playCard(p,card,pick){
     if(H){
       if(bomb){take(...S.floor.filter(c=>c.m===H.m));steal++}
       else if(kH===1)take(H,HM[0]);
-      else if(kH===2){const ch=(pick&&HM.includes(pick))?pick:(p===0?await chooseCard(HM,'어느 패를 먹을까요?'):aiPick(HM,p));take(H,ch||HM[0])}
+      else if(kH===2){const ch=(pick&&HM.includes(pick))?pick:await decideCard(p,'pick',HM,()=>chooseCard(HM,'어느 패를 먹을까요?'),()=>aiPick(HM,p));take(H,ch||HM[0])}
       else if(kH===3){take(H,...HM);const own=S.ppukOwner[H.m]===p;steal+=own?2:1;ev.push(own?'자뻑':'뻑 먹기');delete S.ppukOwner[H.m]}
     }
     if(F){
       const FM=S.floor.filter(c=>c.m===F.m&&c!==F&&!took.includes(c));
       if(FM.length===1)take(F,FM[0]);
-      else if(FM.length===2){const ch=p===0?await chooseCard(FM,'뒤집은 패로 무엇을 먹을까요?'):aiPick(FM,p);take(F,ch||FM[0])}
+      else if(FM.length===2){const ch=await decideCard(p,'pickF',FM,()=>chooseCard(FM,'뒤집은 패로 무엇을 먹을까요?'),()=>aiPick(FM,p));take(F,ch||FM[0])}
       else if(FM.length===3){take(F,...FM);const own=S.ppukOwner[F.m]===p;steal+=own?2:1;ev.push(own?'자뻑':'뻑 먹기');delete S.ppukOwner[F.m]}
     }
   }
@@ -1213,7 +1234,7 @@ async function instBonus(p,name,pts){
 async function luckyRoulette(p){
   const opts=[['피 2장 뺏기','steal','#ff5a5a','피2'],['이기면 점수 ×2','x2','#ffd23f','×2'],['용돈 보너스','cash','#3ad07a','💰'],['피 1장 + 용돈','combo','#4aa8ff','🎁']];
   document.querySelectorAll('.banner').forEach(x=>x.remove());
-  const k=rnd(opts.length),R=opts[k];
+  const k=grnd(opts.length),R=opts[k];
   // 🎱 로또 추첨기
   const ov=document.createElement('div');ov.className='lotto';
   ov.innerHTML=`<div class="lt-t">🍀 링크의 행운 추첨!</div><div class="lt-glass"><div class="lt-shine"></div></div><div class="lt-pipe"></div><div class="lt-out"></div>`;
@@ -1266,7 +1287,7 @@ async function afterTurn(p,before0,again){
   const sc=now.total;
   if(sc>=S.target&&sc>S.lastGo[p]){
     const canGo=S.hands[p].length>0;
-    const go=canGo?(p===0?await askGoStop(sc):aiGo(sc)):false;
+    const go=canGo?await decide(p,'go',()=>askGoStop(sc),()=>aiGo(sc)):false;
     if(go){
       S.go[p]++;S.lastGo[p]=sc;if(p===0)qHit('go');SFX.go();vib([20,40,20]);speak(['','고!','투 고!','쓰리 고!','포 고!','파이브 고!'][S.go[p]]||'고!',1.4,1.2);
       if(p===1)say(S.go[1]===1?S.opp.go:pickT('go'));else say(pickT('meGo'));
@@ -1276,7 +1297,7 @@ async function afterTurn(p,before0,again){
       await banner('스톱!','stop',850);return endGame(p);
     }
   }
-  if(again){S.busy=p===1;render();if(p===1)return aiTurn();return}
+  if(again){S.busy=p===1;render();if(p===1)return oppTurn();return}
   nextTurn(p);
 }
 function nextTurn(p){
@@ -1284,7 +1305,7 @@ function nextTurn(p){
   if(!S.hands[0].length&&!S.hands[1].length)return nagari();
   let t=1-p;if(!S.hands[t].length)t=p;
   S.turn=t;S.busy=t===1;render();
-  if(t===1)aiTurn();
+  if(t===1)oppTurn();
 }
 async function aiTurn(){
   if(!S||S.over)return;
@@ -1400,9 +1421,9 @@ async function endGame(w,sp={}){
   if(!sp.chongtong&&!sp.ppuk3&&DB.cfg.event&&scoreOf(S.caps[L]).total===0){score+=3;lines.push(['완봉승 (상대 0점)','+3'])}
   if(!sp.chongtong&&!sp.ppuk3&&DB.cfg.event&&S.turnN[w]+S.turnN[L]<=8){score+=2;lines.push(['초스피드 승','+2'])}
   const total=score*mul.reduce((m,x)=>m*x[1],1);
-  DB.nagari=0;DB.first=w;
+  if(PV.on){PV.nag=0;PV.first=w===0?PV.me:PV.op}else{DB.nagari=0;DB.first=w}
   const pl=curP(),st=statOf(pl.id);st.g++;
-  {const wi=w===0?pl.id:S.opp.id,li=w===0?S.opp.id:pl.id;addRec({w:wi,l:li,h:pl.id,ts:Date.now()})}
+  {const wi=w===0?pl.id:S.opp.id,li=w===0?S.opp.id:pl.id;if(!PV.on||PV.me==='A')addRec({w:wi,l:li,h:pl.id,pv:PV.on?1:0,ts:Date.now()})}
   qHit('play');if(w===0){qHit('win');if(a.ng>=3)qHit('gwang');if(S.opp.boss)qHit('tutu');if(S.go[0]>=1)qHit('gowin')}
   if(w===0){st.w++;st.net+=total;st.best=Math.max(st.best,total);st.maxGo=Math.max(st.maxGo,S.go[0])}else{st.l++;st.net-=total}
   const d=new Date();
@@ -1414,7 +1435,7 @@ async function endGame(w,sp={}){
   BGM.stop();
   if(w===0){SFX.win();confetti();vib([30,50,30,50,80])}else SFX.lose();
   const html=`<div style="width:96px;height:96px;margin:-4px auto 0">${oppSVG(S.opp,w===0?'sad':'happy')}</div>
-   <h2>${w===0?'🎉 '+esc(pName(pl))+' 승리!':'😢 '+S.opp.nick+' 승리'}</h2><p style="margin:-4px 0 4px">“${w===0?S.opp.lose:S.opp.win}”</p>
+   <h2>${w===0?'🎉 '+esc(pName(pl))+' 승리!':'😢 '+S.opp.nick+' 승리'}</h2>${S.pvp?'<p style="margin:-4px 0 4px">📱 실시간 대전</p>':`<p style="margin:-4px 0 4px">“${w===0?S.opp.lose:S.opp.win}”</p>`}
    <div class="res-lines">${lines.map(([n,v])=>`<div><span>${n}</span><b>${typeof v==='number'?v+'점':v}</b></div>`).join('')||'<div><span>기본 점수</span><b>'+base+'점</b></div>'}</div>
    ${mul.length?`<div class="mult">${mul.map(([n,x])=>`<span>${n} ×${x}</span>`).join('')}</div>`:''}
    <div class="total ${w===0?'':'neg'}">${w===0?'+':'-'}${total}점</div>
@@ -1422,25 +1443,28 @@ async function endGame(w,sp={}){
   let d0=(w===0?total:-total)+S.inst[0]-S.inst[1];
   const charm=d0<0&&S.buff.charm;if(charm)d0=-Math.ceil(-d0/2);
   const instHtml=S.instLog.length?`<div class="res-lines">${S.instLog.map(([q,n,v])=>`<div><span>🎁 ${n} (${q===0?esc(pName(pl)):S.opp.nick})</span><b>${q===0?'+':'-'}${v}점어치</b></div>`).join('')}</div>`:'';
-  const mr=d0>=0?await settleMoney(pl.id,S.opp.id,d0):await settleMoney(S.opp.id,pl.id,-d0);
-  let ctBonus=0;if(sp.chongtong&&!isBoss(w===0?pl.id:S.opp.id)){const wid=w===0?pl.id:S.opp.id;ctBonus=5000;DB.money[wid]=moneyOf(wid)+ctBonus;await pushMoney([wid]);LG.req('matgo/log','POST',{w:wid,l:'총통 보너스',pts:0,pay:ctBonus,ts:Date.now()})}
+  window.__fin=[S.caps[0].map(c=>c.id).sort().join(','),S.caps[1].map(c=>c.id).sort().join(','),total,w];
+  const mr=await settleGame(d0);
+  let ctBonus=0;if(sp.chongtong&&!isBoss(w===0?pl.id:S.opp.id)&&(!PV.on||PV.me==='A')){const wid=w===0?pl.id:S.opp.id;ctBonus=5000;DB.money[wid]=moneyOf(wid)+ctBonus;await pushMoney([wid]);LG.req('matgo/log','POST',{w:wid,l:'총통 보너스',pts:0,pay:ctBonus,ts:Date.now()})}
   let extra=0;if(d0>0&&S.buff.choco&&mr.pay>0){extra=Math.round(mr.pay*.2);DB.money[pl.id]=moneyOf(pl.id)+extra;await pushMoney([pl.id])}
-  useUpBuffs(pl.id);
+  if(!PV.on)useUpBuffs(pl.id);
   let bestMsg='';if(w===0){const r=await recordBest(pl,total,S.opp.nick);if(r)bestMsg=`<div class="bestnote">${r}</div>`}
   const gain=d0>=0;
-  const moneyHtml=instHtml+`<div class="moneybox ${gain?'':'neg'}"><b>${gain?'💰 +':'💸 -'}${won(mr.pay)}</b><small>점당 ${won(DB.cfg.per)} × ${Math.abs(d0)}점${S.instLog.length?' (즉시 보너스 포함)':''}${charm?' · 🧧 부적으로 절반만!':''}${extra?` · 🍫 초코바 +${won(extra)}`:''}${ctBonus?` · 🎴 총통 보너스 +${won(ctBonus)}`:''}${mr.boss?' → 👹 일런마스크 보너스 ×${tutuX()}!':''}${mr.allin?' → 올인! (가진 돈 전부)':''}</small><small>${esc(pName(pl))} 지갑 ${won(moneyOf(pl.id))} ${S.opp.boss?'':` · ${S.opp.nick} ${won(moneyOf(S.opp.id))}`}${LG.online?'':' · 오프라인 저장'}</small></div>`;
+  const moneyHtml=instHtml+`<div class="moneybox ${gain?'':'neg'}"><b>${gain?'💰 +':'💸 -'}${won(mr.pay)}</b><small>점당 ${won(PV.on?PV.per:DB.cfg.per)} × ${Math.abs(d0)}점${S.instLog.length?' (즉시 보너스 포함)':''}${charm?' · 🧧 부적으로 절반만!':''}${extra?` · 🍫 초코바 +${won(extra)}`:''}${ctBonus?` · 🎴 총통 보너스 +${won(ctBonus)}`:''}${mr.boss?' → 👹 일런마스크 보너스 ×${tutuX()}!':''}${mr.allin?' → 올인! (가진 돈 전부)':''}</small><small>${esc(pName(pl))} 지갑 ${won(moneyOf(pl.id))} ${S.opp.boss?'':` · ${S.opp.nick} ${won(moneyOf(S.opp.id))}`}${LG.online?'':' · 오프라인 저장'}</small></div>`;
   if(mr.allin){SFX.bomb();await banner(gain?S.opp.nick+' 파산!':'올인…','red',900)}
   render();
-  const v=await modal(html+moneyHtml+bestMsg,[{t:'한 판 더!',v:'again'},{t:'홈으로',cls:'alt',v:'home'}]);
+  const v=await modal(html+moneyHtml+bestMsg,[{t:'한 판 더!',v:'again'},{t:PV.on?'나가기':'홈으로',cls:'alt',v:'home'}]);
+  if(PV.on)return pvAfter(v);
   if(v==='again')startGame();else goHome();
 }
 async function nagari(){
   if(S.over)return;S.over=true;S.busy=true;render();
-  addRec({a:curP().id,b:S.opp.id,draw:1,h:curP().id,ts:Date.now()});
-  qHit('play');DB.nagari=(DB.nagari||0)+1;useUpBuffs(curP().id);saveDB();BGM.stop();SFX.lose();
-  const nd=S.inst[0]-S.inst[1];let nmsg='';if(nd){const pl=curP();const r=nd>0?await settleMoney(pl.id,S.opp.id,nd):await settleMoney(S.opp.id,pl.id,-nd);nmsg=`<br>🎁 즉시 보너스 정산: ${nd>0?'+':'-'}${won(r.pay)}`}
+  if(!PV.on||PV.me==='A')addRec({a:curP().id,b:S.opp.id,draw:1,h:curP().id,pv:PV.on?1:0,ts:Date.now()});
+  qHit('play');let nx;if(PV.on){nx=++PV.nag}else{nx=DB.nagari=(DB.nagari||0)+1;useUpBuffs(curP().id)}saveDB();BGM.stop();SFX.lose();
+  const nd=S.inst[0]-S.inst[1];let nmsg='';if(nd){const r=await settleGame(nd);nmsg=`<br>🎁 즉시 보너스 정산: ${nd>0?'+':'-'}${won(r.pay)}`}
   await banner('나가리!','red',900);
-  const v=await modal(`<div style="width:90px;height:90px;margin:0 auto">${oppSVG(S.opp,'sad')}</div><h2>나가리 😅</h2><p>아무도 나지 못했어요.<br>다음 판은 점수 <b style="color:#f5c24a">×${2**DB.nagari}</b>!${nmsg}</p>`,[{t:'다음 판!',v:'again'},{t:'홈으로',cls:'alt',v:'home'}]);
+  const v=await modal(`<div style="width:90px;height:90px;margin:0 auto">${oppSVG(S.opp,'sad')}</div><h2>나가리 😅</h2><p>아무도 나지 못했어요.<br>다음 판은 점수 <b style="color:#f5c24a">×${2**nx}</b>!${nmsg}</p>`,[{t:'다음 판!',v:'again'},{t:PV.on?'나가기':'홈으로',cls:'alt',v:'home'}]);
+  if(PV.on)return pvAfter(v);
   if(v==='again')startGame();else goHome();
 }
 
@@ -1633,6 +1657,171 @@ async function openQuest(msg=''){
   SFX.bonus();if(v==='all'){SFX.win();confetti()}
   return openQuest(`${lab} 보상 +${won(gain)} 받았어요!`);
 }
+/* =====================================================
+   📱 실시간 대전 (가족 폰끼리) — 같은 씨앗으로 패를 섞고, 각자의 결정만 주고받아요
+   matgo/rooms/{번호}: host, guest, per, seed, cfg, m/{A|B}/q0001…, hb/{A|B}, end, res/{판}
+===================================================== */
+const PV={on:false};
+const PV_TIMEOUT=60000;
+const pvIdx=i=>PV.on&&PV.me==='B'?1-i:i;
+const qk=n=>'q'+String(n).padStart(4,'0');
+const pvUrl=p=>`${LEAGUE_URL}/derby/matgo/rooms/${PV.code}/${p}.json`;
+async function pvPut(p,v,tries=6){for(let i=0;i<tries;i++){try{const r=await fetch(pvUrl(p),{method:'PUT',cache:'no-store',headers:{'Content-Type':'application/json'},body:JSON.stringify(v)});if(r.ok)return true}catch(e){}if(i<tries-1)await sleep(500*(i+1))}return false}
+async function pvGet(p,q=''){const ac=window.AbortController?new AbortController():null,tm=setTimeout(()=>ac&&ac.abort(),6000);try{const r=await fetch(pvUrl(p)+q,{cache:'no-store',signal:ac?ac.signal:undefined});if(!r.ok)return undefined;return await r.json()}catch(e){return undefined}finally{clearTimeout(tm)}}
+function oppTurn(){return PV.on?remoteTurn():aiTurn()}
+function pvState(){
+  DB.cfg.bonus=PV.cfg.bonus??5;DB.cfg.event=PV.cfg.event!==false;DB.cfg.per=PV.per;
+  const o=oppOf(PV.oppId);S.opp=Object.assign({},o,{pvp:true,boss:false});S.pvp=true;S.vital=0;S.buff={};S.level=2;S.nagari=PV.nag;S.target=7;
+}
+function send(k,v){PV.out++;pvPut('m/'+PV.me+'/'+qk(PV.out),{k,v:v===undefined?null:v},12)}
+function recv(k){return new Promise(res=>{PV.waits.push({k,res});pvPump()})}
+function pvPump(){
+  while(PV.on&&PV.waits.length){const n=PV.inn+1,m=PV.buf[n];if(!m)break;PV.inn=n;delete PV.buf[n];const w=PV.waits.shift();
+    if(m.k==='bye'){PV.waits=[];if(!PV.endSeen){PV.endSeen=true;pvEnd({why:'bye'})}return}
+    if(m.k!==w.k){pvDesync(w.k,m.k);return}w.res(m.v===undefined?null:m.v)}
+}
+async function decide(p,k,local,ai){if(p===0){const v=await local();if(PV.on)send(k,v?1:0);return v}if(PV.on)return !!(await recv(k));return ai()}
+async function decideCard(p,k,cands,local,ai){if(p===0){const v=await local();if(PV.on)send(k,v?v.id:null);return v}if(PV.on){const id=await recv(k);return cands.find(c=>c.id===id)||cands[0]}return ai()}
+async function remoteTurn(){
+  if(!S||S.over)return;const gid=S.gid;S.busy=true;render();
+  const m=await recv('play');if(!S||S.gid!==gid||S.over||!m)return;
+  const c=S.hands[1].find(x=>x.id===m.c);if(!c)return pvDesync('play',m.c);
+  const pk=m.p?S.floor.find(x=>x.id===m.p):null;
+  await playCard(1,c,pk);
+}
+async function pvLoop(){
+  const id=PV.id;let i=0;
+  while(PV.on&&PV.id===id){
+    i++;const now=Date.now();if(now-PV.tick>8000)PV.hbAt=now;PV.tick=now;   // 내 앱이 잠들었다 깨면 상대 시간 다시 재기
+    const d=await pvGet('m/'+PV.op,`?orderBy=${encodeURIComponent('"$key"')}&startAt=${encodeURIComponent('"'+qk(PV.inn+1)+'"')}`);
+    if(!PV.on||PV.id!==id)return;
+    if(d&&typeof d==='object')for(const key in d){const n=+key.slice(1);if(n>PV.inn&&d[key])PV.buf[n]=d[key]}
+    pvPump();
+    if(!PV.waits.length&&PV.buf[PV.inn+1]&&PV.buf[PV.inn+1].k==='bye'&&!PV.endSeen){PV.endSeen=true;return pvEnd({why:'bye'})}
+    if(i%3===1){
+      const [hb,end]=await Promise.all([pvGet('hb/'+PV.op),pvGet('end')]);
+      if(!PV.on||PV.id!==id)return;
+      if(hb!==undefined&&hb!==null&&hb!==PV.hbVal){PV.hbVal=hb;PV.hbAt=Date.now()}
+      if(end&&end.by!==PV.me&&!PV.endSeen&&(end.g===PV.gno||(end.why==='bye'&&end.g===PV.gno-1))){PV.endSeen=true;return pvEnd(end)}
+      if(PV.waits.length&&Date.now()-PV.hbAt>PV_TIMEOUT)return pvOppLeft();
+      const wb=$('#pvWait');if(wb)wb.textContent=PV.waits.length&&Date.now()-PV.hbAt>15000?`📶 ${S&&S.opp?S.opp.nick:'상대'} 연결 확인 중… ${Math.max(0,Math.round((PV_TIMEOUT-(Date.now()-PV.hbAt))/1000))}초 뒤 기권승`:'';
+    }
+    await sleep(PV.waits.length?550:1000);
+  }
+}
+function pvStart(o){
+  Object.assign(PV,{on:true,id:Date.now()+Math.random(),code:o.code,me:o.me,op:o.me==='A'?'B':'A',oppId:o.oppId,per:+o.per||100,seed:o.seed|0,cfg:o.cfg||{},
+    out:0,inn:0,buf:{},waits:[],hbVal:null,hbAt:Date.now(),tick:Date.now(),gno:0,nag:0,first:'A',endSeen:false});
+  GR=mulberry32(PV.seed);
+  clearInterval(PV.hbT);const beat=()=>pvPut('hb/'+PV.me,Date.now(),1);beat();PV.hbT=setInterval(()=>{if(PV.on)beat()},4000);
+  if(!$('#pvWait')){const d=document.createElement('div');d.id='pvWait';document.body.appendChild(d)}
+  pvLoop();SFX.init();beginDeal();
+}
+function pvClose(){PV.on=false;clearInterval(PV.hbT);PV.waits=[];GR=Math.random;const wb=$('#pvWait');if(wb)wb.textContent=''}
+function closeModals(){document.querySelectorAll('.mbg,.lotto,.banner').forEach(x=>x.remove())}
+async function settleGame(d0){
+  const pl=curP();
+  if(!PV.on)return d0>=0?await settleMoney(pl.id,S.opp.id,d0):await settleMoney(S.opp.id,pl.id,-d0);
+  const g=PV.gno,per=PV.per,want=Math.abs(d0)*per;
+  if(PV.me==='A'){const r=d0>=0?await settleMoney(pl.id,S.opp.id,d0,per):await settleMoney(S.opp.id,pl.id,-d0,per);pvPut('res/'+g,{pay:r.pay,allin:!!r.allin});return r}
+  const key=String(g);
+  for(let i=0;i<14;i++){const r=await pvGet('res/'+key);if(r&&r.pay!=null){await syncDown();return {want,pay:r.pay,allin:!!r.allin}}await sleep(700)}
+  await syncDown();return {want,pay:want,allin:false};
+}
+async function pvAfter(v){
+  if(v!=='again'){pvBye();return goHome()}
+  send('again');
+  const wait=modal(`<div style="font-size:46px">⏳</div><h2>상대를 기다려요</h2><p>${esc(S?S.opp.nick:'상대')}님도 '한 판 더'를 누르면 바로 시작해요.</p>`,[{t:'그만하고 나가기',cls:'gray',v:'bye'}]);
+  const r=await Promise.race([wait,recv('again').then(()=>'go')]);
+  if(!PV.on)return;
+  if(r==='go'){closeModals();PV.gno++;PV.endSeen=false;GR=mulberry32(PV.seed+PV.gno*7919);return beginDeal()}
+  pvBye();goHome();
+}
+function pvBye(){if(PV.on){send('bye');pvPut('end',{g:PV.gno,why:'bye',by:PV.me},3);pvClose()}}
+async function pvForfeit(winLocal,why){   // winLocal: 0=내가 이김
+  const myId=curP().id,opId=S.opp.id,wId=winLocal===0?myId:opId,lId=winLocal===0?opId:myId;
+  const pts=Math.max(7,scoreOf(S.caps[winLocal]).total),g=PV.gno;
+  const ex=await pvGet('end');if(ex&&ex.g===g&&ex.by!==PV.me)return null;
+  const r=await settleMoney(wId,lId,pts,PV.per);
+  addRec({w:wId,l:lId,h:myId,pv:1,ff:why,ts:Date.now()});
+  await pvPut('end',{g,why,w:winLocal===0?PV.me:PV.op,by:PV.me,pay:r.pay,pts},4);
+  return r;
+}
+async function pvQuitAsk(){
+  const ok=await modal(`<h2>🏳️ 기권할까요?</h2><p>지금 나가면 <b style="color:#ff8a80">기권패</b>예요.<br>상대 점수(최소 7점) × 점당 ${won(PV.per)}을 내야 해요.</p>`,[{t:'계속하기',cls:'alt',v:0},{t:'기권하고 나가기',v:1}]);
+  if(!ok||!PV.on)return;
+  const gid=S&&S.gid;if(S){S.over=true;S.busy=true}
+  const r=await pvForfeit(1,'quit');pvClose();closeModals();
+  await modal(`<h2>🏳️ 기권했어요</h2><p>${r?'-'+won(r.pay):'정산 완료'}</p>`,[{t:'홈으로',v:1}]);goHome();
+}
+async function pvOppLeft(){
+  const nick=S&&S.opp?S.opp.nick:'상대';
+  if(S&&!S.over){S.over=true;S.busy=true;const r=await pvForfeit(0,'leave');pvClose();closeModals();SFX.win();confetti();
+    await modal(`<div style="font-size:50px">📴</div><h2>${esc(nick)} 연결이 끊겼어요</h2><p>1분 넘게 응답이 없어서 <b style="color:#7fe0b5">기권승</b>이에요!<br>${r?'<b style="font-size:20px;color:#f5c24a">+'+won(r.pay)+'</b>':''}</p>`,[{t:'홈으로',v:1}]);
+  }else{pvClose();closeModals();await modal(`<h2>${esc(nick)}님이 나갔어요</h2><p>다음에 또 붙어요!</p>`,[{t:'홈으로',v:1}])}
+  goHome();
+}
+async function pvEnd(e){
+  const nick=S&&S.opp?S.opp.nick:'상대';pvClose();closeModals();if(S){S.over=true;S.busy=true}
+  if(e.why==='bye')await modal(`<h2>👋 ${esc(nick)}님이 나갔어요</h2><p>다음에 또 붙어요!</p>`,[{t:'홈으로',v:1}]);
+  else if(e.w===PV.me){SFX.win();confetti();await modal(`<div style="font-size:50px">🏳️</div><h2>${esc(nick)}님이 기권했어요!</h2><p><b style="color:#7fe0b5">기권승</b> ${e.pay!=null?'<b style="font-size:20px;color:#f5c24a">+'+won(e.pay)+'</b>':''}</p>`,[{t:'홈으로',v:1}])}
+  else{SFX.lose();await modal(`<div style="font-size:50px">📴</div><h2>연결이 끊겨서 패배했어요</h2><p>1분 넘게 앱을 나가 있어서 기권패로 처리됐어요.<br>${e.pay!=null?'<b style="color:#ff8a80">-'+won(e.pay)+'</b>':''}</p>`,[{t:'홈으로',v:1}])}
+  await syncDown();goHome();
+}
+async function pvDesync(want,got){
+  console.error('PvP desync',want,got);pvPut('end',{g:PV.gno,why:'bye',by:PV.me},3);pvClose();closeModals();
+  await modal('<h2>😵 연결이 꼬였어요</h2><p>두 폰의 판이 어긋나서 이번 판은 무효로 할게요.<br>다시 방을 만들어 주세요.</p>',[{t:'홈으로',v:1}]);goHome();
+}
+/* ---------- 방 만들기 · 들어가기 ---------- */
+async function openPvp(){
+  if(!DB.meLocked){await pickMe(true);if(!DB.meLocked)return}
+  SFX.init();await syncDown();
+  if(moneyOf(DB.cur)<=0)return modal(`<h2>💸 돈이 없어요!</h2><p>관리인에게 충전을 부탁하세요.</p>`,[{t:'알겠어요',v:1}]);
+  const v=await modal(`<div style="font-size:46px">📱⚔️📱</div><h2>가족과 실시간 대전</h2><p>진짜 사람끼리 한 판!<br>방을 만들어 초대하거나, 받은 방 번호로 들어가세요.</p>`,[{t:'🏠 방 만들기',v:'make'},{t:'🔑 방 번호로 들어가기',cls:'alt',v:'join'},{t:'닫기',cls:'gray',v:null}],{dismiss:null});
+  if(v==='make')return pvMake();if(v==='join')return pvJoin();
+}
+async function pvMake(){
+  const per=await modal(`<h2>💰 판돈 정하기</h2><p>이번 대전은 점당 얼마로 칠까요?</p>`,[100,500,1000,3000].map(x=>({t:'점당 '+won(x),v:x})).concat([{t:'취소',cls:'gray',v:null}]),{dismiss:null});
+  if(!per)return;
+  let code=null;
+  for(let i=0;i<8&&!code;i++){const c=String(1000+rnd(9000)),r=await LG.req('matgo/rooms/'+c);if(r===null)return modal('<h2>📶 서버 연결이 안 돼요</h2><p>인터넷 연결을 확인해 주세요.</p>',[{t:'확인',v:1}]);if(!r.host||Date.now()-(r.ts||0)>3*3600e3)code=c}
+  if(!code)return;
+  const seed=(Math.random()*2147483647)|0,cfg={bonus:DB.cfg.bonus??5,event:DB.cfg.event!==false};
+  if(!(await LG.req('matgo/rooms/'+code,'PUT',{host:DB.cur,per,seed,cfg,ts:Date.now()})))return modal('<h2>📶 방을 못 만들었어요</h2><p>잠시 뒤 다시 해 주세요.</p>',[{t:'확인',v:1}]);
+  const url=location.origin+location.pathname+'?room='+code,me=curP();
+  const shareTxt=`🎴 길쭈기 맞고 한 판 붙자!\n${pName(me)}의 방 번호: ${code} (점당 ${won(per)})\n앱에서 '실시간 대전 → 방 번호로 들어가기'에 넣거나 링크를 눌러요\n${url}`;
+  let guest=null;
+  const v=await modal(`<h2>🏠 방을 만들었어요</h2><p>점당 <b style="color:#f5c24a">${won(per)}</b> · 상대에게 방 번호를 알려 주세요</p><div class="pvcode">${code}</div><p id="pvSt" style="font-size:13px">⏳ 상대가 들어오길 기다리는 중…</p>`,
+    [{t:'📤 카톡으로 초대',keep:true,fn:async()=>{try{if(navigator.share)await navigator.share({text:shareTxt});else{await navigator.clipboard.writeText(shareTxt);$('#pvSt').textContent='📋 초대 글을 복사했어요! 카톡에 붙여 넣어 주세요'}}catch(e){}}},{t:'취소',cls:'gray',v:null}],
+    {dismiss:null,onOpen:(bg,close)=>{(async()=>{for(let i=0;i<900&&document.body.contains(bg);i++){const g=await LG.req('matgo/rooms/'+code+'/guest');if(typeof g==='string'&&g){guest=g;return close('go')}await sleep(1200)}})()}});
+  if(v!=='go'||!guest){LG.req('matgo/rooms/'+code,'DELETE');return}
+  await syncDown();
+  const go=oppOf(guest);
+  if(moneyOf(guest)<=0){LG.req('matgo/rooms/'+code,'DELETE');return modal(`<h2>😵 ${esc(go.nick)} 파산!</h2><p>상대 지갑이 비어서 칠 수 없어요.</p>`,[{t:'확인',v:1}])}
+  await banner(`⚔️ ${go.nick} 입장!`,'gold',900);
+  pvStart({code,me:'A',oppId:guest,per,seed,cfg});
+}
+async function pvJoin(pre){
+  let code=pre;
+  if(!code)code=await modal(`<h2>🔑 방 번호 넣기</h2><p>받은 방 번호 4자리를 넣어 주세요</p><input id="pvIn" class="pvin" inputmode="numeric" pattern="[0-9]*" maxlength="4" autocomplete="off" placeholder="0000">`,
+    [{t:'들어가기',keep:true,fn:(bg,close)=>{const v=bg.querySelector('#pvIn').value.replace(/\D/g,'');if(v.length===4)close(v);else bg.querySelector('#pvIn').focus()}},{t:'취소',cls:'gray',v:null}],{dismiss:null,onOpen:bg=>setTimeout(()=>bg.querySelector('#pvIn').focus(),150)});
+  if(!code)return;
+  if(!DB.meLocked){await pickMe(true);if(!DB.meLocked)return}
+  const r=await LG.req('matgo/rooms/'+code);
+  const bad=t=>modal(`<h2>${t}</h2>`,[{t:'확인',v:1}]);
+  if(r===null)return bad('📶 서버 연결이 안 돼요');
+  if(!r.host||Date.now()-(r.ts||0)>3*3600e3)return bad('🤔 없는 방 번호예요');
+  if(r.host===DB.cur)return bad('내가 만든 방이에요 😅');
+  if(r.guest&&r.guest!==DB.cur)return bad('🚪 이미 시작된 방이에요');
+  await syncDown();
+  if(moneyOf(DB.cur)<=0)return bad('💸 내 지갑이 비었어요');
+  const h=oppOf(r.host);
+  const ok=await modal(`<div style="width:80px;height:80px;margin:0 auto">${oppSVG(h)}</div><h2>${esc(h.nick)}님의 방</h2><p>점당 <b style="color:#f5c24a">${won(r.per)}</b>로 실시간 대전해요.<br><small style="opacity:.75">중간에 1분 넘게 앱을 나가면 기권패예요</small></p>`,[{t:'⚔️ 들어가기',v:1},{t:'취소',cls:'gray',v:0}]);
+  if(!ok)return;
+  if(!(await LG.req('matgo/rooms/'+code+'/guest','PUT',DB.cur)))return bad('📶 입장 실패, 다시 해 주세요');
+  pvStart({code,me:'B',oppId:r.host,per:r.per,seed:r.seed,cfg:r.cfg});
+}
+
 /* ---------- ☕ 커피 이벤트 ---------- */
 const COFFEE_TIERS=[{cost:1000000,cups:1},{cost:3000000,cups:2}],COFFEE_MAX=2;
 async function myClaims(){const d=await LG.req('matgo/claims');const all=d?Object.entries(d).map(([k,c])=>({k,...c})):(DB.claims||[]);return all.filter(c=>c.pid===DB.cur)}
@@ -1855,11 +2044,12 @@ async function openSettings(){
     [{t:'닫기',v:1}],{dismiss:0,onOpen:bg=>bg.addEventListener('click',e=>{const b=e.target.closest('.sw');if(!b)return;const k=b.dataset.k;DB.set[k]=!DB.set[k];b.classList.toggle('on',DB.set[k]);saveDB();if(k==='hint'||k==='stamp'){clearSvgCache();fanArt();S&&render()}if(k==='sound'||k==='bgm'){SFX.init();if(DB.set.sound&&DB.set.bgm&&S)BGM.start();else BGM.stop();if(DB.set.sound)SFX.select()}})});
 }
 async function openMenu(){
-  const prev=S.busy;S.busy=true;
+  const prev=S.busy;if(!PV.on)S.busy=true;
   const v=await modal('<h2>⏸ 잠깐 멈춤</h2>',[{t:'계속',v:'go'},{t:'설정',cls:'alt',v:'set'},{t:'규칙',cls:'alt',v:'rule'},{t:'그만',cls:'gray',v:'quit'}],{dismiss:'go'});
-  S.busy=prev;
+  if(!PV.on)S.busy=prev;
   if(v==='set'){await openSettings();return openMenu()}
   if(v==='rule'){await openRules();return openMenu()}
+  if(v==='quit'&&PV.on)return pvQuitAsk();
   if(v==='quit'){const ok=await modal('<h2>그만할까요?</h2><p>진행 중인 판은 기록되지 않아요.</p>',[{t:'계속하기',cls:'alt',v:0},{t:'홈으로',v:1}]);if(ok)return goHome()}
   S&&render();
 }
@@ -1885,6 +2075,7 @@ $('#home').addEventListener('click',async e=>{
   if(e.target.closest('#top3')){SFX.init();SFX.select();return pickMe()}
   if(e.target.closest('#meBtn')){SFX.init();SFX.select();return pickMe()}
   if(e.target.closest('#coffeeBtn'))return openCoffee();
+  if(e.target.closest('#pvpBtn'))return openPvp();
   if(e.target.closest('#cmtBtn'))return openComment();
   if(e.target.closest('#spinBtn'))return openSpin();
   if(e.target.closest('#ver1')){const n=Date.now();adminTaps=(n-adminT<1500)?adminTaps+1:1;adminT=n;if(adminTaps>=5){adminTaps=0;return openAdmin()}return}
@@ -1947,6 +2138,7 @@ loadDB();
 $('#ver1').textContent=VER;$('#ver2').textContent=VER;
 fanArt();renderHome();setupPWA();homeLine();startHomeLines();renderBestBox();syncPlays().then(renderHome);syncDown().then(async ok=>{if(ok){renderHome();if(DB.meLocked)await checkAwards();renderBestBox()}if(!DB.meLocked)pickMe(true)});
 document.addEventListener('visibilitychange',()=>{if(!document.hidden&&$('#home').classList.contains('on'))syncDown().then(ok=>{if(ok){renderHome();renderBestBox()}})});
+{const rq=new URLSearchParams(location.search).get('room');if(rq&&/^\d{4}$/.test(rq)){try{history.replaceState(null,'',location.pathname)}catch(e){}setTimeout(()=>pvJoin(rq),900)}}
 setInterval(()=>{if(document.hidden||!$('#home').classList.contains('on')||document.querySelector('.mbg'))return;Promise.all([syncDown(),loadRecs()]).then(([ok])=>{if(ok){renderHome();renderBestBox()}})},20000);
 document.addEventListener('gesturestart',e=>e.preventDefault());
 document.addEventListener('dblclick',e=>e.preventDefault(),{passive:false});
