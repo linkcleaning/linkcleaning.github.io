@@ -1,0 +1,17 @@
+{
+  "id": "./?app=car-ledger-v3",
+  "name": "스마트차계부",
+  "short_name": "스마트차계부",
+  "description": "주유·정비·기타 지출 기록과 실연비, 한 달 요약",
+  "start_url": "./?home=v4",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#F4F1EA",
+  "theme_color": "#0E5A60",
+  "lang": "ko",
+  "icons": [
+    { "src": "car-icon-192.png", "sizes": "192x192", "type": "image/png" },
+    { "src": "car-icon-512.png", "sizes": "512x512", "type": "image/png" },
+    { "src": "car-icon-maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ]
+}
