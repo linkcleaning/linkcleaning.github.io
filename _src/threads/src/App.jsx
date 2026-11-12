@@ -3,8 +3,9 @@ import {
   THEMES, DEFAULT_APPS, todayKey, todayLabel, computeRules,
   performanceSummary, fullText, generatePost,
 } from './lib.js'
+import CoupangMode from './CoupangMode.jsx'
 
-// v18 — 같은 글 반복 방지(뽑기만 한 글도 피함, 글마다 랜덤 각도) · v17 — 링크 앱 스타일 가이드(카드로 꽉 채우기·큰 숫자·상태 점) 적용
+// v19 — 쿠팡 모드 탭 추가(쿠팡파트너스 링크 → 본문 + 첫 댓글, 스레드에서 바로 열기) · v18 — 같은 글 반복 방지(뽑기만 한 글도 피함, 글마다 랜덤 각도) · v17 — 링크 앱 스타일 가이드(카드로 꽉 채우기·큰 숫자·상태 점) 적용
 const DEFAULT_PROFILE = `제주에 사는 사장님 (스레드는 회사 계정이 아니라 개인 계정)
 - 직업: 제주에서 청소 일 12년째, 2016년에 청소 회사 '링크클린' 창업 (제주시·서귀포)
 - 별장·세컨하우스 관리, 고소작업·외벽청소도 함
@@ -43,6 +44,7 @@ export default function App() {
   const [error, setError] = useState('')
   const [toast, setToast] = useState('')
   const [sheet, setSheet] = useState(null)
+  const [mode, setMode] = useState(() => load('td_mode', 'daily'))
 
   const posted = history.filter(h => h.posted)
   const { label: dateLabel } = todayLabel()
@@ -54,6 +56,7 @@ export default function App() {
   useEffect(() => save('td_search', useSearch), [useSearch])
   useEffect(() => save('td_apps', apps), [apps])
   useEffect(() => save('td_history', history), [history])
+  useEffect(() => save('td_mode', mode), [mode])
   useEffect(() => {
     if (!busy) return
     const t = setInterval(() => setTick(x => x + 1), 2500)
@@ -125,7 +128,7 @@ export default function App() {
         <header className="flex items-center justify-between px-1 pb-3 pt-1">
           <div>
             <p className="text-[13px] font-medium text-muted">{dateLabel}</p>
-            <h1 className="font-num text-[26px] leading-tight text-deep">오늘의 스레드<span className="text-accent">.</span> <span className="align-middle font-body text-[10px] font-medium text-muted">v18</span></h1>
+            <h1 className="font-num text-[26px] leading-tight text-deep">오늘의 스레드<span className="text-accent">.</span> <span className="align-middle font-body text-[10px] font-medium text-muted">v19</span></h1>
           </div>
           <div className="flex gap-1.5">
             <HeadBtn onClick={reset}>초기화</HeadBtn>
@@ -134,8 +137,22 @@ export default function App() {
           </div>
         </header>
 
+        {/* 모드 탭 */}
+        <div className="grid grid-cols-2 gap-1 rounded-full bg-card p-1">
+          {[['daily', '오늘의 글'], ['coupang', '쿠팡 글']].map(([k, l]) => (
+            <button key={k} onClick={() => setMode(k)}
+              className={`rounded-full py-2.5 text-[15px] font-bold transition ${mode === k ? 'bg-deep text-white' : 'text-muted'}`}>{l}</button>
+          ))}
+        </div>
+
+        {mode === 'coupang' && (
+          <CoupangMode apiKey={apiKey} handle={handle} copy={copy}
+            needKey={() => { setSheet('settings'); flash('먼저 Claude API 키를 넣어 주세요') }} />
+        )}
+
+        {mode === 'daily' && <>
         {/* 대표 카드 + 숫자 카드 */}
-        <section className="grid grid-cols-2 gap-2">
+        <section className="mt-3 grid grid-cols-2 gap-2">
           <div className="col-span-2 rounded-[22px] bg-brand p-4 text-white">
             <div className="flex items-start justify-between">
               <p className="text-xs font-semibold text-white/85">오늘 올린 글</p>
@@ -253,10 +270,11 @@ export default function App() {
             <p className="mt-1 break-keep text-[13px] text-muted">제주 사는 이야기 · 생활 꿀팁 · AI 앱 이야기 중 하나로 500자 안에 맞춰 드려요.</p>
           </div>
         )}
+        </>}
       </div>
 
       {/* 하단 고정 버튼 */}
-      <div className="fixed inset-x-0 bottom-0 bg-gradient-to-t from-paper via-paper/95 to-transparent px-3 pb-[max(env(safe-area-inset-bottom),14px)] pt-6">
+      {mode === 'daily' && <div className="fixed inset-x-0 bottom-0 bg-gradient-to-t from-paper via-paper/95 to-transparent px-3 pb-[max(env(safe-area-inset-bottom),14px)] pt-6">
         <div className="mx-auto max-w-md">
           <button onClick={generate} disabled={busy}
             className={`w-full rounded-full bg-accent py-4 font-num text-[19px] text-ink transition active:scale-[.98] disabled:opacity-90 ${!post && !busy ? 'pulse-ring' : ''}`}>
@@ -264,7 +282,7 @@ export default function App() {
               : post ? '다른 글로 다시 생성' : '오늘의 글 생성'}
           </button>
         </div>
-      </div>
+      </div>}
 
       {sheet === 'settings' && (
         <Sheet title="설정" onClose={() => setSheet(null)}>

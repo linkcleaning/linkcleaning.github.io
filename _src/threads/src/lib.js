@@ -632,4 +632,7 @@ export {
   ie as fullText,
   S as toMarkdown,
   se as generatePost,
+  C as callClaude,
+  oe as textOf,
+  x as parseJson,
 };
