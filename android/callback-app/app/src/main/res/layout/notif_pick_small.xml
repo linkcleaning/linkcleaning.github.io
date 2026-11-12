@@ -1,8 +1,0 @@
-<?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="horizontal" android:paddingTop="4dp">
-    <TextView android:id="@+id/p1" android:layout_width="0dp" android:layout_height="40dp" android:layout_weight="1" android:background="@drawable/pick_btn" android:gravity="center" android:textColor="#075985" android:textSize="13sp" android:textStyle="bold" android:layout_marginEnd="4dp" />
-    <TextView android:id="@+id/p2" android:layout_width="0dp" android:layout_height="40dp" android:layout_weight="1" android:background="@drawable/pick_btn" android:gravity="center" android:textColor="#075985" android:textSize="13sp" android:textStyle="bold" android:layout_marginEnd="4dp" />
-    <TextView android:id="@+id/p3" android:layout_width="0dp" android:layout_height="40dp" android:layout_weight="1" android:background="@drawable/pick_btn" android:gravity="center" android:textColor="#075985" android:textSize="13sp" android:textStyle="bold" android:layout_marginEnd="4dp" />
-    <TextView android:id="@+id/p4" android:layout_width="0dp" android:layout_height="40dp" android:layout_weight="1" android:background="@drawable/pick_btn" android:gravity="center" android:textColor="#075985" android:textSize="13sp" android:textStyle="bold" />
-</LinearLayout>

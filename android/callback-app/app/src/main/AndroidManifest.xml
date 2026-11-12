@@ -67,17 +67,6 @@
         </receiver>
 
         <receiver
-            android:name=".PickReceiver"
-            android:exported="false" />
-
-        <activity
-            android:name=".PickActivity"
-            android:exported="false"
-            android:excludeFromRecents="true"
-            android:taskAffinity=""
-            android:theme="@style/Theme.Material3.Light.Dialog" />
-
-        <receiver
             android:name=".InstallReceiver"
             android:exported="false" />
 
