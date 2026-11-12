@@ -94,7 +94,7 @@ https://www.instagram.com/linkcleaning
     const val DEFAULT_SUBJECT = ""  // 제목 없음
     const val MAX_IMAGES = 3
     private const val KEY_SEED_VER = "seed_ver"
-    private const val SEED_VER = 16
+    private const val SEED_VER = 17
 
     const val KEY_ENABLED = "enabled"
     const val KEY_MESSAGE = "message"
@@ -122,6 +122,8 @@ https://www.instagram.com/linkcleaning
     const val KEY_USE_HOME = "sign_use_home"
     const val KEY_USE_MAG = "sign_use_mag"
     const val KEY_SAFE_TEXT = "safe_text"
+    const val KEY_PICK_MODE = "pick_mode"
+    const val KEY_PICK_SECS = "pick_secs"
     const val KEY_ACC_BANK = "acc_bank"
     const val KEY_ACC_NUM = "acc_num"
     const val KEY_ACC_HOLDER = "acc_holder"
@@ -137,7 +139,7 @@ https://www.instagram.com/linkcleaning
     val BACKUP_KEYS = listOf(
         KEY_BLACKLIST, KEY_SEND_INCOMING, KEY_SEND_MISSED, KEY_MOBILE_ONLY, KEY_COOLDOWN_H, KEY_DAILY_LIMIT,
         KEY_SELECTED, KEY_AUTO_IN, KEY_AUTO_MISS, KEY_AUTO_OUT, KEY_SEND_OUTGOING, KEY_SKIP_CONTACTS, KEY_TITLE_ON, KEY_SIGN_PHONE, KEY_SIGN_KAKAO, KEY_SIGN_HOME,
-        KEY_SIGN_MAG, KEY_USE_PHONE, KEY_USE_KAKAO, KEY_USE_HOME, KEY_USE_MAG, KEY_SAFE_TEXT, KEY_SIGN_TEXT, KEY_ACC_BANK, KEY_ACC_NUM, KEY_ACC_HOLDER, KEY_ACC_PHONE, "templates"
+        KEY_SIGN_MAG, KEY_USE_PHONE, KEY_USE_KAKAO, KEY_USE_HOME, KEY_USE_MAG, KEY_SAFE_TEXT, KEY_SIGN_TEXT, KEY_ACC_BANK, KEY_ACC_NUM, KEY_ACC_HOLDER, KEY_ACC_PHONE, KEY_PICK_MODE, KEY_PICK_SECS, "templates"
     )
     private const val SENT_PREFIX = "sent_"
 
@@ -307,6 +309,12 @@ https://www.instagram.com/linkcleaning
             e.apply()
             if (sp.getString(Templates.KEY, null) != null) Templates.save(c, Templates.load(c).map { it.copy(body = Templates.fixDepositor(it.body)) })
         }
+        // v17: 문의 유형별 견적 안내 문자 4종 추가
+        if (sp.getInt(KEY_SEED_VER, 0) < 17 && sp.getString(Templates.KEY, null) != null) {
+            val list = Templates.load(c).toMutableList()
+            val add = Templates.defaults().filter { d -> d.id.startsWith("t_q_") && list.none { it.id == d.id } }
+            if (add.isNotEmpty()) { list.addAll(1.coerceAtMost(list.size), add); Templates.save(c, list) }
+        }
         sp.edit().putInt(KEY_SEED_VER, SEED_VER).commit()
     }
 
@@ -321,6 +329,10 @@ https://www.instagram.com/linkcleaning
     fun accHolder(c: Context) = sp(c).getString(KEY_ACC_HOLDER, null)?.takeIf { it.isNotBlank() } ?: "한승우(링크클린)"
     fun accPhone(c: Context) = sp(c).getString(KEY_ACC_PHONE, null) ?: "064-763-4545"
     fun accountText(c: Context) = "[링크클린] 입금 계좌 안내\n${accBank(c)} ${accNum(c)}\n예금주 ${accHolder(c)}"
+
+    /** 통화 끝나면 문자 고르기 알림 (켜짐: 고를 시간 동안 기다렸다가 기본 문자) */
+    fun pickMode(c: Context) = sp(c).getBoolean(KEY_PICK_MODE, true)
+    fun pickSeconds(c: Context) = sp(c).getInt(KEY_PICK_SECS, 60)
 
     fun titleOn(c: Context) = sp(c).getBoolean(KEY_TITLE_ON, false)
     /** 아이폰 보정 (이모지 빼고 보내기) – 기본 켜짐 */
@@ -403,6 +415,11 @@ https://www.instagram.com/linkcleaning
         val list = history(c).toMutableList()
         list.add(0, r)
         saveHistory(c, list.take(300))
+    }
+
+    @Synchronized
+    fun updateRecord(c: Context, id: Long, status: String, tpl: String?) {
+        saveHistory(c, history(c).map { if (it.id == id) it.copy(status = status, tpl = tpl ?: it.tpl) else it })
     }
 
     @Synchronized

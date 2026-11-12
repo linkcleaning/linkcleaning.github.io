@@ -172,6 +172,12 @@ object CallbackProcessor {
             return
         }
         Prefs.markSent(c, num, now) // 발송 전에 먼저 기록 → 동시에 두 번 나가는 것 방지
+        // 통화한 전화(수신·발신)는 '어떤 문자 보낼까요?' 알림으로 고르게 함
+        if (!force && Prefs.pickMode(c) && (kind == KIND_IN || kind == KIND_OUT)) {
+            Prefs.addHistory(c, SendRecord(id, now, num, kind, "문자 고르는 중", tpl.name, true))
+            main.post { CallPicker.show(c, num, id, kind, tpl.id) }
+            return
+        }
         Prefs.addHistory(c, SendRecord(id, now, num, kind, "발송중", tpl.name, true))
         Prefs.setLastEvent(c, "$kind $who → [${tpl.name}] 보내는 중")
         val text = Compose.build(c, tpl)

@@ -577,7 +577,8 @@ class MainActivity : AppCompatActivity() {
                 "· 받은 전화 → " + (if (Prefs.sendIncoming(this)) "[${tin?.name ?: "-"}]" else "보내지 않음") + "\n" +
                 "· 부재중 전화 → " + (if (Prefs.sendMissed(this)) "[${tmiss?.name ?: "-"}]" else "보내지 않음") + "\n" +
                 "· 내가 건 전화 → " + (if (Prefs.sendOutgoing(this)) "[${Templates.find(this, Prefs.autoOutId(this))?.name ?: "-"}]" else "보내지 않음") + "\n" +
-                "· 같은 번호는 ${CallbackProcessor.periodLabel(Prefs.cooldownHours(this))} 안에 다시 안 보내요"
+                "· 같은 번호는 ${CallbackProcessor.periodLabel(Prefs.cooldownHours(this))} 안에 다시 안 보내요" +
+                (if (Prefs.pickMode(this)) "\n· 통화 후 알림에서 문자 고르기 (${Prefs.pickSeconds(this)}초 뒤 기본 문자)" else "")
         } else "켜 두면 전화(수신·부재중·발신)가 끝날 때마다\n아래 버튼을 누르지 않아도 문자가 자동으로 나가요"
         todayText.text = "${Prefs.todaySuccess(this)}건"
         val ev = Prefs.lastEvent(this)
@@ -1364,6 +1365,18 @@ class MainActivity : AppCompatActivity() {
         autoRow("내가 건 전화", Prefs.KEY_SEND_OUTGOING, Prefs.sendOutgoing(this), Prefs.KEY_AUTO_OUT, Prefs.autoOutId(this))
         ac.addView(ui.text("※ 내가 건 전화는 상대가 받아서 통화가 된 경우에만 보내요.", 12f, Col.S500).apply { setPadding(ui.dp(6), 0, 0, ui.dp(6)) })
         ac.addView(ui.check("주소록에 저장된 번호(가족·지인·거래처)는 빼기", Prefs.skipContacts(this)) { sp.edit().putBoolean(Prefs.KEY_SKIP_CONTACTS, it).apply() })
+        val pk = ui.col().apply { background = ui.rect(Col.AMBER50, 16f, Col.AMBER300, 1f); setPadding(ui.dp(10), ui.dp(4), ui.dp(10), ui.dp(10)) }
+        pk.addView(ui.check("📋 통화 끝나면 문자 골라서 보내기", Prefs.pickMode(this)) { sp.edit().putBoolean(Prefs.KEY_PICK_MODE, it).apply(); renderAuto() })
+        pk.addView(ui.text("받은 전화·내가 건 전화가 끝나면 알림에 [입주·이사] [유품정리] [쓰레기집] [상가·사무실] 버튼이 떠요. 안 고르면 아래 시간 뒤 기본 문자가 나가요. (부재중은 바로 발송)", 12f, Col.S600).apply { setPadding(ui.dp(8), 0, 0, ui.dp(8)) })
+        val pr = ui.row()
+        listOf(30, 60, 120).forEachIndexed { i, sec ->
+            val on = Prefs.pickSeconds(this) == sec
+            pr.addView(ui.button(if (sec < 60) "${sec}초" else "${sec / 60}분", if (on) Col.B700 else Col.WHITE, if (on) Col.WHITE else Col.S600, 40, 14f, if (on) 0 else Col.S200, 12f) {
+                sp.edit().putInt(Prefs.KEY_PICK_SECS, sec).apply(); renderSettings()
+            }, ui.lp(0, ui.WRAP, 1f, end = if (i < 2) 6 else 0))
+        }
+        pk.addView(pr)
+        ac.addView(pk, ui.lp(bottom = 8))
         ac.addView(ui.check("휴대폰 번호(010 등)에만 보내기", Prefs.mobileOnly(this)) { sp.edit().putBoolean(Prefs.KEY_MOBILE_ONLY, it).apply() })
         val lr = ui.row().apply { setPadding(ui.dp(4), ui.dp(4), 0, 0) }
         lr.addView(ui.text("하루 최대 자동 발송", 15f, Col.S700, true), ui.lp(0, ui.WRAP, 1f))
