@@ -3,13 +3,13 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>넘김 · 미니멀 만화 뷰어</title>
+<title>추억의만화빵</title>
 <meta name="description" content="ZIP·CBZ 만화와 사진을 가볍게 넘겨 보는 미니멀 뷰어">
 <meta name="theme-color" content="#0B3B40">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<meta name="apple-mobile-web-app-title" content="넘김">
+<meta name="apple-mobile-web-app-title" content="추억의만화빵">
 
 <!-- 글꼴 · Tailwind · JSZip (모두 CDN, 서비스워커가 한 번 받은 뒤 오프라인용으로 보관) -->
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/sun-typeface/SUIT@2/fonts/variable/woff2/SUIT-Variable.css">
@@ -54,7 +54,7 @@
     var here = location.href.split('#')[0].split('?')[0];
     var scope = new URL('./', here).href;
     var manifest = {
-      name: '넘김 - 미니멀 만화 뷰어', short_name: '넘김', lang: 'ko',
+      name: '추억의만화빵 - 만화 뷰어', short_name: '추억의만화빵', lang: 'ko',
       start_url: here, scope: scope, id: scope, display: 'standalone', orientation: 'any',
       background_color: '#F4F1EA', theme_color: '#0B3B40',
       icons: [
@@ -186,6 +186,20 @@
   .hero-bar div { height:100%; background:#F2964F; border-radius:999px; }
   .hero-cover { width:86px; flex:none; border-radius:10px; overflow:hidden; background:rgba(255,255,255,.12); align-self:center; aspect-ratio:3/4; }
   .hero-cover img { width:100%; height:100%; object-fit:cover; display:block; }
+  #readingSec .sec { margin-top:18px; }
+  .sec-hint { font-size:12px; color:var(--muted); }
+  .rail { display:flex; gap:8px; overflow-x:auto; scroll-snap-type:x mandatory; scroll-padding:0 12px; -webkit-overflow-scrolling:touch; margin:0 -12px; padding:0 12px 4px; scrollbar-width:none; }
+  .rail::-webkit-scrollbar { display:none; }
+  .rd { flex:none; width:128px; scroll-snap-align:start; background:#fff; border-radius:14px; padding:6px 6px 10px; text-align:left; }
+  .rd:active { transform:scale(.98); }
+  .rd .cv { position:relative; aspect-ratio:3/4; border-radius:10px; overflow:hidden; background:#EDE8DE; }
+  .rd .cv img { width:100%; height:100%; object-fit:cover; display:block; }
+  .rd .pct { position:absolute; left:6px; bottom:6px; font-family:"Black Han Sans","IBM Plex Sans KR",sans-serif; font-size:22px; line-height:24px; color:#fff; text-shadow:0 1px 6px rgba(0,0,0,.55); }
+  .rd .pct small { font-family:"IBM Plex Sans KR",sans-serif; font-size:11px; font-weight:600; margin-left:2px; }
+  .rd .nm { font-size:12.5px; font-weight:700; line-height:17px; margin:7px 2px 0; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  .rd .rbar { height:4px; border-radius:999px; background:#EDE8DE; margin:6px 2px 0; overflow:hidden; }
+  .rd .rbar div { height:100%; background:#D9691F; border-radius:999px; }
+  .rd .pg2 { font-size:11px; color:var(--muted); margin:4px 2px 0; }
   .two { display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-top:8px; }
   .act { text-align:left; padding:16px; display:flex; flex-direction:column; gap:2px; }
   .act svg { width:26px; height:26px; color:var(--acc); margin-bottom:10px; }
@@ -226,7 +240,7 @@
   <header id="libHead">
     <div class="lh-in">
       <img id="logo" alt="" class="lh-logo">
-      <div class="lh-title">넘김</div>
+      <div class="lh-title">추억의만화빵</div>
       <span id="usage" class="lh-usage"></span>
       <button id="btnAdd" class="lh-add" aria-label="책 넣기">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>
@@ -250,6 +264,11 @@
       </div>
       <div id="heroCover" class="hero-cover"><img id="heroImg" alt=""></div>
     </button>
+
+    <div id="readingSec" class="hidden">
+      <div class="sec"><h2>읽는 중 <span id="readingCount"></span></h2><span class="sec-hint">옆으로 넘겨 보세요</span></div>
+      <div id="reading" class="rail"></div>
+    </div>
 
     <div class="two">
       <button id="btnZip" class="card act">
@@ -373,7 +392,7 @@
 <div id="toast" class="rounded-full bg-panel border border-line px-4 py-2 text-[13px] shadow-xl whitespace-nowrap"></div>
 <div id="loading" class="hidden"><div class="spin"></div><div id="loadMsg" class="text-[13px] text-mute">여는 중…</div></div>
 <div id="dropHint">여기에 놓으면 바로 열려요</div>
-<div id="ver" aria-hidden="true">v3</div>
+<div id="ver" aria-hidden="true">v4</div>
 
 <!--
   서비스워커 코드 (오프라인 실행용)
@@ -382,7 +401,7 @@
     (linkcleaning.github.io/viewer/ 에는 이미 올려 두었습니다)
 -->
 <script type="text/plain" id="sw-source">
-const CACHE = 'neomgim-v3';
+const CACHE = 'neomgim-v4';
 const CORE = ['./', './index.html'];
 const CDN = [
   'https://cdn.tailwindcss.com',
@@ -628,6 +647,22 @@ async function renderLib() {
     $('#hero').onclick = () => books.length ? $('#books').scrollIntoView({ behavior: 'smooth', block: 'start' }) : $('#fZip').click();
   }
 
+  /* 읽는 중인 다른 책들: 몇 % 봤는지 한눈에 */
+  const reading = [...books].sort((x, y) => recent(y) - recent(x)).filter(x => { const m = meta[x.id] || {}; return m.pos > 0 && !m.done && x !== last; });
+  $('#readingSec').classList.toggle('hidden', !reading.length);
+  $('#readingCount').textContent = reading.length ? `${reading.length}권` : '';
+  const rail = $('#reading'); rail.innerHTML = '';
+  for (const x of reading) {
+    const m = meta[x.id], cnt = x.count || 1, pct = Math.round((m.pos + 1) / cnt * 100), src = coverUrl(x);
+    const el = document.createElement('button');
+    el.className = 'rd';
+    el.innerHTML = `<div class="cv">${src ? `<img src="${src}" alt="">` : ''}<div class="pct">${pct}<small>%</small></div></div>
+      <div class="nm"></div><div class="rbar"><div style="width:${pct}%"></div></div><div class="pg2">${m.pos + 1} / ${cnt}쪽</div>`;
+    el.querySelector('.nm').textContent = x.name;
+    el.onclick = () => openRecord(x, false);
+    rail.appendChild(el);
+  }
+
   const box = $('#books'); box.innerHTML = '';
   for (const b of sortBooks(books)) {
     const m = meta[b.id] || {}, pos = m.pos || 0, cnt = b.count || 1;
@@ -640,7 +675,7 @@ async function renderLib() {
         <div class="cv">${src ? `<img src="${src}" alt="" loading="lazy">` : ''}
           ${!m.done && pos > 0 ? `<div class="pr"><div style="width:${pct}%"></div></div>` : ''}</div>
         <div class="nm"></div>
-        <div class="pg2">${state ? `<span class="dot" style="background:${state[0]}"></span>${state[1]} · ${cnt}쪽` : `${pos + 1} / ${cnt}쪽`}</div>
+        <div class="pg2">${state ? `<span class="dot" style="background:${state[0]}"></span>${state[1]} · ${cnt}쪽` : `<b style="color:#D9691F">${pct}%</b> · ${pos + 1}/${cnt}쪽`}</div>
       </button>
       <button class="del" aria-label="삭제">✕</button>`;
     el.querySelector('.nm').textContent = b.name;
@@ -692,7 +727,7 @@ function startReader(rec, pages) {
   R.g = R.gOf[Math.min((meta[rec.id] || {}).pos || 0, R.count - 1)];
   ls.set('reading', rec.id);
   $('#title').textContent = rec.name;
-  document.title = rec.name + ' · 넘김';
+  document.title = rec.name + ' · 추억의만화빵';
   document.body.classList.add('reading');
   setTheme('#111214'); $('#toTop').classList.remove('show');
   document.body.classList.remove('hide-bars');
@@ -714,7 +749,7 @@ function closeReader(silent) {
   R.rec = null; ls.del('reading');
   document.body.classList.remove('reading', 'hide-bars');
   setTheme('#0B3B40');
-  document.title = '넘김 · 미니멀 만화 뷰어';
+  document.title = '추억의만화빵';
   if (document.fullscreenElement) document.exitFullscreen().catch(() => {});
   renderLib();
 }
