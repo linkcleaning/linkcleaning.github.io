@@ -1,5 +1,5 @@
 /* 추억의만화빵 서비스워커 — index.html 안의 sw-source 와 같은 내용 */
-const CACHE = 'neomgim-v9';
+const CACHE = 'neomgim-v10';
 const CORE = ['./', './index.html', './manifest.webmanifest', './icon-180.png', './icon-192.png', './icon-512.png'];
 const CDN = [
   'https://cdn.tailwindcss.com',

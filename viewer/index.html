@@ -177,7 +177,7 @@
   #dropHint { position:fixed; inset:10px; z-index:80; border:2px dashed var(--orange); border-radius:24px; background:rgba(17,18,20,.85); display:flex; align-items:center; justify-content:center; font-size:18px; font-weight:700; opacity:0; pointer-events:none; transition:opacity .15s; }
   .card-cover { aspect-ratio:3/4; background:#202327; }
   .badge { position:absolute; left:7px; top:7px; font-size:10px; font-weight:800; letter-spacing:.04em; padding:2px 7px; border-radius:7px; }
-  #ver { position:fixed; left:5px; bottom:2px; font:500 9px/1 system-ui,-apple-system,sans-serif; color:#888; opacity:.45; pointer-events:none; z-index:2147483647; letter-spacing:.02em; user-select:none; -webkit-user-select:none; }
+  #ver { position:fixed; left:8px; bottom:calc(env(safe-area-inset-bottom) + 4px); font:600 10px/1 system-ui,-apple-system,sans-serif; color:#888; opacity:.6; pointer-events:none; z-index:2147483647; letter-spacing:.02em; user-select:none; -webkit-user-select:none; }
 
   /* ---------- 서재 (밝은 화면 · 링크 앱 스타일 가이드) ---------- */
   body:not(.reading) { background:#F4F1EA; }
@@ -419,7 +419,7 @@
 <div id="toast" class="rounded-full bg-panel border border-line px-4 py-2 text-[13px] shadow-xl whitespace-nowrap"></div>
 <div id="loading" class="hidden"><div class="spin"></div><div id="loadMsg" class="text-[13px] text-mute">여는 중…</div></div>
 <div id="dropHint">여기에 놓으면 바로 열려요</div>
-<div id="ver" aria-hidden="true">v9</div>
+<div id="ver" aria-hidden="true">v10</div>
 
 <!--
   서비스워커 코드 (오프라인 실행용)
@@ -428,7 +428,7 @@
     (linkcleaning.github.io/viewer/ 에는 이미 올려 두었습니다)
 -->
 <script type="text/plain" id="sw-source">
-const CACHE = 'neomgim-v9';
+const CACHE = 'neomgim-v10';
 const CORE = ['./', './index.html', './manifest.webmanifest', './icon-180.png', './icon-192.png', './icon-512.png'];
 const CDN = [
   'https://cdn.tailwindcss.com',
