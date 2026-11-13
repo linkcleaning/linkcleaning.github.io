@@ -616,7 +616,7 @@ small.zero,.seg small.mn.zero{color:#ff8a80!important}
 
 <script>
 'use strict';
-const VER='v66';
+const VER='v67';
 const $=s=>document.querySelector(s);
 const sleep=ms=>new Promise(r=>setTimeout(r,ms));
 const rnd=n=>Math.floor(Math.random()*n);
@@ -1042,7 +1042,7 @@ function scoreOf(cap){const a=calc(cap,false);if(!cap.some(c=>c.sub==='gukjin'))
    게임 상태
 ===================================================== */
 let S=null;
-function newState(){return{high:!PV.on&&!!window._wantHigh,shield:[false,false],bl:[0,0],vital:vitOf(DB.cur),buff:Object.assign({},(DB.buff||{})[DB.cur]||{}),vitHits:0,inst:[0,0],instLog:[],turnN:[0,0],lastPpuk:[false,false],lucky:[0,0],bonusFlag:[false,false],jackpot:false,deck:[],floor:[],hands:[[],[]],caps:[[],[]],turn:0,go:[0,0],lastGo:[0,0],shakes:[0,0],shakeX:[1,1],shakeTxt:[[],[]],bombs:[0,0],shook:[[],[]],ppuk:[0,0],ppukOwner:{},slot:{},
+function newState(){return{ppukBonus:{},high:!PV.on&&!!window._wantHigh,shield:[false,false],bl:[0,0],vital:vitOf(DB.cur),buff:Object.assign({},(DB.buff||{})[DB.cur]||{}),vitHits:0,inst:[0,0],instLog:[],turnN:[0,0],lastPpuk:[false,false],lucky:[0,0],bonusFlag:[false,false],jackpot:false,deck:[],floor:[],hands:[[],[]],caps:[[],[]],turn:0,go:[0,0],lastGo:[0,0],shakes:[0,0],shakeX:[1,1],shakeTxt:[[],[]],bombs:[0,0],shook:[[],[]],ppuk:[0,0],ppukOwner:{},slot:{},
   busy:true,sel:null,opp:oppOf(DB.set.opp),level:isBoss(DB.set.opp)?tutu().lv:oppOf(DB.set.opp).lv,target:7,nagari:DB.nagari||0,over:false,dn:0,gid:Date.now()}}
 const dummy=()=>({id:'D-'+(S.dn++),m:-1,t:'D',sub:'',i:0});
 const SLOT_ORDER=[6,8,1,3,11,13,0,4,10,14,12,5,9];
@@ -1097,7 +1097,7 @@ function render(){
     const m=bySlot[i];
     if(m===undefined){fh+='<div class="cell"></div>';continue}
     const cs=groups[m],n=cs.length;
-    let inner=S.ppukOwner[m]!==undefined?`<span class="tag">뻑</span>`:'';
+    let inner=S.ppukOwner[m]!==undefined?`<span class="tag">뻑${(S.ppukBonus[m]||[]).length?' +🎁'+S.ppukBonus[m].length:''}</span>`:'';
     cs.forEach((c,k)=>{const off=(k-(n-1)/2);const hl=selC&&selC.m===c.m?' hl':'';
       inner+=cardDiv(c,'f'+hl,`left:calc(50% - var(--fw) * ${(.5-off*.36).toFixed(3)});top:calc(50% - var(--fh) / 2 + ${(off*5).toFixed(1)}px);z-index:${k+1}`)});
     fh+=`<div class="cell">${inner}</div>`;
@@ -1310,10 +1310,11 @@ async function playCard(p,card,pick){
     const ix=S.deck.findIndex((c,i)=>i<S.deck.length-1&&c.t!=='B'&&(okM(c.m)||(m=>m===hm&&kH===0)(c.m)));
     if(ix>=0){const c=S.deck.splice(ix,1)[0];S.deck.push(c);if(p===0){S.vitHits++;say('⚡ 활력 발동! 좋은 패가 온다~')}else if(Math.random()<.4)say(['크르르… 운도 실력이지','크하하! 또 맞았다','네 패는 내 거다…'][rnd(3)])}
   }
+  const flipB=[];   // 뒤집다 나온 보너스패 (뒤에 싸면 묻히고 피 돌려줌)
   while(S.deck.length){
     const c=S.deck.pop();
     await act(()=>S.floor.push(c),{fromDeck:true,dur:420,wait:430});SFX.flip();if(c.t!=='B'){const hit=S.floor.some(x=>x!==c&&x.m===c.m);if(hit){SFX.slap(.85);impact(c,true)}}
-    if(c.t==='B'){await act(()=>{rm(S.floor,c);S.caps[p].push(c)},{dur:380});SFX.bonus();await banner(c.say.join(' '),'gold small',700);await afterCaptureEvents(p,[c]);continue}
+    if(c.t==='B'){await act(()=>{rm(S.floor,c);S.caps[p].push(c)},{dur:380});SFX.bonus();await banner(c.say.join(' '),'gold small',700);c._st=[];await afterCaptureEvents(p,[c],{noAct:true,track:c._st});flipB.push(c);continue}
     F=c;break;
   }
   const took=[],ev=[];let steal=0;
@@ -1327,13 +1328,13 @@ async function playCard(p,card,pick){
       if(bomb){take(...S.floor.filter(c=>c.m===H.m));steal++}
       else if(kH===1)take(H,HM[0]);
       else if(kH===2){const ch=(pick&&HM.includes(pick))?pick:await decideCard(p,'pick',HM,()=>chooseCard(HM,'어느 패를 먹을까요?'),()=>aiPick(HM,p));take(H,ch||HM[0])}
-      else if(kH===3){take(H,...HM);const own=S.ppukOwner[H.m]===p;steal+=own?2:1;ev.push(own?'자뻑':'뻑 먹기');delete S.ppukOwner[H.m]}
+      else if(kH===3){take(H,...HM,...(S.ppukBonus[H.m]||[]));delete S.ppukBonus[H.m];const own=S.ppukOwner[H.m]===p;steal+=own?2:1;ev.push(own?'자뻑':'뻑 먹기');delete S.ppukOwner[H.m]}
     }
     if(F){
       const FM=S.floor.filter(c=>c.m===F.m&&c!==F&&!took.includes(c));
       if(FM.length===1)take(F,FM[0]);
       else if(FM.length===2){const ch=await decideCard(p,'pickF',FM,()=>chooseCard(FM,'뒤집은 패로 무엇을 먹을까요?'),()=>aiPick(FM,p));take(F,ch||FM[0])}
-      else if(FM.length===3){take(F,...FM);const own=S.ppukOwner[F.m]===p;steal+=own?2:1;ev.push(own?'자뻑':'뻑 먹기');delete S.ppukOwner[F.m]}
+      else if(FM.length===3){take(F,...FM,...(S.ppukBonus[F.m]||[]));delete S.ppukBonus[F.m];const own=S.ppukOwner[F.m]===p;steal+=own?2:1;ev.push(own?'자뻑':'뻑 먹기');delete S.ppukOwner[F.m]}
     }
   }
   if(p===0){if(ev.includes('뻑 먹기')||ev.includes('자뻑'))qHit('ppukEat');if(ev.includes('쪽')||ev.includes('따닥'))qHit('jjok')}
@@ -1345,6 +1346,13 @@ async function playCard(p,card,pick){
     if(e==='뻑'){if(firstTurn)await instBonus(p,'첫뻑',5);else if(S.lastPpuk[p])await instBonus(p,'연뻑',10)}
     if(e==='따닥'&&firstTurn)await instBonus(p,'첫따닥',5);
     if(e==='쪽'&&firstTurn)await instBonus(p,'첫쪽',3);
+  }
+  if(flipB.length){
+    if(ev.includes('뻑')&&H){const m=H.m;S.ppukBonus[m]=(S.ppukBonus[m]||[]).concat(flipB);let back=0;
+      await act(()=>{flipB.forEach(c=>{rm(S.caps[p],c);(c._st||[]).forEach(x=>{if(S.caps[p].includes(x)){rm(S.caps[p],x);S.caps[o].push(x);back++}})})},{dur:520,wait:420});
+      SFX.lose();vib([40,30,40]);await banner(`💩 싸서 보너스패가 뻑에 묻혔어요!${back?`\n뺏은 피 ${back}장 돌려줘요`:''}`,'red',1300);
+    }else for(const c of flipB)if(c.act&&!S.over)await bonusAct(p,c);
+    flipB.forEach(c=>delete c._st);
   }
   S.lastPpuk[p]=ev.includes('뻑');
   if(took.length){
@@ -1513,14 +1521,15 @@ async function charAnim(kind,p){
   if(kind==='ttadak'){d.innerHTML=`<div class="hero">${logo}</div><b class="mop">🧹</b><b class="pow">철썩!</b><div class="cap">따닥!</div>`;setTimeout(()=>{SFX.slap(1.3);SFX.noise(0,.1,.6,'bandpass',1200,.7)},420);setTimeout(()=>SFX.slap(1.1),620);setTimeout(()=>vib([40,30,60]),420)}
   document.body.appendChild(d);await sleep(1350);d.classList.add('bye');await sleep(200);d.remove();
 }
-async function afterCaptureEvents(p,cards){
-  for(const c of cards)if(c.act&&!S.over)await bonusAct(p,c);
-  for(const c of cards){if(c.t==='B'&&!S.over){const n=c.steal||1;say(p===1?c.say.join(' '):'');await banner(`${c.lab}!\n피 ${n}장 뺏기`,'gold',700);await act(()=>stealPi(1-p,p,n),{dur:520});SFX.coin()}}
+async function afterCaptureEvents(p,cards,opt={}){
+  if(!opt.noAct)for(const c of cards)if(c.act&&!S.over)await bonusAct(p,c);
+  for(const c of cards){if(c.t==='B'&&!S.over){const n=c.steal||1;say(p===1?c.say.join(' '):'');await banner(`${c.lab}!\n피 ${n}장 뺏기`,'gold',700);let mv=[];await act(()=>{mv=stealPiC(1-p,p,n)},{dur:520});if(opt.track)opt.track.push(...mv);SFX.coin()}}
   if(!DB.cfg.event)return;
   if(cards.some(c=>c.lucky))await luckyRoulette(p);
   const nb=S.caps[p].filter(c=>c.t==='B').length;
   if(nb>=3&&!S.bonusFlag[p]){S.bonusFlag[p]=true;await instBonus(p,'보너스 대박',5)}
 }
+function stealPiC(from,to,n){const out=[];for(let k=0;k<n;k++){const pis=S.caps[from].filter(c=>c.t==='P'||c.t==='B');if(!pis.length)break;pis.sort((a,b)=>piVal(a)-piVal(b));const c=pis[0];rm(S.caps[from],c);S.caps[to].push(c);out.push(c)}return out}
 function stealPi(from,to,n){
   let got=0;
   for(let k=0;k<n;k++){const pis=S.caps[from].filter(c=>c.t==='P'||c.t==='B');if(!pis.length)break;pis.sort((a,b)=>piVal(a)-piVal(b));const c=pis[0];rm(S.caps[from],c);S.caps[to].push(c);got++}
@@ -2451,7 +2460,7 @@ const RULES=`<div class="rules">
 <h3>🎴 기본 진행</h3>손패 1장을 내고, 더미에서 1장을 뒤집어요. 같은 <b>월(그림)</b>끼리 짝이 맞으면 먹어요. 낼 패를 한 번 누르면 <b>먹을 수 있는 바닥패가 빛나고</b>, 한 번 더 누르면(또는 빛나는 바닥패를 누르면) 내요.
 <h3>🧮 점수</h3><b>광</b> 3장 3점(비광 포함 시 2점), 4장 4점, 5장 15점<br><b>열끗</b> 5장 1점 + 1장마다 1점 · <b>고도리</b>(2·4·8월 새) 5점<br><b>띠</b> 5장 1점 + 1장마다 1점 · <b>홍단·청단·초단</b> 각 3점<br><b>피</b> 10장 1점 + 1장마다 1점 (쌍피·보너스는 2~3장으로 계산, 국진은 유리하게 자동 계산)
 <h3>🔥 고 / 스톱</h3>날 점수에 도달하면 고 또는 스톱! 1고 +1점, 2고 +2점, 3고부터 (+2점 후) ×2, ×4…
-<h3>💥 특수 상황</h3><b>쪽</b> 낸 패를 뒤집은 패로 바로 먹기 → 피 1장 뺏기<br><b>뻑 (쌌다, 뿌직~ 💩)</b> 낸 패로 먹었는데 뒤집은 패도 같은 월 → 3장이 바닥에 묶여요. 나중에 먹으면 피 1장(자기 뻑이면 2장)<br><b>따닥</b> 바닥 2장 + 낸 패 + 뒤집은 패 모두 같은 월 → 4장 다 먹고 피 1장<br><b>싹쓸 (🧹 링크클린 출동! 청소 끝!)</b> 바닥을 다 비우면 청소기 소리와 함께 피 1장<br><b>폭탄</b> 같은 월 3장을 들고 바닥에 1장 → 한 번에 4장 먹고 피 1장, ×2, 빈패 2장 받음<br><b>흔들기</b> 같은 월 3장을 들고 바닥에 없을 때 선언 → ×2 (<b>💩 똥(11월)·🌼 국진(9월)을 흔들면 ×4</b>)<br><b>3뻑</b> 한 판에 뻑 3번이면 즉시 승리 · <b>총통</b> 처음에 같은 월 4장이면 10점 승리 + 총통 보너스 5천원<br><b>링크의 보너스 패</b> (6종, 관리인이 장수 결정) 내면 바로 먹고 한 장 더 받아요. <b>모든 보너스패는 상대 피 1장을 뺏어요!</b> — 쓰리피 · 투피 · 피 2장 뺏기 · 🧹 대청소(바닥 패 1장 골라 가져오기) · 🔄 체인지(상대 손패와 1장 무작위 교환) · 🎁 선물상자(대박 15점어치+피2장 / 중박 7점어치+피1장 / 소박 3점어치)<br><b>🎯 빙고 미션</b> 판마다 빙고판(화투 9장)이 떠요. 먹은 패가 ○로 칠해지고 가로·세로·대각선 한 줄마다 ×2 (2줄 ×4, 3줄 ×6…)<br><b>➡️ 밀기</b> 이기면 돈을 바로 받지 않고 다음 판으로 밀 수 있어요. 다음 판도 이기면 (그 판 점수+민 점수)×4, 지면 날아가요<br><b>🎴 섯다 족보</b> 처음 받은 두 장이 38광땡 10점어치 · 광땡 7 · 장땡 5 · 땡 3 · 알리 2 · 독사 1<br><b>🔥 일런마스크 연승</b> 연속으로 이길 때마다 상금이 ×1.5, ×2 … 최대 ×3 (지면 0연승)
+<h3>💥 특수 상황</h3><b>쪽</b> 낸 패를 뒤집은 패로 바로 먹기 → 피 1장 뺏기<br><b>뻑 (쌌다, 뿌직~ 💩)</b> 낸 패로 먹었는데 뒤집은 패도 같은 월 → 3장이 바닥에 묶여요. 나중에 먹으면 피 1장(자기 뻑이면 2장). 뒤집다 보너스패가 나온 뒤 싸면 그 보너스패는 뻑에 묻히고 뺏은 피는 돌려줘요 (뻑을 먹는 사람이 보너스패까지 가져가요)<br><b>따닥</b> 바닥 2장 + 낸 패 + 뒤집은 패 모두 같은 월 → 4장 다 먹고 피 1장<br><b>싹쓸 (🧹 링크클린 출동! 청소 끝!)</b> 바닥을 다 비우면 청소기 소리와 함께 피 1장<br><b>폭탄</b> 같은 월 3장을 들고 바닥에 1장 → 한 번에 4장 먹고 피 1장, ×2, 빈패 2장 받음<br><b>흔들기</b> 같은 월 3장을 들고 바닥에 없을 때 선언 → ×2 (<b>💩 똥(11월)·🌼 국진(9월)을 흔들면 ×4</b>)<br><b>3뻑</b> 한 판에 뻑 3번이면 즉시 승리 · <b>총통</b> 처음에 같은 월 4장이면 10점 승리 + 총통 보너스 5천원<br><b>링크의 보너스 패</b> (6종, 관리인이 장수 결정) 내면 바로 먹고 한 장 더 받아요. <b>모든 보너스패는 상대 피 1장을 뺏어요!</b> — 쓰리피 · 투피 · 피 2장 뺏기 · 🧹 대청소(바닥 패 1장 골라 가져오기) · 🔄 체인지(상대 손패와 1장 무작위 교환) · 🎁 선물상자(대박 15점어치+피2장 / 중박 7점어치+피1장 / 소박 3점어치)<br><b>🎯 빙고 미션</b> 판마다 빙고판(화투 9장)이 떠요. 먹은 패가 ○로 칠해지고 가로·세로·대각선 한 줄마다 ×2 (2줄 ×4, 3줄 ×6…)<br><b>➡️ 밀기</b> 이기면 돈을 바로 받지 않고 다음 판으로 밀 수 있어요. 다음 판도 이기면 (그 판 점수+민 점수)×4, 지면 날아가요<br><b>🎴 섯다 족보</b> 처음 받은 두 장이 38광땡 10점어치 · 광땡 7 · 장땡 5 · 땡 3 · 알리 2 · 독사 1<br><b>🔥 일런마스크 연승</b> 연속으로 이길 때마다 상금이 ×1.5, ×2 … 최대 ×3 (지면 0연승)
 <h3>🎨 그림</h3>화투 그림은 무료 공개 화투 일러스트를 사용했어요.
 <h3>🎲 특수 이벤트 (관리인이 켜고 끔)</h3><b>첫뻑</b> 첫 턴에 뻑 → 상대가 5점어치 즉시 지급 · <b>연뻑</b> 두 턴 연속 뻑 → 10점어치<br><b>첫따닥</b> 5점어치 · <b>첫쪽</b> 3점어치 · <b>막쓸</b> 마지막 패로 싹쓸 → 피 1장 + 3점어치<br><b>보너스 대박</b> 보너스패 3장 이상 먹으면 5점어치 · <b>쓰리고 축하금</b> 3점어치<br><b>🍀 링크의 행운 패</b> 먹으면 🎰 슬롯머신이 돌아가요! (777 이기면 ×2+5점어치 · BAR 피2장+3점어치 · 🍒 피2장 · 🍉 5점어치 · 🍇 3점어치 · 🍋 피1장 · 두 개 맞으면 1점어치 · 꽝) (피 2장 뺏기 / 이기면 ×2 / 5점어치 / 피 1장+3점어치)<br><b>🎰 잭팟 판</b> 가끔(15%) 판 전체 점수 ×2 · <b>완봉승</b> 상대 0점이면 +3점 · <b>초스피드 승</b> 각자 4턴 안에 나면 +2점<br><small>'점어치'는 점당 금액으로 바로 바꿔 판 끝에 함께 정산돼요 (나가리여도 정산)</small>
 <h3>☕ 커피 · 📝 댓글 이벤트</h3>돈 100만원을 모으면 스타벅스 커피 1잔, 300만원이면 2잔 (1인 최대 2잔). 🎡 행운 룰렛은 하루 3번 (꽝·1천·3천·5천·1만·2만원)! 링크클린 블로그·앱에 댓글 달고 캡처를 올리면 관리인 확인 후 +3만원!
