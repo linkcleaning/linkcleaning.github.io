@@ -303,7 +303,17 @@ nav.tabs{position:fixed;left:0;right:0;bottom:0;z-index:40;background:var(--card
 .cam .cbot{position:absolute;left:0;right:0;bottom:0;padding:18px 18px calc(env(safe-area-inset-bottom) + 22px);background:linear-gradient(transparent,rgba(0,0,0,.7));display:flex;align-items:center;justify-content:space-between}
 .cam .cthumbs{display:flex;gap:4px;width:110px}
 .cam .cthumbs img{width:34px;height:44px;object-fit:cover;border-radius:4px;border:2px solid #fff}
-.shutter{width:80px;height:80px;border-radius:50%;border:4px solid #fff;display:grid;place-items:center;background:transparent}
+.shutter{width:80px;height:80px;border-radius:50%;border:4px solid #fff;display:grid;place-items:center;background:conic-gradient(#D9691F calc(var(--p,0) * 1%),transparent 0)}
+.camsvg{position:absolute;inset:0;width:100%;height:100%;pointer-events:none}
+.cam:not(.glare) .frame,.cam:not(.glare) .pdots{display:none}
+.cam.glare .copts{display:none}
+.copts{position:absolute;left:0;right:0;bottom:calc(env(safe-area-inset-bottom) + 128px);display:flex;justify-content:center;gap:8px}
+.cchip{min-height:42px;padding:0 15px;border-radius:999px;background:rgba(0,0,0,.45);color:#fff;font-weight:700;font-size:15px;border:1.5px solid rgba(255,255,255,.45);display:inline-flex;align-items:center;gap:6px}
+.cchip svg{width:17px;height:17px}
+.cchip.on{background:#fff;color:#14262A;border-color:#fff}
+.handle::before{content:'';position:absolute;inset:-14px;border-radius:50%}
+.handle.mid{width:30px;height:30px;margin:-15px 0 0 -15px;border-radius:10px;background:rgba(255,255,255,.85);border:2px solid #fff;box-shadow:0 0 0 2px rgba(217,105,31,.9),0 2px 6px rgba(0,0,0,.35)}
+.handle.mid::after{width:12px;height:3px;margin:-1.5px -6px;border-radius:2px}
 .shutter::after{content:'';width:62px;height:62px;border-radius:50%;background:#fff;transition:transform .1s}
 .shutter:active::after{transform:scale(.88)}
 .cam .arrow{position:absolute;left:50%;top:50%;width:84px;height:84px;margin:-42px;border-radius:50%;background:rgba(217,105,31,.92);display:grid;place-items:center;animation:nudge 1.2s ease-in-out infinite}
@@ -378,12 +388,12 @@ details.tips[open] .chev{transform:rotate(90deg)}
       <div class="card">
         <div class="ct-row"><span class="ct">스캔 방법</span><span class="eng" id="engTxt"></span></div>
         <div class="rows">
-          <label class="row">
-            <span class="ri"><i data-lucide="camera"></i></span>
-            <span style="flex:1"><span class="rt">한 장 찍기</span><span class="rd">종이 사진 한 장을 카메라로 바로</span></span>
+          <button class="row" id="btnScanCam">
+            <span class="ri"><i data-lucide="scan"></i></span>
+            <span style="flex:1"><span class="rt">사진 비추기 <span class="rtag ai">자동 인식</span></span><span class="rd">카메라에 비추면 테두리를 찾아 알아서 찍고 반듯하게 펴 줘요</span></span>
             <i data-lucide="chevron-right" class="chev"></i>
-            <input type="file" accept="image/*" capture="environment" class="hidden" data-load="single">
-          </label>
+          </button>
+          <input type="file" accept="image/*" capture="environment" class="hidden" data-load="single" id="inCamFallback">
           <button class="row" id="btnGlare">
             <span class="ri"><i data-lucide="sun-dim"></i></span>
             <span style="flex:1"><span class="rt">반사 없이 찍기 <span class="rtag">광택 사진</span></span><span class="rd">폰을 조금씩 옮기며 4장 찍으면 번쩍이는 빛만 지워요</span></span>
@@ -432,10 +442,11 @@ details.tips[open] .chev{transform:rotate(90deg)}
               <svg id="quadSvg"></svg>
               <div class="handle" data-i="0"></div><div class="handle" data-i="1"></div>
               <div class="handle" data-i="2"></div><div class="handle" data-i="3"></div>
+              <div class="handle mid" data-e="0"></div><div class="handle mid" data-e="1"></div><div class="handle mid" data-e="2"></div><div class="handle mid" data-e="3"></div>
               <div class="loupe hidden" id="loupe"><canvas id="loupeCv" width="256" height="256"></canvas></div>
             </div>
           </div>
-          <p class="stage-hint" id="stageHint">동그라미를 끌어 사진 네 모서리에 맞춰 주세요</p>
+          <p class="stage-hint" id="stageHint">동그라미는 모서리, 네모는 변 전체를 옮겨요</p>
         </div>
         <div class="tools">
           <button class="tool" id="btnAutoFind"><i data-lucide="wand-sparkles"></i>자동 찾기</button>
@@ -449,11 +460,12 @@ details.tips[open] .chev{transform:rotate(90deg)}
       <div id="step2" class="stack hidden">
         <div class="stage-card">
           <div class="pv-wrap" id="pvWrap"><canvas id="pvCv"></canvas><div class="pv-grid" id="pvGrid"></div><div class="pv-crop hidden" id="pvCrop"></div></div>
-          <p class="stage-hint">기울기·비율을 맞추고 완료를 눌러 주세요</p>
+          <p class="stage-hint">자동으로 폈어요. 괜찮으면 바로 스캔 완료</p>
         </div>
-        <div class="tools" style="grid-template-columns:1fr 1fr">
-          <button class="tool" id="btnRotL"><i data-lucide="rotate-ccw"></i>왼쪽으로 돌리기</button>
-          <button class="tool" id="btnRotR"><i data-lucide="rotate-cw"></i>오른쪽으로 돌리기</button>
+        <div class="tools" style="grid-template-columns:1fr 1fr 1fr">
+          <button class="tool" id="btnRotL"><i data-lucide="rotate-ccw"></i>왼쪽으로</button>
+          <button class="tool" id="btnRotR"><i data-lucide="rotate-cw"></i>오른쪽으로</button>
+          <button class="tool" id="btnFixCorners"><i data-lucide="crop"></i>모서리 고치기</button>
         </div>
         <div class="card">
           <div class="sl-h"><span><i data-lucide="triangle-right"></i>미세 기울기</span><b id="fineVal">0°</b></div>
@@ -739,12 +751,14 @@ details.tips[open] .chev{transform:rotate(90deg)}
 <!-- 카메라 -->
 <div id="cam" class="cam hidden">
   <video id="camVideo" playsinline muted autoplay></video>
+  <svg id="camSvg" class="camsvg"></svg>
   <div class="frame"></div>
   <div class="arrow hidden" id="camArrow"><i data-lucide="arrow-left" id="camArrowI"></i></div>
   <div class="ctop">
     <div style="flex:1"><div class="t" id="camT">정면에서 한 장</div><div class="d" id="camD">사진이 점선 안에 꽉 차게 맞춰 주세요</div><div class="pdots" id="camDots"><i></i><i></i><i></i><i></i></div></div>
     <button class="cbtn" id="camClose" style="min-width:48px;padding:0 12px" aria-label="닫기"><i data-lucide="x"></i></button>
   </div>
+  <div class="copts"><button class="cchip on" id="camAuto"><i data-lucide="sparkles"></i>자동 찍기</button><button class="cchip" id="camCont"><i data-lucide="layers"></i>연속 찍기</button></div>
   <div class="cbot">
     <div class="cthumbs" id="camThumbs"></div>
     <button class="shutter" id="camShot" aria-label="찍기"></button>
@@ -768,7 +782,7 @@ details.tips[open] .chev{transform:rotate(90deg)}
 
 <script>
 'use strict';
-const VERSION = 'v2';
+const VERSION = 'v3';
 /* ================= 도구 ================= */
 const $ = s => document.querySelector(s);
 const $$ = s => [...document.querySelectorAll(s)];
@@ -1132,17 +1146,79 @@ function extremeQuad(pts, k, src) {
   }
   return [tl, tr, br, bl].map(([x, y]) => ({ x: clamp((x + .5) * k, 0, src.width), y: clamp((y + .5) * k, 0, src.height) }));
 }
-function autoDetect(src) {
-  try {
-    const sm = fitCanvas(src, 256), w = sm.width, h = sm.height;
-    let m = fgMask(sm); m = morph(morph(m, w, h, false), w, h, true);
-    const pts = []; for (let y = 0; y < h; y++) for (let x = 0; x < w; x++) if (m[y * w + x]) pts.push([x, y]);
-    const ratio = pts.length / (w * h);
-    if (ratio < .12 || ratio > .97) return insetCorners(src);
-    const q = extremeQuad(pts, src.width / w, src);
-    return quadArea(q) < src.width * src.height * .15 ? insetCorners(src) : q;
-  } catch (e) { return insetCorners(src); }
+function otsu(hist, total) {
+  let sum = 0; for (let i = 0; i < 256; i++) sum += i * hist[i];
+  let sB = 0, wB = 0, best = 0, th = 0;
+  for (let i = 0; i < 256; i++) { wB += hist[i]; if (!wB) continue; const wF = total - wB; if (!wF) break; sB += i * hist[i]; const mB = sB / wB, mF = (sum - sB) / wF, v = wB * wF * (mB - mF) * (mB - mF); if (v > best) { best = v; th = i; } }
+  return th;
 }
+function convexHull(P) {
+  const pts = P.slice().sort((a, b) => a[0] - b[0] || a[1] - b[1]); if (pts.length < 3) return pts;
+  const cr = (o, a, b) => (a[0] - o[0]) * (b[1] - o[1]) - (a[1] - o[1]) * (b[0] - o[0]), lo = [], up = [];
+  for (const p of pts) { while (lo.length >= 2 && cr(lo[lo.length - 2], lo[lo.length - 1], p) <= 0) lo.pop(); lo.push(p); }
+  for (let i = pts.length - 1; i >= 0; i--) { const p = pts[i]; while (up.length >= 2 && cr(up[up.length - 2], up[up.length - 1], p) <= 0) up.pop(); up.push(p); }
+  up.pop(); lo.pop(); return lo.concat(up);
+}
+const hullArea = H => { let a = 0; for (let i = 0; i < H.length; i++) { const p = H[i], q = H[(i + 1) % H.length]; a += p[0] * q[1] - q[0] * p[1]; } return Math.abs(a) / 2 + H.length * .5; };
+function lineHit(l1, l2) {
+  const det = -l1.v[0] * l2.v[1] + l2.v[0] * l1.v[1]; if (Math.abs(det) < 1e-4) return null;
+  const dx = l2.c[0] - l1.c[0], dy = l2.c[1] - l1.c[1], t = (-dx * l2.v[1] + l2.v[0] * dy) / det;
+  return { x: l1.c[0] + t * l1.v[0], y: l1.c[1] + t * l1.v[1] };
+}
+// 종이 사진 테두리 찾기: 배경과의 색 차이(오츠 자동 문턱) → 가장 큰 덩어리 → 네 변을 직선으로 맞춰 꼭짓점 계산
+function detectQuad(src, size = 320) {
+  const fallback = { ok: false, full: false, q: insetCorners(src) };
+  try {
+    const sm = Math.max(src.width, src.height) <= size ? src : fitCanvas(src, size), w = sm.width, h = sm.height, n = w * h, d = getData(sm).data;
+    const [br, bg, bb] = borderMedian(d, w, h), D = new Uint8Array(n), hist = new Uint32Array(256);
+    for (let i = 0, p = 0; i < n; i++, p += 4) { const v = Math.min(255, Math.hypot(d[p] - br, d[p + 1] - bg, d[p + 2] - bb)); D[i] = v; hist[v | 0]++; }
+    const th = clamp(otsu(hist, n), 22, 95);
+    let m = new Uint8Array(n); for (let i = 0; i < n; i++) m[i] = D[i] > th ? 1 : 0;
+    m = morph(m, w, h, false); m = morph(m, w, h, true); m = morph(m, w, h, true); m = morph(m, w, h, false);
+    const lab = new Int32Array(n), stack = []; let bestId = 0, bestN = 0, id = 0;
+    for (let s0 = 0; s0 < n; s0++) {
+      if (!m[s0] || lab[s0]) continue; id++; let cnt = 0; lab[s0] = id; stack.push(s0);
+      while (stack.length) {
+        const i = stack.pop(), x = i % w; cnt++;
+        if (x > 0 && m[i - 1] && !lab[i - 1]) { lab[i - 1] = id; stack.push(i - 1); }
+        if (x < w - 1 && m[i + 1] && !lab[i + 1]) { lab[i + 1] = id; stack.push(i + 1); }
+        if (i >= w && m[i - w] && !lab[i - w]) { lab[i - w] = id; stack.push(i - w); }
+        if (i < n - w && m[i + w] && !lab[i + w]) { lab[i + w] = id; stack.push(i + w); }
+      }
+      if (cnt > bestN) { bestN = cnt; bestId = id; }
+    }
+    const ratio = bestN / n;
+    if (ratio > .93) return { ok: false, full: true, q: [{ x: 0, y: 0 }, { x: src.width, y: 0 }, { x: src.width, y: src.height }, { x: 0, y: src.height }] };
+    if (ratio < .08) return fallback;
+    const pts = [], bpts = [];
+    for (let i = 0; i < n; i++) {
+      if (lab[i] !== bestId) continue;
+      const x = i % w, y = (i / w) | 0; pts.push([x, y]);
+      if (x === 0 || y === 0 || x === w - 1 || y === h - 1 || lab[i - 1] !== bestId || lab[i + 1] !== bestId || lab[i - w] !== bestId || lab[i + w] !== bestId) bpts.push([x, y]);
+    }
+    const init = extremeQuad(pts, 1, { width: w, height: h }).map(p => ({ x: p.x - .5, y: p.y - .5 })), diag = Math.hypot(w, h), lines = [];
+    let support = 0, expect = 0;
+    for (let sd = 0; sd < 4; sd++) {
+      const a = init[sd], b = init[(sd + 1) % 4], L = dist(a, b) || 1, ux = (b.x - a.x) / L, uy = (b.y - a.y) / L, tol = Math.max(2.5, L * .07);
+      let sx = 0, sy = 0, c = 0; const sel = []; expect += L * .8;
+      for (const [x, y] of bpts) { const t = ((x - a.x) * ux + (y - a.y) * uy) / L, dd = Math.abs((x - a.x) * uy - (y - a.y) * ux); if (t > .1 && t < .9 && dd < tol) { sel.push([x, y]); sx += x; sy += y; c++; } }
+      support += c;
+      if (c >= 6) {
+        const cx = sx / c, cy = sy / c; let sxx = 0, sxy = 0, syy = 0;
+        for (const [x, y] of sel) { sxx += (x - cx) ** 2; sxy += (x - cx) * (y - cy); syy += (y - cy) ** 2; }
+        const an = .5 * Math.atan2(2 * sxy, sxx - syy); lines.push({ c: [cx, cy], v: [Math.cos(an), Math.sin(an)] });
+      } else lines.push({ c: [a.x, a.y], v: [ux, uy] });
+    }
+    const q = init.map((p0, i) => { const p = lineHit(lines[(i + 3) % 4], lines[i]); return p && p.x > -w * .05 && p.x < w * 1.05 && p.y > -h * .05 && p.y < h * 1.05 && dist(p, p0) < diag * .15 ? p : p0; });
+    let sign = 0, convex = true;
+    for (let i = 0; i < 4; i++) { const a = q[i], b = q[(i + 1) % 4], c = q[(i + 2) % 4], cr = (b.x - a.x) * (c.y - b.y) - (b.y - a.y) * (c.x - b.x); if (!sign) sign = Math.sign(cr); else if (Math.sign(cr) !== sign) convex = false; }
+    const hull = convexHull(bpts), qa = quadArea(q), rect = hullArea(hull) / (qa || 1), sup = support / (expect || 1), k = src.width / w;
+    const ok = convex && rect > .9 && rect < 1.12 && sup > .45 && qa / n > .1;
+    const cx = q.reduce((a, p) => a + p.x, 0) / 4, cy = q.reduce((a, p) => a + p.y, 0) / 4, sh = ok ? .01 : 0;
+    return { ok, full: false, rect, sup, q: q.map(p => ({ x: clamp((lerp(p.x, cx, sh) + .5) * k, 0, src.width), y: clamp((lerp(p.y, cy, sh) + .5) * k, 0, src.height) })) };
+  } catch (e) { return fallback; }
+}
+function autoDetect(src) { const r = detectQuad(src, 320); return r.ok || r.full ? r.q : insetCorners(src); }
 // 앨범 한 페이지: 여러 장 찾기 (포토마인·리이매진 참고)
 function detectMulti(src) {
   try {
@@ -1255,7 +1331,7 @@ function updateQuadTools() {
   const multi = S.quads.length > 1;
   $('#btnDelQuad').disabled = !multi;
   $('#step1Lbl').textContent = multi ? `${S.quads.length}장 모두 스캔` : '다음';
-  $('#stageHint').textContent = multi ? '사진을 눌러 고르고, 모서리를 끌어 맞춰요' : '동그라미를 끌어 사진 네 모서리에 맞춰 주세요';
+  $('#stageHint').textContent = multi ? '사진을 눌러 고르고, 모서리를 끌어 맞춰요' : '동그라미는 모서리, 네모는 변 전체를 옮겨요';
   if (!$('#step1').classList.contains('hidden')) $('#edTitle').textContent = multi ? `사진 ${S.quads.length}장 찾음` : '모서리 맞추기';
 }
 function layoutEditor() {
@@ -1283,7 +1359,9 @@ function drawQuads() {
     }
   });
   $('#quadSvg').setAttribute('viewBox', `0 0 ${dw} ${dh}`); $('#quadSvg').innerHTML = svg;
-  const q = Q[S.sel]; $$('.handle').forEach((h, i) => { h.style.left = q[i].x + 'px'; h.style.top = q[i].y + 'px'; });
+  const q = Q[S.sel];
+  $$('.handle[data-i]').forEach(h => { const i = +h.dataset.i; h.style.left = q[i].x + 'px'; h.style.top = q[i].y + 'px'; });
+  $$('.handle[data-e]').forEach(h => { const e = +h.dataset.e, a = q[e], b = q[(e + 1) % 4]; h.style.left = (a.x + b.x) / 2 + 'px'; h.style.top = (a.y + b.y) / 2 + 'px'; h.style.transform = `rotate(${Math.atan2(b.y - a.y, b.x - a.x)}rad)`; });
 }
 function inPoly(p, q) { let c = false; for (let i = 0, j = 3; i < 4; j = i++) { if (((q[i].y > p.y) !== (q[j].y > p.y)) && (p.x < (q[j].x - q[i].x) * (p.y - q[i].y) / (q[j].y - q[i].y) + q[i].x)) c = !c; } return c; }
 function showLoupe(i) {
@@ -1300,7 +1378,18 @@ function showLoupe(i) {
   x.strokeStyle = '#fff'; x.lineWidth = 2; x.beginPath(); x.moveTo(R - 18, R); x.lineTo(R + 18, R); x.moveTo(R, R - 18); x.lineTo(R, R + 18); x.stroke();
 }
 function initEditor() {
-  $$('.handle').forEach(h => {
+  $$('.handle[data-e]').forEach(h => {
+    const e = +h.dataset.e; let last = null;
+    h.addEventListener('pointerdown', ev => { ev.preventDefault(); ev.stopPropagation(); h.setPointerCapture(ev.pointerId); last = { x: ev.clientX, y: ev.clientY }; });
+    h.addEventListener('pointermove', ev => {
+      if (!last) return;
+      const dx = (ev.clientX - last.x) / edScale, dy = (ev.clientY - last.y) / edScale, q = S.quads[S.sel]; last = { x: ev.clientX, y: ev.clientY };
+      [e, (e + 1) % 4].forEach(i => { q[i] = { x: clamp(q[i].x + dx, 0, S.src.width), y: clamp(q[i].y + dy, 0, S.src.height) }; });
+      drawQuads();
+    });
+    const up = () => { last = null; }; h.addEventListener('pointerup', up); h.addEventListener('pointercancel', up);
+  });
+  $$('.handle[data-i]').forEach(h => {
     const i = +h.dataset.i;
     h.addEventListener('pointerdown', e => { e.preventDefault(); e.stopPropagation(); h.setPointerCapture(e.pointerId); h.classList.add('drag'); h._drag = 1; showLoupe(i); });
     h.addEventListener('pointermove', e => {
@@ -1342,6 +1431,7 @@ function initEditor() {
   // 2단계
   const rot = cw => { S.warped = rotate90(S.warped, cw); buildPreview(); };
   $('#btnRotL').onclick = () => rot(false); $('#btnRotR').onclick = () => rot(true);
+  $('#btnFixCorners').onclick = () => { if (!S.src) { S.src = S.warped; S.quads = [insetCorners(S.warped, 0)]; S.sel = 0; } setStep(1); };
   let gT;
   $('#fine').addEventListener('input', e => {
     S.fine = +e.target.value; $('#fineVal').textContent = (S.fine > 0 ? '+' : '') + S.fine + '°'; rangeFill(e.target);
@@ -1410,33 +1500,59 @@ async function loadFile(file, mode) {
   try {
     const c = await blobToCanvas(file);
     S.src = fitCanvas(c, 2400); S.mode = mode; S.sel = 0;
-    S.quads = mode === 'album' ? detectMulti(S.src) : [autoDetect(S.src)];
-    openEditor();
-    toast(mode === 'album' ? (S.quads.length > 1 ? `사진 ${S.quads.length}장을 찾았어요` : '1장만 찾았어요. 사진 추가로 늘릴 수 있어요') : '모서리를 찾았어요. 손가락으로 다듬어 주세요');
+    if (mode === 'album') {
+      S.quads = detectMulti(S.src); openEditor();
+      toast(S.quads.length > 1 ? `사진 ${S.quads.length}장을 찾았어요` : '1장만 찾았어요. 사진 추가로 늘릴 수 있어요');
+    } else {
+      const r = detectQuad(S.src, 384); S.quads = [r.q];
+      if (r.ok || r.full) {
+        S.warped = r.full ? copyCanvas(S.src) : warp(S.src, r.q); S.fine = 0; S.ratio = 'orig';
+        openEditor(); syncStep2UI(); setStep(2);
+        toast(r.full ? '이미 잘린 사진이라 그대로 썼어요' : '테두리를 찾아 반듯하게 폈어요');
+      } else { openEditor(); toast('테두리를 못 찾았어요. 손가락으로 맞춰 주세요'); }
+    }
   } catch (e) { console.error(e); toast('사진을 열 수 없어요. 다른 사진으로 해 주세요'); }
   finally { loading(false); }
 }
 
-/* ================= 카메라 (반사 없이 찍기) ================= */
-const CAM = { stream: null, shots: [] };
+/* ================= 카메라: 실시간 사진 인식 + 반사 없이 찍기 ================= */
+const CAM = { stream: null, shots: [], mode: 'single', auto: store('ms_cam_auto') !== false, cont: !!store('ms_cam_cont'), loopT: 0, sq: null, k: 1, stableMs: 0, lastT: 0, lostMs: 0, needChange: false, lastCapQ: null, busy: false, small: null, count: 0, full: false };
 const GUIDE = [
   { t: '정면에서 한 장', d: '사진이 점선 안에 꽉 차게 맞춰 주세요', a: null },
   { t: '왼쪽으로 살짝', d: '폰을 한 뼘 왼쪽으로 옮겨 사진이 점선 안에 오게', a: ['arrow-left', '-14px', '0px'] },
   { t: '오른쪽으로 살짝', d: '이번엔 한 뼘 오른쪽으로 옮겨서', a: ['arrow-right', '14px', '0px'] },
   { t: '아래쪽으로 살짝', d: '마지막으로 한 뼘 아래로 옮겨서', a: ['arrow-down', '0px', '14px'] }
 ];
-async function openGlare() {
-  CAM.shots = [];
-  if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) return openGlareFallback();
-  try {
-    CAM.stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: { ideal: 'environment' }, width: { ideal: 2560 }, height: { ideal: 1920 } }, audio: false });
-  } catch (e) { toast('카메라를 열 수 없어 사진 찍기 방식으로 할게요'); return openGlareFallback(); }
+async function startStream() {
+  CAM.stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: { ideal: 'environment' }, width: { ideal: 2560 }, height: { ideal: 1920 } }, audio: false });
   const v = $('#camVideo'); v.srcObject = CAM.stream; $('#cam').classList.remove('hidden'); document.body.classList.add('lock');
   try { await v.play(); } catch (e) {}
-  updateCam();
+}
+function resetCamState() { CAM.shots = []; CAM.count = 0; CAM.sq = null; CAM.stableMs = 0; CAM.lostMs = 0; CAM.lastT = 0; CAM.needChange = false; CAM.lastCapQ = null; CAM.busy = false; $('#camSvg').innerHTML = ''; }
+async function openScanner() {
+  if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) { $('#inCamFallback').click(); return; }
+  CAM.mode = 'single'; resetCamState(); $('#cam').classList.remove('glare');
+  try { await startStream(); }
+  catch (e) { actionSheet('카메라 화면을 열 수 없어요', [{ label: '기본 카메라로 찍기', desc: '찍고 나면 테두리를 자동으로 찾아 펴 드려요', icon: 'camera', fn: () => $('#inCamFallback').click() }]); return; }
+  updateCam(); camLoop();
+}
+async function openGlare() {
+  if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) return openGlareFallback();
+  CAM.mode = 'glare'; resetCamState(); $('#cam').classList.add('glare');
+  try { await startStream(); } catch (e) { toast('카메라를 열 수 없어 사진 찍기 방식으로 할게요'); return openGlareFallback(); }
+  updateCam(); camLoop();
 }
 function updateCam() {
+  if (CAM.mode === 'single') {
+    $('#camArrow').classList.add('hidden');
+    $('#camAuto').classList.toggle('on', CAM.auto); $('#camCont').classList.toggle('on', CAM.cont);
+    $('#camDone').classList.toggle('hidden', !CAM.cont); $('#camDone').disabled = !CAM.count; $('#camDone').textContent = CAM.count ? `완료 ${CAM.count}장` : '완료';
+    $('#camShot').disabled = false;
+    $('#camThumbs').innerHTML = CAM.cont ? S.batch.slice(-3).map(b => `<img src="${fitCanvas(b.c, 90).toDataURL('image/jpeg', .7)}" alt="">`).join('') : '';
+    return;
+  }
   const n = CAM.shots.length, g = GUIDE[Math.min(n, 3)];
+  $('#camDone').classList.remove('hidden');
   $('#camT').textContent = n >= 4 ? '다 찍었어요' : `${n + 1}번째 · ${g.t}`;
   $('#camD').textContent = n >= 4 ? '합치기를 누르면 반사를 지워요' : g.d;
   $$('#camDots i').forEach((d, i) => d.classList.toggle('on', i < n));
@@ -1447,16 +1563,83 @@ function updateCam() {
   $('#camShot').disabled = n >= 4;
   $('#camThumbs').innerHTML = CAM.shots.slice(-3).map(c => `<img src="${fitCanvas(c, 90).toDataURL('image/jpeg', .7)}" alt="">`).join('');
 }
-function stopCam() { if (CAM.stream) CAM.stream.getTracks().forEach(t => t.stop()); CAM.stream = null; $('#cam').classList.add('hidden'); lockScroll(); }
-function camShot() {
-  const v = $('#camVideo'); if (!v.videoWidth || CAM.shots.length >= 4) return;
-  const c = mkCanvas(v.videoWidth, v.videoHeight); c.getContext('2d').drawImage(v, 0, 0); CAM.shots.push(c);
+function setCamText(t, d) { if ($('#camT').textContent !== t) $('#camT').textContent = t; if ($('#camD').textContent !== d) $('#camD').textContent = d; }
+function drawCamOverlay(ok) {
+  const svg = $('#camSvg'), v = $('#camVideo'), W = window.innerWidth, H = window.innerHeight;
+  if (!CAM.sq || !v.videoWidth) { svg.innerHTML = ''; return; }
+  const vw = v.videoWidth, vh = v.videoHeight, s = Math.max(W / vw, H / vh), ox = (W - vw * s) / 2, oy = (H - vh * s) / 2;
+  const pts = CAM.sq.map(p => [(p.x / CAM.k) * s + ox, (p.y / CAM.k) * s + oy]), col = CAM.needChange ? '#ffffff' : '#D9691F';
+  svg.setAttribute('viewBox', `0 0 ${W} ${H}`);
+  svg.innerHTML = `<polygon points="${pts.map(p => p.join(',')).join(' ')}" fill="rgba(217,105,31,${ok ? .2 : .06})" stroke="${col}" stroke-width="4" stroke-linejoin="round"/>` + pts.map(p => `<circle cx="${p[0]}" cy="${p[1]}" r="9" fill="#fff" stroke="${col}" stroke-width="3"/>`).join('');
+}
+const STABLE_MS = 900;
+function camLoop() {
+  clearTimeout(CAM.loopT);
+  const tick = () => {
+    if (!CAM.stream) return;
+    const v = $('#camVideo');
+    if (v.videoWidth) {
+      const now = performance.now(), dt = CAM.lastT ? Math.min(300, now - CAM.lastT) : 0; CAM.lastT = now;
+      const k = 200 / Math.max(v.videoWidth, v.videoHeight), sm = CAM.small || (CAM.small = mkCanvas(1, 1));
+      sm.width = Math.round(v.videoWidth * k); sm.height = Math.round(v.videoHeight * k); ctx2(sm).drawImage(v, 0, 0, sm.width, sm.height);
+      const r = detectQuad(sm, 200), diag = Math.hypot(sm.width, sm.height); CAM.k = k; CAM.full = r.full;
+      if (r.ok) {
+        CAM.lostMs = 0; let delta = 1;
+        if (CAM.sq) { delta = Math.max(...r.q.map((p, i) => dist(p, CAM.sq[i]))) / diag; CAM.sq = CAM.sq.map((p, i) => ({ x: lerp(p.x, r.q[i].x, .5), y: lerp(p.y, r.q[i].y, .5) })); } else CAM.sq = r.q;
+        if (CAM.needChange && CAM.lastCapQ && Math.max(...CAM.sq.map((p, i) => dist(p, CAM.lastCapQ[i]))) / diag > .1) CAM.needChange = false;
+        CAM.stableMs = delta < .03 ? CAM.stableMs + dt : 0;
+      } else { CAM.lostMs += dt; CAM.stableMs = 0; if (CAM.lostMs > 400) { CAM.sq = null; CAM.needChange = false; } }
+      drawCamOverlay(r.ok);
+      if (CAM.mode === 'single') {
+        const canAuto = CAM.auto && CAM.sq && r.ok && !CAM.needChange && !CAM.busy;
+        $('#camShot').style.setProperty('--p', canAuto ? Math.min(100, CAM.stableMs / STABLE_MS * 100) : 0);
+        if (CAM.busy) setCamText('반듯하게 펴는 중', '잠시만요');
+        else if (CAM.needChange) setCamText('다음 사진을 올려 주세요', `${CAM.count}장 찍었어요. 사진을 바꾸면 또 찍어요`);
+        else if (!CAM.sq) setCamText(CAM.full ? '조금 멀리서 비춰 주세요' : '사진을 화면 안에 비춰 주세요', CAM.full ? '사진 네 모서리가 모두 보이게' : '사진보다 어두운 바닥에 두면 잘 찾아요');
+        else if (!CAM.auto) setCamText('사진을 찾았어요', '셔터를 누르면 반듯하게 펴 드려요');
+        else setCamText(CAM.stableMs > 250 ? '그대로 가만히' : '사진을 찾았어요', '가만히 들고 있으면 알아서 찍어요');
+        if (canAuto && CAM.stableMs >= STABLE_MS) camShot();
+      }
+    }
+    CAM.loopT = setTimeout(tick, 110);
+  };
+  tick();
+}
+function stopCam() { clearTimeout(CAM.loopT); if (CAM.stream) CAM.stream.getTracks().forEach(t => t.stop()); CAM.stream = null; $('#cam').classList.add('hidden'); $('#camSvg').innerHTML = ''; lockScroll(); }
+function camFlash() {
   const f = $('#camFlash'); f.style.transition = 'none'; f.style.opacity = '.8'; requestAnimationFrame(() => { f.style.transition = 'opacity .35s'; f.style.opacity = '0'; });
   try { navigator.vibrate && navigator.vibrate(30); } catch (e) {}
-  updateCam();
-  if (CAM.shots.length >= 4) setTimeout(camFinish, 450);
+}
+async function camShot() {
+  const v = $('#camVideo'); if (!v.videoWidth || CAM.busy) return;
+  if (CAM.mode === 'glare') {
+    if (CAM.shots.length >= 4) return;
+    const c = mkCanvas(v.videoWidth, v.videoHeight); c.getContext('2d').drawImage(v, 0, 0); CAM.shots.push(c); camFlash(); updateCam();
+    if (CAM.shots.length >= 4) setTimeout(camFinish, 450);
+    return;
+  }
+  CAM.busy = true; setCamText('반듯하게 펴는 중', '잠시만요');
+  const c = mkCanvas(v.videoWidth, v.videoHeight); c.getContext('2d').drawImage(v, 0, 0); camFlash();
+  const live = CAM.sq ? CAM.sq.map(p => ({ x: p.x / CAM.k, y: p.y / CAM.k })) : null;
+  CAM.lastCapQ = CAM.sq; CAM.stableMs = 0; $('#camShot').style.setProperty('--p', 0);
+  await nextPaint();
+  try {
+    const src = fitCanvas(c, 2400), sc = src.width / c.width, r = detectQuad(src, 480), lq = live && live.map(p => ({ x: p.x * sc, y: p.y * sc }));
+    let q = r.ok ? r.q : lq || insetCorners(src, 0);
+    if (r.ok && lq && Math.max(...q.map((p, i) => dist(p, lq[i]))) / Math.hypot(src.width, src.height) > .06) q = lq;
+    if (CAM.cont) {
+      const w = fitCanvas(warp(src, q), 1600); fxGlare(w); fxAutoContrast(w); S.batch.push({ c: w, done: false });
+      CAM.count++; CAM.needChange = true; updateCam(); toast(`${CAM.count}장째 찍었어요`);
+    } else {
+      stopCam();
+      S.src = src; S.mode = 'single'; S.quads = [q]; S.sel = 0; S.warped = warp(src, q); S.fine = 0; S.ratio = 'orig';
+      openEditor(); syncStep2UI(); setStep(2); toast('반듯하게 폈어요. 어긋났으면 모서리 고치기');
+    }
+  } catch (e) { console.error(e); toast('찍는 중 문제가 생겼어요. 다시 해 주세요'); }
+  finally { CAM.busy = false; }
 }
 async function camFinish() {
+  if (CAM.mode !== 'glare') { stopCam(); if (S.batch.length) openBatch(); renderHome(); return; }
   const shots = CAM.shots.slice(); stopCam(); if (shots.length < 2) return;
   await startFromComposite(shots);
 }
@@ -2306,7 +2489,10 @@ function bind() {
   $$('input[data-load]').forEach(inp => inp.addEventListener('change', e => { const f = e.target.files[0]; e.target.value = ''; loadFile(f, inp.dataset.load); }));
   initEditor(); initCompare(); initFocusTap(); initDetail();
   $('#btnGlare').onclick = openGlare;
-  $('#camShot').onclick = camShot; $('#camDone').onclick = camFinish; $('#camClose').onclick = () => { stopCam(); CAM.shots = []; };
+  $('#btnScanCam').onclick = openScanner;
+  $('#camAuto').onclick = () => { CAM.auto = !CAM.auto; store('ms_cam_auto', CAM.auto); updateCam(); toast(CAM.auto ? '가만히 들고 있으면 알아서 찍어요' : '셔터를 직접 눌러 찍어요'); };
+  $('#camCont').onclick = () => { CAM.cont = !CAM.cont; store('ms_cam_cont', CAM.cont); updateCam(); toast(CAM.cont ? '여러 장을 계속 찍어요. 다 찍으면 완료를 누르세요' : '한 장 찍으면 바로 다듬기로 가요'); };
+  $('#camShot').onclick = camShot; $('#camDone').onclick = camFinish; $('#camClose').onclick = () => { const had = CAM.mode === 'single' && CAM.count; stopCam(); CAM.shots = []; if (had) { renderHome(); openBatch(); } };
   $('#gsIn').addEventListener('change', async e => {
     const f = e.target.files[0]; e.target.value = ''; if (!f || CAM.shots.length >= 4) return;
     try { CAM.shots.push(fitCanvas(await blobToCanvas(f), 2000)); updateGlareSheet(); } catch (err) { toast('사진을 열 수 없어요'); }
