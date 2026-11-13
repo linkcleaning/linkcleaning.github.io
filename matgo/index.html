@@ -616,7 +616,7 @@ small.zero,.seg small.mn.zero{color:#ff8a80!important}
 
 <script>
 'use strict';
-const VER='v60';
+const VER='v61';
 const $=s=>document.querySelector(s);
 const sleep=ms=>new Promise(r=>setTimeout(r,ms));
 const rnd=n=>Math.floor(Math.random()*n);
@@ -721,14 +721,13 @@ const CARDS=[];
 for(let m=1;m<=12;m++)DEF[m].forEach(([t,sub],i)=>CARDS.push({id:m+'-'+i,m,t,sub:sub||'',i}));
 // 링크의 보너스 패 5장 (말풍선 대사 + 효과)
 CARDS.push(
- {id:'B-3',m:0,t:'B',sub:'3',i:0,say:['아싸','쓰리피~'],lab:'쓰리피'},
- {id:'B-S2',m:0,t:'B',sub:'1',i:1,steal:2,say:['상대에게 피','두 장을 받으세요!!'],lab:'피 2장 뺏기'},
- {id:'B-L',m:0,t:'B',sub:'2',i:2,lucky:true,say:['Good','Luck!'],lab:'행운 슬롯'},
- {id:'B-CL',m:0,t:'B',sub:'1',i:3,act:'clean',ic:'🧹',col:'#00796b',say:['바닥 패 하나','골라 가져가요~'],lab:'대청소'},
- {id:'B-CH',m:0,t:'B',sub:'1',i:4,act:'swap',ic:'🔄',col:'#1565c0',say:['상대 패랑','한 장 바꿔요!'],lab:'체인지'},
- {id:'B-SH',m:0,t:'B',sub:'1',i:5,act:'shield',ic:'🛡️',col:'#455a64',say:['이번 판','피박·광박 면제!'],lab:'방패'},
- {id:'B-GF',m:0,t:'B',sub:'1',i:6,act:'gift',ic:'🎁',col:'#c2185b',say:['선물상자','골라 보세요!'],lab:'선물상자'});
-const BONUS_ORDER=['B-3','B-S2','B-L','B-CL','B-CH','B-SH','B-GF'];
+ {id:'B-3',m:0,t:'B',sub:'3',i:0,say:['쓰리피!','+ 피 1장 뺏기'],lab:'쓰리피'},
+ {id:'B-2',m:0,t:'B',sub:'2',i:1,say:['투피!','+ 피 1장 뺏기'],lab:'투피'},
+ {id:'B-S2',m:0,t:'B',sub:'1',i:2,steal:2,say:['상대에게 피','두 장을 받으세요!!'],lab:'피 2장 뺏기'},
+ {id:'B-CL',m:0,t:'B',sub:'1',i:3,act:'clean',ic:'🧹',col:'#00796b',say:['바닥 패 하나','+ 피 1장 뺏기'],lab:'대청소'},
+ {id:'B-CH',m:0,t:'B',sub:'1',i:4,act:'swap',ic:'🔄',col:'#1565c0',say:['패 한 장 교환','+ 피 1장 뺏기'],lab:'체인지'},
+ {id:'B-GF',m:0,t:'B',sub:'1',i:5,act:'gift',ic:'🎁',col:'#c2185b',say:['선물상자','+ 피 1장 뺏기'],lab:'선물상자'});
+const BONUS_ORDER=['B-3','B-2','B-S2','B-CL','B-CH','B-GF'];
 function piVal(c){if(c.t==='B')return +c.sub;if(c.t==='P')return c.sub==='ssang'?2:1;return 0}
 
 /* =====================================================
@@ -1461,7 +1460,7 @@ async function bonusAct(p,c){
   }else if(c.act==='shield'){
     S.shield[p]=true;SFX.bonus();await banner('🛡️ '+who+'방패!\n이번 판 피박·광박 면제','gold',1000);render();
   }else if(c.act==='gift'){
-    const box=gshuffle([['🎉 대박!','5점어치 + 피 1장',5,1],['🙂 보통','2점어치',2,0],['😝 꽝!','다음 기회에',0,0]]);
+    const box=gshuffle([['🎉 대박!','15점어치 + 피 2장',15,2],['😊 중박','7점어치 + 피 1장',7,1],['🙂 소박','3점어치',3,0]]);
     const k=+(await decideV(p,'gift',()=>giftPick(box),()=>rnd(3)))||0;
     if(!me)await giftShow(box,k,S.opp.nick+'의 선물상자');
     const g=box[k];
@@ -1472,11 +1471,11 @@ async function bonusAct(p,c){
 }
 function giftHTML(box,k,title){return `<h2>${title}</h2><div class="gifts">${box.map((g,i)=>`<div class="gbox ${k==null?'':i===k?'open pick':'open'}" data-v="${i}"><div class="gl">🎁</div>${k==null?'':`<b>${g[0]}</b><small>${g[1]}</small>`}</div>`).join('')}</div>`}
 async function giftPick(box){
-  SFX.event();const v=await modal(giftHTML(box,null,'🎁 선물상자를 골라 보세요!')+'<p style="font-size:12px;opacity:.8">셋 중 하나는 대박, 하나는 꽝!</p>');
+  SFX.event();const v=await modal(giftHTML(box,null,'🎁 선물상자를 골라 보세요!')+'<p style="font-size:12px;opacity:.8">대박 · 중박 · 소박 — 꽝은 없어요!</p>');
   const k=+v||0;await giftShow(box,k,'🎁 선물상자');return k;
 }
 async function giftShow(box,k,title){
-  const g=box[k];g[2]?(g[2]>=5?SFX.win():SFX.coin()):SFX.lose();if(g[2]>=5){confetti();vib([30,40,30])}
+  const g=box[k];g[2]>=7?SFX.win():SFX.coin();if(g[2]>=15){confetti();vib([30,40,30])}
   const bg=document.createElement('div');bg.className='mbg';bg.innerHTML=`<div class="modal">${giftHTML(box,k,title)}</div>`;document.body.appendChild(bg);
   await sleep(1500);bg.remove();
 }
@@ -1489,8 +1488,8 @@ function pushGet(){if(!S)return null;if(PV.on){const q=PV.push;return q?{who:q.w
 function pushSet(w,pts){if(PV.on)PV.push={who:w===0?PV.me:PV.op,pts};else{DB.push={opp:S.opp.id,who:w,pts};saveDB()}}
 function pushClear(){if(PV.on)PV.push=null;else{DB.push=null;saveDB()}}
 async function askPush(total,carry){
-  const v=await modal(`<div style="font-size:44px">🎉</div><h2>${total}점으로 이겼어요!</h2><p>지금 받을까요, 다음 판으로 <b style="color:#ffe08a">밀까요?</b><br><small style="opacity:.8">밀면 다음 판도 이길 때 (그 판 점수 + ${total}점) × 2를 받아요.<br>지면 ${total}점은 날아가요!</small></p>`,
-    [{t:`💰 지금 받기 (${won(total*(PV.on?PV.per:DB.cfg.per))})`,v:0},{t:'➡️ 밀기! 다음 판 ×2',cls:'alt',v:1}],{cls:'vbtn'});
+  const v=await modal(`<div style="font-size:44px">🎉</div><h2>${total}점으로 이겼어요!</h2><p>지금 받을까요, 다음 판으로 <b style="color:#ffe08a">밀까요?</b><br><small style="opacity:.8">밀면 다음 판도 이길 때 (그 판 점수 + ${total}점) × <b style="color:#ffe08a">4</b>를 받아요.<br>지면 ${total}점은 날아가요!</small></p>`,
+    [{t:`💰 지금 받기 (${won(total*(PV.on?PV.per:DB.cfg.per))})`,v:0},{t:'➡️ 밀기! 다음 판 ×4',cls:'alt',v:1}],{cls:'vbtn'});
   return !!v;
 }
 function seotda(cs){
@@ -1516,7 +1515,7 @@ async function charAnim(kind,p){
 }
 async function afterCaptureEvents(p,cards){
   for(const c of cards)if(c.act&&!S.over)await bonusAct(p,c);
-  for(const c of cards){if(c.steal){say(p===1?c.say.join(' '):'');await banner(c.lab+'!','gold',700);await act(()=>stealPi(1-p,p,c.steal),{dur:520});SFX.coin()}}
+  for(const c of cards){if(c.t==='B'&&!S.over){const n=c.steal||1;say(p===1?c.say.join(' '):'');await banner(`${c.lab}!\n피 ${n}장 뺏기`,'gold',700);await act(()=>stealPi(1-p,p,n),{dur:520});SFX.coin()}}
   if(!DB.cfg.event)return;
   if(cards.some(c=>c.lucky))await luckyRoulette(p);
   const nb=S.caps[p].filter(c=>c.t==='B').length;
@@ -1672,10 +1671,10 @@ async function endGame(w,sp={}){
   if(!sp.chongtong&&!sp.ppuk3&&DB.cfg.event&&S.turnN[w]+S.turnN[L]<=8){score+=2;lines.push(['초스피드 승','+2'])}
   let total=score*mul.reduce((m,x)=>m*x[1],1);
   // ➡️ 밀기 정산
-  let pushLine='';{const pk=pushGet();if(pk){pushClear();if(pk.who===w){total=(total+pk.pts)*2;lines.push([`➡️ 밀기 성공! (+${pk.pts}점 후 ×2)`,'×2'])}else pushLine=`<p style="font-size:12px;color:#ffb3b3">➡️ ${pk.who===0?'내':esc(S.opp.nick)+'의'} 밀기 ${pk.pts}점은 날아갔어요</p>`}}
+  let pushLine='';{const pk=pushGet();if(pk){pushClear();if(pk.who===w){total=(total+pk.pts)*4;lines.push([`➡️ 밀기 성공! (+${pk.pts}점 후 ×4)`,'×4'])}else pushLine=`<p style="font-size:12px;color:#ffb3b3">➡️ ${pk.who===0?'내':esc(S.opp.nick)+'의'} 밀기 ${pk.pts}점은 날아갔어요</p>`}}
   let pushed=false;
   if(!sp.chongtong&&!S.opp.boss)pushed=!!(await decide(w,'push',()=>askPush(total),()=>Math.random()<.3));
-  if(pushed){pushSet(w,total);SFX.go();await banner(`➡️ ${w===0?'':S.opp.nick+' '}밀기!\n다음 판 이기면 ×2`,'go',1000)}
+  if(pushed){pushSet(w,total);SFX.go();await banner(`➡️ ${w===0?'':S.opp.nick+' '}밀기!\n다음 판 이기면 ×4`,'go',1000)}
   // 🔥 일런마스크 연승
   let smul=1,streak=0;if(S.opp.boss&&!PV.on){if(w===0){streak=DB.bossStreak=(DB.bossStreak||0)+1;smul=Math.min(3,1+.5*(streak-1))}else DB.bossStreak=0}
   if(PV.on){PV.nag=0;PV.first=w===0?PV.me:PV.op}else{DB.nagari=0;DB.first=w}
@@ -1695,7 +1694,7 @@ async function endGame(w,sp={}){
    <h2>${w===0?'🎉 '+esc(pName(pl))+' 승리!':'😢 '+S.opp.nick+' 승리'}</h2>${S.pvp?'<p style="margin:-4px 0 4px">📱 실시간 대전</p>':`<p style="margin:-4px 0 4px">“${w===0?S.opp.lose:S.opp.win}”</p>`}
    <div class="res-lines">${lines.map(([n,v])=>`<div><span>${n}</span><b>${typeof v==='number'?v+'점':v}</b></div>`).join('')||'<div><span>기본 점수</span><b>'+base+'점</b></div>'}</div>
    ${mul.length?`<div class="mult">${mul.map(([n,x])=>`<span>${n} ×${x}</span>`).join('')}</div>`:''}
-   <div class="total ${w===0?'':'neg'}">${w===0?'+':'-'}${total}점${pushed?' <small style="font-size:14px">➡️ 밀기</small>':''}</div>${pushed?`<p style="font-size:12px;color:#ffe08a">➡️ ${w===0?'내가':esc(S.opp.nick)+'님이'} ${total}점을 다음 판으로 밀었어요. 다음 판도 이기면 ×2!</p>`:''}${pushLine}${streak?`<p style="font-size:13px;color:#ffb74d">🔥 일런마스크 ${streak}연승! 상금 ×${smul}</p>`:''}
+   <div class="total ${w===0?'':'neg'}">${w===0?'+':'-'}${total}점${pushed?' <small style="font-size:14px">➡️ 밀기</small>':''}</div>${pushed?`<p style="font-size:12px;color:#ffe08a">➡️ ${w===0?'내가':esc(S.opp.nick)+'님이'} ${total}점을 다음 판으로 밀었어요. 다음 판도 이기면 ×4!</p>`:''}${pushLine}${streak?`<p style="font-size:13px;color:#ffb74d">🔥 일런마스크 ${streak}연승! 상금 ×${smul}</p>`:''}
    <p style="font-size:12px;opacity:.8">${esc(pName(pl))} 누적 ${st.net>=0?'+':''}${st.net}점 · ${st.w}승 ${st.l}패</p>`;
   let d0=(pushed?0:(w===0?total:-total))+S.inst[0]-S.inst[1];
   const charm=d0<0&&S.buff.charm;if(charm)d0=-Math.ceil(-d0/2);
@@ -2443,7 +2442,7 @@ const RULES=`<div class="rules">
 <h3>🎴 기본 진행</h3>손패 1장을 내고, 더미에서 1장을 뒤집어요. 같은 <b>월(그림)</b>끼리 짝이 맞으면 먹어요. 낼 패를 한 번 누르면 <b>먹을 수 있는 바닥패가 빛나고</b>, 한 번 더 누르면(또는 빛나는 바닥패를 누르면) 내요.
 <h3>🧮 점수</h3><b>광</b> 3장 3점(비광 포함 시 2점), 4장 4점, 5장 15점<br><b>열끗</b> 5장 1점 + 1장마다 1점 · <b>고도리</b>(2·4·8월 새) 5점<br><b>띠</b> 5장 1점 + 1장마다 1점 · <b>홍단·청단·초단</b> 각 3점<br><b>피</b> 10장 1점 + 1장마다 1점 (쌍피·보너스는 2~3장으로 계산, 국진은 유리하게 자동 계산)
 <h3>🔥 고 / 스톱</h3>날 점수에 도달하면 고 또는 스톱! 1고 +1점, 2고 +2점, 3고부터 (+2점 후) ×2, ×4…
-<h3>💥 특수 상황</h3><b>쪽</b> 낸 패를 뒤집은 패로 바로 먹기 → 피 1장 뺏기<br><b>뻑 (쌌다, 뿌직~ 💩)</b> 낸 패로 먹었는데 뒤집은 패도 같은 월 → 3장이 바닥에 묶여요. 나중에 먹으면 피 1장(자기 뻑이면 2장)<br><b>따닥</b> 바닥 2장 + 낸 패 + 뒤집은 패 모두 같은 월 → 4장 다 먹고 피 1장<br><b>싹쓸 (🧹 링크클린 출동! 청소 끝!)</b> 바닥을 다 비우면 청소기 소리와 함께 피 1장<br><b>폭탄</b> 같은 월 3장을 들고 바닥에 1장 → 한 번에 4장 먹고 피 1장, ×2, 빈패 2장 받음<br><b>흔들기</b> 같은 월 3장을 들고 바닥에 없을 때 선언 → ×2 (<b>💩 똥(11월)·🌼 국진(9월)을 흔들면 ×4</b>)<br><b>3뻑</b> 한 판에 뻑 3번이면 즉시 승리 · <b>총통</b> 처음에 같은 월 4장이면 10점 승리 + 총통 보너스 5천원<br><b>링크의 보너스 패</b> (7종 중 판마다 6장이 무작위로 들어가요, 관리인이 장수 결정) 내면 바로 먹고 한 장 더 받아요 — 쓰리피 · 피 2장 뺏기 · 🎰 행운 슬롯 · 🧹 대청소(바닥 패 1장 골라 가져오기) · 🔄 체인지(상대 손패와 1장 무작위 교환) · 🛡️ 방패(이번 판 피박·광박 면제) · 🎁 선물상자(3개 중 하나: 대박 5점어치+피1장 / 보통 2점어치 / 꽝)<br><b>🎯 빙고 미션</b> 판마다 빙고판(화투 9장)이 떠요. 먹은 패가 ○로 칠해지고 가로·세로·대각선 한 줄마다 ×2 (2줄 ×4, 3줄 ×6…)<br><b>➡️ 밀기</b> 이기면 돈을 바로 받지 않고 다음 판으로 밀 수 있어요. 다음 판도 이기면 (그 판 점수+민 점수)×2, 지면 날아가요<br><b>🎴 섯다 족보</b> 처음 받은 두 장이 38광땡 10점어치 · 광땡 7 · 장땡 5 · 땡 3 · 알리 2 · 독사 1<br><b>🔥 일런마스크 연승</b> 연속으로 이길 때마다 상금이 ×1.5, ×2 … 최대 ×3 (지면 0연승)
+<h3>💥 특수 상황</h3><b>쪽</b> 낸 패를 뒤집은 패로 바로 먹기 → 피 1장 뺏기<br><b>뻑 (쌌다, 뿌직~ 💩)</b> 낸 패로 먹었는데 뒤집은 패도 같은 월 → 3장이 바닥에 묶여요. 나중에 먹으면 피 1장(자기 뻑이면 2장)<br><b>따닥</b> 바닥 2장 + 낸 패 + 뒤집은 패 모두 같은 월 → 4장 다 먹고 피 1장<br><b>싹쓸 (🧹 링크클린 출동! 청소 끝!)</b> 바닥을 다 비우면 청소기 소리와 함께 피 1장<br><b>폭탄</b> 같은 월 3장을 들고 바닥에 1장 → 한 번에 4장 먹고 피 1장, ×2, 빈패 2장 받음<br><b>흔들기</b> 같은 월 3장을 들고 바닥에 없을 때 선언 → ×2 (<b>💩 똥(11월)·🌼 국진(9월)을 흔들면 ×4</b>)<br><b>3뻑</b> 한 판에 뻑 3번이면 즉시 승리 · <b>총통</b> 처음에 같은 월 4장이면 10점 승리 + 총통 보너스 5천원<br><b>링크의 보너스 패</b> (6종, 관리인이 장수 결정) 내면 바로 먹고 한 장 더 받아요. <b>모든 보너스패는 상대 피 1장을 뺏어요!</b> — 쓰리피 · 투피 · 피 2장 뺏기 · 🧹 대청소(바닥 패 1장 골라 가져오기) · 🔄 체인지(상대 손패와 1장 무작위 교환) · 🎁 선물상자(대박 15점어치+피2장 / 중박 7점어치+피1장 / 소박 3점어치)<br><b>🎯 빙고 미션</b> 판마다 빙고판(화투 9장)이 떠요. 먹은 패가 ○로 칠해지고 가로·세로·대각선 한 줄마다 ×2 (2줄 ×4, 3줄 ×6…)<br><b>➡️ 밀기</b> 이기면 돈을 바로 받지 않고 다음 판으로 밀 수 있어요. 다음 판도 이기면 (그 판 점수+민 점수)×4, 지면 날아가요<br><b>🎴 섯다 족보</b> 처음 받은 두 장이 38광땡 10점어치 · 광땡 7 · 장땡 5 · 땡 3 · 알리 2 · 독사 1<br><b>🔥 일런마스크 연승</b> 연속으로 이길 때마다 상금이 ×1.5, ×2 … 최대 ×3 (지면 0연승)
 <h3>🎨 그림</h3>화투 그림은 무료 공개 화투 일러스트를 사용했어요.
 <h3>🎲 특수 이벤트 (관리인이 켜고 끔)</h3><b>첫뻑</b> 첫 턴에 뻑 → 상대가 5점어치 즉시 지급 · <b>연뻑</b> 두 턴 연속 뻑 → 10점어치<br><b>첫따닥</b> 5점어치 · <b>첫쪽</b> 3점어치 · <b>막쓸</b> 마지막 패로 싹쓸 → 피 1장 + 3점어치<br><b>보너스 대박</b> 보너스패 3장 이상 먹으면 5점어치 · <b>쓰리고 축하금</b> 3점어치<br><b>🍀 링크의 행운 패</b> 먹으면 🎰 슬롯머신이 돌아가요! (777 이기면 ×2+5점어치 · BAR 피2장+3점어치 · 🍒 피2장 · 🍉 5점어치 · 🍇 3점어치 · 🍋 피1장 · 두 개 맞으면 1점어치 · 꽝) (피 2장 뺏기 / 이기면 ×2 / 5점어치 / 피 1장+3점어치)<br><b>🎰 잭팟 판</b> 가끔(15%) 판 전체 점수 ×2 · <b>완봉승</b> 상대 0점이면 +3점 · <b>초스피드 승</b> 각자 4턴 안에 나면 +2점<br><small>'점어치'는 점당 금액으로 바로 바꿔 판 끝에 함께 정산돼요 (나가리여도 정산)</small>
 <h3>☕ 커피 · 📝 댓글 이벤트</h3>돈 100만원을 모으면 스타벅스 커피 1잔, 300만원이면 2잔 (1인 최대 2잔). 🎡 행운 룰렛은 하루 3번 (꽝·1천·3천·5천·1만·2만원)! 링크클린 블로그·앱에 댓글 달고 캡처를 올리면 관리인 확인 후 +3만원!
