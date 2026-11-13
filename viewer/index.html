@@ -33,20 +33,36 @@
 <!-- 앱 아이콘 + manifest.json 을 파일 하나 안에서 만들어 붙임 -->
 <script>
 (function () {
-  function icon(size) {
+  function icon(size) {   /* 만화책 표지: 주황 표지 + 책등 + 페이지 단면 + 망점 + '빵!' 효과음 */
     var c = document.createElement('canvas'); c.width = c.height = size;
     var x = c.getContext('2d'), s = size / 512;
-    x.fillStyle = '#0E3B40'; x.fillRect(0, 0, size, size);
-    x.fillStyle = '#ECE8E1';
-    x.fillRect(108 * s, 124 * s, 138 * s, 268 * s);                       // 왼쪽 페이지
-    x.beginPath(); x.moveTo(266 * s, 124 * s); x.lineTo(356 * s, 124 * s); // 오른쪽 페이지 (모서리 접힘)
-    x.lineTo(404 * s, 172 * s); x.lineTo(404 * s, 392 * s); x.lineTo(266 * s, 392 * s); x.closePath(); x.fill();
-    x.fillStyle = '#F2994A';
-    x.beginPath(); x.moveTo(356 * s, 124 * s); x.lineTo(356 * s, 172 * s); x.lineTo(404 * s, 172 * s); x.closePath(); x.fill();
-    x.strokeStyle = '#0E3B40'; x.lineWidth = 9 * s;                         // 만화 칸
-    x.strokeRect(128 * s, 146 * s, 98 * s, 96 * s); x.strokeRect(128 * s, 262 * s, 98 * s, 108 * s);
-    x.strokeRect(286 * s, 196 * s, 98 * s, 174 * s);
-    x.fillStyle = '#6CC24A'; x.beginPath(); x.arc(256 * s, 432 * s, 12 * s, 0, Math.PI * 2); x.fill();
+    function rr(X, Y, W, H, R) { x.beginPath(); x.moveTo(X + R, Y); x.arcTo(X + W, Y, X + W, Y + H, R); x.arcTo(X + W, Y + H, X, Y + H, R); x.arcTo(X, Y + H, X, Y, R); x.arcTo(X, Y, X + W, Y, R); x.closePath(); }
+    x.scale(s, s);
+    x.fillStyle = '#0E3B40'; x.fillRect(0, 0, 512, 512);
+    x.save(); x.translate(256, 262); x.rotate(-0.07); x.translate(-256, -262);
+    x.fillStyle = 'rgba(0,0,0,.28)'; rr(132, 100, 272, 346, 16); x.fill();                 // 그림자
+    x.fillStyle = '#ECE8E1'; rr(128, 88, 272, 346, 14); x.fill();                          // 페이지 단면
+    x.strokeStyle = '#C9C1B2'; x.lineWidth = 3;
+    for (var i = 0; i < 4; i++) { x.beginPath(); x.moveTo(392 - i * 5, 104); x.lineTo(392 - i * 5, 420); x.stroke(); }
+    x.fillStyle = '#F2964F'; rr(110, 74, 272, 346, 14); x.fill();                          // 표지
+    x.fillStyle = '#D9691F'; rr(110, 74, 34, 346, 14); x.fill(); x.fillRect(128, 74, 16, 346); // 책등
+    x.fillStyle = 'rgba(255,255,255,.25)'; x.fillRect(146, 74, 5, 346);
+    x.fillStyle = '#0E5A60'; rr(164, 100, 194, 58, 10); x.fill();                          // 제목 띠
+    x.fillStyle = '#ECE8E1'; rr(180, 116, 110, 12, 6); x.fill(); rr(180, 136, 70, 9, 5); x.fill();
+    x.fillStyle = '#6CC24A'; x.beginPath(); x.arc(330, 129, 12, 0, 6.29); x.fill();
+    x.fillStyle = 'rgba(160,70,20,.35)';                                                   // 망점
+    for (var yy = 300; yy < 410; yy += 16) for (var xx = 160; xx < 372; xx += 16) { var r = 2 + (yy - 300) / 30; x.beginPath(); x.arc(xx + ((yy / 16) % 2) * 8, yy, r, 0, 6.29); x.fill(); }
+    x.restore();
+    var cx = 262, cy = 286, n = 12;                                                        // 효과음 폭발 모양
+    x.beginPath();
+    for (var k = 0; k < n * 2; k++) { var a = -Math.PI / 2 + k * Math.PI / n, R = k % 2 ? 72 : 112; x.lineTo(cx + Math.cos(a) * R, cy + Math.sin(a) * R * 0.86); }
+    x.closePath(); x.fillStyle = '#FFF4D6'; x.fill(); x.lineWidth = 9; x.strokeStyle = '#14262A'; x.lineJoin = 'round'; x.stroke();
+    x.save(); x.translate(cx, cy + 4); x.rotate(-0.12);
+    x.font = '900 76px "Black Han Sans","Apple SD Gothic Neo","Malgun Gothic",sans-serif';
+    x.textAlign = 'center'; x.textBaseline = 'middle';
+    x.lineWidth = 10; x.strokeStyle = '#14262A'; x.strokeText('빵!', 0, 0);
+    x.fillStyle = '#D9691F'; x.fillText('빵!', 0, 0);
+    x.restore();
     return c.toDataURL('image/png');
   }
   try {
@@ -394,7 +410,7 @@
 <div id="toast" class="rounded-full bg-panel border border-line px-4 py-2 text-[13px] shadow-xl whitespace-nowrap"></div>
 <div id="loading" class="hidden"><div class="spin"></div><div id="loadMsg" class="text-[13px] text-mute">여는 중…</div></div>
 <div id="dropHint">여기에 놓으면 바로 열려요</div>
-<div id="ver" aria-hidden="true">v5</div>
+<div id="ver" aria-hidden="true">v6</div>
 
 <!--
   서비스워커 코드 (오프라인 실행용)
@@ -403,7 +419,7 @@
     (linkcleaning.github.io/viewer/ 에는 이미 올려 두었습니다)
 -->
 <script type="text/plain" id="sw-source">
-const CACHE = 'neomgim-v5';
+const CACHE = 'neomgim-v6';
 const CORE = ['./', './index.html'];
 const CDN = [
   'https://cdn.tailwindcss.com',
