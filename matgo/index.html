@@ -616,7 +616,7 @@ small.zero,.seg small.mn.zero{color:#ff8a80!important}
 
 <script>
 'use strict';
-const VER='v62';
+const VER='v63';
 const $=s=>document.querySelector(s);
 const sleep=ms=>new Promise(r=>setTimeout(r,ms));
 const rnd=n=>Math.floor(Math.random()*n);
@@ -2490,8 +2490,8 @@ async function openAdmin(){
   return adminPanel();
 }
 async function adminPanel(msg=''){
-  const ppl=allPlayers();
-  const rows=ppl.map(p=>`<div class="rk"><div class="em" style="width:34px;height:34px">${avaHTML(p)}</div><div class="nm"><b>${esc(pName(p))}${p.roster?` <small style="opacity:.6">${p.name}</small>`:''}</b><small class="${moneyOf(p.id)<=0?'zero':''}">${won(moneyOf(p.id))}</small></div>
+  await syncDown();const ppl=allPlayers();
+  const rows=ppl.map(p=>`<div class="rk"><div class="em" style="width:34px;height:34px">${avaHTML(p)}</div><div class="nm"><b>${esc(pName(p))}${p.roster?` <small style="opacity:.6">${p.name}</small>`:''}</b><small class="${moneyOf(p.id)<=0?'zero':''}">👛 지갑 ${won(moneyOf(p.id))}${bankOf(p.id)?`<br>🏦 은행 ${won(bankOf(p.id))}`:''}<br><b style="color:#ffe08a">총자산 ${won(assetOf(p.id))}</b></small></div>
     <div class="adm"><button data-v="m:${p.id}:-1000">-1천</button><button data-v="m:${p.id}:1000">+1천</button><button data-v="m:${p.id}:5000">+5천</button><button data-v="s:${p.id}">✎</button></div></div>`).join('');
   const seg=(k,arr,fmt)=>`<div class="seg" style="grid-template-columns:repeat(${arr.length},1fr)">${arr.map(v=>`<button class="${DB.cfg[k]===v?'on':''}" data-v="c:${k}:${v}">${fmt(v)}</button>`).join('')}</div>`;
   const [reqs,claims,awd]=await Promise.all([LG.req('matgo/reqs'),LG.req('matgo/claims'),LG.req('matgo/awards')]);
