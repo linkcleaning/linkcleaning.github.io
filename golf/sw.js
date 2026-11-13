@@ -1,5 +1,5 @@
 // 링크 골프 - 서비스워커 (오프라인 실행용 · 화면은 항상 최신 버전 우선)
-const CACHE = 'link-golf-v2';
+const CACHE = 'link-golf-v3';
 const ASSETS = ['./', './index.html', './manifest.json', './icon-180.png', './icon-192.png', './icon-512.png'];
 self.addEventListener('install', e => {
   e.waitUntil(caches.open(CACHE).then(c => Promise.all(ASSETS.map(a => c.add(new Request(a, { cache: 'reload' })).catch(() => {})))));
@@ -13,7 +13,7 @@ self.addEventListener('fetch', e => {
   const url = new URL(r.url);
   // 외부 파일(Tailwind CDN·구글 폰트): 한 번 받으면 저장해 두고 오프라인에서도 사용
   if (url.origin !== self.location.origin) {
-    if (!/cdn\.tailwindcss\.com|fonts\.(googleapis|gstatic)\.com/.test(url.host)) return;
+    if (!/cdn\.tailwindcss\.com|cdn\.jsdelivr\.net|fonts\.(googleapis|gstatic)\.com/.test(url.host)) return;
     e.respondWith(caches.match(r).then(hit => hit || fetch(r).then(res => { const cp = res.clone(); caches.open(CACHE).then(c => c.put(r, cp)); return res; })));
     return;
   }
