@@ -127,6 +127,9 @@
   body.hide-bars #top { transform:translateY(-100%); opacity:0; pointer-events:none; }
   body.hide-bars #bottom { transform:translateY(100%); opacity:0; pointer-events:none; }
 
+  .back-btn { width:52px; height:52px; display:grid; place-items:center; border-radius:14px; flex:none; }
+  .back-btn svg { width:32px; height:32px; }
+  .back-btn:active { background:rgba(255,255,255,.08); }
   .tool { display:flex; flex-direction:column; align-items:center; gap:3px; padding:6px 4px; min-width:56px; border-radius:12px; color:#C9C6C0; font-size:10.5px; letter-spacing:-.01em; }
   .tool svg { width:22px; height:22px; }
   .tool.on { color:var(--orange); }
@@ -329,9 +332,9 @@
   <div id="dim"></div>
 
   <div id="top" class="bar">
-    <div class="flex items-center gap-1 px-2 h-12">
-      <button id="btnBack" class="w-10 h-10 grid place-items-center rounded-xl active:bg-white/5" aria-label="서재로">
-        <svg viewBox="0 0 24 24" class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m15 5-7 7 7 7"/></svg>
+    <div class="flex items-center gap-1 px-1 h-14">
+      <button id="btnBack" class="back-btn" aria-label="서재로">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="m15 4-8 8 8 8"/></svg>
       </button>
       <div id="title" class="flex-1 min-w-0 truncate text-[15px] font-semibold"></div>
       <div id="pageNum" class="text-[13px] text-mute tabular-nums px-2"></div>
@@ -416,7 +419,7 @@
 <div id="toast" class="rounded-full bg-panel border border-line px-4 py-2 text-[13px] shadow-xl whitespace-nowrap"></div>
 <div id="loading" class="hidden"><div class="spin"></div><div id="loadMsg" class="text-[13px] text-mute">여는 중…</div></div>
 <div id="dropHint">여기에 놓으면 바로 열려요</div>
-<div id="ver" aria-hidden="true">v8</div>
+<div id="ver" aria-hidden="true">v9</div>
 
 <!--
   서비스워커 코드 (오프라인 실행용)
@@ -425,7 +428,7 @@
     (linkcleaning.github.io/viewer/ 에는 이미 올려 두었습니다)
 -->
 <script type="text/plain" id="sw-source">
-const CACHE = 'neomgim-v8';
+const CACHE = 'neomgim-v9';
 const CORE = ['./', './index.html', './manifest.webmanifest', './icon-180.png', './icon-192.png', './icon-512.png'];
 const CDN = [
   'https://cdn.tailwindcss.com',
