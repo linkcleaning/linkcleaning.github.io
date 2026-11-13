@@ -30,7 +30,11 @@
 </script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js" defer></script>
 
-<!-- 앱 아이콘 + manifest.json 을 파일 하나 안에서 만들어 붙임 -->
+<!-- 홈 화면 아이콘: 아이폰은 실제 그림 파일만 읽어서 같은 폴더의 PNG를 연결 -->
+<link rel="apple-touch-icon" sizes="180x180" href="icon-180.png">
+<link rel="icon" type="image/png" href="icon-192.png">
+<link rel="manifest" href="manifest.webmanifest">
+<!-- HTML 파일만 따로 열었을 때(아이콘 파일이 없을 때)를 위한 대비: 아이콘·manifest를 코드로 만들어 붙임 -->
 <script>
 (function () {
   function icon(size) {   /* 만화책 표지: 주황 표지 + 책등 + 페이지 단면 + 망점 + '빵!' 효과음 */
@@ -65,7 +69,9 @@
     x.restore();
     return c.toDataURL('image/png');
   }
+  if (/^https?:/.test(location.protocol)) return;   // 사이트에 올린 경우엔 위 PNG·manifest 파일 사용
   try {
+    document.querySelectorAll('link[rel=apple-touch-icon],link[rel=icon],link[rel=manifest]').forEach(function (l) { l.remove(); });
     var i512 = icon(512), i192 = icon(192), i180 = icon(180);
     var here = location.href.split('#')[0].split('?')[0];
     var scope = new URL('./', here).href;
@@ -410,7 +416,7 @@
 <div id="toast" class="rounded-full bg-panel border border-line px-4 py-2 text-[13px] shadow-xl whitespace-nowrap"></div>
 <div id="loading" class="hidden"><div class="spin"></div><div id="loadMsg" class="text-[13px] text-mute">여는 중…</div></div>
 <div id="dropHint">여기에 놓으면 바로 열려요</div>
-<div id="ver" aria-hidden="true">v6</div>
+<div id="ver" aria-hidden="true">v7</div>
 
 <!--
   서비스워커 코드 (오프라인 실행용)
@@ -419,8 +425,8 @@
     (linkcleaning.github.io/viewer/ 에는 이미 올려 두었습니다)
 -->
 <script type="text/plain" id="sw-source">
-const CACHE = 'neomgim-v6';
-const CORE = ['./', './index.html'];
+const CACHE = 'neomgim-v7';
+const CORE = ['./', './index.html', './manifest.webmanifest', './icon-180.png', './icon-192.png', './icon-512.png'];
 const CDN = [
   'https://cdn.tailwindcss.com',
   'https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js',
