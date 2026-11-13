@@ -163,6 +163,8 @@
   .lh-logo { width:30px; height:30px; border-radius:9px; }
   .lh-title { font-size:20px; line-height:28px; font-weight:700; letter-spacing:-.02em; flex:1; }
   .lh-usage { font-size:12px; opacity:.7; }
+  .lh-add { transition:opacity .2s, transform .2s; }
+  .lh-add.off { opacity:0; transform:scale(.6); pointer-events:none; }
   .lh-add { width:38px; height:38px; border-radius:999px; background:#F2964F; color:var(--ink); display:grid; place-items:center; }
   .lh-add svg { width:20px; height:20px; }
   .lh-add:active { transform:scale(.94); }
@@ -242,7 +244,7 @@
       <img id="logo" alt="" class="lh-logo">
       <div class="lh-title">추억의만화빵</div>
       <span id="usage" class="lh-usage"></span>
-      <button id="btnAdd" class="lh-add" aria-label="책 넣기">
+      <button id="btnAdd" class="lh-add off" aria-label="책 넣기">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>
       </button>
     </div>
@@ -392,7 +394,7 @@
 <div id="toast" class="rounded-full bg-panel border border-line px-4 py-2 text-[13px] shadow-xl whitespace-nowrap"></div>
 <div id="loading" class="hidden"><div class="spin"></div><div id="loadMsg" class="text-[13px] text-mute">여는 중…</div></div>
 <div id="dropHint">여기에 놓으면 바로 열려요</div>
-<div id="ver" aria-hidden="true">v4</div>
+<div id="ver" aria-hidden="true">v5</div>
 
 <!--
   서비스워커 코드 (오프라인 실행용)
@@ -401,7 +403,7 @@
     (linkcleaning.github.io/viewer/ 에는 이미 올려 두었습니다)
 -->
 <script type="text/plain" id="sw-source">
-const CACHE = 'neomgim-v4';
+const CACHE = 'neomgim-v5';
 const CORE = ['./', './index.html'];
 const CDN = [
   'https://cdn.tailwindcss.com',
@@ -696,6 +698,11 @@ $('#addMenu').onclick = e => { const b = e.target.closest('button'); if (!b) ret
 document.addEventListener('click', e => { if (!e.target.closest('#addMenu')) $('#addMenu').classList.add('hidden'); });
 addEventListener('scroll', () => $('#toTop').classList.toggle('show', !document.body.classList.contains('reading') && scrollY > 500), { passive: true });
 $('#toTop').onclick = () => scrollTo({ top: 0, behavior: 'smooth' });
+/* 가운데 '압축파일·이미지' 버튼이 보이는 동안엔 위 + 버튼을 숨겨 겹치지 않게, 내려가서 안 보이면 + 등장 */
+new IntersectionObserver(([en]) => {
+  $('#btnAdd').classList.toggle('off', en.isIntersecting);
+  if (en.isIntersecting) $('#addMenu').classList.add('hidden');
+}, { rootMargin: '-56px 0px 0px 0px' }).observe($('.two'));
 
 /* ======================= 뷰어 ======================= */
 const stage = $('#stage'), strip = $('#strip'), slider = $('#slider');
