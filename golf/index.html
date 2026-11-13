@@ -147,6 +147,7 @@
   .say{left:calc(100% + 6px);bottom:auto;top:10px;}
   .say:after{left:-12px;top:12px;border:6px solid transparent;border-right-color:#fff;border-top-color:transparent;}
   #banner{top:30%;}
+  .mini{position:absolute;right:10px;top:calc(var(--sat) + 132px);border-radius:12px;border:1.5px solid rgba(255,255,255,.55);box-shadow:0 6px 18px rgba(0,30,40,.35);pointer-events:none;}
   .tag{position:absolute;transform:translate(-50%,-100%);pointer-events:none;background:rgba(7,28,33,.6);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);
        border:1px solid rgba(255,255,255,.3);color:#fff;border-radius:10px;padding:1px 7px 2px;font-size:15px;white-space:nowrap;}
   .tag small{font-size:10px;margin-left:1px;opacity:.8}
@@ -256,6 +257,7 @@
         </div>
       </div>
       <div id="toast"></div>
+      <canvas id="mini" class="mini hidden" style="width:64px;height:150px"></canvas>
     </div>
 
     <!-- 상단 HUD -->
@@ -363,7 +365,7 @@
          → 5 게임 상태/샷 물리 → 6 카메라/그리기 → 7 UI/입력 → 8 로비 → 9 PWA
    좌표계: 미터(m). x = 오른쪽(+), y = 핀 방향 앞쪽(+). 티는 (0,0).
    ===================================================================== */
-const APP_VER = 'v3';
+const APP_VER = 'v4';
 document.getElementById('ver').textContent = APP_VER;
 
 /* ---------- 0. 유틸 ---------- */
@@ -697,7 +699,7 @@ function strike(power, off) {
   G.shot = { sx: G.ball.x, sy: G.ball.y, dx, dy, rx, ry, D, curve, drift, land, t: 0,
              T: 0.9 + D / 95, H: c.apex * Math.max(.35, power), q, power, c };
   G.strokes++; G.trail = [];
-  G.state = 'flight'; G.shot.wait = SWING_HIT;          // 캐릭터 다운스윙이 공에 닿는 순간 출발
+  G.state = 'flight'; G.shot.wait = SWING_HIT; G.golferAt = { x: G.shot.sx, y: G.shot.sy, aim: G.aim };          // 캐릭터 다운스윙이 공에 닿는 순간 출발
   react('swing', { a0: poseBackAngle() });
   setTimeout(() => {
     SFX.hit(q); if (navigator.vibrate) navigator.vibrate(q === 'perfect' ? 30 : 15);
@@ -735,7 +737,7 @@ function strikePutt(power) {
   const d = G.putScale * power, v0 = Math.sqrt(2 * SURF.green.fric * d);
   G.roll = { vx: Math.sin(G.aim) * v0, vy: Math.cos(G.aim) * v0, acc: 0, speed: 1.35, hop: 0, wait: PUTT_HIT };
   G.gauge.pos = power * 100; G.strokes++; G.trail = []; G.shot = null;
-  react('swing', { a0: poseBackAngle(), putt: true });
+  react('swing', { a0: poseBackAngle(), putt: true }); G.golferAt = { x: G.ball.x, y: G.ball.y, aim: G.aim };
   G.state = 'roll'; setTimeout(() => SFX.putt(), PUTT_HIT * 1000);
   updatePanel(); updateHud();
 }
@@ -891,7 +893,7 @@ function drawCourseBase(h, s, t) {   // 코스 바닥(바다·러프·물·페�
   h.fw.forEach(f => { fwPath(ctx, f); ctx.strokeStyle = '#4fa553'; ctx.lineWidth = (f.w + 5) * s; ctx.stroke(); });
   lctx.setTransform(DPR, 0, 0, DPR, 0, 0); lctx.clearRect(0, 0, W, H);
   h.fw.forEach(f => { fwPath(lctx, f); lctx.strokeStyle = '#66bd5f'; lctx.lineWidth = f.w * s; lctx.stroke(); });
-  lctx.globalCompositeOperation = 'source-atop'; lctx.fillStyle = 'rgba(255,255,255,.07)';
+  lctx.globalCompositeOperation = 'source-atop'; lctx.fillStyle = 'rgba(255,255,255,.1)';
   for (let y = Math.floor(h.b.y0 / 12) * 12; y < h.b.y1; y += 24) lctx.fillRect(0, SY(y + 12), W, 12 * s);
   lctx.globalCompositeOperation = 'source-over';
   ctx.save(); ctx.setTransform(1, 0, 0, 1, 0, 0); ctx.drawImage(layer, 0, 0); ctx.restore();
@@ -1013,7 +1015,7 @@ function drawGreenGrid(h, s, t) {
   const g = h.green;
   ctx.save(); ell(ctx, g, 2.5); ctx.clip();
   if (s > 10) {                                        // 1m 격자
-    ctx.strokeStyle = 'rgba(255,255,255,.09)'; ctx.lineWidth = 1;
+    ctx.strokeStyle = s > 25 ? 'rgba(40,110,255,.42)' : 'rgba(255,255,255,.09)'; ctx.lineWidth = s > 25 ? 2 : 1;
     for (let x = Math.floor(g[0] - g[2] - 3); x <= g[0] + g[2] + 3; x++) { ctx.beginPath(); ctx.moveTo(SX(x), SY(g[1] - g[3] - 3)); ctx.lineTo(SX(x), SY(g[1] + g[3] + 3)); ctx.stroke(); }
     for (let y = Math.floor(g[1] - g[3] - 3); y <= g[1] + g[3] + 3; y++) { ctx.beginPath(); ctx.moveTo(SX(g[0] - g[2] - 3), SY(y)); ctx.lineTo(SX(g[0] + g[2] + 3), SY(y)); ctx.stroke(); }
   }
@@ -1257,7 +1259,7 @@ function init3D() {
   renderer.setPixelRatio(Math.min(2, window.devicePixelRatio || 1));
   const scene = new THREE.Scene();
   scene.fog = new THREE.Fog(new THREE.Color('#c9eef2'), 420, 2600);
-  const camera = new THREE.PerspectiveCamera(52, 1, 0.05, 6000);
+  const camera = new THREE.PerspectiveCamera(58, 1, 0.05, 6000);
   // 하늘: 위는 진한 파랑 → 수평선은 옅은 민트
   const skyG = new THREE.SphereGeometry(3500, 32, 16), sp = skyG.attributes.position, col = [];
   const cTop = new THREE.Color('#1f8fd0'), cMid = new THREE.Color('#7fd0ea'), cHor = new THREE.Color('#dcf6f4');
@@ -1315,23 +1317,42 @@ function init3D() {
   const flag = new THREE.Mesh(flagG, new THREE.MeshLambertMaterial({ color: 0xff7a1f, side: THREE.DoubleSide, emissive: 0x401800 })); flag.position.y = 2.1;
   const flagHolder = new THREE.Group(); flagHolder.add(flag);
   pin.add(cupM, cupRing, glowRing, pole, flagHolder); scene.add(pin);
-  R3 = { renderer, scene, camera, ball, shadow, trail, trailPos, trailG, dots, ring, pin, flag, flagG, flagBase: flagG.attributes.position.array.slice(), flagHolder, glowRing,
+  const beamG = new THREE.CylinderGeometry(1, 1, 1, 20, 1, true); beamG.translate(0, .5, 0);
+  const bc = document.createElement('canvas'); bc.width = 4; bc.height = 128; const bx = bc.getContext('2d'), bgd = bx.createLinearGradient(0, 0, 0, 128);
+  bgd.addColorStop(0, 'rgba(255,255,255,0)'); bgd.addColorStop(.6, 'rgba(255,255,255,.35)'); bgd.addColorStop(1, 'rgba(255,255,255,1)'); bx.fillStyle = bgd; bx.fillRect(0, 0, 4, 128);
+  const beamTex = new THREE.CanvasTexture(bc);
+  const beam = new THREE.Mesh(beamG, new THREE.MeshBasicMaterial({ map: beamTex, color: 0xd6ff5a, transparent: true, opacity: .25, blending: THREE.AdditiveBlending, depthWrite: false, side: THREE.DoubleSide, fog: false }));
+  const pinBeam = new THREE.Mesh(beamG, new THREE.MeshBasicMaterial({ map: beamTex, color: 0xff9a4a, transparent: true, opacity: .35, blending: THREE.AdditiveBlending, depthWrite: false, side: THREE.DoubleSide, fog: false }));
+  scene.add(beam, pinBeam);
+  R3 = { beam, pinBeam, renderer, scene, camera, ball, shadow, trail, trailPos, trailG, dots, ring, pin, flag, flagG, flagBase: flagG.attributes.position.array.slice(), flagHolder, glowRing,
          halla, clouds, wtex, hole: null, holeGroup: null, cam: { pos: new THREE.Vector3(0, 5, 10), look: new THREE.Vector3(0, 0, -50) }, mat4: new THREE.Matrix4(), v: new THREE.Vector3() };
 }
 
 // 바닥 텍스처 굽기: 2D 그리기 함수를 큰 캔버스에 한 번 실행
+let grainPat = null;
+function addGrain(c, w, h) {                          // 잔디 질감: 잔잔한 점무늬를 한 번 덮음
+  if (!grainPat) { const n = document.createElement('canvas'); n.width = n.height = 96; const nc = n.getContext('2d'), id = nc.createImageData(96, 96);
+    for (let i = 0; i < id.data.length; i += 4) { const v = Math.random() < .5 ? 0 : 255; id.data[i] = id.data[i + 1] = id.data[i + 2] = v; id.data[i + 3] = Math.random() * 26; }
+    nc.putImageData(id, 0, 0); grainPat = n; }
+  c.save(); c.setTransform(1, 0, 0, 1, 0, 0); c.fillStyle = c.createPattern(grainPat, 'repeat'); c.fillRect(0, 0, w, h); c.restore();
+}
 function bakeRegion(h, x0, x1, y0, y1, ppm, extra) {
+  const tc = bakeCanvas(h, x0, x1, y0, y1, ppm, extra);
+  const tex = new THREE.CanvasTexture(tc); tex.colorSpace = THREE.SRGBColorSpace;
+  tex.anisotropy = R3.renderer.capabilities.getMaxAnisotropy();
+  return tex;
+}
+function bakeCanvas(h, x0, x1, y0, y1, ppm, extra, grain = true) {
   const tw = Math.round((x1 - x0) * ppm), th = Math.round((y1 - y0) * ppm);
   const tc = document.createElement('canvas'); tc.width = tw; tc.height = th;
   const sv = { ctx, W, H, DPR, cam: Object.assign({}, cam), lw: layer.width, lh: layer.height, hole: G.hole };
   ctx = tc.getContext('2d'); W = tw; H = th; DPR = 1; layer.width = tw; layer.height = th;
   cam.x = (x0 + x1) / 2; cam.y = (y0 + y1) / 2; cam.s = ppm; G.hole = h;
   drawCourseBase(h, ppm, 0);
+  if (grain) addGrain(ctx, tw, th);
   if (extra) extra(ppm);
   ctx = sv.ctx; W = sv.W; H = sv.H; DPR = sv.DPR; Object.assign(cam, sv.cam); layer.width = sv.lw; layer.height = sv.lh; G.hole = sv.hole;
-  const tex = new THREE.CanvasTexture(tc); tex.colorSpace = THREE.SRGBColorSpace;
-  tex.anisotropy = R3.renderer.capabilities.getMaxAnisotropy();
-  return tex;
+  return tc;
 }
 // 고저차대로 휘어진 땅 판
 function groundMesh(h, x0, x1, y0, y1, step, mat) {
@@ -1394,21 +1415,131 @@ function buildHole3D(h) {
   });
   [trunks, leaves, canopies, fruits].forEach(m => { m.instanceMatrix.needsUpdate = true; if (m.instanceColor) m.instanceColor.needsUpdate = true; grp.add(m); });
   S.add(grp);
+  // 미니맵용 작은 지도
+  R3.mini = { x0: h.b.x0 + 15, x1: h.b.x1 - 15, y0: h.b.y0 + 5, y1: h.b.y1 - 15 };
+  R3.miniImg = bakeCanvas(h, R3.mini.x0, R3.mini.x1, R3.mini.y0, R3.mini.y1, 300 / (R3.mini.y1 - R3.mini.y0), (s) => {
+    h.trees.forEach(([x, y, r]) => { ctx.fillStyle = '#21602f'; ctx.beginPath(); ctx.arc(SX(x), SY(y), Math.max(1.5, r * s), 0, 7); ctx.fill(); });
+  }, false);
+  const mr = (R3.mini.x1 - R3.mini.x0) / (R3.mini.y1 - R3.mini.y0); $('#mini').style.width = Math.round(clamp(150 * mr, 44, 110)) + 'px';
+  ensureGolfer3D();
   // 깃발·한라산 위치
   R3.pin.position.set(h.cup[0], gH(h.cup[0], h.cup[1], h), -h.cup[1]);
   R3.halla.position.set(h.cup[0] - 300, SEA_Y - 20, -(h.cup[1] + 1900));
 }
 
+/* ---------- 6-3. 3D 골퍼 (공 옆에 서서 스윙) ----------
+   2D 캐릭터와 같은 동작 데이터(poseNow)를 3D 몸에 그대로 적용.
+   골퍼 기준 좌표: x = 목표 방향, y = 위, z = 공 쪽(얼굴 방향). 2D 1칸 = 1.75cm */
+const GK = .0175;
+function buildGolfer3D(ch) {
+  const lam = c => new THREE.MeshLambertMaterial({ color: c });
+  const root = new THREE.Group(), body = new THREE.Group(); root.add(body);
+  const skin = lam(ch.skin), shirt = lam(ch.shirt), pants = lam(ch.pants), shoe = lam(ch.shoe), white = lam(0xffffff);
+  const S = (r, w = 16, h = 12) => new THREE.SphereGeometry(r, w, h);
+  const add = (geo, mat, x, y, z, sx = 1, sy = 1, sz = 1) => { const m = new THREE.Mesh(geo, mat); m.position.set(x, y, z); m.scale.set(sx, sy, sz); body.add(m); return m; };
+  // 다리·신발 (치마 캐릭터는 맨다리+흰 양말)
+  const legG = new THREE.CylinderGeometry(.052, .058, .27, 10); legG.translate(0, .135, 0);
+  [-1, 1].forEach(s => {
+    add(legG, ch.skirt ? skin : pants, s * .08, 0, 0);
+    if (ch.skirt) add(new THREE.CylinderGeometry(.06, .062, .09, 10), white, s * .08, .06, 0);
+    add(new THREE.BoxGeometry(.1, .06, .17), shoe, s * .08, .03, .03);
+  });
+  if (ch.skirt) add(new THREE.CylinderGeometry(.15, .21, .2, 14), pants, 0, .3, 0);
+  // 몸통·머리
+  add(S(1, 18, 14), shirt, 0, .44, 0, .19, .2, .15);
+  const head = new THREE.Group(); head.position.set(0, .8, 0); body.add(head);
+  const hm = (geo, mat, x, y, z, sx = 1, sy = 1, sz = 1) => { const m = new THREE.Mesh(geo, mat); m.position.set(x, y, z); m.scale.set(sx, sy, sz); head.add(m); return m; };
+  hm(S(.23, 24, 18), skin, 0, 0, 0);
+  hm(S(.045), skin, -.225, -.01, 0); hm(S(.045), skin, .225, -.01, 0);
+  const hair = ch.id === 'dolsoe' ? null : lam(ch.id === 'gyuri' ? 0x4a2e1f : 0x3a2a20);
+  if (hair) hm(S(.235, 24, 18), hair, 0, .02, -.035);                              // 뒷머리 (뒤에서 볼 때 보임)
+  if (ch.id === 'gyuri') { hm(S(.07), hair, -.21, -.05, -.08); hm(S(.07), hair, .21, -.05, -.08); }
+  const eye = lam(0x1d2b30); hm(S(ch.bigEye ? .04 : .028), ch.bigEye ? white : eye, -.08, .01, .2); hm(S(ch.bigEye ? .04 : .028), ch.bigEye ? white : eye, .08, .01, .2);
+  if (ch.bigEye) { hm(S(.022), eye, -.08, .01, .235); hm(S(.022), eye, .08, .01, .235); hm(S(.05), lam(0xa79f92), 0, -.05, .22, 1, 1.2, 1); }
+  hm(S(.04), lam(0xffa0a0), -.13, -.07, .17, 1, .6, .4); hm(S(.04), lam(0xffa0a0), .13, -.07, .17, 1, .6, .4);
+  // 모자
+  if (ch.hat === 'cap') {
+    hm(new THREE.SphereGeometry(.245, 24, 12, 0, Math.PI * 2, 0, Math.PI / 2), lam(ch.hatC), 0, .03, 0);
+    hm(new THREE.BoxGeometry(.32, .025, .2), lam(ch.hatC2), 0, .04, .22);
+    hm(S(.04), lam(0xe8792b), 0, .17, .19);
+  } else if (ch.hat === 'harbang') {
+    hm(S(1, 20, 14), lam(ch.hatC), 0, .2, 0, .2, .18, .2);
+    hm(new THREE.CylinderGeometry(.27, .27, .03, 26), lam(ch.hatC2), 0, .1, 0);
+  } else if (ch.hat === 'gyul') {
+    hm(S(.16), lam(ch.hatC), 0, .27, 0);
+    hm(new THREE.CylinderGeometry(.012, .012, .05, 6), lam(0x6b4a2b), 0, .44, 0);
+    const lf = hm(new THREE.BoxGeometry(.11, .012, .045), lam(ch.hatC2), .05, .44, 0); lf.rotation.z = .5;
+  }
+  // 팔·손·클럽 (매 프레임 위치 갱신)
+  const unitCyl = r => { const g = new THREE.CylinderGeometry(r, r, 1, 8); g.translate(0, .5, 0); return g; };
+  const arms = [0, 1].map(() => ({ arm: add(unitCyl(.038), skin, 0, 0, 0), sleeve: add(unitCyl(.06), shirt, 0, 0, 0) }));
+  const hands = [add(S(.05), white, 0, 0, 0), add(S(.045), skin, 0, 0, 0)];
+  const shaft = add(unitCyl(.011), lam(0xd9e2e4), 0, 0, 0);
+  const clubHead = add(new THREE.BoxGeometry(.11, .05, .07), lam(0x3a4a50), 0, 0, 0);
+  return { root, body, head, arms, hands, shaft, clubHead, id: ch.id };
+}
+const _up = () => new THREE.Vector3(0, 1, 0);
+function placeCyl(mesh, a, b) {                       // a→b 사이를 잇는 원기둥
+  const d = new THREE.Vector3().subVectors(b, a), L = d.length() || .001;
+  mesh.position.copy(a); mesh.scale.set(1, L, 1); mesh.quaternion.setFromUnitVectors(_up(), d.multiplyScalar(1 / L));
+}
+function poseGolfer3D(g, P) {
+  const br = Math.sin((P.t || 0) * 2.4) * .4, L = (u, v, z) => new THREE.Vector3(u * GK, -v * GK, z);
+  g.body.position.y = (P.jump || 0) * GK - (P.droop ? .02 : 0);
+  g.head.rotation.x = P.droop ? .35 : P.mood === 'focus' ? .25 : 0;
+  const S0 = { x: 0, y: -25 + br };
+  let hands, cFrom, cEnd, zH = .26, zC = .46;
+  if (P.arms === 'up') { hands = [{ x: -11, y: -46 }, { x: 11, y: -46 }]; cFrom = hands[1]; cEnd = { x: 19, y: -64 }; zH = .05; zC = 0; }
+  else {
+    const a = P.a * DEG, H = { x: S0.x + Math.cos(a) * 12, y: S0.y + Math.sin(a) * 12 };
+    const Lc = P.putt ? 14 : 15 + 7 * Math.min(1, Math.abs(P.a - AD) / 60);
+    hands = [H, H]; cFrom = H; cEnd = { x: H.x + Math.cos(a) * Lc, y: H.y + Math.sin(a) * Lc };
+  }
+  const up = clamp((-cEnd.y - 10) / 50, 0, 1);       // 클럽이 머리 위로 갈수록 몸 쪽으로
+  const zHand = lerp(zH, .1, up * .6), zEnd = lerp(zC, .05, up);
+  const sh = [L(-8, -29 + br, .02), L(8, -29 + br, .02)];
+  const hv = hands.map(h => L(h.x, h.y, zHand));
+  sh.forEach((s, i) => { placeCyl(g.arms[i].arm, s, hv[i]); placeCyl(g.arms[i].sleeve, s, s.clone().lerp(hv[i], .32)); g.hands[i].position.copy(hv[i]); });
+  const ce = L(cEnd.x, cEnd.y, zEnd); placeCyl(g.shaft, hv[1], ce);
+  g.clubHead.position.copy(ce); g.clubHead.quaternion.copy(g.shaft.quaternion); g.clubHead.scale.set(1, P.putt ? .7 : 1, P.putt ? 1.3 : 1);
+}
+// 미니맵 (오른쪽, 위에서 본 코스)
+function drawMini(now) {
+  const mc = $('#mini'); if (!R3 || !R3.miniImg) return;
+  const { c, w, h } = prep(mc), m = R3.mini;
+  c.clearRect(0, 0, w, h); c.drawImage(R3.miniImg, 0, 0, w, h);
+  const X = x => (x - m.x0) / (m.x1 - m.x0) * w, Y = y => (1 - (y - m.y0) / (m.y1 - m.y0)) * h;
+  const b = G.ball; let bx = b.x, by = b.y;
+  if (G.state === 'flight' && G.shot.wait <= 0) { const p = flightPos(G.shot, G.shot.t); bx = p.x; by = p.y; }
+  if (['aim', 'power', 'impact'].includes(G.state) && !club().putter) {
+    const p = previewLanding(); c.strokeStyle = '#ffd34d'; c.lineWidth = 1.5; c.setLineDash([3, 3]);
+    c.beginPath(); c.moveTo(X(b.x), Y(b.y)); c.lineTo(X(p.x), Y(p.y)); c.stroke(); c.setLineDash([]);
+    c.fillStyle = '#ff8a2a'; c.beginPath(); c.arc(X(p.x), Y(p.y), 3, 0, 7); c.fill();
+  }
+  const cx = X(G.hole.cup[0]), cy = Y(G.hole.cup[1]);
+  c.strokeStyle = '#fff'; c.lineWidth = 1.2; c.beginPath(); c.moveTo(cx, cy); c.lineTo(cx, cy - 10); c.stroke();
+  c.fillStyle = '#ff4d3a'; c.beginPath(); c.moveTo(cx, cy - 10); c.lineTo(cx + 7, cy - 7.5); c.lineTo(cx, cy - 5); c.fill();
+  c.fillStyle = '#fff'; c.strokeStyle = '#0a3a40'; c.lineWidth = 1.5; c.beginPath(); c.arc(X(bx), Y(by), 3.4, 0, 7); c.fill(); c.stroke();
+}
+
+function ensureGolfer3D() {
+  if (!R3) return; const ch = me();
+  if (R3.golfer && R3.golfer.id === ch.id) return;
+  if (R3.golfer) { R3.scene.remove(R3.golfer.root); R3.golfer.root.traverse(o => { if (o.geometry) o.geometry.dispose(); if (o.material) o.material.dispose(); }); }
+  R3.golfer = buildGolfer3D(ch); R3.scene.add(R3.golfer.root);
+}
 // --- 카메라 위치 계산 (공 뒤에서 핀 쪽을 바라봄) ---
 const V = (x, y, z) => new THREE.Vector3(x, y, z);
 function aimPose() {
   const b = G.ball, a = G.aim, dx = Math.sin(a), dy = Math.cos(a), g = gH(b.x, b.y);
+  const rx = Math.cos(a), ry = -Math.sin(a);         // 오른쪽 방향
   if (club().putter) {
-    const d = Math.min(cupDist() + 1, G.putScale), back = 2.2 + d * .3, up = 1.0 + d * .17;
-    return { pos: V(b.x - dx * back, g + up, -(b.y - dy * back)), look: V(b.x + dx * d * .5, gH(b.x + dx * d * .5, b.y + dy * d * .5), -(b.y + dy * d * .5)) };
+    const d = Math.min(cupDist() + 1, G.putScale), back = 2.6 + d * .22, up = 1.15 + d * .12, side = .3;
+    return { pos: V(b.x - dx * back + rx * side, g + up, -(b.y - dy * back + ry * side)), look: V(b.x + dx * d * .45, gH(b.x + dx * d * .45, b.y + dy * d * .45), -(b.y + dy * d * .45)) };
   }
-  const Rr = reachOf(club(), lieNow()), L = Math.min(Rr * .5, 90), lx = b.x + dx * L, ly = b.y + dy * L;
-  return { pos: V(b.x - dx * 8, g + 3.8, -(b.y - dy * 8)), look: V(lx, gH(lx, ly) + Rr * .02, -ly) };
+  const Rr = reachOf(club(), lieNow()), L = Math.min(Rr * .45, 70), lx = b.x + dx * L, ly = b.y + dy * L;
+  const L2 = 25, l2x = b.x + dx * L2, l2y = b.y + dy * L2;
+  return { pos: V(b.x - dx * 5.6 + rx * .5, g + 1.9, -(b.y - dy * 5.6 + ry * .5)), look: V(l2x, gH(l2x, l2y) - 1.0, -l2y) };
 }
 function overviewPose() {
   const h = G.hole, r = h.route, xs = r.map(p => p[0]), ys = r.map(p => p[1]);
@@ -1490,6 +1621,25 @@ function render3D(now) {
     }
     R3.dots.instanceMatrix.needsUpdate = true;
   }
+  // 골퍼: 마지막으로 친 자리에 서서 스윙·리액션
+  if (R3.golfer) {
+    const gf = R3.golfer, at = G.golferAt || { x: G.ball.x, y: G.ball.y, aim: G.aim }, ga = ['aim', 'power', 'impact', 'intro'].includes(G.state) ? G.aim : at.aim;
+    const gx = ['aim', 'power', 'impact', 'intro'].includes(G.state) ? G.ball.x : at.x, gy = ['aim', 'power', 'impact', 'intro'].includes(G.state) ? G.ball.y : at.y;
+    const dx = Math.sin(ga), dy = Math.cos(ga), rx = Math.cos(ga), ry = -Math.sin(ga), off = club().putter || (G.roll && !G.shot) ? .42 : .5;
+    gf.root.position.set(gx - rx * off, gH(gx - rx * off, gy - ry * off), -(gy - ry * off));
+    gf.root.quaternion.setFromRotationMatrix(R3.mat4.makeBasis(R3.v.set(dx, 0, -dy).clone(), _up(), new THREE.Vector3(rx, 0, -ry)));
+    poseGolfer3D(gf, poseNow(now));
+    gf.root.visible = G.state !== 'intro' && !(G.overview && G.state === 'aim');
+  }
+  // 빛기둥: 낙하 지점(조준 중) · 핀(멀 때)
+  R3.beam.visible = aiming && !club().putter;
+  if (R3.beam.visible) { const p = previewLanding(), rd = camera.position.distanceTo(R3.v.set(p.x, gH(p.x, p.y), -p.y)), bs = Math.max(1.2, rd * .012);
+    R3.beam.position.set(p.x, gH(p.x, p.y), -p.y); R3.beam.scale.set(bs * .45, bs * 10, bs * .45); R3.beam.material.opacity = .22 + Math.sin(t * 5) * .06; }
+  const cd = cupDist(); R3.pinBeam.visible = cd > 35 && G.state !== 'intro';
+  if (R3.pinBeam.visible) { const rd = camera.position.distanceTo(R3.pin.position), bs = Math.max(.5, rd * .008); R3.pinBeam.position.copy(R3.pin.position); R3.pinBeam.scale.set(bs * .5, bs * 16, bs * .5); }
+  // 작은 골퍼 창: 3D 골퍼가 화면에 보일 때(조준 중)는 숨김, 공 따라갈 때·리액션 때만 표시
+  $('#pip').style.visibility = ['aim', 'power', 'impact', 'intro'].includes(G.state) || (G.state === 'flight' && G.shot.wait > 0) ? 'hidden' : 'visible';
+  drawMini(now);
   // 깃발 펄럭임 (바람 방향)
   const w = G.wind, fp = R3.flagG.attributes.position, fb = R3.flagBase, amp = .05 + Math.min(w.spd, 7) * .018;
   for (let i = 0; i < fp.count; i++) { const x = fb[i * 3]; fp.setZ(i, Math.sin(x * 5 - t * (4 + w.spd)) * amp * x); }
@@ -1517,8 +1667,8 @@ function groundPick(sx, sy) {
 }
 function start3D() {
   if (!R3) return;
-  $('#gl').classList.remove('hidden'); $('#cv').classList.add('hidden');
-  resize(); if (G) buildHole3D(G.hole);
+  $('#gl').classList.remove('hidden'); $('#cv').classList.add('hidden'); $('#mini').classList.remove('hidden');
+  resize(); if (G) { buildHole3D(G.hole); ensureGolfer3D(); }
 }
 import(THREE_URL).then(m => {
   THREE = m;

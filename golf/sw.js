@@ -1,5 +1,5 @@
 // 링크 골프 - 서비스워커 (오프라인 실행용 · 화면은 항상 최신 버전 우선)
-const CACHE = 'link-golf-v3';
+const CACHE = 'link-golf-v4';
 const ASSETS = ['./', './index.html', './manifest.json', './icon-180.png', './icon-192.png', './icon-512.png'];
 self.addEventListener('install', e => {
   e.waitUntil(caches.open(CACHE).then(c => Promise.all(ASSETS.map(a => c.add(new Request(a, { cache: 'reload' })).catch(() => {})))));
