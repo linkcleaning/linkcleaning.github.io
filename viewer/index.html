@@ -416,7 +416,7 @@
 <div id="toast" class="rounded-full bg-panel border border-line px-4 py-2 text-[13px] shadow-xl whitespace-nowrap"></div>
 <div id="loading" class="hidden"><div class="spin"></div><div id="loadMsg" class="text-[13px] text-mute">여는 중…</div></div>
 <div id="dropHint">여기에 놓으면 바로 열려요</div>
-<div id="ver" aria-hidden="true">v7</div>
+<div id="ver" aria-hidden="true">v8</div>
 
 <!--
   서비스워커 코드 (오프라인 실행용)
@@ -425,7 +425,7 @@
     (linkcleaning.github.io/viewer/ 에는 이미 올려 두었습니다)
 -->
 <script type="text/plain" id="sw-source">
-const CACHE = 'neomgim-v7';
+const CACHE = 'neomgim-v8';
 const CORE = ['./', './index.html', './manifest.webmanifest', './icon-180.png', './icon-192.png', './icon-512.png'];
 const CDN = [
   'https://cdn.tailwindcss.com',
@@ -465,7 +465,7 @@ self.addEventListener('fetch', e => {
 'use strict';
 const $ = s => document.querySelector(s);
 const LS = 'neomgim.';
-const MAX_BOOKS = 30;
+const MAX_BOOKS = Infinity;   // 권수 제한 없음 (기기 저장공간까지)
 const IMG_RE = /\.(jpe?g|png|webp|gif|avif|bmp)$/i;
 const ARC_RE = /\.(zip|cbz)$/i;
 const MIME = { jpg: 'image/jpeg', jpeg: 'image/jpeg', png: 'image/png', webp: 'image/webp', gif: 'image/gif', avif: 'image/avif', bmp: 'image/bmp' };
@@ -617,7 +617,7 @@ async function openRecord(rec, isNew) {
   try {
     const pages = await pagesFromRecord(rec);
     if (!pages.length) { loading(false); return toast('이미지가 들어 있지 않아요'); }
-    if (isNew && !(await DB.get(rec.id).catch(() => null))) addToLibrary(rec, pages).catch(() => toast('저장 공간이 부족해 이번에만 열어요'));
+    if (isNew && !(await DB.get(rec.id).catch(() => null))) addToLibrary(rec, pages).catch(() => toast('아이폰 저장공간이 부족해 서재에 못 넣었어요 (이번에만 열려요)'));
     meta[rec.id] = Object.assign({ pos: 0 }, meta[rec.id], { opened: Date.now() });
     saveMeta();
     startReader(rec, pages);
@@ -711,7 +711,10 @@ async function renderLib() {
     box.appendChild(el);
   }
   if (navigator.storage && navigator.storage.estimate) {
-    navigator.storage.estimate().then(e => { if (e.usage > 1048576) $('#usage').textContent = `${(e.usage / 1048576).toFixed(0)}MB`; }).catch(() => {});
+    navigator.storage.estimate().then(e => {
+      const fmt = b => b >= 1073741824 ? (b / 1073741824).toFixed(b >= 10737418240 ? 0 : 1) + 'GB' : Math.max(1, Math.round(b / 1048576)) + 'MB';
+      $('#usage').innerHTML = e.quota ? `${fmt(e.usage || 0)} <span style="opacity:.6">/ 최대 ${fmt(e.quota)}</span>` : (e.usage > 1048576 ? fmt(e.usage) : '');
+    }).catch(() => {});
   }
 }
 $('#btnSort').onclick = () => { settings.sort = settings.sort === 'name' ? 'recent' : 'name'; saveSettings(); renderLib(); };
