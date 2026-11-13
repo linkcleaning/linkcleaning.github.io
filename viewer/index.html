@@ -74,21 +74,26 @@
   * { box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
   html, body { margin:0; background:var(--bg); color:#ECE8E1; font-family:"SUIT Variable",SUIT,-apple-system,BlinkMacSystemFont,"Apple SD Gothic Neo","Malgun Gothic",sans-serif; }
   button { font:inherit; color:inherit; background:none; border:0; cursor:pointer; }
+  button:focus:not(:focus-visible) { outline:none; }
   .hidden { display:none !important; }
 
-  /* ---------- 서재 ---------- */
   body.reading #lib { display:none; }
   body:not(.reading) #reader { display:none; }
-  body.reading { overflow:hidden; overscroll-behavior:none; -webkit-user-select:none; user-select:none; }
+  body.reading { overflow:hidden; overscroll-behavior:none; -webkit-user-select:none; user-select:none; -webkit-touch-callout:none; }
 
-  /* ---------- 뷰어 ---------- */
-  #stage { position:fixed; inset:0; background:var(--bg); overflow:hidden; touch-action:manipulation; overscroll-behavior:contain; }
-  #stage.fit-width { overflow-x:hidden; overflow-y:auto; -webkit-overflow-scrolling:touch; }
-  #wrap { display:flex; justify-content:center; align-items:center; width:100%; min-height:100%; }
-  #wrap.rtl { flex-direction:row-reverse; }
-  .fit-height #wrap { height:100%; }
+  /* ---------- 뷰어: 3장 슬롯(이전·현재·다음)이 나란히 놓인 띠를 손가락으로 끌어 넘김 ---------- */
+  #stage { position:fixed; inset:0; background:var(--bg); overflow:hidden; touch-action:none; }
+  #stage.fit-width { touch-action:pan-y; }
+  #strip { position:absolute; inset:0; will-change:transform; }
+  .slot { position:absolute; inset:0; overflow:hidden; }
+  .fit-width .slot { overflow-x:hidden; overflow-y:auto; -webkit-overflow-scrolling:touch; overscroll-behavior:contain; }
+  #stage.zoomed, #stage.zoomed .slot { touch-action:none; overflow:hidden; }
+  .wrap { display:flex; justify-content:center; align-items:center; width:100%; min-height:100%; transform-origin:0 0; }
+  .wrap.rtl { flex-direction:row-reverse; }
+  .wrap.ease { transition:transform .22s ease; }
+  .fit-height .wrap { height:100%; }
   .fit-height .pg { height:100%; width:auto; max-width:calc(100% / var(--n,1)); object-fit:contain; }
-  .fit-width #wrap { align-items:flex-start; }
+  .fit-width .wrap { align-items:flex-start; }
   .fit-width .pg { width:calc(100% / var(--n,1)); height:auto; }
   .pg { display:block; flex:0 1 auto; min-width:0; -webkit-user-drag:none; pointer-events:none; }
   #dim { position:fixed; inset:0; background:#000; opacity:0; pointer-events:none; z-index:10; transition:opacity .15s; }
@@ -113,7 +118,19 @@
   input[type=range]::-moz-range-thumb { width:16px; height:16px; border-radius:50%; background:var(--orange); border:3px solid #1A1C1F; }
   input[type=range].rtl { direction:rtl; }
 
-  #pop { position:fixed; left:50%; transform:translateX(-50%); z-index:22; width:min(340px, calc(100% - 24px)); bottom:calc(122px + env(safe-area-inset-bottom)); }
+  #seek { position:absolute; bottom:100%; margin-bottom:10px; transform:translateX(-50%); width:92px; pointer-events:none; }
+  #seek .ph { aspect-ratio:2/3; border-radius:10px; overflow:hidden; background:#202327; border:2px solid var(--orange); box-shadow:0 10px 30px rgba(0,0,0,.6); }
+  #seek img { width:100%; height:100%; object-fit:cover; }
+
+  .pop { position:fixed; left:50%; transform:translateX(-50%); z-index:22; width:min(360px, calc(100% - 24px)); bottom:calc(122px + env(safe-area-inset-bottom)); }
+  .seg { display:flex; background:#111214; border-radius:11px; padding:3px; }
+  .seg button { flex:1; padding:8px 0; border-radius:8px; font-size:13px; color:var(--mute); }
+  .seg button.on { background:#2A2D31; color:#ECE8E1; font-weight:700; }
+  .sw { width:44px; height:26px; border-radius:13px; background:#33363B; position:relative; transition:background .2s; flex:none; }
+  .sw::after { content:''; position:absolute; top:3px; left:3px; width:20px; height:20px; border-radius:50%; background:#ECE8E1; transition:transform .2s; }
+  .sw.on { background:var(--teal); }
+  .sw.on::after { transform:translateX(18px); }
+
   #scrim { position:fixed; inset:0; z-index:25; background:rgba(0,0,0,.45); opacity:0; pointer-events:none; transition:opacity .2s; }
   #scrim.open { opacity:1; pointer-events:auto; }
   #drawer { position:fixed; left:0; right:0; bottom:0; z-index:30; height:min(64dvh, 640px); transform:translateY(102%); transition:transform .25s cubic-bezier(.2,.8,.2,1); padding-bottom:env(safe-area-inset-bottom); }
@@ -133,6 +150,7 @@
   body.dragging #dropHint { opacity:1; }
   #dropHint { position:fixed; inset:10px; z-index:80; border:2px dashed var(--orange); border-radius:24px; background:rgba(17,18,20,.85); display:flex; align-items:center; justify-content:center; font-size:18px; font-weight:700; opacity:0; pointer-events:none; transition:opacity .15s; }
   .card-cover { aspect-ratio:3/4; background:#202327; }
+  .badge { position:absolute; left:7px; top:7px; font-size:10px; font-weight:800; letter-spacing:.04em; padding:2px 7px; border-radius:7px; }
   #ver { position:fixed; left:5px; bottom:2px; font:500 9px/1 system-ui,-apple-system,sans-serif; color:#888; opacity:.45; pointer-events:none; z-index:2147483647; letter-spacing:.02em; user-select:none; -webkit-user-select:none; }
 </style>
 </head>
@@ -156,7 +174,7 @@
       <button id="btnZip" class="rounded-2xl bg-orange text-ink px-4 py-5 text-left active:scale-[.98] transition">
         <svg viewBox="0 0 24 24" class="w-7 h-7 mb-3" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7.5 12 3l8 4.5v9L12 21l-8-4.5z"/><path d="M12 12v9M4 7.5l8 4.5 8-4.5"/></svg>
         <div class="font-extrabold text-[17px]">압축파일 열기</div>
-        <div class="text-[12px] opacity-75 mt-0.5">ZIP · CBZ</div>
+        <div class="text-[12px] opacity-75 mt-0.5">ZIP · CBZ · 여러 권</div>
       </button>
       <button id="btnImg" class="rounded-2xl bg-teal-soft border border-teal/60 px-4 py-5 text-left active:scale-[.98] transition">
         <svg viewBox="0 0 24 24" class="w-7 h-7 mb-3 text-orange" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="14" height="14" rx="2"/><path d="M7 3h12a2 2 0 0 1 2 2v12"/><path d="m3 16 4-4 4 4 2-2 4 4"/></svg>
@@ -164,14 +182,27 @@
         <div class="text-[12px] text-mute mt-0.5">JPG · PNG · WebP</div>
       </button>
     </div>
-    <p class="text-[12px] text-mute mb-9 hidden sm:block">PC에서는 파일을 이 창에 끌어다 놓아도 열려요.</p>
-    <div class="sm:hidden mb-9"></div>
+    <p class="text-[12px] text-mute mb-8 hidden sm:block">PC에서는 파일을 이 창에 끌어다 놓아도 열려요.</p>
+    <div class="sm:hidden mb-8"></div>
 
-    <div class="flex items-baseline justify-between mb-3">
-      <h2 class="text-[15px] font-bold">내 서재</h2>
-      <span id="libCount" class="text-[12px] text-mute"></span>
+    <button id="resume" class="hidden w-full mb-8 rounded-2xl bg-panel border border-line p-3 flex items-center gap-3 text-left active:scale-[.99] transition">
+      <div class="w-14 h-[74px] rounded-lg overflow-hidden bg-[#202327] shrink-0"><img id="resumeImg" alt="" class="w-full h-full object-cover"></div>
+      <div class="flex-1 min-w-0">
+        <div class="text-[11px] font-bold text-orange tracking-wide">이어서 보기</div>
+        <div id="resumeName" class="text-[15px] font-bold truncate mt-0.5"></div>
+        <div class="flex items-center gap-2 mt-1.5">
+          <div class="flex-1 h-1 rounded-full bg-[#33363B] overflow-hidden"><div id="resumeBar" class="h-full bg-teal"></div></div>
+          <span id="resumePos" class="text-[11px] text-mute tabular-nums"></span>
+        </div>
+      </div>
+      <svg viewBox="0 0 24 24" class="w-5 h-5 text-mute shrink-0" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="m9 5 7 7-7 7"/></svg>
+    </button>
+
+    <div class="flex items-center justify-between mb-3">
+      <h2 class="text-[15px] font-bold">내 서재 <span id="libCount" class="text-[12px] text-mute font-medium ml-1"></span></h2>
+      <button id="btnSort" class="text-[12px] text-mute px-3 py-1.5 rounded-full bg-panel border border-line"></button>
     </div>
-    <div id="books" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-x-3 gap-y-5"></div>
+    <div id="books" class="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 gap-x-3 gap-y-5"></div>
     <div id="empty" class="hidden rounded-2xl border border-dashed border-line py-12 text-center text-mute text-sm leading-6">
       아직 열어 본 책이 없어요.<br>위 버튼으로 만화나 사진을 불러오세요.
     </div>
@@ -184,7 +215,13 @@
 
 <!-- ======================= 뷰어 화면 ======================= -->
 <section id="reader">
-  <div id="stage" class="fit-height"><div id="wrap"></div></div>
+  <div id="stage" class="fit-height">
+    <div id="strip">
+      <div class="slot"><div class="wrap"></div></div>
+      <div class="slot"><div class="wrap"></div></div>
+      <div class="slot"><div class="wrap"></div></div>
+    </div>
+  </div>
   <div id="dim"></div>
 
   <div id="top" class="bar">
@@ -204,7 +241,10 @@
     <div class="max-w-2xl mx-auto px-4 pt-2">
       <div class="flex items-center gap-3">
         <span id="pFirst" class="text-[11px] text-mute w-8 text-center tabular-nums">1</span>
-        <input id="slider" type="range" min="0" max="0" value="0" aria-label="페이지 이동">
+        <div class="relative flex-1">
+          <input id="slider" type="range" min="0" max="0" value="0" aria-label="페이지 이동">
+          <div id="seek" class="hidden"><div class="ph"><img alt=""></div><div id="seekNum" class="text-center text-[12px] font-bold mt-1.5 tabular-nums"></div></div>
+        </div>
         <span id="pLast" class="text-[11px] text-mute w-8 text-center tabular-nums"></span>
       </div>
       <div class="flex justify-between pt-1">
@@ -212,18 +252,31 @@
         <button class="tool" id="tSpread"></button>
         <button class="tool" id="tFit"></button>
         <button class="tool" id="tBright"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="12" cy="12" r="4"/><path d="M12 2.5v2M12 19.5v2M2.5 12h2M19.5 12h2M5.3 5.3l1.4 1.4M17.3 17.3l1.4 1.4M5.3 18.7l1.4-1.4M17.3 6.7l1.4-1.4"/></svg>밝기</button>
-        <button class="tool" id="tDir"></button>
+        <button class="tool" id="tSet"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M4 7h10M18 7h2M4 17h4M12 17h8"/><circle cx="16" cy="7" r="2"/><circle cx="10" cy="17" r="2"/></svg>설정</button>
       </div>
     </div>
   </div>
 
-  <div id="pop" class="hidden rounded-2xl bg-panel border border-line px-4 py-3 shadow-2xl">
+  <div id="pop" class="pop hidden rounded-2xl bg-panel border border-line px-4 py-3 shadow-2xl">
     <div class="flex items-center justify-between text-[12px] text-mute mb-1"><span>화면 밝기</span><span id="brightVal" class="tabular-nums text-paper"></span></div>
     <div class="flex items-center gap-3">
       <svg viewBox="0 0 24 24" class="w-4 h-4 text-mute shrink-0" fill="currentColor"><circle cx="12" cy="12" r="5"/></svg>
       <input id="bright" type="range" min="20" max="100" step="1" aria-label="밝기">
       <svg viewBox="0 0 24 24" class="w-6 h-6 text-orange shrink-0" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="4"/><path d="M12 2.5v2M12 19.5v2M2.5 12h2M19.5 12h2M5.3 5.3l1.4 1.4M17.3 17.3l1.4 1.4M5.3 18.7l1.4-1.4M17.3 6.7l1.4-1.4"/></svg>
     </div>
+  </div>
+
+  <div id="sheet" class="pop hidden rounded-2xl bg-panel border border-line px-4 py-4 shadow-2xl space-y-4 text-[13.5px]">
+    <div>
+      <div class="text-[12px] text-mute mb-1.5">읽기 방향</div>
+      <div class="seg" id="segDir"><button data-v="ltr">왼쪽 → 오른쪽</button><button data-v="rtl">오른쪽 → 왼쪽 (만화)</button></div>
+    </div>
+    <div>
+      <div class="text-[12px] text-mute mb-1.5">넘김 효과</div>
+      <div class="seg" id="segAnim"><button data-v="slide">슬라이드</button><button data-v="none">없음 (빠르게)</button></div>
+    </div>
+    <button id="swTrim" class="w-full flex items-center justify-between gap-3 text-left"><span>여백 자동 자르기<span class="block text-[11.5px] text-mute">스캔본 흰·검은 테두리를 잘라 그림을 크게</span></span><span class="sw"></span></button>
+    <button id="swCover" class="w-full flex items-center justify-between gap-3 text-left"><span>표지 따로 보기<span class="block text-[11.5px] text-mute">두 쪽 보기에서 짝이 어긋나면 꺼 보세요</span></span><span class="sw"></span></button>
   </div>
 
   <div id="scrim"></div>
@@ -235,15 +288,31 @@
     </div>
     <div id="grid" class="flex-1 overflow-y-auto px-4 pb-6 grid grid-cols-4 sm:grid-cols-6 md:grid-cols-8 gap-2.5 content-start"></div>
   </div>
+
+  <div id="end" class="hidden fixed inset-0 z-40 bg-black/70 flex items-center justify-center p-6">
+    <div class="bg-panel border border-line rounded-3xl p-5 w-full max-w-sm">
+      <div class="text-[12px] text-leaf font-bold">끝까지 다 읽었어요</div>
+      <div id="endTitle" class="text-[17px] font-extrabold mt-1 break-all"></div>
+      <button id="endNext" class="hidden w-full mt-4 rounded-2xl bg-orange text-ink p-3 flex items-center gap-3 text-left">
+        <div class="w-11 h-14 rounded-md overflow-hidden bg-black/20 shrink-0"><img id="endNextImg" alt="" class="w-full h-full object-cover"></div>
+        <div class="min-w-0"><div class="text-[11px] font-bold opacity-70">다음 권</div><div id="endNextName" class="font-extrabold truncate"></div></div>
+      </button>
+      <div class="grid grid-cols-2 gap-2 mt-3">
+        <button id="endRestart" class="rounded-xl bg-[#26292D] py-3 text-[14px] font-semibold">처음부터</button>
+        <button id="endLib" class="rounded-xl bg-[#26292D] py-3 text-[14px] font-semibold">서재로</button>
+      </div>
+      <button id="endClose" class="w-full mt-2 py-2 text-[13px] text-mute">계속 보기</button>
+    </div>
+  </div>
 </section>
 
-<input id="fZip" type="file" class="hidden">
+<input id="fZip" type="file" class="hidden" multiple>
 <input id="fImg" type="file" class="hidden" accept="image/*,.jpg,.jpeg,.png,.webp,.gif,.avif" multiple>
 
 <div id="toast" class="rounded-full bg-panel border border-line px-4 py-2 text-[13px] shadow-xl whitespace-nowrap"></div>
 <div id="loading" class="hidden"><div class="spin"></div><div id="loadMsg" class="text-[13px] text-mute">여는 중…</div></div>
 <div id="dropHint">여기에 놓으면 바로 열려요</div>
-<div id="ver" aria-hidden="true">v1</div>
+<div id="ver" aria-hidden="true">v2</div>
 
 <!--
   서비스워커 코드 (오프라인 실행용)
@@ -252,7 +321,7 @@
     (linkcleaning.github.io/viewer/ 에는 이미 올려 두었습니다)
 -->
 <script type="text/plain" id="sw-source">
-const CACHE = 'neomgim-v1';
+const CACHE = 'neomgim-v2';
 const CORE = ['./', './index.html'];
 const CDN = [
   'https://cdn.tailwindcss.com',
@@ -291,12 +360,13 @@ self.addEventListener('fetch', e => {
 'use strict';
 const $ = s => document.querySelector(s);
 const LS = 'neomgim.';
-const MAX_BOOKS = 12;
+const MAX_BOOKS = 30;
 const IMG_RE = /\.(jpe?g|png|webp|gif|avif|bmp)$/i;
 const ARC_RE = /\.(zip|cbz)$/i;
 const MIME = { jpg: 'image/jpeg', jpeg: 'image/jpeg', png: 'image/png', webp: 'image/webp', gif: 'image/gif', avif: 'image/avif', bmp: 'image/bmp' };
 const collator = new Intl.Collator('ko', { numeric: true, sensitivity: 'base' });
 const mimeOf = n => MIME[(n.split('.').pop() || '').toLowerCase()] || 'image/jpeg';
+const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
 
 /* ---------- 저장 (LocalStorage: 설정·읽던 페이지 / IndexedDB: 책 파일) ---------- */
 const ls = {
@@ -304,9 +374,10 @@ const ls = {
   set(k, v) { try { localStorage.setItem(LS + k, JSON.stringify(v)); } catch {} },
   del(k) { try { localStorage.removeItem(LS + k); } catch {} }
 };
-const settings = Object.assign({ spread: false, fit: 'height', bright: 100, rtl: false }, ls.get('settings', {}));
+const settings = Object.assign({ spread: 'auto', fit: 'height', bright: 100, rtl: false, anim: 'slide', trim: false, cover: true, sort: 'recent' }, ls.get('settings', {}));
+if (settings.spread === true) settings.spread = 'two'; else if (settings.spread === false) settings.spread = 'one';   // v1 설정 옮기기
 const saveSettings = () => ls.set('settings', settings);
-const meta = ls.get('meta', {});            // { [책id]: { pos, opened } }
+const meta = ls.get('meta', {});            // { [책id]: { pos, opened, done } }
 const saveMeta = () => ls.set('meta', meta);
 
 const DB = {
@@ -334,22 +405,48 @@ const DB = {
   del(id) { return this.run('readwrite', s => s.delete(id)); }
 };
 
-/* ---------- 공통 UI ---------- */
+/* ---------- 공통 ---------- */
 let toastT;
 function toast(msg) { const t = $('#toast'); t.textContent = msg; t.classList.add('show'); clearTimeout(toastT); toastT = setTimeout(() => t.classList.remove('show'), 1700); }
 function loading(on, msg) { $('#loading').classList.toggle('hidden', !on); if (msg) $('#loadMsg').textContent = msg; }
 function hash(str) { let h = 5381; for (let i = 0; i < str.length; i++) h = (h * 33 ^ str.charCodeAt(i)) >>> 0; return h.toString(36); }
 const stripExt = n => n.replace(/\.[^.]+$/, '');
+async function loadImg(blob) { const url = URL.createObjectURL(blob); const im = new Image(); im.src = url; try { await im.decode(); } finally { URL.revokeObjectURL(url); } return im; }
+const toBlob = (c, type, q) => new Promise(res => c.toBlob(res, type, q));
 
 async function makeThumb(blob, w) {
-  const url = URL.createObjectURL(blob);
-  try {
-    const im = new Image(); im.src = url; await im.decode();
-    const r = Math.min(1, w / im.naturalWidth), c = document.createElement('canvas');
-    c.width = Math.max(1, Math.round(im.naturalWidth * r)); c.height = Math.max(1, Math.round(im.naturalHeight * r));
-    c.getContext('2d').drawImage(im, 0, 0, c.width, c.height);
-    return await new Promise(res => c.toBlob(res, 'image/jpeg', 0.78));
-  } finally { URL.revokeObjectURL(url); }
+  const im = await loadImg(blob);
+  const r = Math.min(1, w / im.naturalWidth), c = document.createElement('canvas');
+  c.width = Math.max(1, Math.round(im.naturalWidth * r)); c.height = Math.max(1, Math.round(im.naturalHeight * r));
+  c.getContext('2d').drawImage(im, 0, 0, c.width, c.height);
+  return toBlob(c, 'image/jpeg', 0.78);
+}
+
+/* 여백 자동 자르기: 작게 줄인 그림에서 테두리 색과 다른 부분의 범위를 찾아 원본을 잘라냄 */
+async function trimBlob(blob) {
+  const im = await loadImg(blob);
+  const W = im.naturalWidth, H = im.naturalHeight, sw = Math.min(240, W), sh = Math.max(1, Math.round(H * sw / W));
+  const c = document.createElement('canvas'); c.width = sw; c.height = sh;
+  const x = c.getContext('2d', { willReadFrequently: true }); x.drawImage(im, 0, 0, sw, sh);
+  const d = x.getImageData(0, 0, sw, sh).data, lum = (px, py) => { const o = (py * sw + px) * 4; return d[o] * .3 + d[o + 1] * .59 + d[o + 2] * .11; };
+  const corners = [lum(1, 1), lum(sw - 2, 1), lum(1, sh - 2), lum(sw - 2, sh - 2)];
+  const bg = corners.reduce((a, b) => a + b) / 4;
+  if (corners.some(v => Math.abs(v - bg) > 28)) return blob;                // 테두리가 한 가지 색이 아니면 그대로
+  const diff = (px, py) => Math.abs(lum(px, py) - bg) > 40;
+  const rowHas = py => { let n = 0; for (let px = 0; px < sw; px++) if (diff(px, py) && ++n > sw * 0.012) return true; return false; };
+  const colHas = px => { let n = 0; for (let py = 0; py < sh; py++) if (diff(px, py) && ++n > sh * 0.012) return true; return false; };
+  let t = 0, b = sh - 1, l = 0, r = sw - 1;
+  while (t < b && !rowHas(t)) t++;
+  while (b > t && !rowHas(b)) b--;
+  while (l < r && !colHas(l)) l++;
+  while (r > l && !colHas(r)) r--;
+  const pad = 2, k = W / sw;
+  t = Math.max(0, t - pad); l = Math.max(0, l - pad); b = Math.min(sh - 1, b + pad); r = Math.min(sw - 1, r + pad);
+  const cx = Math.round(l * k), cy = Math.round(t * k), cw = Math.round((r - l + 1) * k), ch = Math.round((b - t + 1) * k);
+  if (cw * ch > W * H * 0.95 || cw < W * 0.3 || ch < H * 0.3) return blob;   // 거의 안 잘리거나 너무 많이 잘리면 원본
+  const o = document.createElement('canvas'); o.width = Math.min(cw, W - cx); o.height = Math.min(ch, H - cy);
+  o.getContext('2d').drawImage(im, cx, cy, o.width, o.height, 0, 0, o.width, o.height);
+  return (await toBlob(o, 'image/jpeg', 0.92)) || blob;
 }
 
 /* ---------- 책 만들기 ---------- */
@@ -364,16 +461,40 @@ async function pagesFromRecord(rec) {
   }
   return rec.data.map(d => ({ name: d.name, blob: async () => d.blob }));
 }
+const zipRec = f => ({ id: 'z' + hash(f.name + '|' + f.size + '|' + f.lastModified), name: stripExt(f.name), kind: 'zip', data: f });
+
+async function addToLibrary(rec, pages) {
+  rec.count = pages.length; rec.added = Date.now();
+  try { rec.cover = await makeThumb(await pages[0].blob(), 360); } catch {}
+  await DB.put(rec);
+  await trimLibrary();
+  if (navigator.storage && navigator.storage.persist) navigator.storage.persist().catch(() => {});
+}
 
 async function openFiles(list) {
   const files = [...(list || [])];
   if (!files.length) return;
-  const arc = files.find(f => ARC_RE.test(f.name) || /zip/.test(f.type));
+  const arcs = files.filter(f => ARC_RE.test(f.name) || /zip/.test(f.type));
   const imgs = files.filter(f => IMG_RE.test(f.name) || /^image\//.test(f.type));
+  if (arcs.length > 1) {                       // 여러 권 → 서재에 한꺼번에 넣기
+    arcs.sort((a, b) => collator.compare(a.name, b.name));
+    let ok = 0;
+    for (let k = 0; k < arcs.length; k++) {
+      loading(true, `서재에 넣는 중… ${k + 1} / ${arcs.length}`);
+      try {
+        const rec = zipRec(arcs[k]);
+        if (await DB.get(rec.id).catch(() => null)) { ok++; continue; }
+        const pages = await pagesFromRecord(rec);
+        if (pages.length) { await addToLibrary(rec, pages); ok++; }
+      } catch (e) { console.error(e); }
+    }
+    loading(false);
+    toast(`${ok}권을 서재에 넣었어요`);
+    return renderLib();
+  }
   let rec;
-  if (arc) {
-    rec = { id: 'z' + hash(arc.name + '|' + arc.size + '|' + arc.lastModified), name: stripExt(arc.name), kind: 'zip', data: arc };
-  } else if (imgs.length) {
+  if (arcs.length) rec = zipRec(arcs[0]);
+  else if (imgs.length) {
     const unique = new Set(imgs.map(f => f.name)).size === imgs.length;
     if (unique) imgs.sort((a, b) => collator.compare(a.name, b.name));   // 이름이 다 다르면 번호순, 같으면(아이폰 사진) 고른 순서
     const d = new Date();
@@ -381,9 +502,7 @@ async function openFiles(list) {
     rec = { id: 'i' + hash(imgs.map(f => f.name + f.size).join('|')), name, kind: 'images', data: imgs.map(f => ({ name: f.name, blob: f })) };
   } else if (files.some(f => /\.(cbr|rar|7z|cb7|pdf)$/i.test(f.name))) {
     return toast('RAR·7z·PDF는 아직 못 열어요. ZIP·CBZ로 바꿔 주세요');
-  } else {
-    return toast('열 수 있는 파일이 없어요');
-  }
+  } else return toast('열 수 있는 파일이 없어요');
   openRecord(rec, true);
 }
 
@@ -392,15 +511,7 @@ async function openRecord(rec, isNew) {
   try {
     const pages = await pagesFromRecord(rec);
     if (!pages.length) { loading(false); return toast('이미지가 들어 있지 않아요'); }
-    if (isNew) {
-      const old = await DB.get(rec.id).catch(() => null);
-      if (!old) {
-        rec.count = pages.length; rec.added = Date.now();
-        try { rec.cover = await makeThumb(await pages[0].blob(), 360); } catch {}
-        DB.put(rec).then(trimLibrary).catch(() => toast('저장 공간이 부족해 이번에만 열어요'));
-        if (navigator.storage && navigator.storage.persist) navigator.storage.persist().catch(() => {});
-      }
-    }
+    if (isNew && !(await DB.get(rec.id).catch(() => null))) addToLibrary(rec, pages).catch(() => toast('저장 공간이 부족해 이번에만 열어요'));
     meta[rec.id] = Object.assign({ pos: 0 }, meta[rec.id], { opened: Date.now() });
     saveMeta();
     startReader(rec, pages);
@@ -420,32 +531,46 @@ async function trimLibrary() {
 
 /* ---------- 서재 ---------- */
 let libUrls = [];
+const recent = b => (meta[b.id] || {}).opened || b.added || 0;
+function sortBooks(books) { return books.sort(settings.sort === 'name' ? (a, b) => collator.compare(a.name, b.name) : (a, b) => recent(b) - recent(a)); }
 async function renderLib() {
   libUrls.forEach(u => URL.revokeObjectURL(u)); libUrls = [];
   let books = [];
   try { books = await DB.all(); } catch {}
-  books.sort((a, b) => ((meta[b.id] || {}).opened || b.added || 0) - ((meta[a.id] || {}).opened || a.added || 0));
-  const box = $('#books'); box.innerHTML = '';
+  const coverUrl = b => { if (!b.cover) return ''; const u = URL.createObjectURL(b.cover); libUrls.push(u); return u; };
+  $('#btnSort').textContent = settings.sort === 'name' ? '이름순 ⇅' : '최근순 ⇅';
   $('#empty').classList.toggle('hidden', books.length > 0);
   $('#libCount').textContent = books.length ? `${books.length}권` : '';
-  for (const b of books) {
-    const pos = (meta[b.id] || {}).pos || 0, cnt = b.count || 1;
-    const pct = cnt > 1 ? Math.round(pos / (cnt - 1) * 100) : 100;
+
+  const last = [...books].sort((a, b) => recent(b) - recent(a)).find(b => { const m = meta[b.id] || {}; return m.pos > 0 && !m.done; });
+  $('#resume').classList.toggle('hidden', !last);
+  if (last) {
+    const m = meta[last.id], cnt = last.count || 1;
+    $('#resumeImg').src = coverUrl(last); $('#resumeName').textContent = last.name;
+    $('#resumePos').textContent = `${m.pos + 1} / ${cnt}쪽`;
+    $('#resumeBar').style.width = Math.round((m.pos + 1) / cnt * 100) + '%';
+    $('#resume').onclick = () => openRecord(last, false);
+  }
+
+  const box = $('#books'); box.innerHTML = '';
+  for (const b of sortBooks(books)) {
+    const m = meta[b.id] || {}, pos = m.pos || 0, cnt = b.count || 1;
+    const pct = Math.round((pos + 1) / cnt * 100), src = coverUrl(b);
+    const badge = m.done ? '<span class="badge bg-leaf text-ink">완독</span>' : !m.opened ? '<span class="badge bg-orange text-ink">NEW</span>' : '';
     const el = document.createElement('div');
     el.className = 'relative';
-    let src = '';
-    if (b.cover) { src = URL.createObjectURL(b.cover); libUrls.push(src); }
     el.innerHTML = `
       <button class="open block w-full text-left active:scale-[.98] transition">
-        <div class="card-cover rounded-2xl overflow-hidden relative">
+        <div class="card-cover rounded-xl overflow-hidden relative">
           ${src ? `<img src="${src}" class="w-full h-full object-cover" alt="">` : ''}
-          <div class="absolute left-0 right-0 bottom-0 h-1 bg-black/50"><div class="h-full bg-orange" style="width:${pct}%"></div></div>
+          ${badge}
+          ${!m.done && pos > 0 ? `<div class="absolute left-0 right-0 bottom-0 h-1 bg-black/50"><div class="h-full bg-orange" style="width:${pct}%"></div></div>` : ''}
         </div>
-        <div class="mt-2 text-[13.5px] font-semibold leading-snug line-clamp-2 break-all"></div>
-        <div class="text-[11.5px] text-mute mt-0.5 tabular-nums">${pos + 1} / ${cnt}쪽 · ${b.kind === 'zip' ? '압축' : '사진'}</div>
+        <div class="nm mt-1.5 text-[12.5px] font-semibold leading-snug line-clamp-2 break-all"></div>
+        <div class="text-[11px] text-mute mt-0.5 tabular-nums">${m.done ? cnt + '쪽' : `${pos + 1} / ${cnt}쪽`}</div>
       </button>
-      <button class="del absolute top-1.5 right-1.5 w-7 h-7 rounded-full bg-black/60 grid place-items-center text-[13px] text-paper/80" aria-label="삭제">✕</button>`;
-    el.querySelector('.open div.mt-2').textContent = b.name;
+      <button class="del absolute top-1 right-1 w-7 h-7 rounded-full bg-black/60 grid place-items-center text-[12px] text-paper/80" aria-label="삭제">✕</button>`;
+    el.querySelector('.nm').textContent = b.name;
     el.querySelector('.open').onclick = () => openRecord(b, false);
     el.querySelector('.del').onclick = async () => {
       if (!confirm(`'${b.name}'을(를) 서재에서 지울까요?\n(기기의 원본 파일은 그대로예요)`)) return;
@@ -457,15 +582,36 @@ async function renderLib() {
     navigator.storage.estimate().then(e => { if (e.usage) $('#usage').textContent = `사용 ${(e.usage / 1048576).toFixed(0)}MB`; }).catch(() => {});
   }
 }
+$('#btnSort').onclick = () => { settings.sort = settings.sort === 'name' ? 'recent' : 'name'; saveSettings(); renderLib(); };
 
-/* ---------- 뷰어 ---------- */
-const stage = $('#stage'), wrap = $('#wrap'), slider = $('#slider');
-const R = { rec: null, pages: [], count: 0, start: 0, token: 0, urls: new Map(), order: [], shown: new Set(), thumbs: new Map(), io: null, gridFor: null };
+/* ======================= 뷰어 ======================= */
+const stage = $('#stage'), strip = $('#strip'), slider = $('#slider');
+const slotEls = [...strip.children];
+let S = { prev: slotEls[0], cur: slotEls[1], next: slotEls[2] };
+const R = { rec: null, pages: [], count: 0, groups: [], gOf: null, g: 0, token: 0, urls: new Map(), order: [], thumbs: new Map(), wide: new Set(), io: null, gridFor: null };
+
+const spreadOn = () => settings.spread === 'two' || (settings.spread === 'auto' && innerWidth > innerHeight * 1.05);
+function buildGroups() {                    // 쪽 묶음: 두 쪽 보기면 [0] [1,2] [3,4]… 가로로 넓은 펼침면은 혼자
+  const g = [], n = R.count;
+  if (!spreadOn()) for (let i = 0; i < n; i++) g.push([i]);
+  else {
+    let i = 0;
+    if (settings.cover && n) { g.push([0]); i = 1; }
+    while (i < n) {
+      if (R.wide.has(i) || i + 1 >= n || R.wide.has(i + 1)) { g.push([i]); i++; }
+      else { g.push([i, i + 1]); i += 2; }
+    }
+  }
+  R.groups = g; R.gOf = new Int32Array(n);
+  g.forEach((a, k) => a.forEach(p => { R.gOf[p] = k; }));
+}
+const firstPage = () => (R.groups[R.g] || [0])[0];
 
 function startReader(rec, pages) {
   closeReader(true);
-  Object.assign(R, { rec, pages, count: pages.length, start: 0 });
-  R.start = spreadStart(Math.min((meta[rec.id] || {}).pos || 0, R.count - 1));
+  Object.assign(R, { rec, pages, count: pages.length, wide: new Set() });
+  buildGroups();
+  R.g = R.gOf[Math.min((meta[rec.id] || {}).pos || 0, R.count - 1)];
   ls.set('reading', rec.id);
   $('#title').textContent = rec.name;
   document.title = rec.name + ' · 넘김';
@@ -473,16 +619,18 @@ function startReader(rec, pages) {
   document.body.classList.remove('hide-bars');
   if (!history.state || !history.state.reader) history.pushState({ reader: 1 }, '');
   applySettings();
-  render();
+  renderAll();
 }
 
 function closeReader(silent) {
-  R.token++;
+  R.token++; finishAnim();
   R.urls.forEach(u => URL.revokeObjectURL(u)); R.urls.clear(); R.order = [];
-  R.thumbs.forEach(u => URL.revokeObjectURL(u)); R.thumbs.clear();
+  R.thumbs.forEach(u => URL.revokeObjectURL(u)); R.thumbs.clear(); thumbJobs.clear();
   if (R.io) { R.io.disconnect(); R.io = null; }
-  R.gridFor = null; $('#grid').innerHTML = ''; wrap.innerHTML = '';
-  closeDrawer(); closePop();
+  R.gridFor = null; $('#grid').innerHTML = '';
+  slotEls.forEach(s => { s._g = null; s._ready = null; s.firstElementChild.replaceChildren(); });
+  resetZoom();
+  closeDrawer(); closePops(); $('#end').classList.add('hidden');
   if (silent) return;
   R.rec = null; ls.del('reading');
   document.body.classList.remove('reading', 'hide-bars');
@@ -491,146 +639,430 @@ function closeReader(silent) {
   renderLib();
 }
 
+/* 페이지 이미지 주소 (최근 14장만 메모리에 유지) */
 async function getUrl(i) {
   if (R.urls.has(i)) { R.order = R.order.filter(x => x !== i); R.order.push(i); return R.urls.get(i); }
-  const tok = R.token, blob = await R.pages[i].blob();
+  const tok = R.token;
+  let blob = await R.pages[i].blob();
+  if (settings.trim) { try { blob = await trimBlob(blob); } catch {} }
   if (tok !== R.token) return '';
   if (R.urls.has(i)) return R.urls.get(i);
   const u = URL.createObjectURL(blob);
   R.urls.set(i, u); R.order.push(i);
-  while (R.order.length > 10) {                     // 메모리 아끼기: 최근 10쪽만 들고 있기
-    const k = R.order.find(x => !R.shown.has(x));
+  const keep = new Set(slotEls.flatMap(s => s._g != null && R.groups[s._g] ? R.groups[s._g] : []));
+  while (R.order.length > 14) {
+    const k = R.order.find(x => !keep.has(x));
     if (k == null) break;
     R.order = R.order.filter(x => x !== k); URL.revokeObjectURL(R.urls.get(k)); R.urls.delete(k);
   }
   return u;
 }
 
-function spreadStart(i) { if (!settings.spread || i <= 0) return Math.max(0, i); return i % 2 === 1 ? i : i - 1; }  // 두 쪽 보기: 표지는 혼자, 이후 1-2, 3-4…
-function pagesAt(s) { return settings.spread && s > 0 && s + 1 < R.count ? [s, s + 1] : [s]; }
-
-async function render() {
-  const tok = ++R.token, idx = pagesAt(R.start);
-  R.shown = new Set(idx);
-  updateUI();
+async function fillSlot(el, g) {
+  el._g = g; el._ready = null;
+  const w = el.firstElementChild;
+  w.style.transform = '';
+  if (g == null || g < 0 || g >= R.groups.length) { w.replaceChildren(); return; }
+  const idx = R.groups[g], tok = R.token;
   try {
     const urls = await Promise.all(idx.map(getUrl));
-    if (tok !== R.token) return;
-    const imgs = await Promise.all(urls.map(async u => {
+    if (el._g !== g || tok !== R.token) return;
+    const imgs = await Promise.all(urls.map(async (u, k) => {
       const im = new Image(); im.src = u; im.alt = ''; im.className = 'pg'; im.draggable = false;
       try { await im.decode(); } catch {}
+      if (im.naturalWidth > im.naturalHeight * 1.12 && !R.wide.has(idx[k])) { R.wide.add(idx[k]); R.regroup = true; }
       return im;
     }));
-    if (tok !== R.token) return;
+    if (el._g !== g || tok !== R.token) return;
     if (imgs.length === 2) {                         // 두 쪽이 가운데에서 딱 붙도록
       imgs[0].style.objectPosition = settings.rtl ? 'left center' : 'right center';
       imgs[1].style.objectPosition = settings.rtl ? 'right center' : 'left center';
     }
-    wrap.style.setProperty('--n', imgs.length);
-    wrap.replaceChildren(...imgs);
-    stage.scrollTop = 0;
-    preload();
-  } catch (e) { console.error(e); toast('이 페이지를 읽지 못했어요'); }
-  meta[R.rec.id] = Object.assign(meta[R.rec.id] || {}, { pos: R.start, opened: Date.now() });
+    w.classList.toggle('rtl', settings.rtl);
+    w.style.setProperty('--n', imgs.length);
+    w.replaceChildren(...imgs);
+    el.scrollTop = 0; el._ready = g;
+    if (R.regroup) regroup();
+  } catch (e) { console.error(e); if (el === S.cur) toast('이 페이지를 읽지 못했어요'); }
+}
+
+function regroup() {                         // 펼침면(가로 그림)을 발견하면 쪽 묶음을 다시 계산
+  R.regroup = false;
+  if (!spreadOn()) return;
+  const fp = firstPage(), before = JSON.stringify(R.groups);
+  buildGroups();
+  if (JSON.stringify(R.groups) === before) return;
+  R.g = R.gOf[fp]; renderAll();
+}
+
+function place() {
+  const ns = settings.rtl ? -1 : 1;           // 다음 쪽이 놓이는 쪽 (만화 방향이면 왼쪽)
+  S.cur.style.transform = 'translateX(0)';
+  S.next.style.transform = `translateX(${ns * 100}%)`;
+  S.prev.style.transform = `translateX(${-ns * 100}%)`;
+  slotEls.forEach(s => { s.style.visibility = 'visible'; });
+}
+
+function renderAll() {
+  R.token++; finishAnim(); resetZoom();
+  strip.style.transition = 'none'; strip.style.transform = 'none';
+  place();
+  fillSlot(S.cur, R.g); fillSlot(S.next, R.g + 1); fillSlot(S.prev, R.g - 1);
+  afterChange();
+}
+
+function afterChange() {
+  if (!R.rec) return;
+  updateUI();
+  const m = meta[R.rec.id] = Object.assign(meta[R.rec.id] || {}, { pos: firstPage(), opened: Date.now() });
+  if (R.g > 0) m.moved = true;
+  if (R.g === R.groups.length - 1) m.done = true;
   saveMeta();
 }
 
-function preload() {
-  const n = R.start + pagesAt(R.start).length;
-  [n, n + 1, R.start - 1].filter(i => i >= 0 && i < R.count).forEach(i => getUrl(i).then(u => { if (u) { const im = new Image(); im.src = u; } }).catch(() => {}));
+/* 넘기기 (슬라이드 애니메이션) */
+let anim = null;
+function finishAnim() { if (!anim) return; const a = anim; anim = null; clearTimeout(a.t); a.done(); }
+function snapBack() { strip.style.transition = 'transform .2s ease'; strip.style.transform = 'none'; }
+function navigate(dir) {
+  finishAnim();
+  const tg = R.g + dir;
+  if (tg < 0) { snapBack(); return toast('첫 페이지예요'); }
+  if (tg >= R.groups.length) { snapBack(); return showEnd(); }
+  resetZoom();
+  hideBars();
+  const ns = settings.rtl ? -1 : 1, k = dir > 0 ? ns : -ns, W = stage.clientWidth;
+  const done = () => {
+    strip.style.transition = 'none'; strip.style.transform = 'none';
+    if (dir > 0) S = { prev: S.cur, cur: S.next, next: S.prev };
+    else S = { next: S.cur, cur: S.prev, prev: S.next };
+    place();
+    R.g = tg;
+    if (S.cur._g !== tg) fillSlot(S.cur, tg);
+    else if (settings.fit === 'width') S.cur.scrollTop = 0;
+    fillSlot(dir > 0 ? S.next : S.prev, dir > 0 ? tg + 1 : tg - 1);
+    afterChange();
+  };
+  if (settings.anim === 'none') return done();
+  const me = { done, t: setTimeout(finishAnim, 340) };
+  anim = me;
+  strip.style.transition = 'transform .26s cubic-bezier(.22,.7,.25,1)';
+  requestAnimationFrame(() => { if (anim === me) strip.style.transform = `translateX(${-k * W}px)`; });
 }
+const goSide = side => navigate(side === (settings.rtl ? -1 : 1) ? 1 : -1);   // side: 화면 오른쪽(+1)/왼쪽(-1)
+function go(page) { R.g = R.gOf[clamp(page, 0, R.count - 1)]; renderAll(); }
 
-function go(i) { R.start = spreadStart(Math.max(0, Math.min(R.count - 1, i))); render(); }
-function next() {
-  const n = R.start + pagesAt(R.start).length;
-  if (n >= R.count) return toast('마지막 페이지예요');
-  R.start = n; render(); hideBars();
+function dragTo(dx) {
+  const side = dx < 0 ? 1 : -1, dir = side === (settings.rtl ? -1 : 1) ? 1 : -1;
+  const edge = R.g + dir < 0 || R.g + dir >= R.groups.length;
+  strip.style.transition = 'none';
+  strip.style.transform = `translateX(${edge ? dx * 0.3 : dx}px)`;
 }
-function prev() {
-  if (R.start <= 0) return toast('첫 페이지예요');
-  R.start = spreadStart(R.start - 1); render(); hideBars();
+function releaseDrag(dx, v) {
+  const W = stage.clientWidth;
+  if (Math.abs(dx) > W * 0.16 || (Math.abs(v) > 0.35 && Math.abs(dx) > 30)) goSide(dx < 0 ? 1 : -1);
+  else snapBack();
 }
-const forward = () => settings.rtl ? prev() : next();   // 화면 오른쪽 방향
-const backward = () => settings.rtl ? next() : prev();  // 화면 왼쪽 방향
 
 function updateUI() {
-  const idx = pagesAt(R.start);
+  const idx = R.groups[R.g] || [0];
   $('#pageNum').textContent = (idx.length === 2 ? `${idx[0] + 1}-${idx[1] + 1}` : `${idx[0] + 1}`) + ` / ${R.count}`;
-  slider.max = Math.max(0, R.count - 1); slider.value = R.start;
-  slider.style.setProperty('--p', (R.count > 1 ? R.start / (R.count - 1) * 100 : 100) + '%');
+  slider.max = Math.max(0, R.count - 1); slider.value = idx[0];
+  slider.style.setProperty('--p', (R.count > 1 ? idx[0] / (R.count - 1) * 100 : 100) + '%');
   $('#pLast').textContent = R.count;
   if (R.gridFor === R.rec) markThumb();
 }
 
-/* ---------- 설정 버튼 ---------- */
+/* ---------- 끝까지 읽었을 때: 다음 권 ---------- */
+async function showEnd() {
+  closePops();
+  const rec = R.rec;
+  $('#endTitle').textContent = rec.name;
+  $('#endNext').classList.add('hidden');
+  $('#end').classList.remove('hidden');
+  let books = [];
+  try { books = (await DB.all()).sort((a, b) => collator.compare(a.name, b.name)); } catch {}
+  const i = books.findIndex(b => b.id === rec.id), nx = i >= 0 ? books[i + 1] : null;
+  if (!nx || R.rec !== rec) return;
+  if (nx.cover) { const u = URL.createObjectURL(nx.cover); $('#endNextImg').src = u; libUrls.push(u); } else $('#endNextImg').removeAttribute('src');
+  $('#endNextName').textContent = nx.name;
+  $('#endNext').onclick = () => { $('#end').classList.add('hidden'); openRecord(nx, false); };
+  $('#endNext').classList.remove('hidden');
+}
+$('#endRestart').onclick = () => { $('#end').classList.add('hidden'); go(0); };
+$('#endLib').onclick = () => { $('#end').classList.add('hidden'); $('#btnBack').click(); };
+$('#endClose').onclick = () => $('#end').classList.add('hidden');
+
+/* ---------- 확대 (더블탭 · 두 손가락 · 드래그로 이동) ---------- */
+const Z = { s: 1, x: 0, y: 0, ox: 0, oy: 0, c: null };
+function zoomBase() {
+  const w = S.cur.firstElementChild, prev = w.style.transform;
+  w.style.transform = 'none';
+  const r = w.getBoundingClientRect(); Z.ox = r.left; Z.oy = r.top;
+  const imgs = [...w.children];
+  if (imgs.length) {
+    const rs = imgs.map(i => i.getBoundingClientRect());
+    Z.c = { l: Math.min(...rs.map(q => q.left)), t: Math.min(...rs.map(q => q.top)), r: Math.max(...rs.map(q => q.right)), b: Math.max(...rs.map(q => q.bottom)) };
+  } else Z.c = { l: r.left, t: r.top, r: r.right, b: r.bottom };
+  w.style.transform = prev;
+}
+function clampZoom() {
+  const vw = innerWidth, vh = innerHeight;
+  const ax = Z.ox + Z.s * (Z.c.l - Z.ox), bx = Z.ox + Z.s * (Z.c.r - Z.ox);
+  const ay = Z.oy + Z.s * (Z.c.t - Z.oy), by = Z.oy + Z.s * (Z.c.b - Z.oy);
+  Z.x = bx - ax > vw ? clamp(Z.x, vw - bx, -ax) : vw / 2 - (ax + bx) / 2;
+  Z.y = by - ay > vh ? clamp(Z.y, vh - by, -ay) : vh / 2 - (ay + by) / 2;
+}
+function applyZoom(ease) {
+  const w = S.cur.firstElementChild;
+  w.classList.toggle('ease', !!ease);
+  w.style.transform = Z.s > 1 ? `translate(${Z.x}px,${Z.y}px) scale(${Z.s})` : '';
+  stage.classList.toggle('zoomed', Z.s > 1);
+}
+function resetZoom(ease) { if (Z.s === 1 && !stage.classList.contains('zoomed')) return; Z.s = 1; Z.x = Z.y = 0; applyZoom(ease); }
+function zoomAt(px, py) {
+  if (Z.s > 1) return resetZoom(true);
+  zoomBase();
+  Z.s = 2.5; Z.x = (px - Z.ox) * (1 - Z.s); Z.y = (py - Z.oy) * (1 - Z.s);
+  clampZoom(); applyZoom(true);
+}
+
+/* ---------- 탭 (좌우 30% 넘김, 가운데 메뉴 · 가운데 두 번 탭 확대) ---------- */
+let lastTap = null, tapTimer = null;
+function handleTap(x, y) {
+  if (closePops()) return;
+  const z = x / innerWidth, center = z >= 0.3 && z <= 0.7;
+  if (Z.s === 1 && !center) { lastTap = null; return goSide(z < 0.3 ? -1 : 1); }
+  const now = Date.now();
+  if (lastTap && now - lastTap.t < 300 && Math.hypot(x - lastTap.x, y - lastTap.y) < 40) {
+    clearTimeout(tapTimer); lastTap = null; return zoomAt(x, y);
+  }
+  lastTap = { x, y, t: now };
+  clearTimeout(tapTimer); tapTimer = setTimeout(() => { lastTap = null; toggleBars(); }, 280);
+}
+
+/* ---------- 터치: 스와이프(손가락 따라옴) · 핀치 확대 · 이동 ---------- */
+let T = null;
+const dist = (a, b) => Math.hypot(a.clientX - b.clientX, a.clientY - b.clientY);
+stage.addEventListener('touchstart', e => {
+  if (e.touches.length === 2) {
+    if (T && T.mode === 'drag') snapBack();
+    if (Z.s === 1) zoomBase();
+    const [a, b] = e.touches;
+    T = { mode: 'pinch', d0: dist(a, b), s0: Z.s, x0: Z.x, y0: Z.y, cx: (a.clientX + b.clientX) / 2, cy: (a.clientY + b.clientY) / 2 };
+    return;
+  }
+  if (e.touches.length > 2) return;
+  finishAnim();
+  const t = e.touches[0];
+  T = { x0: t.clientX, y0: t.clientY, t0: Date.now(), mode: null, zx: Z.x, zy: Z.y, lx: t.clientX, lt: Date.now(), v: 0 };
+}, { passive: true });
+stage.addEventListener('touchmove', e => {
+  if (!T) return;
+  if (T.mode === 'pinch') {
+    if (e.touches.length < 2) return;
+    e.preventDefault();
+    const [a, b] = e.touches, cx = (a.clientX + b.clientX) / 2, cy = (a.clientY + b.clientY) / 2;
+    const s = clamp(T.s0 * dist(a, b) / T.d0, 1, 5);
+    const px = Z.ox + (T.cx - Z.ox - T.x0) / T.s0, py = Z.oy + (T.cy - Z.oy - T.y0) / T.s0;   // 처음 두 손가락 사이에 있던 그림 지점
+    Z.s = s; Z.x = cx - Z.ox - s * (px - Z.ox); Z.y = cy - Z.oy - s * (py - Z.oy);
+    clampZoom(); applyZoom(); return;
+  }
+  const t = e.touches[0], dx = t.clientX - T.x0, dy = t.clientY - T.y0;
+  if (!T.mode) {
+    if (Math.hypot(dx, dy) < 8) return;
+    T.mode = Z.s > 1 ? 'pan' : Math.abs(dx) > Math.abs(dy) ? 'drag' : 'scroll';
+  }
+  if (T.mode === 'pan') { e.preventDefault(); Z.x = T.zx + dx; Z.y = T.zy + dy; clampZoom(); applyZoom(); }
+  else if (T.mode === 'drag') {
+    e.preventDefault();
+    const now = Date.now(); if (now > T.lt) { T.v = (t.clientX - T.lx) / (now - T.lt); T.lx = t.clientX; T.lt = now; }
+    if (settings.anim !== 'none') dragTo(dx);
+  }
+}, { passive: false });
+stage.addEventListener('touchend', e => {
+  if (!T) return;
+  if (e.touches.length) {
+    if (T.mode === 'pinch' && e.touches.length === 1) { const t = e.touches[0]; T = { x0: t.clientX, y0: t.clientY, t0: Date.now(), mode: 'pan', zx: Z.x, zy: Z.y }; }
+    return;
+  }
+  const t = e.changedTouches[0], dx = t.clientX - T.x0, dy = t.clientY - T.y0, mode = T.mode, dt = Date.now() - T.t0, v = T.v;
+  T = null;
+  if (mode === 'pinch' || mode === 'pan') { if (Z.s < 1.05) resetZoom(true); return; }
+  if (mode === 'drag') {
+    if (settings.anim === 'none') { if (Math.abs(dx) > 45 && Math.abs(dx) > Math.abs(dy) * 1.3) goSide(dx < 0 ? 1 : -1); }
+    else releaseDrag(dx, v);
+    return;
+  }
+  if (!mode && dt < 450) { e.preventDefault(); handleTap(t.clientX, t.clientY); }
+});
+stage.addEventListener('touchcancel', () => { if (T && T.mode === 'drag') snapBack(); T = null; });
+
+/* ---------- 마우스 · 휠 · 키보드 (PC) ---------- */
+let M = null;
+stage.addEventListener('pointerdown', e => { if (e.pointerType === 'mouse' && e.button === 0) M = { x: e.clientX, y: e.clientY, zx: Z.x, zy: Z.y, moved: false }; });
+stage.addEventListener('pointermove', e => {
+  if (!M || e.pointerType !== 'mouse') return;
+  if (Math.hypot(e.clientX - M.x, e.clientY - M.y) > 5) M.moved = true;
+  if (Z.s > 1 && M.moved) { Z.x = M.zx + e.clientX - M.x; Z.y = M.zy + e.clientY - M.y; clampZoom(); applyZoom(); }
+});
+stage.addEventListener('pointerup', e => {
+  if (e.pointerType !== 'mouse' || !M) return;
+  const moved = M.moved; M = null;
+  if (!moved) handleTap(e.clientX, e.clientY);
+});
+let wheelLock = 0;
+stage.addEventListener('wheel', e => {
+  if (e.ctrlKey || Z.s > 1) return;
+  const sc = S.cur;
+  if (sc.scrollHeight > sc.clientHeight + 4) {   // 너비 맞춤: 끝까지 내린 뒤에만 넘김
+    const atBottom = sc.scrollTop + sc.clientHeight >= sc.scrollHeight - 2, atTop = sc.scrollTop <= 0;
+    if (!((e.deltaY > 0 && atBottom) || (e.deltaY < 0 && atTop))) return;
+  }
+  e.preventDefault();
+  const now = Date.now();
+  if (now < wheelLock || Math.abs(e.deltaY) < 8) return;
+  wheelLock = now + 450;
+  navigate(e.deltaY > 0 ? 1 : -1);
+}, { passive: false });
+
+function spaceStep(dir) {
+  const sc = S.cur;
+  if (sc.scrollHeight > sc.clientHeight + 4) {
+    const atBottom = sc.scrollTop + sc.clientHeight >= sc.scrollHeight - 4, atTop = sc.scrollTop <= 4;
+    if (dir > 0 && !atBottom) return sc.scrollBy({ top: sc.clientHeight * 0.85, behavior: 'smooth' });
+    if (dir < 0 && !atTop) return sc.scrollBy({ top: -sc.clientHeight * 0.85, behavior: 'smooth' });
+  }
+  navigate(dir);
+}
+function fullscreen() {
+  if (!document.fullscreenEnabled) return;
+  document.fullscreenElement ? document.exitFullscreen() : document.documentElement.requestFullscreen().catch(() => {});
+}
+$('#btnFull').onclick = fullscreen;
+if (document.fullscreenEnabled) $('#btnFull').classList.remove('hidden');
+
+document.addEventListener('keydown', e => {
+  if (!document.body.classList.contains('reading') || e.metaKey || e.ctrlKey || e.altKey) return;
+  if (e.target === $('#bright')) return;
+  const k = e.key, endOpen = !$('#end').classList.contains('hidden');
+  if (k === 'Escape') {
+    if (endOpen) $('#end').classList.add('hidden');
+    else if ($('#drawer').classList.contains('open')) closeDrawer();
+    else if (!closePops()) { if (Z.s > 1) resetZoom(true); else toggleBars(); }
+    return;
+  }
+  if (endOpen) return;
+  if (k === 'ArrowRight') { e.preventDefault(); goSide(1); }
+  else if (k === 'ArrowLeft') { e.preventDefault(); goSide(-1); }
+  else if (k === ' ' || k === 'Spacebar') { e.preventDefault(); spaceStep(e.shiftKey ? -1 : 1); }
+  else if (k === 'PageDown') { e.preventDefault(); navigate(1); }
+  else if (k === 'PageUp') { e.preventDefault(); navigate(-1); }
+  else if (k === 'Home') go(0);
+  else if (k === 'End') go(R.count - 1);
+  else if (k === 'Enter') toggleBars();
+  else if (k === 'f' || k === 'F') fullscreen();
+  else if (k === 't' || k === 'T') ($('#drawer').classList.contains('open') ? closeDrawer : openDrawer)();
+  else if (k === 'd' || k === 'D') cycleSpread();
+  else if (k === 'w' || k === 'W') toggleFit();
+  else if (k === 'ArrowDown' && settings.fit !== 'width') { e.preventDefault(); navigate(1); }
+  else if (k === 'ArrowUp' && settings.fit !== 'width') { e.preventDefault(); navigate(-1); }
+});
+
+/* ---------- 메뉴 버튼 · 설정 ---------- */
 const ICON = {
   one: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="6.5" y="3.5" width="11" height="17" rx="1.5"/></svg>',
   two: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="2.5" y="4.5" width="9" height="15" rx="1.3"/><rect x="12.5" y="4.5" width="9" height="15" rx="1.3"/></svg>',
+  auto: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><rect x="3.5" y="5.5" width="9" height="14" rx="1.3"/><rect x="9.5" y="8.5" width="11" height="7" rx="1.3"/><path d="M15 3.5a4 4 0 0 1 4 3"/></svg>',
   h: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v18M8 7l4-4 4 4M8 17l4 4 4-4"/></svg>',
-  w: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12h18M7 8l-4 4 4 4M17 8l4 4-4 4"/></svg>',
-  ltr: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12h15M13 6l6 6-6 6"/></svg>',
-  rtl: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M20 12H5M11 6l-6 6 6 6"/></svg>'
+  w: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12h18M7 8l-4 4 4 4M17 8l4 4-4 4"/></svg>'
 };
+const SPREAD_LABEL = { one: '한 쪽', two: '두 쪽', auto: '자동' };
 function applySettings() {
-  $('#tSpread').innerHTML = (settings.spread ? ICON.two : ICON.one) + (settings.spread ? '두 쪽' : '한 쪽');
+  $('#tSpread').innerHTML = ICON[settings.spread] + SPREAD_LABEL[settings.spread];
   $('#tFit').innerHTML = (settings.fit === 'width' ? ICON.w : ICON.h) + (settings.fit === 'width' ? '너비 맞춤' : '높이 맞춤');
-  $('#tDir').innerHTML = (settings.rtl ? ICON.rtl : ICON.ltr) + (settings.rtl ? '만화 방향' : '왼→오');
-  $('#tSpread').classList.toggle('on', settings.spread);
+  $('#tSpread').classList.toggle('on', settings.spread !== 'one');
   $('#tFit').classList.toggle('on', settings.fit === 'width');
-  $('#tDir').classList.toggle('on', settings.rtl);
   $('#tBright').classList.toggle('on', settings.bright < 100);
   stage.classList.toggle('fit-width', settings.fit === 'width');
   stage.classList.toggle('fit-height', settings.fit !== 'width');
-  wrap.classList.toggle('rtl', settings.rtl);
   slider.classList.toggle('rtl', settings.rtl);
   $('#dim').style.opacity = (100 - settings.bright) / 100;
   $('#bright').value = settings.bright; $('#brightVal').textContent = settings.bright + '%';
   $('#bright').style.setProperty('--p', ((settings.bright - 20) / 80 * 100) + '%');
+  $('#segDir').querySelectorAll('button').forEach(b => b.classList.toggle('on', b.dataset.v === (settings.rtl ? 'rtl' : 'ltr')));
+  $('#segAnim').querySelectorAll('button').forEach(b => b.classList.toggle('on', b.dataset.v === settings.anim));
+  $('#swTrim .sw').classList.toggle('on', settings.trim);
+  $('#swCover .sw').classList.toggle('on', settings.cover);
 }
-function toggleSpread() { settings.spread = !settings.spread; saveSettings(); applySettings(); R.start = spreadStart(R.start); render(); toast(settings.spread ? '두 쪽 보기' : '한 쪽 보기'); }
-function toggleFit() { settings.fit = settings.fit === 'width' ? 'height' : 'width'; saveSettings(); applySettings(); stage.scrollTop = 0; toast(settings.fit === 'width' ? '너비 맞춤 (위아래로 스크롤)' : '높이 맞춤'); }
-function toggleDir() { settings.rtl = !settings.rtl; saveSettings(); applySettings(); render(); toast(settings.rtl ? '오른쪽→왼쪽 (일본 만화 방향)' : '왼쪽→오른쪽'); }
+function regroupKeep() { const fp = firstPage(); buildGroups(); R.g = R.gOf[fp]; renderAll(); }
+function cycleSpread() {
+  settings.spread = { one: 'two', two: 'auto', auto: 'one' }[settings.spread];
+  saveSettings(); applySettings(); regroupKeep();
+  toast({ one: '한 쪽 보기', two: '두 쪽 보기', auto: '자동 — 가로 화면이면 두 쪽' }[settings.spread]);
+}
+function toggleFit() { settings.fit = settings.fit === 'width' ? 'height' : 'width'; saveSettings(); applySettings(); renderAll(); toast(settings.fit === 'width' ? '너비 맞춤 (위아래로 스크롤)' : '높이 맞춤'); }
+function clearPageCache() { R.urls.forEach(u => URL.revokeObjectURL(u)); R.urls.clear(); R.order = []; }
 
-$('#tSpread').onclick = toggleSpread;
+$('#tSpread').onclick = cycleSpread;
 $('#tFit').onclick = toggleFit;
-$('#tDir').onclick = toggleDir;
-$('#tBright').onclick = () => $('#pop').classList.contains('hidden') ? $('#pop').classList.remove('hidden') : closePop();
-function closePop() { $('#pop').classList.add('hidden'); }
+$('#tBright').onclick = () => togglePop('#pop');
+$('#tSet').onclick = () => togglePop('#sheet');
+$('#segDir').onclick = e => { const b = e.target.closest('button'); if (!b) return; settings.rtl = b.dataset.v === 'rtl'; saveSettings(); applySettings(); renderAll(); };
+$('#segAnim').onclick = e => { const b = e.target.closest('button'); if (!b) return; settings.anim = b.dataset.v; saveSettings(); applySettings(); };
+$('#swTrim').onclick = () => { settings.trim = !settings.trim; saveSettings(); applySettings(); clearPageCache(); renderAll(); };
+$('#swCover').onclick = () => { settings.cover = !settings.cover; saveSettings(); applySettings(); regroupKeep(); };
 $('#bright').oninput = e => { settings.bright = +e.target.value; applySettings(); };
 $('#bright').onchange = () => saveSettings();
 
+function togglePop(sel) { const open = $(sel).classList.contains('hidden'); closePops(); if (open) $(sel).classList.remove('hidden'); }
+function closePops() { let was = false; ['#pop', '#sheet'].forEach(s => { if (!$(s).classList.contains('hidden')) { $(s).classList.add('hidden'); was = true; } }); return was; }
+function hideBars() { document.body.classList.add('hide-bars'); closePops(); }
+function toggleBars() { document.body.classList.toggle('hide-bars'); closePops(); }
+
+/* ---------- 쪽 이동 막대 + 미리보기 그림 ---------- */
+let seekT;
 slider.oninput = () => {
-  const v = +slider.value, idx = pagesAt(spreadStart(v));
-  $('#pageNum').textContent = (idx.length === 2 ? `${idx[0] + 1}-${idx[1] + 1}` : `${idx[0] + 1}`) + ` / ${R.count}`;
-  slider.style.setProperty('--p', (R.count > 1 ? v / (R.count - 1) * 100 : 100) + '%');
+  const v = +slider.value, idx = R.groups[R.gOf[v]];
+  const label = idx.length === 2 ? `${idx[0] + 1}-${idx[1] + 1}` : `${idx[0] + 1}`;
+  $('#pageNum').textContent = `${label} / ${R.count}`;
+  const p = R.count > 1 ? v / (R.count - 1) : 1;
+  slider.style.setProperty('--p', p * 100 + '%');
+  const seek = $('#seek'), img = seek.querySelector('img');
+  seek.classList.remove('hidden');
+  seek.style.left = `calc(10px + ${(settings.rtl ? 1 - p : p)} * (100% - 20px))`;
+  $('#seekNum').textContent = label;
+  seek.dataset.i = idx[0];
+  if (R.thumbs.has(idx[0])) img.src = R.thumbs.get(idx[0]);
+  clearTimeout(seekT);
+  seekT = setTimeout(() => getThumb(idx[0]).then(u => { if (u && seek.dataset.i == idx[0]) img.src = u; }), 60);
 };
-slider.onchange = () => { go(+slider.value); slider.blur(); };
+slider.onchange = () => { $('#seek').classList.add('hidden'); go(+slider.value); slider.blur(); };
+slider.addEventListener('pointerup', () => setTimeout(() => $('#seek').classList.add('hidden'), 50));
 
-/* ---------- 메뉴바 숨기기/보이기 ---------- */
-function hideBars() { document.body.classList.add('hide-bars'); closePop(); }
-function toggleBars() { document.body.classList.toggle('hide-bars'); closePop(); }
-
-/* ---------- 썸네일 서랍 ---------- */
-let thumbQ = [], thumbRun = 0;
-function pumpThumbs() {
-  while (thumbRun < 3 && thumbQ.length) {
-    const { i, img } = thumbQ.shift(), rec = R.rec;
-    if (R.thumbs.has(i)) { img.src = R.thumbs.get(i); img.classList.add('ok'); continue; }
-    thumbRun++;
-    R.pages[i].blob().then(b => makeThumb(b, 220)).then(t => {
-      if (R.rec !== rec || !t) return;
-      const u = URL.createObjectURL(t); R.thumbs.set(i, u); img.src = u; img.onload = () => img.classList.add('ok');
-    }).catch(() => {}).finally(() => { thumbRun--; if (R.rec === rec) pumpThumbs(); });
-  }
+/* ---------- 썸네일 (서랍 · 이동 막대 공용) ---------- */
+const thumbJobs = new Map();
+let thumbRun = 0; const thumbWait = [];
+function limit(fn) { return new Promise((res, rej) => { const go = () => { thumbRun++; fn().then(res, rej).finally(() => { thumbRun--; const n = thumbWait.shift(); if (n) n(); }); }; thumbRun < 3 ? go() : thumbWait.push(go); }); }
+function getThumb(i) {
+  if (R.thumbs.has(i)) return Promise.resolve(R.thumbs.get(i));
+  if (thumbJobs.has(i)) return thumbJobs.get(i);
+  const rec = R.rec;
+  const p = limit(() => R.rec === rec ? R.pages[i].blob().then(b => makeThumb(b, 220)) : Promise.resolve(null))
+    .then(t => { if (R.rec !== rec || !t) return null; const u = URL.createObjectURL(t); R.thumbs.set(i, u); return u; })
+    .catch(() => null).finally(() => thumbJobs.delete(i));
+  thumbJobs.set(i, p);
+  return p;
 }
 function buildGrid() {
   if (R.gridFor === R.rec) return;
-  const grid = $('#grid'); grid.innerHTML = ''; thumbQ = [];
+  const grid = $('#grid'); grid.innerHTML = '';
   if (R.io) R.io.disconnect();
   R.io = new IntersectionObserver(es => es.forEach(e => {
     if (!e.isIntersecting) return;
     R.io.unobserve(e.target);
-    thumbQ.push({ i: +e.target.dataset.i, img: e.target.querySelector('img') }); pumpThumbs();
+    const img = e.target.querySelector('img');
+    getThumb(+e.target.dataset.i).then(u => { if (u) { img.onload = () => img.classList.add('ok'); img.src = u; } });
   }), { root: grid, rootMargin: '200px' });
   const frag = document.createDocumentFragment();
   for (let i = 0; i < R.count; i++) {
@@ -643,14 +1075,14 @@ function buildGrid() {
   R.gridFor = R.rec;
 }
 function markThumb() {
-  const grid = $('#grid'), set = new Set(pagesAt(R.start));
+  const grid = $('#grid');
   grid.querySelectorAll('.th.cur').forEach(e => e.classList.remove('cur'));
-  set.forEach(i => { const e = grid.children[i]; if (e) e.classList.add('cur'); });
+  (R.groups[R.g] || []).forEach(i => { const e = grid.children[i]; if (e) e.classList.add('cur'); });
 }
 function openDrawer() {
-  buildGrid(); markThumb(); closePop();
+  buildGrid(); markThumb(); closePops();
   $('#drawer').classList.add('open'); $('#scrim').classList.add('open');
-  const cur = $('#grid').children[R.start];
+  const cur = $('#grid').children[firstPage()];
   if (cur) requestAnimationFrame(() => cur.scrollIntoView({ block: 'center' }));
 }
 function closeDrawer() { $('#drawer').classList.remove('open'); $('#scrim').classList.remove('open'); }
@@ -659,90 +1091,7 @@ $('#dClose').onclick = closeDrawer;
 $('#scrim').onclick = closeDrawer;
 $('#grid').onclick = e => { const b = e.target.closest('.th'); if (!b) return; go(+b.dataset.i); closeDrawer(); };
 
-/* ---------- 터치 · 스와이프 (모바일) ---------- */
-const zoomed = () => window.visualViewport && visualViewport.scale > 1.05;   // 두 손가락 확대 중엔 넘기지 않음
-function tapAt(x) {
-  if (!$('#pop').classList.contains('hidden')) return closePop();
-  const z = x / innerWidth;
-  if (z < 0.3) backward(); else if (z > 0.7) forward(); else toggleBars();
-}
-let tS = null, multi = false;
-stage.addEventListener('touchstart', e => {
-  if (e.touches.length > 1) { multi = true; return; }
-  multi = false; const t = e.touches[0]; tS = { x: t.clientX, y: t.clientY, t: Date.now() };
-}, { passive: true });
-stage.addEventListener('touchmove', e => { if (e.touches.length > 1) multi = true; }, { passive: true });
-stage.addEventListener('touchend', e => {
-  if (!tS || e.touches.length) return;
-  const t = e.changedTouches[0], dx = t.clientX - tS.x, dy = t.clientY - tS.y, dt = Date.now() - tS.t;
-  tS = null;
-  if (multi) { multi = false; return; }
-  const tap = Math.abs(dx) < 10 && Math.abs(dy) < 10 && dt < 450;
-  if (zoomed()) { if (tap) toggleBars(); return; }
-  if (Math.abs(dx) > 45 && Math.abs(dx) > Math.abs(dy) * 1.4 && dt < 800) { dx < 0 ? forward() : backward(); return; }
-  if (tap) { e.preventDefault(); tapAt(t.clientX); }
-});
-
-/* ---------- 마우스 · 키보드 · 휠 (PC) ---------- */
-let mD = null;
-stage.addEventListener('pointerdown', e => { if (e.pointerType === 'mouse' && e.button === 0) mD = { x: e.clientX, y: e.clientY }; });
-stage.addEventListener('pointerup', e => {
-  if (e.pointerType !== 'mouse' || !mD) return;
-  const d = Math.hypot(e.clientX - mD.x, e.clientY - mD.y); mD = null;
-  if (d < 6) tapAt(e.clientX);
-});
-let wheelLock = 0;
-stage.addEventListener('wheel', e => {
-  if (e.ctrlKey) return;
-  if (stage.scrollHeight > stage.clientHeight + 4) {   // 너비 맞춤: 끝까지 내린 뒤에만 넘김
-    const atBottom = stage.scrollTop + stage.clientHeight >= stage.scrollHeight - 2, atTop = stage.scrollTop <= 0;
-    if (!((e.deltaY > 0 && atBottom) || (e.deltaY < 0 && atTop))) return;
-  }
-  e.preventDefault();
-  const now = Date.now();
-  if (now < wheelLock || Math.abs(e.deltaY) < 8) return;
-  wheelLock = now + 450;
-  e.deltaY > 0 ? next() : prev();
-}, { passive: false });
-
-function spaceStep(dir) {
-  const canScroll = stage.scrollHeight > stage.clientHeight + 4;
-  if (canScroll) {
-    const atBottom = stage.scrollTop + stage.clientHeight >= stage.scrollHeight - 4, atTop = stage.scrollTop <= 4;
-    if (dir > 0 && !atBottom) return stage.scrollBy({ top: stage.clientHeight * 0.85, behavior: 'smooth' });
-    if (dir < 0 && !atTop) return stage.scrollBy({ top: -stage.clientHeight * 0.85, behavior: 'smooth' });
-  }
-  dir > 0 ? next() : prev();
-}
-function fullscreen() {
-  if (!document.fullscreenEnabled) return;
-  document.fullscreenElement ? document.exitFullscreen() : document.documentElement.requestFullscreen().catch(() => {});
-}
-$('#btnFull').onclick = fullscreen;
-if (document.fullscreenEnabled) $('#btnFull').classList.remove('hidden');
-
-document.addEventListener('keydown', e => {
-  if (!document.body.classList.contains('reading') || e.metaKey || e.ctrlKey || e.altKey) return;
-  if (e.target === $('#bright')) return;
-  const k = e.key;
-  if (k === 'ArrowRight') { e.preventDefault(); forward(); }
-  else if (k === 'ArrowLeft') { e.preventDefault(); backward(); }
-  else if (k === ' ' || k === 'Spacebar') { e.preventDefault(); spaceStep(e.shiftKey ? -1 : 1); }
-  else if (k === 'PageDown') { e.preventDefault(); next(); }
-  else if (k === 'PageUp') { e.preventDefault(); prev(); }
-  else if (k === 'Home') go(0);
-  else if (k === 'End') go(R.count - 1);
-  else if (k === 'Enter') toggleBars();
-  else if (k === 'Escape') { if ($('#drawer').classList.contains('open')) closeDrawer(); else if (!$('#pop').classList.contains('hidden')) closePop(); else toggleBars(); }
-  else if (k === 'f' || k === 'F') fullscreen();
-  else if (k === 't' || k === 'T') ($('#drawer').classList.contains('open') ? closeDrawer : openDrawer)();
-  else if (k === 'd' || k === 'D') toggleSpread();
-  else if (k === 'w' || k === 'W') toggleFit();
-  else if (k === 'ArrowDown' && settings.fit !== 'width') { e.preventDefault(); next(); }
-  else if (k === 'ArrowUp' && settings.fit !== 'width') { e.preventDefault(); prev(); }
-});
-
-/* ---------- 파일 열기 · 끌어다 놓기 · 뒤로가기 ---------- */
+/* ---------- 파일 열기 · 끌어다 놓기 · 뒤로가기 · 화면 회전 ---------- */
 $('#btnZip').onclick = () => $('#fZip').click();
 $('#btnImg').onclick = () => $('#fImg').click();
 $('#fZip').onchange = e => { openFiles(e.target.files); e.target.value = ''; };
@@ -755,6 +1104,17 @@ addEventListener('dragenter', e => { if (e.dataTransfer && [...e.dataTransfer.ty
 addEventListener('dragleave', () => { if (--dragN <= 0) { dragN = 0; document.body.classList.remove('dragging'); } });
 addEventListener('dragover', e => e.preventDefault());
 addEventListener('drop', e => { e.preventDefault(); dragN = 0; document.body.classList.remove('dragging'); if (e.dataTransfer) openFiles(e.dataTransfer.files); });
+
+let rzT, lastSpread = spreadOn();
+addEventListener('resize', () => {
+  clearTimeout(rzT);
+  rzT = setTimeout(() => {
+    if (!R.rec) return;
+    const now = spreadOn();
+    if (now !== lastSpread) { lastSpread = now; regroupKeep(); }
+    else if (Z.s > 1) resetZoom();
+  }, 150);
+});
 
 /* ---------- 시작 ---------- */
 const appleIcon = document.querySelector('link[rel="apple-touch-icon"]');

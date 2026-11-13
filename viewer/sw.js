@@ -1,5 +1,5 @@
 /* 넘김 서비스워커 — index.html 안의 sw-source 와 같은 내용 */
-const CACHE = 'neomgim-v1';
+const CACHE = 'neomgim-v2';
 const CORE = ['./', './index.html'];
 const CDN = [
   'https://cdn.tailwindcss.com',
