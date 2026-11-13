@@ -1,10 +1,11 @@
 /* 넘김 서비스워커 — index.html 안의 sw-source 와 같은 내용 */
-const CACHE = 'neomgim-v2';
+const CACHE = 'neomgim-v3';
 const CORE = ['./', './index.html'];
 const CDN = [
   'https://cdn.tailwindcss.com',
   'https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js',
-  'https://cdn.jsdelivr.net/gh/sun-typeface/SUIT@2/fonts/variable/woff2/SUIT-Variable.css'
+  'https://cdn.jsdelivr.net/gh/sun-typeface/SUIT@2/fonts/variable/woff2/SUIT-Variable.css',
+  'https://fonts.googleapis.com/css2?family=Black+Han+Sans&family=IBM+Plex+Sans+KR:wght@400;500;600;700&display=swap'
 ];
 self.addEventListener('install', e => {
   e.waitUntil(caches.open(CACHE).then(async c => {

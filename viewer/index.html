@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>넘김 · 미니멀 만화 뷰어</title>
 <meta name="description" content="ZIP·CBZ 만화와 사진을 가볍게 넘겨 보는 미니멀 뷰어">
-<meta name="theme-color" content="#111214">
+<meta name="theme-color" content="#0B3B40">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
@@ -13,6 +13,7 @@
 
 <!-- 글꼴 · Tailwind · JSZip (모두 CDN, 서비스워커가 한 번 받은 뒤 오프라인용으로 보관) -->
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/sun-typeface/SUIT@2/fonts/variable/woff2/SUIT-Variable.css">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Black+Han+Sans&family=IBM+Plex+Sans+KR:wght@400;500;600;700&display=swap">
 <script src="https://cdn.tailwindcss.com"></script>
 <script>
   if (window.tailwind) tailwind.config = {
@@ -55,7 +56,7 @@
     var manifest = {
       name: '넘김 - 미니멀 만화 뷰어', short_name: '넘김', lang: 'ko',
       start_url: here, scope: scope, id: scope, display: 'standalone', orientation: 'any',
-      background_color: '#111214', theme_color: '#111214',
+      background_color: '#F4F1EA', theme_color: '#0B3B40',
       icons: [
         { src: i192, sizes: '192x192', type: 'image/png', purpose: 'any maskable' },
         { src: i512, sizes: '512x512', type: 'image/png', purpose: 'any maskable' }
@@ -152,65 +153,125 @@
   .card-cover { aspect-ratio:3/4; background:#202327; }
   .badge { position:absolute; left:7px; top:7px; font-size:10px; font-weight:800; letter-spacing:.04em; padding:2px 7px; border-radius:7px; }
   #ver { position:fixed; left:5px; bottom:2px; font:500 9px/1 system-ui,-apple-system,sans-serif; color:#888; opacity:.45; pointer-events:none; z-index:2147483647; letter-spacing:.02em; user-select:none; -webkit-user-select:none; }
+
+  /* ---------- 서재 (밝은 화면 · 링크 앱 스타일 가이드) ---------- */
+  body:not(.reading) { background:#F4F1EA; }
+  #lib { --s100:#F4F1EA; --card:#fff; --brand:#0E5A60; --deep:#0B3B40; --tint:#DCEDEB; --acc:#D9691F; --leafL:#3F8F2E; --ink:#14262A; --muted:#56676A; --lineL:#E2DBCD;
+         min-height:100vh; background:var(--s100); color:var(--ink); font-family:"IBM Plex Sans KR","SUIT Variable","Apple SD Gothic Neo",system-ui,sans-serif; padding-bottom:calc(env(safe-area-inset-bottom) + 24px); }
+  #libHead { position:sticky; top:0; z-index:15; background:var(--deep); color:#fff; padding-top:env(safe-area-inset-top); box-shadow:0 1px 0 rgba(0,0,0,.08); }
+  .lh-in { max-width:1080px; margin:0 auto; height:56px; padding:0 12px 0 14px; display:flex; align-items:center; gap:10px; }
+  .lh-logo { width:30px; height:30px; border-radius:9px; }
+  .lh-title { font-size:20px; line-height:28px; font-weight:700; letter-spacing:-.02em; flex:1; }
+  .lh-usage { font-size:12px; opacity:.7; }
+  .lh-add { width:38px; height:38px; border-radius:999px; background:#F2964F; color:var(--ink); display:grid; place-items:center; }
+  .lh-add svg { width:20px; height:20px; }
+  .lh-add:active { transform:scale(.94); }
+  #addMenu { position:absolute; right:12px; top:calc(env(safe-area-inset-top) + 54px); background:#fff; color:var(--ink); border-radius:14px; box-shadow:0 12px 34px rgba(11,59,64,.22); overflow:hidden; min-width:220px; }
+  #addMenu button { display:block; width:100%; text-align:left; padding:13px 16px; }
+  #addMenu button + button { border-top:1px solid var(--lineL); }
+  #addMenu b { display:block; font-size:15px; }
+  #addMenu span { font-size:12px; color:var(--muted); }
+  .lb { max-width:1080px; margin:0 auto; padding:12px; }
+  #lib .card { background:var(--card); border-radius:14px; }
+  .hero { width:100%; display:flex; gap:14px; align-items:stretch; text-align:left; background:var(--brand); color:#fff; border-radius:22px; padding:18px; min-height:150px; }
+  .hero:active { transform:scale(.99); }
+  .hero-txt { flex:1; min-width:0; display:flex; flex-direction:column; }
+  #lib .lab { font-size:12px; line-height:16px; font-weight:600; }
+  .hero .lab { opacity:.85; }
+  .hero-name { font-size:15px; font-weight:700; margin-top:4px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  .hero-num { font-family:"Black Han Sans","IBM Plex Sans KR",sans-serif; font-size:48px; line-height:52px; margin-top:auto; padding-top:8px; }
+  .u { font-family:"IBM Plex Sans KR",sans-serif; font-size:13px; font-weight:500; margin-left:4px; }
+  .hero-sub { font-size:13px; opacity:.85; }
+  .hero-bar { height:5px; border-radius:999px; background:rgba(255,255,255,.22); margin-top:10px; overflow:hidden; }
+  .hero-bar div { height:100%; background:#F2964F; border-radius:999px; }
+  .hero-cover { width:86px; flex:none; border-radius:10px; overflow:hidden; background:rgba(255,255,255,.12); align-self:center; aspect-ratio:3/4; }
+  .hero-cover img { width:100%; height:100%; object-fit:cover; display:block; }
+  .two { display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-top:8px; }
+  .act { text-align:left; padding:16px; display:flex; flex-direction:column; gap:2px; }
+  .act svg { width:26px; height:26px; color:var(--acc); margin-bottom:10px; }
+  .act b { font-size:15px; }
+  .act span { font-size:12px; color:var(--muted); }
+  .act:active { transform:scale(.98); }
+  .sec { display:flex; align-items:center; justify-content:space-between; margin:24px 4px 10px; }
+  .sec h2 { margin:0; font-size:17px; font-weight:700; }
+  .sec h2 span { font-size:13px; font-weight:500; color:var(--muted); margin-left:2px; }
+  .chip { font-size:12px; font-weight:600; padding:6px 12px; border-radius:999px; background:var(--tint); color:var(--ink); }
+  .shelf { display:grid; grid-template-columns:repeat(3, 1fr); gap:8px; }
+  @media (min-width:640px) { .shelf { grid-template-columns:repeat(4, 1fr); } }
+  @media (min-width:900px) { .shelf { grid-template-columns:repeat(6, 1fr); } }
+  .bk { position:relative; background:#fff; border-radius:14px; padding:6px 6px 10px; }
+  .bk .open { display:block; width:100%; text-align:left; }
+  .bk .open:active { transform:scale(.98); }
+  .bk .cv { position:relative; aspect-ratio:3/4; border-radius:10px; overflow:hidden; background:#EDE8DE; }
+  .bk .cv img { width:100%; height:100%; object-fit:cover; display:block; }
+  .bk .pr { position:absolute; left:0; right:0; bottom:0; height:4px; background:rgba(0,0,0,.25); }
+  .bk .pr div { height:100%; background:#F2964F; }
+  .bk .nm { font-size:12.5px; font-weight:700; line-height:17px; margin:7px 2px 0; display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden; word-break:break-all; }
+  .bk .pg2 { font-size:11px; color:var(--muted); margin:2px 2px 0; display:flex; align-items:center; gap:5px; }
+  .bk .dot { width:7px; height:7px; border-radius:999px; flex:none; }
+  .bk .del { position:absolute; top:10px; right:10px; width:24px; height:24px; border-radius:999px; background:rgba(20,38,42,.55); color:#fff; font-size:11px; display:grid; place-items:center; }
+  .empty { padding:36px 16px; text-align:center; font-size:14px; line-height:22px; color:var(--muted); }
+  .empty .pc { display:block; font-size:12px; margin-top:8px; }
+  .tip { margin-top:24px; padding:14px 16px; font-size:13px; line-height:20px; color:var(--muted); }
+  .tip b { color:var(--ink); }
+  .to-top { position:fixed; right:16px; bottom:calc(env(safe-area-inset-bottom) + 18px); width:46px; height:46px; border-radius:999px; background:var(--deep); color:#fff; display:grid; place-items:center; box-shadow:0 8px 22px rgba(11,59,64,.3); opacity:0; transform:translateY(12px); pointer-events:none; transition:all .2s; z-index:14; }
+  .to-top svg { width:22px; height:22px; }
+  .to-top.show { opacity:1; transform:none; pointer-events:auto; }
 </style>
 </head>
 <body class="antialiased">
 
 <!-- ======================= 서재 화면 ======================= -->
-<section id="lib" class="min-h-screen" style="padding-top:env(safe-area-inset-top); padding-bottom:env(safe-area-inset-bottom)">
-  <div class="max-w-5xl mx-auto px-5 pt-8 pb-16">
-    <header class="flex items-end justify-between mb-7">
-      <div>
-        <div class="flex items-center gap-2.5">
-          <img id="logo" alt="" class="w-9 h-9 rounded-xl">
-          <h1 class="text-[28px] font-extrabold tracking-tight leading-none">넘김</h1>
-        </div>
-        <p class="text-mute text-sm mt-2">만화·사진을 가볍게 넘겨 보는 뷰어</p>
-      </div>
-      <p id="usage" class="text-[11px] text-mute text-right"></p>
-    </header>
-
-    <div class="grid grid-cols-2 gap-3 mb-3">
-      <button id="btnZip" class="rounded-2xl bg-orange text-ink px-4 py-5 text-left active:scale-[.98] transition">
-        <svg viewBox="0 0 24 24" class="w-7 h-7 mb-3" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7.5 12 3l8 4.5v9L12 21l-8-4.5z"/><path d="M12 12v9M4 7.5l8 4.5 8-4.5"/></svg>
-        <div class="font-extrabold text-[17px]">압축파일 열기</div>
-        <div class="text-[12px] opacity-75 mt-0.5">ZIP · CBZ · 여러 권</div>
-      </button>
-      <button id="btnImg" class="rounded-2xl bg-teal-soft border border-teal/60 px-4 py-5 text-left active:scale-[.98] transition">
-        <svg viewBox="0 0 24 24" class="w-7 h-7 mb-3 text-orange" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="14" height="14" rx="2"/><path d="M7 3h12a2 2 0 0 1 2 2v12"/><path d="m3 16 4-4 4 4 2-2 4 4"/></svg>
-        <div class="font-extrabold text-[17px]">이미지 여러 장</div>
-        <div class="text-[12px] text-mute mt-0.5">JPG · PNG · WebP</div>
+<section id="lib">
+  <header id="libHead">
+    <div class="lh-in">
+      <img id="logo" alt="" class="lh-logo">
+      <div class="lh-title">넘김</div>
+      <span id="usage" class="lh-usage"></span>
+      <button id="btnAdd" class="lh-add" aria-label="책 넣기">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>
       </button>
     </div>
-    <p class="text-[12px] text-mute mb-8 hidden sm:block">PC에서는 파일을 이 창에 끌어다 놓아도 열려요.</p>
-    <div class="sm:hidden mb-8"></div>
+    <div id="addMenu" class="hidden">
+      <button data-a="zip"><b>압축파일</b><span>ZIP · CBZ · 여러 권 한 번에</span></button>
+      <button data-a="img"><b>이미지 여러 장</b><span>JPG · PNG · WebP</span></button>
+    </div>
+  </header>
 
-    <button id="resume" class="hidden w-full mb-8 rounded-2xl bg-panel border border-line p-3 flex items-center gap-3 text-left active:scale-[.99] transition">
-      <div class="w-14 h-[74px] rounded-lg overflow-hidden bg-[#202327] shrink-0"><img id="resumeImg" alt="" class="w-full h-full object-cover"></div>
-      <div class="flex-1 min-w-0">
-        <div class="text-[11px] font-bold text-orange tracking-wide">이어서 보기</div>
-        <div id="resumeName" class="text-[15px] font-bold truncate mt-0.5"></div>
-        <div class="flex items-center gap-2 mt-1.5">
-          <div class="flex-1 h-1 rounded-full bg-[#33363B] overflow-hidden"><div id="resumeBar" class="h-full bg-teal"></div></div>
-          <span id="resumePos" class="text-[11px] text-mute tabular-nums"></span>
-        </div>
+  <main class="lb">
+    <!-- 대표 카드: 이어서 보기 / 서재 요약 -->
+    <button id="hero" class="hero">
+      <div class="hero-txt">
+        <div id="heroLab" class="lab"></div>
+        <div id="heroName" class="hero-name"></div>
+        <div class="hero-num"><span id="heroNum"></span><span id="heroUnit" class="u"></span></div>
+        <div id="heroSub" class="hero-sub"></div>
+        <div id="heroBarWrap" class="hero-bar"><div id="heroBar"></div></div>
       </div>
-      <svg viewBox="0 0 24 24" class="w-5 h-5 text-mute shrink-0" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="m9 5 7 7-7 7"/></svg>
+      <div id="heroCover" class="hero-cover"><img id="heroImg" alt=""></div>
     </button>
 
-    <div class="flex items-center justify-between mb-3">
-      <h2 class="text-[15px] font-bold">내 서재 <span id="libCount" class="text-[12px] text-mute font-medium ml-1"></span></h2>
-      <button id="btnSort" class="text-[12px] text-mute px-3 py-1.5 rounded-full bg-panel border border-line"></button>
-    </div>
-    <div id="books" class="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 gap-x-3 gap-y-5"></div>
-    <div id="empty" class="hidden rounded-2xl border border-dashed border-line py-12 text-center text-mute text-sm leading-6">
-      아직 열어 본 책이 없어요.<br>위 버튼으로 만화나 사진을 불러오세요.
+    <div class="two">
+      <button id="btnZip" class="card act">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7.5 12 3l8 4.5v9L12 21l-8-4.5z"/><path d="M12 12v9M4 7.5l8 4.5 8-4.5"/></svg>
+        <b>압축파일 열기</b><span>ZIP · CBZ · 여러 권</span>
+      </button>
+      <button id="btnImg" class="card act">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="14" height="14" rx="2"/><path d="M7 3h12a2 2 0 0 1 2 2v12"/><path d="m3 16 4-4 4 4 2-2 4 4"/></svg>
+        <b>이미지 여러 장</b><span>JPG · PNG · WebP</span>
+      </button>
     </div>
 
-    <div id="iosTip" class="hidden mt-10 rounded-2xl bg-panel px-4 py-3.5 text-[13px] text-mute leading-6">
-      <b class="text-paper">앱처럼 쓰기</b> · Safari 아래 <b class="text-paper">공유 버튼</b> → <b class="text-paper">홈 화면에 추가</b>를 누르면 주소창 없이 열려요.
+    <div class="sec">
+      <h2>내 서재 <span id="libCount"></span></h2>
+      <button id="btnSort" class="chip"></button>
     </div>
-  </div>
+    <div id="books" class="shelf"></div>
+    <div id="empty" class="hidden card empty">아직 열어 본 책이 없어요.<br>위 버튼으로 만화나 사진을 불러오세요.<span class="pc">PC에서는 파일을 이 창에 끌어다 놓아도 돼요.</span></div>
+
+    <div id="iosTip" class="hidden card tip"><b>앱처럼 쓰기</b> · Safari 아래 <b>공유 버튼</b> → <b>홈 화면에 추가</b>를 누르면 주소창 없이 열려요.</div>
+  </main>
+  <button id="toTop" class="to-top" aria-label="맨 위로"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m6 14 6-6 6 6"/></svg></button>
 </section>
 
 <!-- ======================= 뷰어 화면 ======================= -->
@@ -312,7 +373,7 @@
 <div id="toast" class="rounded-full bg-panel border border-line px-4 py-2 text-[13px] shadow-xl whitespace-nowrap"></div>
 <div id="loading" class="hidden"><div class="spin"></div><div id="loadMsg" class="text-[13px] text-mute">여는 중…</div></div>
 <div id="dropHint">여기에 놓으면 바로 열려요</div>
-<div id="ver" aria-hidden="true">v2</div>
+<div id="ver" aria-hidden="true">v3</div>
 
 <!--
   서비스워커 코드 (오프라인 실행용)
@@ -321,12 +382,13 @@
     (linkcleaning.github.io/viewer/ 에는 이미 올려 두었습니다)
 -->
 <script type="text/plain" id="sw-source">
-const CACHE = 'neomgim-v2';
+const CACHE = 'neomgim-v3';
 const CORE = ['./', './index.html'];
 const CDN = [
   'https://cdn.tailwindcss.com',
   'https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js',
-  'https://cdn.jsdelivr.net/gh/sun-typeface/SUIT@2/fonts/variable/woff2/SUIT-Variable.css'
+  'https://cdn.jsdelivr.net/gh/sun-typeface/SUIT@2/fonts/variable/woff2/SUIT-Variable.css',
+  'https://fonts.googleapis.com/css2?family=Black+Han+Sans&family=IBM+Plex+Sans+KR:wght@400;500;600;700&display=swap'
 ];
 self.addEventListener('install', e => {
   e.waitUntil(caches.open(CACHE).then(async c => {
@@ -406,6 +468,7 @@ const DB = {
 };
 
 /* ---------- 공통 ---------- */
+const setTheme = c => { const m = document.querySelector('meta[name=theme-color]'); if (m) m.content = c; };
 let toastT;
 function toast(msg) { const t = $('#toast'); t.textContent = msg; t.classList.add('show'); clearTimeout(toastT); toastT = setTimeout(() => t.classList.remove('show'), 1700); }
 function loading(on, msg) { $('#loading').classList.toggle('hidden', !on); if (msg) $('#loadMsg').textContent = msg; }
@@ -542,34 +605,44 @@ async function renderLib() {
   $('#empty').classList.toggle('hidden', books.length > 0);
   $('#libCount').textContent = books.length ? `${books.length}권` : '';
 
+  /* 대표 카드: 읽다 만 책이 있으면 '이어서 보기', 없으면 서재 요약 */
   const last = [...books].sort((a, b) => recent(b) - recent(a)).find(b => { const m = meta[b.id] || {}; return m.pos > 0 && !m.done; });
-  $('#resume').classList.toggle('hidden', !last);
   if (last) {
-    const m = meta[last.id], cnt = last.count || 1;
-    $('#resumeImg').src = coverUrl(last); $('#resumeName').textContent = last.name;
-    $('#resumePos').textContent = `${m.pos + 1} / ${cnt}쪽`;
-    $('#resumeBar').style.width = Math.round((m.pos + 1) / cnt * 100) + '%';
-    $('#resume').onclick = () => openRecord(last, false);
+    const m = meta[last.id], cnt = last.count || 1, pct = Math.round((m.pos + 1) / cnt * 100);
+    $('#heroLab').textContent = '이어서 보기';
+    $('#heroName').textContent = last.name;
+    $('#heroNum').textContent = pct; $('#heroUnit').textContent = '%';
+    $('#heroSub').textContent = `${m.pos + 1} / ${cnt}쪽`;
+    $('#heroBarWrap').classList.remove('hidden'); $('#heroBar').style.width = pct + '%';
+    const u = coverUrl(last); $('#heroCover').classList.toggle('hidden', !u); if (u) $('#heroImg').src = u;
+    $('#hero').onclick = () => openRecord(last, false);
+  } else {
+    const done = books.filter(b => (meta[b.id] || {}).done).length;
+    $('#heroLab').textContent = '내 서재';
+    $('#heroName').textContent = books.length ? '오늘은 뭘 볼까요?' : '만화·사진을 가볍게 넘겨 보세요';
+    $('#heroNum').textContent = books.length; $('#heroUnit').textContent = '권';
+    $('#heroSub').textContent = books.length ? `완독 ${done}권 · 새 책 ${books.filter(b => !(meta[b.id] || {}).opened).length}권` : 'ZIP · CBZ · 사진 여러 장';
+    $('#heroBarWrap').classList.add('hidden');
+    const first = books.length ? sortBooks([...books])[0] : null, u = first ? coverUrl(first) : '';
+    $('#heroCover').classList.toggle('hidden', !u); if (u) $('#heroImg').src = u;
+    $('#hero').onclick = () => books.length ? $('#books').scrollIntoView({ behavior: 'smooth', block: 'start' }) : $('#fZip').click();
   }
 
   const box = $('#books'); box.innerHTML = '';
   for (const b of sortBooks(books)) {
     const m = meta[b.id] || {}, pos = m.pos || 0, cnt = b.count || 1;
     const pct = Math.round((pos + 1) / cnt * 100), src = coverUrl(b);
-    const badge = m.done ? '<span class="badge bg-leaf text-ink">완독</span>' : !m.opened ? '<span class="badge bg-orange text-ink">NEW</span>' : '';
+    const state = m.done ? ['#3F8F2E', '완독'] : !m.opened ? ['#D9691F', 'NEW'] : pos > 0 ? null : ['#9AA6A7', '펼쳐 봄'];
     const el = document.createElement('div');
-    el.className = 'relative';
+    el.className = 'bk';
     el.innerHTML = `
-      <button class="open block w-full text-left active:scale-[.98] transition">
-        <div class="card-cover rounded-xl overflow-hidden relative">
-          ${src ? `<img src="${src}" class="w-full h-full object-cover" alt="">` : ''}
-          ${badge}
-          ${!m.done && pos > 0 ? `<div class="absolute left-0 right-0 bottom-0 h-1 bg-black/50"><div class="h-full bg-orange" style="width:${pct}%"></div></div>` : ''}
-        </div>
-        <div class="nm mt-1.5 text-[12.5px] font-semibold leading-snug line-clamp-2 break-all"></div>
-        <div class="text-[11px] text-mute mt-0.5 tabular-nums">${m.done ? cnt + '쪽' : `${pos + 1} / ${cnt}쪽`}</div>
+      <button class="open">
+        <div class="cv">${src ? `<img src="${src}" alt="" loading="lazy">` : ''}
+          ${!m.done && pos > 0 ? `<div class="pr"><div style="width:${pct}%"></div></div>` : ''}</div>
+        <div class="nm"></div>
+        <div class="pg2">${state ? `<span class="dot" style="background:${state[0]}"></span>${state[1]} · ${cnt}쪽` : `${pos + 1} / ${cnt}쪽`}</div>
       </button>
-      <button class="del absolute top-1 right-1 w-7 h-7 rounded-full bg-black/60 grid place-items-center text-[12px] text-paper/80" aria-label="삭제">✕</button>`;
+      <button class="del" aria-label="삭제">✕</button>`;
     el.querySelector('.nm').textContent = b.name;
     el.querySelector('.open').onclick = () => openRecord(b, false);
     el.querySelector('.del').onclick = async () => {
@@ -579,10 +652,15 @@ async function renderLib() {
     box.appendChild(el);
   }
   if (navigator.storage && navigator.storage.estimate) {
-    navigator.storage.estimate().then(e => { if (e.usage) $('#usage').textContent = `사용 ${(e.usage / 1048576).toFixed(0)}MB`; }).catch(() => {});
+    navigator.storage.estimate().then(e => { if (e.usage > 1048576) $('#usage').textContent = `${(e.usage / 1048576).toFixed(0)}MB`; }).catch(() => {});
   }
 }
 $('#btnSort').onclick = () => { settings.sort = settings.sort === 'name' ? 'recent' : 'name'; saveSettings(); renderLib(); };
+$('#btnAdd').onclick = e => { e.stopPropagation(); $('#addMenu').classList.toggle('hidden'); };
+$('#addMenu').onclick = e => { const b = e.target.closest('button'); if (!b) return; $('#addMenu').classList.add('hidden'); $(b.dataset.a === 'zip' ? '#fZip' : '#fImg').click(); };
+document.addEventListener('click', e => { if (!e.target.closest('#addMenu')) $('#addMenu').classList.add('hidden'); });
+addEventListener('scroll', () => $('#toTop').classList.toggle('show', !document.body.classList.contains('reading') && scrollY > 500), { passive: true });
+$('#toTop').onclick = () => scrollTo({ top: 0, behavior: 'smooth' });
 
 /* ======================= 뷰어 ======================= */
 const stage = $('#stage'), strip = $('#strip'), slider = $('#slider');
@@ -616,6 +694,7 @@ function startReader(rec, pages) {
   $('#title').textContent = rec.name;
   document.title = rec.name + ' · 넘김';
   document.body.classList.add('reading');
+  setTheme('#111214'); $('#toTop').classList.remove('show');
   document.body.classList.remove('hide-bars');
   if (!history.state || !history.state.reader) history.pushState({ reader: 1 }, '');
   applySettings();
@@ -634,6 +713,7 @@ function closeReader(silent) {
   if (silent) return;
   R.rec = null; ls.del('reading');
   document.body.classList.remove('reading', 'hide-bars');
+  setTheme('#0B3B40');
   document.title = '넘김 · 미니멀 만화 뷰어';
   if (document.fullscreenElement) document.exitFullscreen().catch(() => {});
   renderLib();
