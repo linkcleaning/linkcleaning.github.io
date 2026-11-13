@@ -616,7 +616,7 @@ small.zero,.seg small.mn.zero{color:#ff8a80!important}
 
 <script>
 'use strict';
-const VER='v64';
+const VER='v65';
 const $=s=>document.querySelector(s);
 const sleep=ms=>new Promise(r=>setTimeout(r,ms));
 const rnd=n=>Math.floor(Math.random()*n);
@@ -2497,10 +2497,18 @@ function admLive(bg){   // 돈 ±·설정은 창을 닫지 않고 그 자리에�
     if(k==='m'){e.stopPropagation();e.preventDefault();
       DB.money[a]=Math.max(0,moneyOf(a)+(+b));saveDB();const el=bg.querySelector('#am_'+a);if(el){el.innerHTML=admMoneyHTML(a);el.className=moneyOf(a)<=0?'zero':''}
       t.animate&&t.animate([{transform:'scale(.85)'},{transform:'none'}],{duration:180});SFX.coin();
-      say(`${pName(oppOf(a))} ${won(Math.abs(+b))} ${+b>0?'충전':'차감'} → 지갑 ${won(moneyOf(a))} ⏳`);
+      say(`${oppOf(a).nick} ${won(Math.abs(+b))} ${+b>0?'충전':'차감'} → 지갑 ${won(moneyOf(a))} ⏳`);
       const ok=await LG.req('matgo/money','PATCH',{[a]:moneyOf(a)});
-      say(ok?`✅ ${pName(oppOf(a))} 지갑 ${won(moneyOf(a))} 저장 완료`:'📶 저장 실패! 인터넷을 확인해 주세요');
+      say(ok?`✅ ${oppOf(a).nick} 지갑 ${won(moneyOf(a))} 저장 완료`:'📶 저장 실패! 인터넷을 확인해 주세요');
       if(ok)LG.req('matgo/log','POST',{w:+b>0?a:'관리인',l:+b>0?'관리인':a,pts:0,pay:Math.abs(+b),ts:Date.now()});
+    }else if(k==='s'){e.stopPropagation();e.preventDefault();
+      let val=null;await modal(`<h2>${esc(oppOf(a).nick)} 지갑 금액</h2><input class="inp" id="mv" type="number" inputmode="numeric" value="${moneyOf(a)}">`,[{t:'취소',cls:'alt',v:0},{t:'저장',keep:true,fn:(b2,close)=>{val=Math.max(0,Math.round(+b2.querySelector('#mv').value||0));close(1)}}],{onOpen:b2=>setTimeout(()=>{const i=b2.querySelector('#mv');i.focus();i.select()},100)});
+      if(val==null)return;
+      const before=moneyOf(a);DB.money[a]=val;saveDB();const el=bg.querySelector('#am_'+a);if(el){el.innerHTML=admMoneyHTML(a);el.className=val<=0?'zero':''}SFX.coin();
+      say(`⏳ ${oppOf(a).nick} 지갑 ${won(val)} 저장 중…`);
+      const ok=await LG.req('matgo/money','PATCH',{[a]:val});
+      say(ok?`✅ ${oppOf(a).nick} 지갑 ${won(val)} 저장 완료`:'📶 저장 실패! 인터넷을 확인해 주세요');
+      if(ok&&val!==before)LG.req('matgo/log','POST',{w:val>before?a:'관리인',l:val>before?'관리인':a,pts:0,pay:Math.abs(val-before),ts:Date.now()});
     }else if(k==='c'){e.stopPropagation();e.preventDefault();
       DB.cfg[a]=b==='true'?true:b==='false'?false:+b;saveDB();
       t.parentElement.querySelectorAll('button').forEach(x=>x.classList.toggle('on',x===t));SFX.select();say('⏳ 설정 저장 중…');
