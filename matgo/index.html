@@ -616,7 +616,7 @@ small.zero,.seg small.mn.zero{color:#ff8a80!important}
 
 <script>
 'use strict';
-const VER='v63';
+const VER='v64';
 const $=s=>document.querySelector(s);
 const sleep=ms=>new Promise(r=>setTimeout(r,ms));
 const rnd=n=>Math.floor(Math.random()*n);
@@ -2489,9 +2489,28 @@ async function openAdmin(){
   await syncDown();
   return adminPanel();
 }
+function admMoneyHTML(id){return `👛 지갑 ${won(moneyOf(id))}${bankOf(id)?`<br>🏦 은행 ${won(bankOf(id))}`:''}<br><b style="color:#ffe08a">총자산 ${won(assetOf(id))}</b>`}
+function admLive(bg){   // 돈 ±·설정은 창을 닫지 않고 그 자리에서 바로 처리
+  const say=t=>{const m=bg.querySelector('#admMsg');if(m){m.textContent=t;m.style.animation='none';void m.offsetWidth;m.style.animation='ltdrop .35s'}};
+  bg.addEventListener('click',async e=>{
+    const t=e.target.closest('[data-v]');if(!t)return;const v=t.dataset.v,[k,a,b]=v.split(':');
+    if(k==='m'){e.stopPropagation();e.preventDefault();
+      DB.money[a]=Math.max(0,moneyOf(a)+(+b));saveDB();const el=bg.querySelector('#am_'+a);if(el){el.innerHTML=admMoneyHTML(a);el.className=moneyOf(a)<=0?'zero':''}
+      t.animate&&t.animate([{transform:'scale(.85)'},{transform:'none'}],{duration:180});SFX.coin();
+      say(`${pName(oppOf(a))} ${won(Math.abs(+b))} ${+b>0?'충전':'차감'} → 지갑 ${won(moneyOf(a))} ⏳`);
+      const ok=await LG.req('matgo/money','PATCH',{[a]:moneyOf(a)});
+      say(ok?`✅ ${pName(oppOf(a))} 지갑 ${won(moneyOf(a))} 저장 완료`:'📶 저장 실패! 인터넷을 확인해 주세요');
+      if(ok)LG.req('matgo/log','POST',{w:+b>0?a:'관리인',l:+b>0?'관리인':a,pts:0,pay:Math.abs(+b),ts:Date.now()});
+    }else if(k==='c'){e.stopPropagation();e.preventDefault();
+      DB.cfg[a]=b==='true'?true:b==='false'?false:+b;saveDB();
+      t.parentElement.querySelectorAll('button').forEach(x=>x.classList.toggle('on',x===t));SFX.select();say('⏳ 설정 저장 중…');
+      const ok=await LG.req('matgo/cfg','PUT',DB.cfg);say(ok?'✅ 설정을 저장했어요':'📶 저장 실패! 인터넷을 확인해 주세요');
+    }
+  },true);
+}
 async function adminPanel(msg=''){
   await syncDown();const ppl=allPlayers();
-  const rows=ppl.map(p=>`<div class="rk"><div class="em" style="width:34px;height:34px">${avaHTML(p)}</div><div class="nm"><b>${esc(pName(p))}${p.roster?` <small style="opacity:.6">${p.name}</small>`:''}</b><small class="${moneyOf(p.id)<=0?'zero':''}">👛 지갑 ${won(moneyOf(p.id))}${bankOf(p.id)?`<br>🏦 은행 ${won(bankOf(p.id))}`:''}<br><b style="color:#ffe08a">총자산 ${won(assetOf(p.id))}</b></small></div>
+  const rows=ppl.map(p=>`<div class="rk"><div class="em" style="width:34px;height:34px">${avaHTML(p)}</div><div class="nm"><b>${esc(pName(p))}${p.roster?` <small style="opacity:.6">${p.name}</small>`:''}</b><small id="am_${p.id}" class="${moneyOf(p.id)<=0?'zero':''}">${admMoneyHTML(p.id)}</small></div>
     <div class="adm"><button data-v="m:${p.id}:-1000">-1천</button><button data-v="m:${p.id}:1000">+1천</button><button data-v="m:${p.id}:5000">+5천</button><button data-v="s:${p.id}">✎</button></div></div>`).join('');
   const seg=(k,arr,fmt)=>`<div class="seg" style="grid-template-columns:repeat(${arr.length},1fr)">${arr.map(v=>`<button class="${DB.cfg[k]===v?'on':''}" data-v="c:${k}:${v}">${fmt(v)}</button>`).join('')}</div>`;
   const [reqs,claims,awd]=await Promise.all([LG.req('matgo/reqs'),LG.req('matgo/claims'),LG.req('matgo/awards')]);
@@ -2500,7 +2519,7 @@ async function adminPanel(msg=''){
   const cls=claims?Object.entries(claims).sort((a,b)=>b[1].ts-a[1].ts).slice(0,15):[];
   const logs=await LG.req('matgo/log');
   const lg=logs?Object.values(logs).sort((a,b)=>b.ts-a.ts).slice(0,10).map(x=>{const d=new Date(x.ts),nm=id=>{const q=ppl.find(p=>p.id===id);return q?pName(q):id};return `${d.getMonth()+1}/${d.getDate()} ${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')} ${esc(nm(x.w))} ← ${esc(nm(x.l))} ${won(x.pay)} (${x.pts}점)`}).join('<br>'):'';
-  const v=await modal(`<h2>👑 관리인 메뉴</h2>${msg?`<p style="color:#8cc63f;font-weight:800">${msg}</p>`:''}
+  const v=await modal(`<h2>👑 관리인 메뉴</h2><p id="admMsg" style="color:#8cc63f;font-weight:800;min-height:1em">${msg||''}</p>
     <div class="lbl">📝 댓글 인증 대기 (${wait.length}건)</div>${wait.length?`<div class="rank">${wait.map(([k,r])=>`<div class="rk"><div class="nm"><b>${esc(r.name)}</b><small>${esc(r.where)} · ${new Date(r.ts).toLocaleString('ko-KR',{month:'numeric',day:'numeric',hour:'2-digit',minute:'2-digit'})}</small></div><div class="adm"><button data-v="img:${k}">📷</button><button data-v="ok:${k}" style="background:#2e7d32">승인</button><button data-v="no:${k}">거절</button></div></div>`).join('')}</div>`:'<p style="font-size:12px">대기 중인 인증이 없어요</p>'}
     <div class="lbl" style="margin-top:10px">☕ 커피 교환 신청</div>${cls.length?`<div class="rank">${cls.map(([k,c])=>`<div class="rk"><div class="em">${'☕'.repeat(c.cups)}</div><div class="nm"><b>${esc(c.name)}</b><small>${c.code}</small></div>${c.done?'<span style="font-size:12px">지급 ✅</span>':`<div class="adm"><button data-v="cf:${k}" style="background:#00704a">지급함</button></div>`}</div>`).join('')}</div>`:'<p style="font-size:12px">신청이 없어요</p>'}
     <div class="lbl" style="margin-top:10px">💰 지갑 관리 (모든 기기에 함께 반영)</div><div class="rank">${rows}</div>
@@ -2516,7 +2535,7 @@ async function adminPanel(msg=''){
     <div class="lbl">🏁 시작 금액 (새 시즌 초기화 때 쓰는 돈)</div>${seg('start',[5000,10000,30000,50000,100000],won)}
     <button class="btn gray" style="width:100%;margin-top:10px" data-v="reset">🔄 새 시즌 — 모두 시작 금액으로 초기화</button>
     <button class="btn gray" style="width:100%;margin-top:6px" data-v="unlock">🔓 이 기기에서 '나' 다시 고르게 하기</button>
-    ${lg?`<div class="lbl" style="margin-top:12px">📜 최근 돈 이동</div><div class="hist">${lg}</div>`:''}`,[{t:'닫기',v:null}],{dismiss:null});
+    ${lg?`<div class="lbl" style="margin-top:12px">📜 최근 돈 이동</div><div class="hist">${lg}</div>`:''}`,[{t:'닫기',v:null}],{dismiss:null,onOpen:admLive});
   if(!v)return renderHome();
   const [k,a,b]=v.split(':');
   if(k==='img'){const im=await LG.req('matgo/reqimg/'+a);await modal(typeof im==='string'&&im?`<img class="reqimg" src="${im}">`:'<p>사진이 없어요</p>',[{t:'닫기',v:1}],{dismiss:1});return adminPanel()}
