@@ -1,0 +1,1116 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<!-- 확대·스크롤 막기 + 아이폰 노치 영역까지 꽉 채우기 -->
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+<title>링크 골프</title>
+<meta name="description" content="모두의골프식 3단계 게이지로 즐기는 제주 9홀 미니 골프">
+<meta name="theme-color" content="#0a1416">
+<!-- 홈 화면에 추가했을 때 앱처럼 (아이폰/안드로이드) -->
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="링크 골프">
+<link rel="apple-touch-icon" href="icon-180.png">
+<link rel="icon" href="icon-192.png">
+<link rel="manifest" href="manifest.json">
+
+<!-- Tailwind CSS (CDN) — 레이아웃용 유틸리티 -->
+<script src="https://cdn.tailwindcss.com"></script>
+<script>
+  if (window.tailwind) tailwind.config = {
+    theme: { extend: {
+      colors: { ink:'#0a1416', deck:'#10222a', deck2:'#163039', teal:'#0d4f57', tealb:'#5fb3b8', org:'#e8792b', leaf:'#3fa34d', sand:'#e0cc95' },
+      fontFamily: { disp:['"Black Han Sans"','sans-serif'], body:['"IBM Plex Sans KR"','-apple-system','"Apple SD Gothic Neo"','sans-serif'] }
+    } }
+  };
+</script>
+<!-- 글씨체: 숫자·제목은 굵은 'Black Han Sans', 본문은 'IBM Plex Sans KR' -->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Black+Han+Sans&family=IBM+Plex+Sans+KR:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+<style>
+  /* ===== 기본: 다크 모드 + 링크클린 브랜드색(진한 청록·주황·로고 초록) ===== */
+  :root{
+    --ink:#0a1416; --deck:#10222a; --deck2:#163039; --line:#21404a;
+    --teal:#0d4f57; --tealb:#5fb3b8; --org:#e8792b; --orgb:#ffa15c; --leaf:#3fa34d; --gold:#ffd166;
+    --sat:env(safe-area-inset-top,0px); --sab:env(safe-area-inset-bottom,0px);
+  }
+  html,body{height:100%;margin:0;background:var(--ink);color:#eef5f4;overscroll-behavior:none;}
+  body{font-family:"IBM Plex Sans KR",-apple-system,"Apple SD Gothic Neo",sans-serif;
+       -webkit-user-select:none;user-select:none;-webkit-touch-callout:none;-webkit-tap-highlight-color:transparent;touch-action:manipulation;}
+  .disp{font-family:"Black Han Sans",sans-serif;letter-spacing:.01em;font-weight:400;}
+  .num{font-variant-numeric:tabular-nums;}
+  button{font:inherit;color:inherit;cursor:pointer;}
+  .hidden{display:none!important;}
+
+  /* 로비 */
+  .lobby-bg{background:
+      radial-gradient(120% 60% at 50% -10%, rgba(95,179,184,.28), transparent 60%),
+      radial-gradient(80% 40% at 100% 100%, rgba(232,121,43,.14), transparent 60%),
+      var(--ink);}
+  .card{background:var(--deck);border:1px solid var(--line);border-radius:18px;}
+  .btn-main{background:linear-gradient(180deg,#f38a3d,#d9661c);box-shadow:0 6px 0 #9c4510,0 10px 24px rgba(232,121,43,.35);border-radius:16px;}
+  .btn-main:active{transform:translateY(4px);box-shadow:0 2px 0 #9c4510;}
+  .btn-sub{background:var(--deck2);border:1px solid var(--line);border-radius:14px;}
+  .btn-sub:active{background:#1d3d47;}
+  .chip{background:var(--deck2);border:1px solid var(--line);border-radius:999px;}
+  .chip.on{background:var(--tealb);color:#06292d;border-color:var(--tealb);font-weight:700;}
+
+  /* 스코어카드 */
+  .sc{border-collapse:separate;border-spacing:0;width:100%;font-size:12px;}
+  .sc th,.sc td{text-align:center;padding:5px 0;border-bottom:1px solid var(--line);}
+  .sc th{color:#8fb0b2;font-weight:500;}
+  .sc .tot{color:var(--gold);font-weight:700;}
+  .s{display:inline-flex;align-items:center;justify-content:center;width:22px;height:22px;font-weight:700;}
+  .s.bd{border:2px solid var(--org);border-radius:50%;color:var(--orgb);}           /* 버디 */
+  .s.eg{border:2px solid var(--gold);border-radius:50%;box-shadow:0 0 0 2px var(--ink),0 0 0 4px var(--gold);color:var(--gold);} /* 이글 이상 */
+  .s.bg{border:1.5px solid #7fa3a6;border-radius:3px;}                                 /* 보기 */
+  .s.db{background:#3a5157;border-radius:3px;}                                         /* 더블보기 이상 */
+
+  /* 게임 상단 HUD */
+  .hud{padding:calc(var(--sat) + 6px) 10px 6px;background:linear-gradient(180deg,rgba(10,20,22,.96),rgba(10,20,22,.78));}
+  .pill{background:rgba(22,48,57,.9);border:1px solid var(--line);border-radius:12px;}
+
+  /* 하단 조작 패널 */
+  .panel{padding:8px 12px calc(var(--sab) + 10px);background:linear-gradient(0deg,#0a1416 70%,rgba(10,20,22,.92));border-top:1px solid var(--line);}
+  .panel.busy .ctl{opacity:.35;pointer-events:none;}
+
+  /* 3단계 게이지 */
+  #gauge{position:relative;height:38px;border-radius:12px;background:#07100f;border:2px solid #2a4a52;overflow:hidden;}
+  #gauge .zone{position:absolute;top:0;bottom:0;}
+  #gZoneG{background:rgba(63,163,77,.45);}
+  #gZoneP{background:var(--gold);box-shadow:0 0 12px var(--gold);}
+  #gFill{position:absolute;top:6px;bottom:6px;left:0;border-radius:6px;background:linear-gradient(90deg,var(--tealb),#9fe0c4 55%,var(--org));}
+  #gLock{position:absolute;top:0;bottom:0;width:3px;background:#fff;opacity:.85;}
+  #gMark{position:absolute;top:-2px;bottom:-2px;width:6px;margin-left:-3px;background:#fff;border-radius:3px;box-shadow:0 0 8px #fff,0 0 2px #000;}
+  .tick{position:absolute;top:0;bottom:0;width:1px;background:rgba(255,255,255,.18);}
+  .tlab{position:absolute;top:2px;transform:translateX(-50%);font-size:9px;color:#8fb0b2;}
+  #shotBtn{height:64px;border-radius:18px;font-size:24px;}
+  #shotBtn.armed{background:linear-gradient(180deg,#ffd166,#e8a21b);box-shadow:0 6px 0 #9a6a07;color:#3b2500;}
+  #shotBtn.impact{background:linear-gradient(180deg,#7fe08c,#3fa34d);box-shadow:0 6px 0 #1f6b2a;color:#062b0e;}
+
+  /* 화면 가운데 알림 (나이스 샷!, OB 등) */
+  #toast{position:absolute;left:50%;top:38%;transform:translate(-50%,-50%);pointer-events:none;text-align:center;white-space:nowrap;}
+  #toast.show{animation:pop 1.3s ease-out forwards;}
+  @keyframes pop{0%{opacity:0;transform:translate(-50%,-30%) scale(.6)}15%{opacity:1;transform:translate(-50%,-50%) scale(1.12)}25%{transform:translate(-50%,-50%) scale(1)}80%{opacity:1}100%{opacity:0;transform:translate(-50%,-70%)}}
+  .glow{text-shadow:0 2px 0 rgba(0,0,0,.55),0 0 18px currentColor;}
+
+  /* 홀 소개 배너 */
+  #banner{position:absolute;left:0;right:0;top:18%;text-align:center;pointer-events:none;transition:opacity .4s;}
+  .sheet{background:rgba(5,12,13,.72);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);}
+  .modal{background:var(--deck);border:1px solid var(--line);border-radius:22px;}
+
+  /* 버전 꼬리표 — 아주 작게 */
+  #ver{position:fixed;left:5px;bottom:2px;font:500 9px/1 system-ui,sans-serif;color:#888;opacity:.4;pointer-events:none;z-index:99;}
+</style>
+</head>
+<body>
+<div id="app" class="fixed inset-0 overflow-hidden">
+
+  <!-- ================= 1) 메인 로비 ================= -->
+  <section id="lobby" class="lobby-bg absolute inset-0 overflow-y-auto z-30">
+    <div class="max-w-md mx-auto px-5" style="padding-top:calc(var(--sat) + 28px);padding-bottom:calc(var(--sab) + 30px)">
+      <!-- 타이틀 -->
+      <div class="flex items-center gap-3">
+        <svg width="58" height="58" viewBox="0 0 64 64" aria-hidden="true">
+          <circle cx="32" cy="32" r="30" fill="#0d4f57"/><ellipse cx="32" cy="46" rx="20" ry="8" fill="#3fa34d"/>
+          <ellipse cx="38" cy="46" rx="3" ry="1.4" fill="#06221f"/><rect x="37" y="14" width="2.4" height="32" fill="#eef5f4"/>
+          <path d="M39.4 14 L54 19.5 L39.4 25 Z" fill="#e8792b"/><circle cx="23" cy="44" r="4" fill="#fff"/>
+        </svg>
+        <div>
+          <div class="disp text-[34px] leading-none text-white">링크 골프</div>
+          <div class="text-[13px] text-tealb mt-1 tracking-wide">LINK GOLF · 제주 9홀 코스</div>
+        </div>
+      </div>
+
+      <!-- 시작 버튼들 -->
+      <button id="bNew" class="btn-main w-full mt-7 py-4 text-left px-5">
+        <div class="disp text-[24px] text-white">라운드 시작</div>
+        <div class="text-[12px] text-orange-100/90">1번홀부터 9홀 · 파 36</div>
+      </button>
+      <button id="bCont" class="btn-sub w-full mt-3 py-3 px-5 text-left hidden">
+        <div class="flex justify-between items-center"><span class="font-semibold">이어하기</span><span id="contInfo" class="text-tealb text-sm num"></span></div>
+      </button>
+
+      <!-- 베스트 기록 -->
+      <div class="grid grid-cols-3 gap-2 mt-5">
+        <div class="card p-3 text-center"><div class="text-[11px] text-slate-400">베스트 라운드</div><div id="stBest" class="disp text-2xl mt-1 num">-</div></div>
+        <div class="card p-3 text-center"><div class="text-[11px] text-slate-400">라운드 수</div><div id="stRounds" class="disp text-2xl mt-1 num">0</div></div>
+        <div class="card p-3 text-center"><div class="text-[11px] text-slate-400">홀인원</div><div id="stHio" class="disp text-2xl mt-1 num text-[#ffd166]">0</div></div>
+      </div>
+
+      <!-- 홀 연습 (코스 선택) -->
+      <div class="mt-6 flex items-end justify-between"><h2 class="disp text-xl">홀 골라 연습</h2><span class="text-[11px] text-slate-400">숫자는 내 홀 베스트</span></div>
+      <div id="holeGrid" class="grid grid-cols-3 gap-2 mt-2"></div>
+
+      <!-- 최근 스코어카드 -->
+      <div class="mt-6 flex items-end justify-between"><h2 class="disp text-xl">최근 스코어카드</h2><span id="lastDate" class="text-[11px] text-slate-400"></span></div>
+      <div id="lastCard" class="card p-3 mt-2"></div>
+
+      <!-- 조작법 -->
+      <details class="card p-4 mt-6 text-[13px] text-slate-300 leading-relaxed">
+        <summary class="font-semibold text-white">조작법 보기</summary>
+        <ol class="list-decimal ml-5 mt-2 space-y-1">
+          <li><b>방향</b>: 코스 화면을 손가락으로 끌면 그 지점을 겨냥해요. ◀ ▶ 로 미세 조정.</li>
+          <li><b>1번 탭</b>: 샷 버튼 → 게이지가 차올라요.</li>
+          <li><b>2번 탭</b>: 원하는 파워에서 멈추기.</li>
+          <li><b>3번 탭</b>: 돌아오는 바늘이 <span class="text-[#ffd166]">금색 줄(퍼펙트)</span>에 올 때! 빗나가면 공이 휘어요.</li>
+          <li><b>바람</b>은 오른쪽 위 화살표, <b>고저차</b>는 ▲▼ 로 확인. 높게 뜨는 웨지일수록 바람을 더 타요.</li>
+          <li><b>퍼팅</b>: 그린에서는 거리 범위(4~40m)를 고르고 2번 탭. 화살표가 흐르는 쪽으로 공이 휘어요.</li>
+          <li>그린 위 50cm 안에 붙으면 <b>OK(컨시드)</b>!</li>
+        </ol>
+      </details>
+
+      <div class="flex justify-between items-center mt-5 text-[12px] text-slate-500">
+        <button id="bMute" class="chip px-3 py-1.5">🔊 소리 켜짐</button>
+        <button id="bReset" class="px-2 py-1 opacity-60">기록 초기화</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= 2) 게임 화면 ================= -->
+  <section id="game" class="absolute inset-0 flex flex-col hidden">
+    <!-- 상단 정보: 홀 / 남은 거리 / 바람 / 고저차 -->
+    <header class="hud z-10">
+      <div class="flex items-stretch gap-2">
+        <button id="bMenu" class="pill w-10 flex items-center justify-center text-lg" aria-label="메뉴">☰</button>
+        <div class="pill px-2.5 py-1 min-w-[78px]">
+          <div class="disp text-[20px] leading-tight num"><span id="hHole">1</span><span class="text-[12px] text-slate-400 ml-0.5">번홀</span></div>
+          <div class="text-[11px] text-slate-300 num">PAR <b id="hPar">4</b> · <span id="hStroke">1타째</span></div>
+        </div>
+        <div class="pill flex-1 px-2.5 py-1 text-center">
+          <div class="text-[10px] text-slate-400">핀까지</div>
+          <div class="disp text-[24px] leading-none num"><span id="hDist">0</span><span class="text-[13px] ml-0.5">m</span></div>
+          <div id="hElev" class="text-[11px] num mt-0.5"></div>
+        </div>
+        <div class="pill px-2 py-1 flex items-center gap-1.5">
+          <svg id="windArrow" width="34" height="34" viewBox="-17 -17 34 34" aria-hidden="true">
+            <circle r="15" fill="none" stroke="#2b525b" stroke-width="2"/>
+            <g id="windRot"><path d="M0 -12 L6 2 L1.6 0 L1.6 11 L-1.6 11 L-1.6 0 L-6 2 Z" fill="#5fb3b8"/></g>
+          </svg>
+          <div class="text-right leading-tight">
+            <div class="text-[10px] text-slate-400">바람</div>
+            <div class="disp text-[17px] num"><span id="hWind">0.0</span><span class="text-[10px] ml-0.5">m/s</span></div>
+          </div>
+        </div>
+      </div>
+      <div class="flex justify-between items-center mt-1.5 px-0.5 text-[11px]">
+        <span id="hLie" class="text-slate-300"></span>
+        <span id="hTotal" class="num text-slate-300"></span>
+      </div>
+    </header>
+
+    <!-- 코스 캔버스 -->
+    <div id="stage" class="relative flex-1 min-h-0">
+      <canvas id="cv" class="absolute inset-0 w-full h-full" style="touch-action:none"></canvas>
+      <button id="bView" class="absolute right-2 top-2 pill px-3 py-1.5 text-[12px]">🗺 전체</button>
+      <div id="banner" class="opacity-0">
+        <div class="inline-block sheet rounded-2xl px-6 py-3">
+          <div id="bnHole" class="disp text-[34px] leading-none"></div>
+          <div id="bnName" class="text-tealb text-[14px] mt-1"></div>
+          <div id="bnInfo" class="text-[12px] text-slate-300 mt-0.5 num"></div>
+        </div>
+      </div>
+      <div id="toast"></div>
+    </div>
+
+    <!-- 하단 조작 패널 -->
+    <footer id="panel" class="panel z-10">
+      <!-- 클럽 선택 + 방향 미세조정 -->
+      <div class="ctl flex items-center gap-2">
+        <button id="bClubPrev" class="btn-sub w-10 h-11 text-xl">‹</button>
+        <div class="flex-1 btn-sub h-11 flex items-center justify-center gap-2 px-2">
+          <span id="cId" class="disp text-[22px] text-org">1W</span>
+          <span class="text-left leading-tight"><span id="cName" class="block text-[12px]">드라이버</span><span id="cSpec" class="block text-[10px] text-slate-400 num">230m · 10.5°</span></span>
+        </div>
+        <button id="bClubNext" class="btn-sub w-10 h-11 text-xl">›</button>
+        <button id="bAimL" class="btn-sub w-11 h-11 text-lg" aria-label="왼쪽">◀</button>
+        <button id="bAimR" class="btn-sub w-11 h-11 text-lg" aria-label="오른쪽">▶</button>
+      </div>
+      <!-- 퍼팅 전용: 거리 범위 선택 -->
+      <div id="puttRow" class="ctl hidden flex items-center gap-1.5 mt-2">
+        <span class="text-[11px] text-slate-400 mr-1">퍼팅 범위</span>
+        <div id="puttChips" class="flex gap-1.5 flex-1"></div>
+      </div>
+      <div id="puttInfo" class="hidden text-[11px] text-tealb mt-1.5 text-center"></div>
+      <!-- 3단계 게이지 -->
+      <div class="mt-2.5">
+        <div id="gauge">
+          <div id="gZoneG" class="zone"></div><div id="gZoneP" class="zone"></div>
+          <div id="gTicks"></div>
+          <div id="gFill" style="width:0"></div>
+          <div id="gLock" class="hidden"></div>
+          <div id="gMark"></div>
+        </div>
+        <div class="flex justify-between text-[11px] mt-1 px-0.5"><span id="gState" class="text-slate-400">방향을 정하고 샷 버튼!</span><span id="gPow" class="num text-slate-300"></span></div>
+      </div>
+      <button id="shotBtn" class="btn-main w-full mt-2 disp text-white">샷</button>
+    </footer>
+  </section>
+
+  <!-- ================= 3) 팝업들 ================= -->
+  <!-- 홀 결과 -->
+  <div id="mHole" class="sheet absolute inset-0 z-40 hidden flex items-center justify-center p-6">
+    <div class="modal w-full max-w-sm p-6 text-center">
+      <div id="rTitle" class="disp text-[52px] leading-none glow"></div>
+      <div id="rSub" class="text-slate-300 mt-2 num"></div>
+      <div id="rBest" class="text-[12px] text-[#ffd166] mt-1"></div>
+      <div id="rCard" class="mt-4"></div>
+      <button id="bNext" class="btn-main w-full mt-5 py-3 disp text-xl text-white">다음 홀</button>
+      <button id="bHoleLobby" class="btn-sub w-full mt-2 py-2.5 text-sm">로비로</button>
+    </div>
+  </div>
+  <!-- 메뉴 -->
+  <div id="mMenu" class="sheet absolute inset-0 z-40 hidden flex items-end justify-center">
+    <div class="modal w-full max-w-md p-4 m-3 space-y-2" style="margin-bottom:calc(var(--sab) + 12px)">
+      <button id="mResume" class="btn-main w-full py-3 disp text-lg text-white">계속하기</button>
+      <button id="mRestart" class="btn-sub w-full py-3">이 홀 다시 시작</button>
+      <button id="mSound" class="btn-sub w-full py-3">소리 끄기</button>
+      <button id="mLobby" class="btn-sub w-full py-3">로비로 나가기 (라운드는 저장돼요)</button>
+    </div>
+  </div>
+</div>
+<div id="ver"></div>
+
+<script>
+'use strict';
+/* =====================================================================
+   링크 골프 — 모두의골프식 3단계 게이지 미니 골프 (단일 HTML)
+   구조: 0 상수/유틸 → 1 저장소 → 2 사운드 → 3 코스 데이터 → 4 지형 판정
+         → 5 게임 상태/샷 물리 → 6 카메라/그리기 → 7 UI/입력 → 8 로비 → 9 PWA
+   좌표계: 미터(m). x = 오른쪽(+), y = 핀 방향 앞쪽(+). 티는 (0,0).
+   ===================================================================== */
+const APP_VER = 'v1';
+document.getElementById('ver').textContent = APP_VER;
+
+/* ---------- 0. 유틸 ---------- */
+const $ = s => document.querySelector(s);
+const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
+const lerp = (a, b, t) => a + (b - a) * t;
+const hyp = Math.hypot;
+const DEG = Math.PI / 180;
+function segDist(px, py, ax, ay, bx, by) {            // 점과 선분 사이 거리
+  const dx = bx - ax, dy = by - ay, l = dx * dx + dy * dy;
+  const t = l ? clamp(((px - ax) * dx + (py - ay) * dy) / l, 0, 1) : 0;
+  return hyp(px - ax - dx * t, py - ay - dy * t);
+}
+const inEll = (x, y, e, pad = 0) => { const a = (x - e[0]) / (e[2] + pad), b = (y - e[1]) / (e[3] + pad); return a * a + b * b <= 1; };
+function mulberry32(a) { return () => { a |= 0; a = a + 0x6D2B79F5 | 0; let t = Math.imul(a ^ a >>> 15, 1 | a); t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t; return ((t ^ t >>> 14) >>> 0) / 4294967296; }; }
+
+/* ---------- 1. 저장소 (LocalStorage) ----------
+   best: 홀별 최소 타수, bestRound: 최소 라운드 타수, rounds: 최근 라운드 기록,
+   cur: 진행 중인 라운드(이어하기), hio: 홀인원 횟수, mute: 소리 끔 */
+const KEY = 'link-golf-v1';
+const store = Object.assign({ best: {}, bestRound: null, rounds: [], cur: null, hio: 0, mute: false },
+  (() => { try { return JSON.parse(localStorage.getItem(KEY)) || {}; } catch (e) { return {}; } })());
+function save() { try { localStorage.setItem(KEY, JSON.stringify(store)); } catch (e) {} }
+
+/* ---------- 2. 사운드 (Web Audio API로 직접 합성 — 파일 없음) ---------- */
+const SFX = {
+  ctx: null, noiseBuf: null, master: null,
+  init() {                                             // 아이폰은 첫 터치 때 오디오를 깨워야 함
+    if (this.ctx) { if (this.ctx.state === 'suspended') this.ctx.resume(); return; }
+    const AC = window.AudioContext || window.webkitAudioContext; if (!AC) return;
+    this.ctx = new AC();
+    const n = this.ctx.sampleRate, b = this.ctx.createBuffer(1, n, n), d = b.getChannelData(0);
+    for (let i = 0; i < n; i++) d[i] = Math.random() * 2 - 1;
+    this.noiseBuf = b;
+    this.master = this.ctx.createGain(); this.master.gain.value = 0.9; this.master.connect(this.ctx.destination);
+  },
+  on() { return this.ctx && !store.mute; },
+  tone(f, dur, type = 'sine', vol = .3, when = 0, fEnd = 0) {
+    if (!this.on()) return; const c = this.ctx, t = c.currentTime + when;
+    const o = c.createOscillator(), g = c.createGain(); o.type = type;
+    o.frequency.setValueAtTime(f, t); if (fEnd) o.frequency.exponentialRampToValueAtTime(fEnd, t + dur);
+    g.gain.setValueAtTime(vol, t); g.gain.exponentialRampToValueAtTime(.0008, t + dur);
+    o.connect(g); g.connect(this.master); o.start(t); o.stop(t + dur + .02);
+  },
+  noise(dur, vol, ft = 'bandpass', freq = 1000, q = 1, when = 0, fEnd = 0) {
+    if (!this.on()) return; const c = this.ctx, t = c.currentTime + when;
+    const s = c.createBufferSource(); s.buffer = this.noiseBuf;
+    const f = c.createBiquadFilter(); f.type = ft; f.Q.value = q;
+    f.frequency.setValueAtTime(freq, t); if (fEnd) f.frequency.exponentialRampToValueAtTime(fEnd, t + dur);
+    const g = c.createGain(); g.gain.setValueAtTime(vol, t); g.gain.exponentialRampToValueAtTime(.0008, t + dur);
+    s.connect(f); f.connect(g); g.connect(this.master); s.start(t, Math.random() * .5); s.stop(t + dur + .02);
+  },
+  // "딱!" 타격음: 짧은 고음 잡음 + 클릭 + 낮은 쿵. 퍼펙트면 맑은 '팅' 추가
+  hit(q) {
+    this.noise(.07, .9, 'bandpass', 3400, 1.3); this.tone(2100, .05, 'triangle', .45, 0, 700); this.tone(150, .09, 'sine', .55, 0, 55);
+    if (q === 'perfect') { this.tone(2637, .4, 'sine', .16, .02); this.tone(3951, .3, 'sine', .07, .04); }
+    if (q === 'miss') this.noise(.14, .35, 'lowpass', 500, 1);
+  },
+  putt() { this.tone(950, .05, 'triangle', .35, 0, 480); this.noise(.03, .35, 'bandpass', 2200, 2); },
+  tick() { this.tone(1250, .03, 'square', .06); },
+  land(s) { if (s === 'bunker') this.noise(.2, .5, 'lowpass', 700, .7); else this.noise(.07, .22, 'lowpass', 420, 1); },
+  splash() { this.noise(.7, .6, 'lowpass', 2600, .8, 0, 220); this.noise(.3, .25, 'highpass', 3000, .5, .05); },
+  cup() {                                              // 딸그락 + 짧은 차임
+    [0, .06, .13, .19].forEach((w, i) => this.noise(.035, .55 - i * .1, 'bandpass', 1200 - i * 80, 5, w));
+    [1047, 1319, 1568].forEach((f, i) => this.tone(f, .35, 'triangle', .14, .28 + i * .09));
+  },
+  good() { [784, 988, 1175, 1568].forEach((f, i) => this.tone(f, .22, 'square', .07, i * .08)); },
+  fanfare() {                                          // 홀인원 / 이글 팡파르
+    const n = [523, 659, 784, 1047, 784, 1047, 1319, 1568];
+    n.forEach((f, i) => { this.tone(f, .2, 'square', .09, i * .11); this.tone(f / 2, .2, 'triangle', .1, i * .11); });
+    [1047, 1319, 1568, 2093].forEach(f => this.tone(f, 1.2, 'triangle', .08, .95));
+  },
+  sad() { this.tone(330, .25, 'triangle', .12); this.tone(262, .4, 'triangle', .12, .22); }
+};
+
+/* ---------- 3. 클럽 & 지형 & 코스 데이터 ----------
+   로프트(°)가 클수록: 공이 높이 뜨고(apex↑), 바람을 더 타고(windF↑), 덜 굴러감(roll↓) */
+const CLUBS = [
+  { id: '1W', name: '드라이버', dist: 230, loft: 10.5 },
+  { id: '3W', name: '3번 우드', dist: 205, loft: 15 },
+  { id: '5I', name: '5번 아이언', dist: 170, loft: 25 },
+  { id: '7I', name: '7번 아이언', dist: 145, loft: 33 },
+  { id: '9I', name: '9번 아이언', dist: 120, loft: 41 },
+  { id: 'PW', name: '피칭 웨지', dist: 100, loft: 46 },
+  { id: 'SW', name: '샌드 웨지', dist: 75, loft: 56 },
+  { id: 'PT', name: '퍼터', dist: 0, loft: 3, putter: true }
+];
+CLUBS.forEach(c => {
+  c.apex = 18 + c.loft * 0.35;                         // 최고 높이(m)
+  c.windF = 0.75 + c.loft * 0.009;                     // 바람 민감도
+  c.roll = Math.max(0.012, 0.17 - c.loft * 0.0028);    // 착지 후 굴러가는 비율
+});
+// 지형별: lie=다음 샷 비거리 배율, fric=구름 마찰(m/s²), roll=착지 후 구름 배율
+const SURF = {
+  tee:     { name: '티잉 그라운드', lie: 1,   fric: 2.2, roll: 1 },
+  fairway: { name: '페어웨이',     lie: 1,   fric: 2.2, roll: 1 },
+  fringe:  { name: '프린지',       lie: .97, fric: 1.5, roll: .9 },
+  rough:   { name: '러프',         lie: .82, fric: 5.5, roll: .45 },
+  bunker:  { name: '벙커',         lie: .6,  fric: 40,  roll: 0 },
+  green:   { name: '그린',         lie: 1,   fric: .85, roll: .85 },
+  water:   { name: '해저드' }, ob: { name: 'OB' }
+};
+/* 코스: route=티→핀 중심선, fw=페어웨이(폭 w), green/bunker/water=[x,y,반지름x,반지름y],
+   cup=핀 위치, elev=티 대비 핀 높이(m, +오르막), slope=그린 기본 경사(가속도 m/s², 공이 흘러가는 쪽) */
+const HOLES = [
+  { name: '새별 첫 티샷', par: 4, elev: 3, route: [[0,0],[0,120],[8,230],[14,322]],
+    fw: [{ w: 34, p: [[0,16],[0,120],[8,230],[13,300]] }], green: [14,322,16,14], cup: [15,326],
+    bunker: [[-6,300,6,4],[33,318,5,7],[-20,215,7,5]], water: [], slope: [.17,-.06] },
+  { name: '물 건너 한 방', par: 3, elev: -5, route: [[0,0],[0,150]],
+    fw: [{ w: 22, p: [[0,14],[0,34]] }, { w: 26, p: [[0,118],[0,136]] }], green: [0,150,15,13], cup: [3,153],
+    bunker: [[-18,152,5,7],[14,165,7,4]], water: [[0,78,34,28]], slope: [-.2,.1] },
+  { name: '오름 돌아가기', par: 5, elev: 6, route: [[0,0],[0,200],[-30,320],[-90,420],[-110,478]],
+    fw: [{ w: 36, p: [[0,18],[0,200],[-30,320],[-90,420],[-106,462]] }], green: [-112,478,17,14], cup: [-109,481],
+    bunker: [[-46,252,8,6],[23,196,7,10],[-131,470,6,8],[-96,496,8,4]], water: [[-6,385,22,30]], slope: [.24,0] },
+  { name: '내리막 도그레그', par: 4, elev: -8, route: [[0,0],[0,180],[40,280],[72,358]],
+    fw: [{ w: 32, p: [[0,16],[0,180],[40,280],[66,342]] }], green: [72,358,15,14], cup: [75,361],
+    bunker: [[19,190,8,6],[-15,232,6,9],[55,362,5,7],[89,352,5,6]], water: [], slope: [-.1,-.25] },
+  { name: '섬 그린', par: 3, elev: 0, route: [[0,0],[0,125]],
+    fw: [{ w: 22, p: [[0,14],[0,30]] }], green: [0,125,16,14], cup: [-3,127],
+    bunker: [[13,113,4,3]], water: [[0,117,44,40]], slope: [.15,.2] },
+  { name: '올레 S자', par: 4, elev: 4, route: [[0,0],[0,110],[30,200],[0,300],[10,392]],
+    fw: [{ w: 30, p: [[0,16],[0,110],[30,200],[0,300],[8,375]] }], green: [10,392,16,13], cup: [12,395],
+    bunker: [[-21,212,8,7],[46,300,7,8],[-8,402,5,5],[29,382,5,6]], water: [[62,150,18,40]], slope: [.2,-.15] },
+  { name: '냇가 건너기', par: 5, elev: 2, route: [[0,0],[0,250],[5,320],[16,505]],
+    fw: [{ w: 36, p: [[0,18],[0,252]] }, { w: 32, p: [[5,318],[14,488]] }], green: [16,505,17,15], cup: [19,508],
+    bunker: [[-21,232,7,8],[31,420,8,6],[0,522,8,4]], water: [[0,285,90,19]], slope: [-.25,.05] },
+  { name: '한라 오르막', par: 3, elev: 12, route: [[0,0],[-6,186]],
+    fw: [{ w: 22, p: [[0,14],[0,32]] }, { w: 26, p: [[-4,148],[-6,172]] }], green: [-6,186,15,13], cup: [-4,189],
+    bunker: [[-23,182,6,8],[10,197,6,4],[11,170,5,6]], water: [], slope: [0,-.3] },
+  { name: '마지막 내리막', par: 4, elev: -6, route: [[0,0],[-10,150],[0,280],[22,408]],
+    fw: [{ w: 34, p: [[0,16],[-10,150],[0,280],[18,390]] }], green: [22,408,17,15], cup: [20,411],
+    bunker: [[-31,160,7,9],[4,394,6,4],[41,413,5,7]], water: [[48,330,16,45]], slope: [.2,.1] }
+];
+// 코스 준비: 경계(OB), 길이, 나무 배치(홀마다 같은 모양이 나오도록 시드 고정)
+HOLES.forEach((h, idx) => {
+  const xs = [], ys = [];
+  const add = (x, y) => { xs.push(x); ys.push(y); };
+  h.route.forEach(p => add(p[0], p[1])); h.fw.forEach(f => f.p.forEach(p => add(p[0], p[1])));
+  [h.green, ...h.bunker, ...h.water].forEach(e => { add(e[0] - e[2], e[1] - e[3]); add(e[0] + e[2], e[1] + e[3]); });
+  h.b = { x0: Math.min(...xs) - 55, x1: Math.max(...xs) + 55, y0: -28, y1: Math.max(...ys) + 40 };
+  h.len = 0; for (let i = 1; i < h.route.length; i++) h.len += hyp(h.route[i][0] - h.route[i - 1][0], h.route[i][1] - h.route[i - 1][1]);
+  h.len = Math.round(h.len);
+  const rnd = mulberry32(idx * 977 + 13); h.trees = [];
+  for (let k = 0; k < 400 && h.trees.length < 46; k++) {
+    const x = lerp(h.b.x0 + 4, h.b.x1 - 4, rnd()), y = lerp(h.b.y0 + 4, h.b.y1 - 4, rnd()), r = 4 + rnd() * 4.5;
+    let ok = hyp(x, y) > 22 && !inEll(x, y, h.green, 12);
+    h.fw.forEach(f => { for (let i = 0; i < f.p.length - 1; i++) if (segDist(x, y, f.p[i][0], f.p[i][1], f.p[i + 1][0], f.p[i + 1][1]) < f.w / 2 + 14) ok = false; });
+    for (let i = 0; i < h.route.length - 1; i++) if (segDist(x, y, h.route[i][0], h.route[i][1], h.route[i + 1][0], h.route[i + 1][1]) < 22) ok = false;
+    [...h.bunker, ...h.water].forEach(e => { if (inEll(x, y, e, 6)) ok = false; });
+    h.trees.forEach(t => { if (hyp(t[0] - x, t[1] - y) < t[2] + r + 1) ok = false; });
+    if (ok) h.trees.push([x, y, r]);
+  }
+});
+
+/* ---------- 4. 지형 판정 ---------- */
+let G = null;                                          // 현재 게임 상태 (5번에서 생성)
+function surfaceAt(x, y, h = G.hole) {
+  const b = h.b;
+  if (x < b.x0 || x > b.x1 || y < b.y0 || y > b.y1) return 'ob';
+  if (inEll(x, y, h.green)) return 'green';
+  for (const e of h.bunker) if (inEll(x, y, e)) return 'bunker';
+  if (inEll(x, y, h.green, 2.5)) return 'fringe';
+  for (const e of h.water) if (inEll(x, y, e)) return 'water';
+  if (Math.abs(x) <= 7 && y >= -6 && y <= 8) return 'tee';
+  for (const f of h.fw) for (let i = 0; i < f.p.length - 1; i++)
+    if (segDist(x, y, f.p[i][0], f.p[i][1], f.p[i + 1][0], f.p[i + 1][1]) <= f.w / 2) return 'fairway';
+  return 'rough';
+}
+// 높이: 티(0) → 핀(elev) 까지 앞으로 갈수록 서서히 변함
+function elevAt(x, y, h = G.hole) { return h.elev * clamp(y / h.cup[1], 0, 1.05); }
+// 그린 경사: 기본 경사 + 살짝 굽이치는 언듈레이션
+function slopeAt(x, y, h = G.hole) {
+  return [h.slope[0] + .07 * Math.sin(x * .35 + y * .21), h.slope[1] + .07 * Math.cos(x * .27 - y * .33)];
+}
+// 중심선(route) 위 가장 가까운 지점까지의 길이 / 길이 s 지점 좌표
+function routeProject(r, x, y) {
+  let best = 1e9, bs = 0, acc = 0;
+  for (let i = 0; i < r.length - 1; i++) {
+    const [ax, ay] = r[i], [bx, by] = r[i + 1], dx = bx - ax, dy = by - ay, l = hyp(dx, dy);
+    const t = clamp(((x - ax) * dx + (y - ay) * dy) / (l * l), 0, 1), d = hyp(x - ax - dx * t, y - ay - dy * t);
+    if (d < best) { best = d; bs = acc + l * t; } acc += l;
+  }
+  return bs;
+}
+function routePoint(r, s) {
+  for (let i = 0; i < r.length - 1; i++) {
+    const [ax, ay] = r[i], [bx, by] = r[i + 1], l = hyp(bx - ax, by - ay);
+    if (s <= l) return [ax + (bx - ax) * s / l, ay + (by - ay) * s / l]; s -= l;
+  }
+  return r[r.length - 1].slice();
+}
+
+/* ---------- 5. 게임 상태 & 샷 물리 ----------
+   state 흐름: intro → aim → power → impact → flight → roll → (aim | 홀아웃)
+   퍼팅은 aim → power → roll (2번 탭) */
+const GMIN = -12, GMAX = 100;                          // 게이지 눈금 범위 (0 = 임팩트 지점)
+const UP_SPEED = 92, DOWN_SPEED = 118, PUTT_SPEED = 62; // 게이지 바늘 속도(눈금/초)
+const DT = 1 / 120;                                    // 굴림 물리 고정 스텝
+const CUP_R = 0.11;                                    // 컵 판정 반경(m) — 실제보다 살짝 관대
+const PUTT_SCALES = [4, 8, 15, 25, 40];
+
+function newGame(mode, holeIdx) {
+  G = { mode, holeIdx, hole: HOLES[holeIdx], ball: { x: 0, y: 0 }, prev: { x: 0, y: 0 }, strokes: 0,
+        wind: { x: 0, y: 0, spd: 0 }, aim: 0, ci: 0, putScale: 8, gauge: { pos: 0, power: 0, t0: 0, t1: 0 },
+        state: 'intro', introT: 0, shot: null, roll: null, trail: [], time: 0, overview: false, dragging: false, lip: 0 };
+}
+function startHole(idx) {
+  G.holeIdx = idx; G.hole = HOLES[idx];
+  G.ball = { x: 0, y: 0 }; G.prev = { x: 0, y: 0 }; G.strokes = 0; G.trail = []; G.shot = null; G.roll = null;
+  // 바람: 뒤 홀로 갈수록 세짐 (최대 약 6.5 m/s), 방향은 랜덤
+  const spd = Math.round(Math.random() * (1.6 + idx * 0.6) * 10) / 10, ang = Math.random() * Math.PI * 2;
+  G.wind = { x: Math.sin(ang) * spd, y: Math.cos(ang) * spd, spd, ang };
+  G.state = 'intro'; G.introT = 2.2; G.overview = false;
+  $('#bnHole').textContent = (idx + 1) + '번홀';
+  $('#bnName').textContent = G.hole.name;
+  $('#bnInfo').textContent = 'PAR ' + G.hole.par + ' · ' + G.hole.len + 'm · 바람 ' + spd.toFixed(1) + 'm/s';
+  $('#banner').style.opacity = 1;
+  setCamTarget(fitPts(courseCorners(), 10, 0.4, 40), true);
+  updateHud(); updatePanel();
+}
+const courseCorners = () => { const b = G.hole.b; return [[b.x0 + 20, b.y0 + 10], [b.x1 - 20, b.y1 - 10]]; };
+const lieNow = () => surfaceAt(G.ball.x, G.ball.y);
+const cupDist = () => hyp(G.hole.cup[0] - G.ball.x, G.hole.cup[1] - G.ball.y);
+const club = () => CLUBS[G.ci];
+function reachOf(c, lie) { return c.dist * (lie === 'bunker' && c.id === 'SW' ? .92 : SURF[lie].lie); }
+
+// 거리·지형에 맞는 클럽 자동 선택 (드라이버는 티샷만)
+function autoClub() {
+  const lie = lieNow(), d = cupDist();
+  if (lie === 'green' || (lie === 'fringe' && d < 22)) { G.ci = 7; return; }
+  let pick = lie === 'tee' ? 0 : 1;
+  for (let i = 6; i >= (lie === 'tee' ? 0 : 1); i--) if (reachOf(CLUBS[i], lie) >= d * 0.97) { pick = i; break; }
+  G.ci = pick;
+}
+// 기본 방향: 핀이 사정거리 안이면 핀, 아니면 코스 중심선을 따라 앞쪽 지점
+function defaultAim() {
+  const c = club(), [cx, cy] = G.hole.cup, b = G.ball;
+  if (c.putter) return Math.atan2(cx - b.x, cy - b.y);
+  const reach = reachOf(c, lieNow()), d = cupDist();
+  if (d <= reach * 1.08) return Math.atan2(cx - b.x, cy - b.y);
+  const s = routeProject(G.hole.route, b.x, b.y), p = routePoint(G.hole.route, s + reach * .95);
+  return Math.atan2(p[0] - b.x, p[1] - b.y);
+}
+function autoPuttScale() { const d = cupDist(); G.putScale = PUTT_SCALES.find(s => s >= d * 1.15) || 40; }
+
+function beginAim() {
+  G.prev = { x: G.ball.x, y: G.ball.y };
+  // 기브업: 더블파+2 넘으면 자동 종료
+  if (G.strokes >= G.hole.par * 2 + 2) { toast('기브업', '#9fb7b9'); holeOut(true); return; }
+  autoClub(); G.aim = defaultAim(); autoPuttScale();
+  G.state = 'aim'; G.gauge.pos = 0; G.overview = false;
+  updateHud(); updatePanel(); aimCamera();
+}
+
+/* --- 게이지: 시각을 기준으로 바늘 위치를 계산 (탭 순간이 정확하게 반영됨) --- */
+function gaugeAt(t) {
+  const g = G.gauge;
+  if (G.state === 'power') {
+    if (club().putter) { const u = ((t - g.t0) / 1000 * PUTT_SPEED) % 200; return u <= 100 ? u : 200 - u; } // 퍼팅: 0↔100 왕복
+    return Math.min(100, (t - g.t0) / 1000 * UP_SPEED);
+  }
+  if (G.state === 'impact') return g.power - (t - g.t1) / 1000 * DOWN_SPEED;
+  return g.pos;
+}
+function impactZone() {                                // 임팩트 판정 폭 (러프·벙커는 더 좁음)
+  const l = lieNow();
+  return l === 'bunker' ? { p: 1.3, g: 4 } : l === 'rough' ? { p: 1.6, g: 4.6 } : { p: 2, g: 5.5 };
+}
+// 샷 버튼 / 화면 탭 — 1번: 시작, 2번: 파워 결정, 3번: 임팩트
+function pressShot() {
+  SFX.init();
+  const t = performance.now();
+  if (G.state === 'intro') { G.introT = 0; return; }
+  if (G.state === 'aim') { G.state = 'power'; G.gauge.t0 = t; SFX.tick(); updatePanel(); return; }
+  if (G.state === 'power') {
+    const p = clamp(gaugeAt(t), 0, 100);
+    if (club().putter) { strikePutt(Math.max(1, p) / 100); return; }
+    G.gauge.power = Math.max(3, p); G.gauge.t1 = t; G.state = 'impact'; SFX.tick(); updatePanel(); return;
+  }
+  if (G.state === 'impact') strike(G.gauge.power / 100, gaugeAt(t));
+}
+
+/* --- 풀샷: 파워·임팩트 정확도·바람·고저차·라이를 반영해 탄도 계산 --- */
+function strike(power, off) {
+  const c = club(), lie = lieNow(), z = impactZone();
+  const q = Math.abs(off) <= z.p ? 'perfect' : Math.abs(off) <= z.g ? 'good' : 'miss';
+  let D = reachOf(c, lie) * power;
+  if (q === 'perfect') D *= 1.03;                      // 퍼펙트 보너스
+  if (q === 'miss') D *= 0.86;                         // 미스: 거리 손해
+  // 휨: 바늘이 임팩트 지점 오른쪽(빨리 탭)=슬라이스(→), 왼쪽(늦게 탭)=훅(←)
+  let curve = clamp(off, -14, 14) * D * (q === 'perfect' ? .004 : .011) * (q === 'miss' ? 1.5 : 1);
+  if (lie === 'rough') curve += (Math.random() - .5) * D * .05;
+  if (lie === 'bunker') curve += (Math.random() - .5) * D * .07;
+  const dx = Math.sin(G.aim), dy = Math.cos(G.aim), rx = Math.cos(G.aim), ry = -Math.sin(G.aim);
+  // 고저차: 오르막이면 덜 날아감, 내리막이면 더 날아감
+  const ex = G.ball.x + dx * D, ey = G.ball.y + dy * D;
+  D = Math.max(1, D - (elevAt(ex, ey) - elevAt(G.ball.x, G.ball.y)) * 0.8);
+  // 바람: 비거리·로프트에 비례해 바람 방향으로 밀림 (맞바람=짧게, 뒷바람=길게, 옆바람=휨)
+  const wf = c.windF * (D / 100) * 1.35;
+  const drift = { x: G.wind.x * wf, y: G.wind.y * wf };
+  const land = { x: G.ball.x + dx * D + rx * curve + drift.x, y: G.ball.y + dy * D + ry * curve + drift.y };
+  G.shot = { sx: G.ball.x, sy: G.ball.y, dx, dy, rx, ry, D, curve, drift, land, t: 0,
+             T: 0.9 + D / 95, H: c.apex * Math.max(.35, power), q, power, c };
+  G.strokes++; G.trail = [];
+  G.state = 'flight';
+  SFX.hit(q); if (navigator.vibrate) navigator.vibrate(q === 'perfect' ? 30 : 15);
+  toast(q === 'perfect' ? 'PERFECT!' : q === 'good' ? 'GOOD' : 'MISS…', q === 'perfect' ? '#ffd166' : q === 'good' ? '#9fe0c4' : '#ff8a7a', q === 'perfect' ? 44 : 34);
+  setCamTarget(fitPts([[G.ball.x, G.ball.y], [land.x, land.y]], 30, .6, 9));
+  updatePanel(); updateHud();
+}
+// 비행 위치 (t: 0~1) — 휨·바람은 t²로 점점 커지고, 높이는 포물선
+function flightPos(s, t) {
+  return { x: s.sx + s.dx * s.D * t + (s.rx * s.curve + s.drift.x) * t * t,
+           y: s.sy + s.dy * s.D * t + (s.ry * s.curve + s.drift.y) * t * t,
+           h: 4 * s.H * t * (1 - t) };
+}
+function landShot() {
+  const s = G.shot, L = s.land, surf = surfaceAt(L.x, L.y);
+  G.ball = { x: L.x, y: L.y };
+  if (hyp(L.x - G.hole.cup[0], L.y - G.hole.cup[1]) < 0.3) { holeOut(); return; }   // 다이렉트 컵인!
+  if (surf === 'water' || surf === 'ob') { penalty(surf); return; }
+  SFX.land(surf);
+  if (surf === 'bunker') { toast('벙커!', '#e0cc95', 30); finishRoll(); return; }
+  // 착지 방향(속도 벡터) 그대로 굴러감. 굴림 거리 = 비거리 × 클럽 구름 × 지형 구름
+  const vx = s.dx * s.D + 2 * (s.rx * s.curve + s.drift.x), vy = s.dy * s.D + 2 * (s.ry * s.curve + s.drift.y), vl = hyp(vx, vy) || 1;
+  const R = s.D * s.c.roll * SURF[surf].roll * (s.q === 'miss' ? 1.3 : 1);
+  const v0 = Math.sqrt(2 * SURF[surf].fric * R);
+  G.roll = { vx: vx / vl * v0, vy: vy / vl * v0, acc: 0, speed: 1.7, hop: .35 };
+  G.state = 'roll';
+}
+// 퍼팅: 범위 × 파워 만큼 평지에서 굴러가는 초속도로 출발 (경사는 굴러가며 반영)
+function strikePutt(power) {
+  const d = G.putScale * power, v0 = Math.sqrt(2 * SURF.green.fric * d);
+  G.roll = { vx: Math.sin(G.aim) * v0, vy: Math.cos(G.aim) * v0, acc: 0, speed: 1.35, hop: 0 };
+  G.gauge.pos = power * 100; G.strokes++; G.trail = []; G.shot = null;
+  G.state = 'roll'; SFX.putt();
+  updatePanel(); updateHud();
+}
+// 굴림 물리 1스텝: 마찰 + 그린 경사 + 컵 판정
+function rollStep() {
+  const b = G.ball, r = G.roll, s = surfaceAt(b.x, b.y);
+  if (s === 'water' || s === 'ob') return s;
+  const f = SURF[s].fric, sp = hyp(r.vx, r.vy);
+  const sl = s === 'green' || s === 'fringe' ? slopeAt(b.x, b.y) : [0, 0];
+  if (sp <= f * DT) {                                  // 거의 멈춤: 경사가 정지마찰보다 약하면 정지
+    r.vx = 0; r.vy = 0;
+    if (hyp(sl[0], sl[1]) < f * .6 || s !== 'green') return 'stop';
+  } else { r.vx -= f * r.vx / sp * DT; r.vy -= f * r.vy / sp * DT; }
+  r.vx += sl[0] * DT; r.vy += sl[1] * DT;
+  b.x += r.vx * DT; b.y += r.vy * DT;
+  const dc = hyp(b.x - G.hole.cup[0], b.y - G.hole.cup[1]), v = hyp(r.vx, r.vy);
+  if (G.lip > 0) G.lip -= DT;
+  if (dc < CUP_R && G.lip <= 0) {
+    if (v < 1.65) return 'cup';
+    const a = (Math.random() < .5 ? -1 : 1) * (12 + Math.random() * 22) * DEG, ca = Math.cos(a), sa = Math.sin(a);
+    const nx = (r.vx * ca - r.vy * sa) * .72, ny = (r.vx * sa + r.vy * ca) * .72;   // 립아웃: 컵 맞고 튕겨 나감
+    r.vx = nx; r.vy = ny; G.lip = .25; toast('립아웃!', '#ff8a7a', 30); SFX.noise(.05, .5, 'bandpass', 1500, 4);
+  }
+  return null;
+}
+function finishRoll() {
+  // OK(컨시드): 그린 위 50cm 이내면 한 타 더하고 홀아웃
+  if (lieNow() === 'green' && cupDist() < 0.5) { G.strokes++; toast('OK!', '#9fe0c4', 44); setTimeout(() => holeOut(false, true), 650); G.state = 'done'; return; }
+  setTimeout(beginAim, 450); G.state = 'done';
+}
+function penalty(kind) {
+  G.strokes++;                                         // 1벌타, 직전 위치에서 다시
+  if (kind === 'water') { SFX.splash(); toast('해저드! 1벌타', '#7cc4f0', 34); }
+  else { SFX.sad(); toast('OB! 1벌타', '#ff8a7a', 36); }
+  G.state = 'done';
+  setTimeout(() => { G.ball = { x: G.prev.x, y: G.prev.y }; G.trail = []; beginAim(); }, 1200);
+}
+
+/* --- 홀아웃 & 스코어 기록 --- */
+const TERMS = { '-3': '알바트로스', '-2': '이글', '-1': '버디', '0': '파', '1': '보기', '2': '더블보기', '3': '트리플보기' };
+function termOf(score, par) { if (score === 1) return '홀인원'; const d = score - par; return TERMS[d] || ('+' + d); }
+function holeOut(giveUp = false, conceded = false) {
+  G.state = 'done';
+  const h = G.hole, sc = G.strokes, d = sc - h.par, term = giveUp ? '기브업' : termOf(sc, h.par);
+  if (!giveUp && !conceded) SFX.cup();
+  if (!giveUp) G.ball = { x: h.cup[0], y: h.cup[1] };
+  setTimeout(() => {
+    if (sc === 1) { SFX.fanfare(); store.hio++; } else if (d <= -1) SFX[d <= -2 ? 'fanfare' : 'good'](); else if (d >= 2) SFX.sad();
+    // 기록 저장
+    const k = G.holeIdx; let newBest = false;
+    if (!giveUp && (store.best[k] == null || sc < store.best[k])) { store.best[k] = sc; newBest = true; }
+    let roundDone = false;
+    if (G.mode === 'round') {
+      store.cur.scores[k] = sc; store.cur.hole = k + 1;
+      if (k === HOLES.length - 1) {
+        roundDone = true;
+        const total = store.cur.scores.reduce((a, b) => a + b, 0);
+        store.rounds.unshift({ date: new Date().toISOString(), scores: store.cur.scores.slice(), total });
+        store.rounds = store.rounds.slice(0, 10);
+        if (store.bestRound == null || total < store.bestRound) { store.bestRound = total; newBest = 'round'; }
+        store.cur = null;
+      }
+    }
+    save();
+    showHoleResult(term, sc, d, newBest, roundDone);
+  }, conceded ? 100 : 900);
+}
+
+/* ---------- 6. 카메라 & 그리기 ---------- */
+const cv = $('#cv'), ctx = cv.getContext('2d');
+const layer = document.createElement('canvas'), lctx = layer.getContext('2d');   // 페어웨이 잔디결용 보조 캔버스
+let W = 0, H = 0, DPR = 1;
+const cam = { x: 0, y: 100, s: 2 }, camT = { x: 0, y: 100, s: 2 };
+function resize() {
+  const r = cv.getBoundingClientRect(); DPR = Math.min(2.5, window.devicePixelRatio || 1);
+  W = r.width; H = r.height;
+  cv.width = layer.width = Math.round(W * DPR); cv.height = layer.height = Math.round(H * DPR);
+  if (G) (G.state === 'aim' ? aimCamera() : null);
+}
+// 점들이 화면에 다 들어오도록 중심·배율 계산 (pad=여백 m, minSpan=최소 범위 m)
+function fitPts(pts, pad, minS = .5, maxS = 40, minSpan = 0) {
+  let x0 = 1e9, x1 = -1e9, y0 = 1e9, y1 = -1e9;
+  pts.forEach(([x, y]) => { x0 = Math.min(x0, x); x1 = Math.max(x1, x); y0 = Math.min(y0, y); y1 = Math.max(y1, y); });
+  const bw = Math.max(x1 - x0, minSpan) + pad * 2, bh = Math.max(y1 - y0, minSpan) + pad * 2;
+  return { x: (x0 + x1) / 2, y: (y0 + y1) / 2, s: clamp(Math.min(W / bw, H / bh), minS, maxS) };
+}
+function setCamTarget(t, snap) { Object.assign(camT, t); if (snap) Object.assign(cam, t); }
+function aimCamera() {
+  if (!G || G.dragging) return;
+  if (G.overview) { setCamTarget(fitPts(courseCorners(), 6, .3, 40)); return; }
+  const b = [G.ball.x, G.ball.y], c = club();
+  if (c.putter) {
+    const e = [G.ball.x + Math.sin(G.aim) * G.putScale * .6, G.ball.y + Math.cos(G.aim) * G.putScale * .6];
+    setCamTarget(fitPts([b, G.hole.cup, e], 2.5, 3, 42, 7)); return;
+  }
+  const p = previewLanding(), pts = [b, [p.x, p.y]];
+  if (cupDist() < reachOf(c, lieNow()) * 1.6) pts.push(G.hole.cup);
+  setCamTarget(fitPts(pts, 26, .6, 9, 40));
+}
+function previewLanding() {
+  const R = reachOf(club(), lieNow());
+  return { x: G.ball.x + Math.sin(G.aim) * R, y: G.ball.y + Math.cos(G.aim) * R, R };
+}
+const SX = x => W / 2 + (x - cam.x) * cam.s;
+const SY = y => H / 2 - (y - cam.y) * cam.s;
+const toWorld = (sx, sy) => ({ x: cam.x + (sx - W / 2) / cam.s, y: cam.y - (sy - H / 2) / cam.s });
+function ell(c, e, pad = 0) { c.beginPath(); c.ellipse(SX(e[0]), SY(e[1]), (e[2] + pad) * cam.s, (e[3] + pad) * cam.s, 0, 0, Math.PI * 2); }
+
+function draw() {
+  const h = G.hole, s = cam.s, t = G.time;
+  ctx.setTransform(DPR, 0, 0, DPR, 0, 0);
+  // 바깥(OB 지역)
+  ctx.fillStyle = '#0f241d'; ctx.fillRect(0, 0, W, H);
+  // 러프: 경계 안쪽 + 가로 잔디결
+  const bx0 = SX(h.b.x0), bx1 = SX(h.b.x1), by0 = SY(h.b.y1), by1 = SY(h.b.y0);
+  ctx.fillStyle = '#2d6a3b'; ctx.fillRect(bx0, by0, bx1 - bx0, by1 - by0);
+  ctx.fillStyle = 'rgba(0,0,0,.06)';
+  for (let y = Math.floor(h.b.y0 / 16) * 16; y < h.b.y1; y += 32) ctx.fillRect(bx0, SY(y + 16), bx1 - bx0, 16 * s);
+  // OB 말뚝선
+  ctx.setLineDash([6, 6]); ctx.strokeStyle = 'rgba(255,255,255,.55)'; ctx.lineWidth = 1.5;
+  ctx.strokeRect(bx0, by0, bx1 - bx0, by1 - by0); ctx.setLineDash([]);
+
+  // 물(해저드) — 일렁이는 물결
+  h.water.forEach(e => {
+    ell(ctx, e, 1.2); ctx.fillStyle = '#2a6c55'; ctx.fill();
+    ell(ctx, e); ctx.fillStyle = '#1b5d88'; ctx.fill();
+    ctx.save(); ell(ctx, e); ctx.clip();
+    ctx.strokeStyle = 'rgba(160,215,255,.22)'; ctx.lineWidth = 1.2;
+    for (let yy = e[1] - e[3]; yy < e[1] + e[3]; yy += 4) {
+      ctx.beginPath();
+      for (let xx = e[0] - e[2]; xx <= e[0] + e[2]; xx += 2) {
+        const py = SY(yy + Math.sin(xx * .35 + t * 1.6 + yy) * .6);
+        xx === e[0] - e[2] ? ctx.moveTo(SX(xx), py) : ctx.lineTo(SX(xx), py);
+      }
+      ctx.stroke();
+    }
+    ctx.restore();
+  });
+
+  // 페어웨이: 보조 캔버스에 그리고 줄무늬(잔디 깎은 결)를 입힘
+  ctx.lineCap = lctx.lineCap = 'round'; ctx.lineJoin = lctx.lineJoin = 'round';
+  const fwPath = (c, f) => { c.beginPath(); f.p.forEach((p, i) => i ? c.lineTo(SX(p[0]), SY(p[1])) : c.moveTo(SX(p[0]), SY(p[1]))); };
+  h.fw.forEach(f => { fwPath(ctx, f); ctx.strokeStyle = '#3c8446'; ctx.lineWidth = (f.w + 5) * s; ctx.stroke(); });
+  lctx.setTransform(DPR, 0, 0, DPR, 0, 0); lctx.clearRect(0, 0, W, H);
+  h.fw.forEach(f => { fwPath(lctx, f); lctx.strokeStyle = '#4d9d50'; lctx.lineWidth = f.w * s; lctx.stroke(); });
+  lctx.globalCompositeOperation = 'source-atop'; lctx.fillStyle = 'rgba(255,255,255,.07)';
+  for (let y = Math.floor(h.b.y0 / 12) * 12; y < h.b.y1; y += 24) lctx.fillRect(0, SY(y + 12), W, 12 * s);
+  lctx.globalCompositeOperation = 'source-over';
+  ctx.save(); ctx.setTransform(1, 0, 0, 1, 0, 0); ctx.drawImage(layer, 0, 0); ctx.restore();
+
+  // 티잉 그라운드
+  ctx.fillStyle = '#5fae5f'; ctx.fillRect(SX(-7), SY(8), 14 * s, 14 * s);
+  ctx.fillStyle = '#e8792b'; [[-4, 1.5], [4, 1.5]].forEach(p => { ctx.beginPath(); ctx.arc(SX(p[0]), SY(p[1]), Math.max(2, .6 * s), 0, 7); ctx.fill(); });
+
+  // 그린: 프린지 → 그린 → 체크무늬
+  ell(ctx, h.green, 2.5); ctx.fillStyle = '#4fa257'; ctx.fill();
+  ell(ctx, h.green); ctx.fillStyle = '#6cc276'; ctx.fill();
+  ctx.save(); ell(ctx, h.green); ctx.clip(); ctx.fillStyle = 'rgba(255,255,255,.06)';
+  for (let gx = -30; gx < 30; gx += 4) for (let gy = -30; gy < 30; gy += 4) if (((gx + gy) / 4) % 2 === 0)
+    ctx.fillRect(SX(h.green[0] + gx), SY(h.green[1] + gy + 4), 4 * s, 4 * s);
+  ctx.restore();
+
+  // 벙커
+  h.bunker.forEach(e => {
+    ell(ctx, e, .6); ctx.fillStyle = '#b9a56f'; ctx.fill();
+    ell(ctx, e); ctx.fillStyle = '#e0cc95'; ctx.fill();
+    ell(ctx, [e[0] + e[2] * .15, e[1] + e[3] * .15, e[2] * .6, e[3] * .55]); ctx.fillStyle = 'rgba(255,250,230,.25)'; ctx.fill();
+  });
+
+  // 나무 (그림자 → 잎 → 하이라이트)
+  h.trees.forEach(([x, y, r]) => {
+    const px = SX(x), py = SY(y), pr = r * s; if (px < -pr * 2 || px > W + pr * 2 || py < -pr * 2 || py > H + pr * 2) return;
+    ctx.fillStyle = 'rgba(0,0,0,.28)'; ctx.beginPath(); ctx.arc(px + pr * .35, py + pr * .3, pr, 0, 7); ctx.fill();
+    ctx.fillStyle = '#1d4a2a'; ctx.beginPath(); ctx.arc(px, py, pr, 0, 7); ctx.fill();
+    ctx.fillStyle = '#2c6b3a'; ctx.beginPath(); ctx.arc(px - pr * .25, py - pr * .25, pr * .62, 0, 7); ctx.fill();
+  });
+
+  // 그린 경사 화살표 (퍼팅 중이거나 가까이 확대했을 때) — 화살표가 흐르는 쪽으로 공이 휨
+  if (s > 5) drawGreenGrid(h, s, t);
+
+  // 조준선 & 예상 낙하 지점
+  if (['aim', 'power', 'impact'].includes(G.state)) drawAim(s, t);
+
+  // 컵 & 깃발 (깃발은 바람 방향으로 펄럭임)
+  const cx = SX(h.cup[0]), cy = SY(h.cup[1]);
+  ctx.fillStyle = '#071512'; ctx.beginPath(); ctx.ellipse(cx, cy, Math.max(3, .11 * s), Math.max(2.4, .09 * s), 0, 0, 7); ctx.fill();
+  const pole = clamp(3 * s, 26, 64);
+  ctx.strokeStyle = 'rgba(0,0,0,.3)'; ctx.lineWidth = 2; ctx.beginPath(); ctx.moveTo(cx, cy); ctx.lineTo(cx + pole * .45, cy + pole * .2); ctx.stroke();
+  ctx.strokeStyle = '#f1f5f4'; ctx.lineWidth = 2; ctx.beginPath(); ctx.moveTo(cx, cy); ctx.lineTo(cx, cy - pole); ctx.stroke();
+  const fdir = G.wind.x >= 0 ? 1 : -1, flen = 10 + Math.min(G.wind.spd, 7) * 2.2, wave = Math.sin(t * (3 + G.wind.spd)) * 2.5;
+  ctx.fillStyle = '#e8792b'; ctx.beginPath(); ctx.moveTo(cx, cy - pole);
+  ctx.quadraticCurveTo(cx + fdir * flen * .5, cy - pole + 2 + wave, cx + fdir * flen, cy - pole + 5 + wave * .5);
+  ctx.lineTo(cx, cy - pole + 11); ctx.fill();
+
+  // 공의 궤적
+  if (G.trail.length > 1) {
+    ctx.strokeStyle = 'rgba(255,255,255,.55)'; ctx.lineWidth = 2; ctx.beginPath();
+    G.trail.forEach((p, i) => { const x = SX(p.x), y = SY(p.y) - p.h * hProj(); i ? ctx.lineTo(x, y) : ctx.moveTo(x, y); });
+    ctx.stroke();
+  }
+  drawBall();
+}
+const hProj = () => clamp(cam.s, 1.2, 5) * .55;          // 높이 → 화면 위쪽 오프셋 (2.5D 느낌)
+function drawBall() {
+  let x = G.ball.x, y = G.ball.y, h = 0;
+  if (G.state === 'flight') { const p = flightPos(G.shot, G.shot.t); x = p.x; y = p.y; h = p.h; }
+  if (G.state === 'roll' && G.roll.hopH) h = G.roll.hopH;
+  const px = SX(x), py = SY(y), r = 3.8 + Math.min(h, 40) * .09;
+  ctx.fillStyle = 'rgba(0,0,0,.35)'; ctx.beginPath(); ctx.ellipse(px + h * .25, py + 1, 3.6, 2.2, 0, 0, 7); ctx.fill();
+  const by = py - h * hProj();
+  ctx.fillStyle = '#fff'; ctx.beginPath(); ctx.arc(px, by, r, 0, 7); ctx.fill();
+  ctx.strokeStyle = 'rgba(0,0,0,.35)'; ctx.lineWidth = 1; ctx.stroke();
+}
+function drawAim(s, t) {
+  const b = G.ball, bx = SX(b.x), by = SY(b.y), c = club();
+  if (c.putter) {
+    // 퍼팅 가이드: 범위 길이만큼 직선 + 현재 파워 표시
+    const L = G.putScale, ex = b.x + Math.sin(G.aim) * L, ey = b.y + Math.cos(G.aim) * L;
+    ctx.strokeStyle = 'rgba(255,255,255,.35)'; ctx.lineWidth = 2; ctx.setLineDash([4, 5]);
+    ctx.beginPath(); ctx.moveTo(bx, by); ctx.lineTo(SX(ex), SY(ey)); ctx.stroke(); ctx.setLineDash([]);
+    [.25, .5, .75, 1].forEach(f => { const x = SX(b.x + Math.sin(G.aim) * L * f), y = SY(b.y + Math.cos(G.aim) * L * f);
+      ctx.fillStyle = 'rgba(255,255,255,.6)'; ctx.beginPath(); ctx.arc(x, y, f === 1 ? 4 : 2.5, 0, 7); ctx.fill(); });
+    if (G.state === 'power') {
+      const p = clamp(gaugeAt(performance.now()), 0, 100) / 100;
+      ctx.strokeStyle = '#ffa15c'; ctx.lineWidth = 4; ctx.beginPath(); ctx.moveTo(bx, by);
+      ctx.lineTo(SX(b.x + Math.sin(G.aim) * L * p), SY(b.y + Math.cos(G.aim) * L * p)); ctx.stroke();
+    }
+    return;
+  }
+  const p = previewLanding(), px = SX(p.x), py = SY(p.y);
+  ctx.strokeStyle = 'rgba(255,255,255,.55)'; ctx.lineWidth = 2; ctx.setLineDash([3, 6]); ctx.lineDashOffset = -t * 20;
+  ctx.beginPath(); ctx.moveTo(bx, by); ctx.lineTo(px, py); ctx.stroke(); ctx.setLineDash([]); ctx.lineDashOffset = 0;
+  const rr = Math.max(9, 6 * s);
+  ctx.strokeStyle = '#ffa15c'; ctx.lineWidth = 2.5; ctx.beginPath(); ctx.arc(px, py, rr, 0, 7); ctx.stroke();
+  ctx.strokeStyle = 'rgba(255,161,92,.5)'; ctx.lineWidth = 1.5; ctx.beginPath(); ctx.arc(px, py, rr * .45, 0, 7); ctx.stroke();
+  ctx.font = '600 12px "IBM Plex Sans KR",sans-serif'; ctx.textAlign = 'center';
+  ctx.fillStyle = 'rgba(0,0,0,.55)'; ctx.fillText(Math.round(p.R) + 'm', px + 1, py - rr - 5);
+  ctx.fillStyle = '#fff'; ctx.fillText(Math.round(p.R) + 'm', px, py - rr - 6);
+}
+function drawGreenGrid(h, s, t) {
+  const g = h.green;
+  ctx.save(); ell(ctx, g, 2.5); ctx.clip();
+  if (s > 10) {                                        // 1m 격자
+    ctx.strokeStyle = 'rgba(255,255,255,.09)'; ctx.lineWidth = 1;
+    for (let x = Math.floor(g[0] - g[2] - 3); x <= g[0] + g[2] + 3; x++) { ctx.beginPath(); ctx.moveTo(SX(x), SY(g[1] - g[3] - 3)); ctx.lineTo(SX(x), SY(g[1] + g[3] + 3)); ctx.stroke(); }
+    for (let y = Math.floor(g[1] - g[3] - 3); y <= g[1] + g[3] + 3; y++) { ctx.beginPath(); ctx.moveTo(SX(g[0] - g[2] - 3), SY(y)); ctx.lineTo(SX(g[0] + g[2] + 3), SY(y)); ctx.stroke(); }
+  }
+  const step = s > 14 ? 1.5 : 2.5, ph = (t * .6) % 1;   // 경사 방향으로 흐르는 점
+  for (let x = g[0] - g[2] - 2; x <= g[0] + g[2] + 2; x += step) for (let y = g[1] - g[3] - 2; y <= g[1] + g[3] + 2; y += step) {
+    const sl = slopeAt(x, y), m = hyp(sl[0], sl[1]); if (m < .02) continue;
+    const ux = sl[0] / m, uy = sl[1] / m, L = step * .5, o = (ph - .5) * L;
+    const x0 = x + ux * (o - L / 2), y0 = y + uy * (o - L / 2), x1 = x + ux * (o + L / 2), y1 = y + uy * (o + L / 2);
+    ctx.strokeStyle = `rgba(255,255,255,${clamp(m * 1.6, .18, .6)})`; ctx.lineWidth = 1.6;
+    ctx.beginPath(); ctx.moveTo(SX(x0), SY(y0)); ctx.lineTo(SX(x1), SY(y1)); ctx.stroke();
+    ctx.fillStyle = ctx.strokeStyle; ctx.beginPath(); ctx.arc(SX(x1), SY(y1), 1.6, 0, 7); ctx.fill();
+  }
+  ctx.restore();
+}
+
+/* ---------- 메인 루프 ---------- */
+let last = performance.now();
+function loop(now) {
+  const dt = Math.min(.05, (now - last) / 1000); last = now;
+  if (G && !$('#game').classList.contains('hidden')) { update(dt, now); draw(); updateGauge(now); }
+  requestAnimationFrame(loop);
+}
+function update(dt, now) {
+  G.time += dt;
+  if (G.state === 'intro') {
+    G.introT -= dt;
+    if (G.introT <= 0) { $('#banner').style.opacity = 0; beginAim(); }
+  } else if (G.state === 'power' && !club().putter && gaugeAt(now) >= 100) {
+    G.gauge.power = 100; G.gauge.t1 = now; G.state = 'impact'; updatePanel();     // 끝까지 가면 자동으로 되돌아옴
+  } else if (G.state === 'impact' && gaugeAt(now) <= GMIN) {
+    strike(G.gauge.power / 100, GMIN);                                           // 못 누르면 자동 미스
+  } else if (G.state === 'flight') {
+    const s = G.shot; s.t = Math.min(1, s.t + dt / s.T);
+    G.trail.push(flightPos(s, s.t));
+    const p = flightPos(s, s.t); camT.x = lerp(camT.x, p.x, .02); camT.y = lerp(camT.y, p.y, .02);
+    if (s.t >= 1) landShot();
+  } else if (G.state === 'roll') {
+    const r = G.roll; r.acc += dt * r.speed;
+    if (r.hop > 0) { r.hop -= dt; r.hopH = Math.max(0, Math.sin((1 - r.hop / .35) * Math.PI)) * 1.6; } else r.hopH = 0;
+    let res = null;
+    while (r.acc >= DT && !res) { r.acc -= DT; res = rollStep(); }
+    camT.x = lerp(camT.x, G.ball.x, .06); camT.y = lerp(camT.y, G.ball.y, .06);
+    if (res === 'cup') holeOut();
+    else if (res === 'water' || res === 'ob') penalty(res);
+    else if (res === 'stop') { SFX.tick(); finishRoll(); }
+  }
+  const k = 1 - Math.exp(-dt * (G.state === 'intro' ? 2 : 4));
+  cam.x = lerp(cam.x, camT.x, k); cam.y = lerp(cam.y, camT.y, k); cam.s = lerp(cam.s, camT.s, k);
+  updateHudLive();
+}
+
+/* ---------- 7. UI 갱신 & 입력 ---------- */
+function toast(text, color = '#fff', size = 36) {
+  const el = $('#toast'); el.className = ''; void el.offsetWidth;
+  el.innerHTML = `<div class="disp glow" style="color:${color};font-size:${size}px">${text}</div>`; el.className = 'show';
+}
+function updateHud() {
+  const h = G.hole;
+  $('#hHole').textContent = G.holeIdx + 1; $('#hPar').textContent = h.par;
+  $('#hStroke').textContent = (G.strokes + (['aim', 'power', 'impact', 'intro'].includes(G.state) ? 1 : 0)) + '타째';
+  $('#hWind').textContent = G.wind.spd.toFixed(1);
+  $('#windRot').setAttribute('transform', `rotate(${Math.atan2(G.wind.x, G.wind.y) / DEG})`);
+  if (G.mode === 'round' && store.cur) {
+    let tot = 0, par = 0; store.cur.scores.forEach((v, i) => { if (v != null) { tot += v; par += HOLES[i].par; } });
+    const d = tot - par; $('#hTotal').textContent = '라운드 ' + (par ? (d === 0 ? 'E' : (d > 0 ? '+' : '') + d) + ' (' + tot + '타)' : '시작');
+  } else $('#hTotal').textContent = '연습 모드' + (store.best[G.holeIdx] != null ? ' · 베스트 ' + store.best[G.holeIdx] + '타' : '');
+}
+let hudCache = '';
+function updateHudLive() {                             // 매 프레임: 거리·라이·고저차 (바뀔 때만 DOM 갱신)
+  const d = cupDist(), lie = lieNow(), el = G.hole.elev ? elevAt(...G.hole.cup) - elevAt(G.ball.x, G.ball.y) : 0;
+  const key = d.toFixed(1) + lie + el.toFixed(0) + G.state;
+  if (key === hudCache) return; hudCache = key;
+  $('#hDist').textContent = d < 20 ? d.toFixed(1) : Math.round(d);
+  const e = Math.round(el);
+  $('#hElev').innerHTML = e > 0 ? `<span style="color:#ffa15c">▲ ${e}m 오르막</span>` : e < 0 ? `<span style="color:#5fb3b8">▼ ${-e}m 내리막</span>` : '<span class="text-slate-400">평지</span>';
+  const sf = SURF[lie] || {};
+  $('#hLie').innerHTML = `라이: <b>${sf.name || lie}</b>` + (sf.lie != null && lie !== 'green' ? ` · 비거리 ${Math.round(sf.lie * 100)}%` : '');
+  if (club().putter && G.state === 'aim') updatePuttInfo();
+}
+// 퍼팅 정보: 핀 방향 기준 오르막/내리막 + 좌우 휨
+function updatePuttInfo() {
+  const sl = slopeAt(...G.hole.cup), a = G.aim, along = sl[0] * Math.sin(a) + sl[1] * Math.cos(a), side = sl[0] * Math.cos(a) - sl[1] * Math.sin(a);
+  const ud = along < -.06 ? '오르막 (세게)' : along > .06 ? '내리막 (살살)' : '거의 평평';
+  const lr = Math.abs(side) < .06 ? '휨 거의 없음' : (side > 0 ? '오른쪽' : '왼쪽') + '으로 ' + (Math.abs(side) > .2 ? '많이' : '조금') + ' 휨';
+  $('#puttInfo').textContent = `⛳ ${ud} · ${lr}`;
+}
+function updatePanel() {
+  const c = club(), lie = lieNow(), st = G.state, busy = !['aim', 'power', 'impact'].includes(st);
+  $('#panel').classList.toggle('busy', busy || st !== 'aim');
+  $('#cId').textContent = c.id; $('#cName').textContent = c.name;
+  $('#cSpec').textContent = c.putter ? '그린 전용 · 굴리기' : Math.round(reachOf(c, lie)) + 'm · 로프트 ' + c.loft + '°';
+  $('#puttRow').classList.toggle('hidden', !c.putter); $('#puttInfo').classList.toggle('hidden', !c.putter);
+  $('#puttChips').innerHTML = PUTT_SCALES.map(s => `<button class="chip px-2.5 py-1 text-[12px] num ${s === G.putScale ? 'on' : ''}" data-ps="${s}">${s}m</button>`).join('');
+  // 게이지 임팩트 구간 & 눈금
+  const z = impactZone(), pct = v => (v - GMIN) / (GMAX - GMIN) * 100;
+  $('#gZoneG').style.cssText = c.putter ? 'display:none' : `left:${pct(-z.g)}%;width:${pct(z.g) - pct(-z.g)}%`;
+  $('#gZoneP').style.cssText = c.putter ? 'display:none' : `left:${pct(-z.p)}%;width:${pct(z.p) - pct(-z.p)}%`;
+  const R = c.putter ? G.putScale : reachOf(c, lie);
+  $('#gTicks').innerHTML = [25, 50, 75, 100].map(f => `<div class="tick" style="left:${pct(f)}%"></div><div class="tlab num" style="left:${Math.min(pct(f), 95)}%">${c.putter ? (R * f / 100).toFixed(R * f / 100 < 10 ? 1 : 0) : Math.round(R * f / 100)}m</div>`).join('');
+  const btn = $('#shotBtn'); btn.classList.remove('armed', 'impact');
+  if (st === 'aim') { btn.textContent = c.putter ? '퍼팅 시작' : '샷 시작'; $('#gState').textContent = c.putter ? '범위를 고르고 방향 확인!' : '방향을 정하고 샷 버튼!'; }
+  else if (st === 'power') { btn.textContent = c.putter ? '치기!' : '파워 결정!'; btn.classList.add('armed'); $('#gState').textContent = c.putter ? '원하는 세기에서 탭!' : '원하는 파워에서 탭!'; }
+  else if (st === 'impact') { btn.textContent = '임팩트!'; btn.classList.add('impact'); $('#gState').innerHTML = '<span style="color:#ffd166">금색 줄에서 탭!</span>'; }
+  else { btn.textContent = '…'; $('#gState').textContent = st === 'intro' ? '탭하면 바로 시작' : '공을 지켜보는 중'; }
+  $('#gLock').classList.toggle('hidden', st !== 'impact' && st !== 'flight');
+  if (st === 'impact' || st === 'flight') $('#gLock').style.left = pct(G.gauge.power) + '%';
+}
+function updateGauge(now) {
+  const st = G.state, pct = v => (clamp(v, GMIN, GMAX) - GMIN) / (GMAX - GMIN) * 100;
+  let v = G.gauge.pos;
+  if (st === 'power' || st === 'impact') v = gaugeAt(now);
+  else if (st === 'aim') v = 0;
+  else if (st === 'flight') v = G.gauge.power;
+  if (st === 'impact') v = Math.max(GMIN, v);
+  $('#gMark').style.left = pct(v) + '%';
+  const fillTo = st === 'impact' || st === 'flight' ? G.gauge.power : Math.max(0, v);
+  $('#gFill').style.left = pct(0) + '%'; $('#gFill').style.width = (pct(fillTo) - pct(0)) + '%';
+  $('#gPow').textContent = st === 'power' ? Math.round(clamp(v, 0, 100)) + '%' : st === 'impact' || st === 'flight' ? '파워 ' + Math.round(G.gauge.power) + '%' : '';
+}
+
+// --- 입력: 샷 버튼은 pointerdown으로 즉시 반응 (타이밍 정확도) ---
+$('#shotBtn').addEventListener('pointerdown', e => { e.preventDefault(); pressShot(); });
+// 캔버스: aim 상태에서는 끌어서 조준, 게이지 진행 중에는 화면 어디든 탭 = 샷 버튼
+cv.addEventListener('pointerdown', e => {
+  e.preventDefault(); SFX.init();
+  if (G.state === 'power' || G.state === 'impact' || G.state === 'intro') { pressShot(); return; }
+  if (G.state !== 'aim') return;
+  G.dragging = true; cv.setPointerCapture(e.pointerId); aimAt(e);
+});
+cv.addEventListener('pointermove', e => { if (G && G.dragging) aimAt(e); });
+const endDrag = () => { if (G && G.dragging) { G.dragging = false; aimCamera(); } };
+cv.addEventListener('pointerup', endDrag); cv.addEventListener('pointercancel', endDrag);
+function aimAt(e) {
+  const r = cv.getBoundingClientRect(), w = toWorld(e.clientX - r.left, e.clientY - r.top);
+  if (hyp(w.x - G.ball.x, w.y - G.ball.y) < .3) return;
+  G.aim = Math.atan2(w.x - G.ball.x, w.y - G.ball.y); if (club().putter) updatePuttInfo();
+}
+// 방향 미세 조정: 누르고 있으면 계속 돌아감
+function holdBtn(el, fn) {
+  let tm = null, iv = null;
+  const stop = () => { clearTimeout(tm); clearInterval(iv); };
+  el.addEventListener('pointerdown', e => { e.preventDefault(); SFX.init(); fn(); tm = setTimeout(() => iv = setInterval(fn, 40), 280); });
+  ['pointerup', 'pointerleave', 'pointercancel'].forEach(ev => el.addEventListener(ev, stop));
+}
+const nudge = dir => { if (G.state !== 'aim') return; G.aim += dir * (club().putter ? .15 : .35) * DEG; if (club().putter) updatePuttInfo(); };
+holdBtn($('#bAimL'), () => nudge(-1)); holdBtn($('#bAimR'), () => nudge(1));
+function changeClub(d) {
+  if (G.state !== 'aim') return; SFX.tick();
+  G.ci = (G.ci + d + CLUBS.length) % CLUBS.length;
+  if (G.ci === 0 && lieNow() !== 'tee') G.ci = (G.ci + d + CLUBS.length) % CLUBS.length;   // 드라이버는 티에서만
+  G.aim = defaultAim(); updatePanel(); aimCamera();
+}
+$('#bClubPrev').addEventListener('click', () => changeClub(-1));
+$('#bClubNext').addEventListener('click', () => changeClub(1));
+$('#puttChips').addEventListener('click', e => { const b = e.target.closest('[data-ps]'); if (!b || G.state !== 'aim') return; SFX.tick(); G.putScale = +b.dataset.ps; updatePanel(); aimCamera(); });
+$('#bView').addEventListener('click', () => { SFX.tick(); G.overview = !G.overview; $('#bView').textContent = G.overview ? '🎯 공으로' : '🗺 전체'; if (G.overview) setCamTarget(fitPts(courseCorners(), 6, .3, 40)); else aimCamera(); });
+
+// 메뉴
+$('#bMenu').addEventListener('click', () => { SFX.tick(); $('#mSound').textContent = store.mute ? '소리 켜기' : '소리 끄기'; $('#mMenu').classList.remove('hidden'); });
+$('#mResume').addEventListener('click', () => $('#mMenu').classList.add('hidden'));
+$('#mRestart').addEventListener('click', () => { $('#mMenu').classList.add('hidden'); startHole(G.holeIdx); });
+$('#mSound').addEventListener('click', () => { store.mute = !store.mute; save(); $('#mSound').textContent = store.mute ? '소리 켜기' : '소리 끄기'; renderLobby(); });
+$('#mLobby').addEventListener('click', () => { $('#mMenu').classList.add('hidden'); showLobby(); });
+
+// 홀 결과 팝업
+function showHoleResult(term, sc, d, newBest, roundDone) {
+  const col = sc === 1 ? '#ffd166' : d <= -2 ? '#ffd166' : d === -1 ? '#ffa15c' : d === 0 ? '#9fe0c4' : '#c9d6d7';
+  $('#rTitle').textContent = term + (sc === 1 || d <= -1 ? '!' : ''); $('#rTitle').style.color = col;
+  $('#rSub').textContent = `${G.holeIdx + 1}번홀 · ${sc}타 (PAR ${G.hole.par})`;
+  $('#rBest').textContent = newBest === 'round' ? '🏆 베스트 라운드 갱신!' : newBest ? '★ 이 홀 베스트 기록!' : '';
+  $('#rCard').innerHTML = G.mode === 'round' ? scoreTable(roundDone ? store.rounds[0].scores : store.cur.scores) : '';
+  const nb = $('#bNext');
+  if (G.mode === 'practice') nb.textContent = '다시 치기';
+  else nb.textContent = roundDone ? '라운드 종료 · 로비로' : '다음 홀 (' + (G.holeIdx + 2) + '번)';
+  nb.dataset.act = G.mode === 'practice' ? 'again' : roundDone ? 'lobby' : 'next';
+  $('#mHole').classList.remove('hidden');
+}
+$('#bNext').addEventListener('click', () => {
+  SFX.init(); SFX.tick(); $('#mHole').classList.add('hidden');
+  const a = $('#bNext').dataset.act;
+  if (a === 'lobby') showLobby(); else if (a === 'again') startHole(G.holeIdx); else startHole(G.holeIdx + 1);
+});
+$('#bHoleLobby').addEventListener('click', () => { $('#mHole').classList.add('hidden'); showLobby(); });
+
+/* ---------- 8. 로비 ---------- */
+function scoreCell(v, par) {
+  if (v == null) return '<span class="text-slate-600">·</span>';
+  const d = v - par, cls = d <= -2 || v === 1 ? 'eg' : d === -1 ? 'bd' : d === 1 ? 'bg' : d >= 2 ? 'db' : '';
+  return `<span class="s ${cls} num">${v}</span>`;
+}
+function scoreTable(scores) {
+  let tot = 0, par = 0, n = 0;
+  scores.forEach((v, i) => { if (v != null) { tot += v; par += HOLES[i].par; n++; } });
+  const d = tot - par, ds = n ? (d === 0 ? 'E' : (d > 0 ? '+' : '') + d) : '';
+  return `<table class="sc num"><tr><th class="text-left pl-1">홀</th>${HOLES.map((h, i) => `<th>${i + 1}</th>`).join('')}<th>합</th></tr>
+    <tr><th class="text-left pl-1">PAR</th>${HOLES.map(h => `<td class="text-slate-400">${h.par}</td>`).join('')}<td class="text-slate-400">36</td></tr>
+    <tr><th class="text-left pl-1">타수</th>${scores.map((v, i) => `<td>${scoreCell(v, HOLES[i].par)}</td>`).join('')}<td class="tot">${n ? tot : '-'}<div class="text-[10px]">${ds}</div></td></tr></table>`;
+}
+function renderLobby() {
+  const fmt = v => v == null ? '-' : v + '<span class="text-[12px] text-slate-400 ml-1">' + (v - 36 === 0 ? 'E' : (v > 36 ? '+' : '') + (v - 36)) + '</span>';
+  $('#stBest').innerHTML = fmt(store.bestRound); $('#stRounds').textContent = store.rounds.length; $('#stHio').textContent = store.hio;
+  // 이어하기
+  if (store.cur && store.cur.hole < HOLES.length) {
+    let tot = 0, par = 0; store.cur.scores.forEach((v, i) => { if (v != null) { tot += v; par += HOLES[i].par; } });
+    $('#bCont').classList.remove('hidden');
+    $('#contInfo').textContent = (store.cur.hole + 1) + '번홀부터 · ' + (par ? ((tot - par) === 0 ? 'E' : ((tot - par) > 0 ? '+' : '') + (tot - par)) : '');
+  } else $('#bCont').classList.add('hidden');
+  // 홀 선택 카드
+  $('#holeGrid').innerHTML = HOLES.map((h, i) => {
+    const b = store.best[i];
+    return `<button class="card p-2.5 text-left active:scale-95 transition" data-hole="${i}">
+      <div class="flex justify-between items-start"><span class="disp text-[22px] leading-none">${i + 1}</span><span class="text-[10px] text-tealb">PAR ${h.par}</span></div>
+      <div class="text-[11px] text-slate-300 mt-1 truncate">${h.name}</div>
+      <div class="flex justify-between items-end mt-1"><span class="text-[10px] text-slate-500 num">${h.len}m</span>${b != null ? scoreCell(b, h.par) : '<span class="text-[10px] text-slate-600">-</span>'}</div></button>`;
+  }).join('');
+  // 최근 스코어카드
+  const r = store.rounds[0];
+  $('#lastCard').innerHTML = r ? scoreTable(r.scores) : '<div class="text-center text-slate-500 text-[13px] py-3">아직 완주한 라운드가 없어요. 첫 라운드를 시작해 보세요!</div>';
+  $('#lastDate').textContent = r ? new Date(r.date).toLocaleDateString('ko-KR', { month: 'long', day: 'numeric', weekday: 'short' }) : '';
+  $('#bMute').textContent = store.mute ? '🔇 소리 꺼짐' : '🔊 소리 켜짐';
+}
+function showLobby() { renderLobby(); $('#game').classList.add('hidden'); $('#lobby').classList.remove('hidden'); }
+function enterGame(mode, idx) {
+  SFX.init(); SFX.tick();
+  $('#lobby').classList.add('hidden'); $('#game').classList.remove('hidden');
+  newGame(mode, idx); resize(); startHole(idx);
+}
+$('#bNew').addEventListener('click', () => {
+  if (store.cur && store.cur.scores.some(v => v != null) && !confirm('진행 중인 라운드가 있어요. 새로 시작할까요?')) return;
+  store.cur = { scores: HOLES.map(() => null), hole: 0, start: Date.now() }; save(); enterGame('round', 0);
+});
+$('#bCont').addEventListener('click', () => enterGame('round', store.cur.hole));
+$('#holeGrid').addEventListener('click', e => { const b = e.target.closest('[data-hole]'); if (b) enterGame('practice', +b.dataset.hole); });
+$('#bMute').addEventListener('click', () => { store.mute = !store.mute; save(); SFX.init(); renderLobby(); SFX.tick(); });
+$('#bReset').addEventListener('click', () => {
+  if (!confirm('베스트 기록·스코어카드를 모두 지울까요?')) return;
+  Object.assign(store, { best: {}, bestRound: null, rounds: [], cur: null, hio: 0 }); save(); renderLobby();
+});
+window.addEventListener('resize', () => { if (G && !$('#game').classList.contains('hidden')) resize(); });
+document.addEventListener('gesturestart', e => e.preventDefault());   // 아이폰 핀치 확대 방지
+
+renderLobby();
+requestAnimationFrame(loop);
+
+/* ---------- 9. PWA: 서비스 워커 등록 (오프라인 실행) ---------- */
+if ('serviceWorker' in navigator && location.protocol !== 'file:') {
+  window.addEventListener('load', () => navigator.serviceWorker.register('sw.js').catch(() => {}));
+}
+</script>
+</body>
+</html>

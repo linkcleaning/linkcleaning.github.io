@@ -1,0 +1,15 @@
+{
+  "name": "링크 골프",
+  "short_name": "링크골프",
+  "description": "모두의골프식 3단계 게이지로 즐기는 제주 9홀 미니 골프",
+  "start_url": "./index.html",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#0a1416",
+  "theme_color": "#0a1416",
+  "icons": [
+    {"src": "icon-192.png", "sizes": "192x192", "type": "image/png"},
+    {"src": "icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any maskable"}
+  ]
+}
