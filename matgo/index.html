@@ -623,7 +623,7 @@ small.zero,.seg small.mn.zero{color:#ff8a80!important}
 
 <script>
 'use strict';
-const VER='v75';
+const VER='v76';
 const $=s=>document.querySelector(s);
 const sleep=ms=>new Promise(r=>setTimeout(r,ms));
 const rnd=n=>Math.floor(Math.random()*n);
@@ -2278,18 +2278,13 @@ async function openVip(){
 const cardOfMonth=m=>{const cs=CARDS.filter(c=>c.m===m);return cs[rnd(cs.length)]};
 async function vipHiLo(b0){
   const bet=b0||await vipBet('🃏 하이로우');if(!bet)return openVip();VIPL={fn:vipHiLo,bet,n:'🃏 하이로우'};if(!(await payWallet(DB.cur,-bet)))return openVip();
-  let pot=bet,cur=1+rnd(12),step=0;
-  for(;;){
-    const hi=12-cur,lo=cur-1,mh=hi?Math.max(1.05,Math.min(10,.92*12/hi)):0,ml=lo?Math.max(1.05,Math.min(10,.92*12/lo)):0;
-    const c=cardOfMonth(cur);
-    const v=await modal(`<h2>🃏 하이로우 ${step?`· ${step}연속 성공!`:''}</h2><div class="hlc"><div class="pc">${svgOf(c)}</div><div class="hlm">${cur}월</div></div><p>다음 패가 <b>${cur}월</b>보다 높을까요, 낮을까요?<br><small>같은 달이면 실패 · 지금 판돈 <b style="color:#f5c24a">${won(pot)}</b></small></p>`,
-      [hi?{t:`⬆️ 높다 (×${mh.toFixed(2)})`,v:'h'}:null,lo?{t:`⬇️ 낮다 (×${ml.toFixed(2)})`,v:'l'}:null,step?{t:`💰 그만하고 ${won(pot)} 받기`,cls:'alt',v:'stop'}:null].filter(Boolean),{cls:'vbtn'});
-    if(v==='stop'){await payWallet(DB.cur,pot);SFX.win();confetti();return vipDone(`🃏 ${won(bet)} 걸고<br>${won(pot)} 받았어요!`,pot-bet)}
-    const nx=1+rnd(12),nc=cardOfMonth(nx),ok=v==='h'?nx>cur:nx<cur;SFX.flip();
-    await showFlip(c,nc,ok?'성공!':'실패…',ok);
-    if(!ok){SFX.lose();return vipDone(`😢 ${nx}월이 나왔어요… ${won(bet)}을 잃었어요`,-bet)}
-    pot=Math.floor(pot*(v==='h'?mh:ml)/100)*100;cur=nx;step++;SFX.coin();
-  }
+  const cur=6+rnd(2),c=cardOfMonth(cur);
+  const v=await modal(`<h2>🃏 하이로우</h2><div class="hlc"><div class="pc">${svgOf(c)}</div><div class="hlm">${cur}월</div></div><p>다음 패가 <b>${cur}월</b>보다 높을까요, 낮을까요?<br><small>맞히면 건 돈만큼 더 받아요 (×2) · 같은 달이면 실패</small></p>`,
+    [{t:'⬆️ 높다',v:'h'},{t:'⬇️ 낮다',v:'l'}],{cls:'vbtn'});
+  const nx=1+rnd(12),nc=cardOfMonth(nx),ok=v==='h'?nx>cur:nx<cur;SFX.flip();
+  await showFlip(c,nc,ok?'성공!':'실패…',ok);
+  if(!ok){SFX.lose();return vipDone(`😢 ${nx}월이 나왔어요… ${won(bet)}을 잃었어요`,-bet)}
+  await payWallet(DB.cur,bet*2);SFX.win();confetti();return vipDone(`🃏 ${nx}월! 맞혔어요<br>${won(bet)} 걸고 ${won(bet*2)} 받았어요!`,bet);
 }
 async function showFlip(a,b,txt,ok){const d=document.createElement('div');d.className='sdov';d.innerHTML=`<div class="sdc"><div class="pc">${svgOf(a)}</div><div class="pc">${svgOf(b)}</div></div><div class="sdn" style="color:${ok?'#7fe0b5':'#ff8a80'}">${txt}</div>`;document.body.appendChild(d);await sleep(1100);d.remove()}
 let VIPL=null;
