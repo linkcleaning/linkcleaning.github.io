@@ -735,7 +735,7 @@
 
 <script>
 'use strict';
-const APP_VER = 'v30';
+const APP_VER = 'v31';
 const $ = s => document.querySelector(s);
 const $$ = s => [...document.querySelectorAll(s)];
 const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
@@ -3695,9 +3695,15 @@ async function hubHandbook(q) {
   if (HUB.hand.busy) return;
   HUB.hand.q = q; HUB.hand.busy = '관련 문서 찾는 중…'; paintFind();
   try {
-    const j = await wpGet('action=query&list=search&srlimit=8&srprop=&srsearch=' + encodeURIComponent(q));
-    const titles = ((j.query && j.query.search) || []).map(x => x.title);
-    if (!titles.length) throw new Error('none');
+    const j = await wpGet('action=query&list=search&srlimit=15&srprop=&srsearch=' + encodeURIComponent(q));
+    const found = ((j.query && j.query.search) || []).map(x => x.title).filter(t => !/\(동음이의\)|목록$/.test(t));
+    if (!found.length) throw new Error('none');
+    // 낱말이 제목에 들어간 문서를 먼저, 그다음 대표 문서와 ‘비슷한 문서’(morelike)로 채움 — 회사·인물 문서가 끼는 것을 줄임
+    const toks = q.replace(/\s+/g, ' ').split(' ').filter(Boolean), hit = t => toks.some(k => t.replace(/\s/g, '').includes(k.replace(/\s/g, '')));
+    const main = found.find(hit) || found[0];
+    let like = [];
+    try { const j2 = await wpGet('action=query&list=search&srlimit=10&srprop=&srsearch=' + encodeURIComponent('morelike:' + main)); like = ((j2.query && j2.query.search) || []).map(x => x.title); } catch {}
+    const titles = [...new Set([main, ...found.filter(hit), ...like, ...found])];
     const topics = [];
     for (const t of titles) {
       if (topics.length >= 5) break;
