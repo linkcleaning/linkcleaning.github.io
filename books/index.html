@@ -190,6 +190,7 @@
   /* 가져오기 진행 창 */
   #imp { position:fixed; z-index:70; left:12px; right:12px; bottom:calc(12px + var(--sb)); background:#fff; border-radius:22px; box-shadow:0 18px 50px -14px rgba(0,0,0,.35); overflow:hidden; transform:translateY(calc(100% + 140px)); visibility:hidden; transition:transform .28s cubic-bezier(.2,.8,.2,1), visibility .28s; }
   #imp.open { transform:none; visibility:visible; }
+  body.reading #imp { display:none; }
   @media (min-width:720px) { #imp { left:auto; width:400px; right:20px; } }
   #impList { max-height:38vh; overflow-y:auto; }
   .ir { display:flex; align-items:center; gap:10px; padding:9px 16px; font-size:13.5px; border-top:1px solid #F1EDE6; }
@@ -223,6 +224,11 @@
   #rMini { position:absolute; left:0; right:0; bottom:calc(var(--sb) + 9px); text-align:center; font-size:11px; font-weight:600; opacity:.5; pointer-events:none; letter-spacing:.02em; font-variant-numeric:tabular-nums; }
   #rHead { position:absolute; left:0; right:0; top:calc(var(--st) + 9px); text-align:center; font-size:11px; opacity:.45; pointer-events:none; padding:0 60px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
   #reader.bars #rMini, #reader.bars #rHead { opacity:0; }
+  #rMenu { position:absolute; z-index:6; top:calc(var(--st) + 4px); right:8px; height:34px; padding:0 12px; border-radius:17px; display:flex; align-items:center; gap:5px;
+    font-size:12px; font-weight:700; color:var(--r-fg); background:var(--r-hover); border:1px solid var(--r-line); opacity:.75; transition:opacity .2s; }
+  #rMenu svg { width:16px; height:16px; }
+  #rMenu:active { opacity:1; }
+  #reader.bars #rMenu { opacity:0; pointer-events:none; }
   input[type=range].rng { -webkit-appearance:none; appearance:none; width:100%; height:30px; background:transparent; }
   input[type=range].rng::-webkit-slider-runnable-track { height:4px; border-radius:4px; background:linear-gradient(to right, var(--orange) var(--p,0%), var(--r-track) var(--p,0%)); }
   input[type=range].rng::-webkit-slider-thumb { -webkit-appearance:none; width:20px; height:20px; margin-top:-8px; border-radius:50%; background:#fff; border:2px solid var(--orange); box-shadow:0 2px 6px rgba(0,0,0,.25); }
@@ -312,6 +318,7 @@
   <div id="viewerWrap"><div id="viewer"></div></div>
   <div id="rLoading">책을 펼치는 중…</div>
   <div id="rMini"></div>
+  <button id="rMenu" aria-label="메뉴 열기"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M4 7h16M4 12h16M4 17h16"/></svg>메뉴</button>
   <div id="rCalc" class="hidden">쪽수 계산 중…</div>
 
   <header id="rTop" class="rbar">
@@ -490,7 +497,7 @@
 
 <script>
 'use strict';
-const APP_VER = 'v14';
+const APP_VER = 'v15';
 const $ = s => document.querySelector(s);
 const $$ = s => [...document.querySelectorAll(s)];
 const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
@@ -1993,13 +2000,20 @@ function jumpSection(rd, d) {   // 스크롤 방식: › ‹ 버튼은 다음·�
 }
 function showBars(on) { $('#reader').classList.toggle('bars', on); if (!on) { $('#aa').classList.add('hidden'); $('#rAa').classList.remove('on'); } }
 function toggleBars() { if (!$('#aa').classList.contains('hidden')) { showBars(true); $('#aa').classList.add('hidden'); $('#rAa').classList.remove('on'); return; } showBars(!$('#reader').classList.contains('bars')); }
-function tapAt(x) { const W = innerWidth; if (R.flow === 'scroll') { toggleBars(); return; } if (x < W * 0.28) prev(); else if (x > W * 0.72) next(); else toggleBars(); }
+function tapAt(x, y) {
+  const W = innerWidth, H = innerHeight;
+  if (y != null && y < H * 0.22) { showBars(true); return; }   // 화면 위쪽 어디든 누르면 메뉴
+  if (R.flow === 'scroll') { toggleBars(); return; }
+  if (x < W * 0.28) prev(); else if (x > W * 0.72) next(); else toggleBars();
+}
+$('#rMenu').onclick = e => { e.stopPropagation(); showBars(true); };
 const hasSel = w => { try { const s = w.getSelection(); return s && String(s).trim().length > 0; } catch { return false; } };
 function onFrame(contents) {
   const doc = contents.document, win = contents.window || doc.defaultView;
   const st = doc.createElement('style'); st.textContent = FRAME_CSS; (doc.head || doc.documentElement).appendChild(st);
   applyFrameVars(doc);
   const fx = x => { const fr = win.frameElement; return (fr ? fr.getBoundingClientRect().left : 0) + x; };
+  const fy = y => { const fr = win.frameElement; return (fr ? fr.getBoundingClientRect().top : 0) + y; };
   let sx = 0, sy = 0, t0 = 0, moved = false, lastTouch = 0;
   doc.addEventListener('touchstart', e => { const t = e.touches[0]; sx = t.clientX; sy = t.clientY; t0 = Date.now(); moved = false; }, { passive: true });
   doc.addEventListener('touchmove', e => { const t = e.touches[0]; if (Math.abs(t.clientX - sx) > 10 || Math.abs(t.clientY - sy) > 10) moved = true; }, { passive: true });
@@ -2008,12 +2022,12 @@ function onFrame(contents) {
     const t = e.changedTouches[0], dx = t.clientX - sx, dy = t.clientY - sy;
     if (hasSel(win)) return;
     if (R.flow !== 'scroll' && Math.abs(dx) > 40 && Math.abs(dx) > Math.abs(dy) * 1.3 && Date.now() - t0 < 800) { dx < 0 ? next() : prev(); return; }
-    if (!moved && Date.now() - t0 < 400 && !(e.target.closest && e.target.closest('a'))) { e.preventDefault(); tapAt(fx(t.clientX)); }
+    if (!moved && Date.now() - t0 < 400 && !(e.target.closest && e.target.closest('a'))) { e.preventDefault(); tapAt(fx(t.clientX), fy(t.clientY)); }
   });
-  doc.addEventListener('click', e => { if (Date.now() - lastTouch < 700) return; if ((e.target.closest && e.target.closest('a')) || hasSel(win)) return; tapAt(fx(e.clientX)); });
+  doc.addEventListener('click', e => { if (Date.now() - lastTouch < 700) return; if ((e.target.closest && e.target.closest('a')) || hasSel(win)) return; tapAt(fx(e.clientX), fy(e.clientY)); });
   doc.addEventListener('wheel', onWheel, { passive: true });
 }
-$('#rbg').addEventListener('click', e => tapAt(e.clientX));
+$('#rbg').addEventListener('click', e => tapAt(e.clientX, e.clientY));
 let wheelT = 0;
 function onWheel(e) { if (!RD || R.flow === 'scroll' || Date.now() - wheelT < 420) return; const d = Math.abs(e.deltaY) > Math.abs(e.deltaX) ? e.deltaY : e.deltaX; if (Math.abs(d) < 18) return; wheelT = Date.now(); d > 0 ? next() : prev(); }
 $('#viewerWrap').addEventListener('wheel', onWheel, { passive: true });
