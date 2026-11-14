@@ -356,6 +356,8 @@
     <div class="seg mb-4" id="segMg"></div>
     <div class="lbl">배경</div>
     <div class="flex gap-3 mb-1" id="segTheme"></div>
+    <div class="lbl mt-4">넘김 방식</div>
+    <div class="seg" id="segFlow"><button data-v="page">좌우로 쪽 넘김</button><button data-v="scroll">위아래 스크롤</button></div>
     <div id="spreadRow" class="mt-4 hidden">
       <div class="lbl">넓은 화면</div>
       <div class="seg" id="segSpread"><button data-v="0">한 쪽씩</button><button data-v="1">두 쪽 펼침</button></div>
@@ -493,7 +495,7 @@
 
 <script>
 'use strict';
-const APP_VER = 'v8';
+const APP_VER = 'v9';
 const $ = s => document.querySelector(s);
 const $$ = s => [...document.querySelectorAll(s)];
 const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
@@ -534,7 +536,7 @@ const coverURL = new Map();
 const LS = { get(k, d) { try { return Object.assign({}, d, JSON.parse(localStorage.getItem(k) || '{}')); } catch { return { ...d }; } },
              set(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch {} } };
 const S = LS.get('darak.lib', { view: 'grid', sort: 'recent', filter: 'all', kakao: '', aladin: '', proxy: '', via: '', tab: 'kr' });
-const R = LS.get('darak.reader', { size: 100, font: 'ridi', lh: 1.8, theme: 'paper', margin: 1, spread: 1 });
+const R = LS.get('darak.reader', { size: 100, font: 'ridi', lh: 1.8, theme: 'paper', margin: 1, spread: 1, flow: 'page' });
 const saveS = () => LS.set('darak.lib', S);
 const saveR = () => LS.set('darak.reader', R);
 let findQ = '';
@@ -1687,13 +1689,22 @@ function paintAa() {
   $('#segMg').innerHTML = MARGINS.map(([v, l], i) => `<button data-v="${i}" class="${+R.margin === i ? 'on' : ''}">${l}</button>`).join('');
   $('#segTheme').innerHTML = Object.entries(THEMES).map(([k, t]) => `<button class="sw-th ${R.theme === k ? 'on' : ''}" data-v="${k}" style="background:${t.bg};color:${t.fg}" aria-label="${t.name}">가</button>`).join('');
   $$('#segSpread button').forEach(b => b.classList.toggle('on', +b.dataset.v === +R.spread));
-  $('#spreadRow').classList.toggle('hidden', innerWidth < 880);
+  $$('#segFlow button').forEach(b => b.classList.toggle('on', b.dataset.v === (R.flow || 'page')));
+  $('#spreadRow').classList.toggle('hidden', innerWidth < 880 || R.flow === 'scroll');
 }
 $$('[data-fs]').forEach(b => b.onclick = () => { R.size = clamp(R.size + (+b.dataset.fs) * 10, 70, 220); saveR(); applyReaderStyle(true); });
 $('#segFont').onclick = e => { const b = e.target.closest('[data-v]'); if (!b) return; R.font = b.dataset.v; saveR(); applyReaderStyle(true); };
 $('#segLh').onclick = e => { const b = e.target.closest('[data-v]'); if (!b) return; R.lh = +b.dataset.v; saveR(); applyReaderStyle(true); };
 $('#segMg').onclick = e => { const b = e.target.closest('[data-v]'); if (!b) return; R.margin = +b.dataset.v; saveR(); applyReaderStyle(false); reflowSoon(true); };
 $('#segTheme').onclick = e => { const b = e.target.closest('[data-v]'); if (!b) return; R.theme = b.dataset.v; saveR(); applyReaderStyle(false); };
+$('#segFlow').onclick = e => {
+  const b = e.target.closest('[data-v]'); if (!b || b.dataset.v === R.flow) return;
+  R.flow = b.dataset.v; saveR(); paintAa();
+  if (!RD) return;
+  const id = RD.id; if (RD.loc && RD.loc.start) RD.meta.cfi = RD.loc.start.cfi;
+  closeReader(true); openReader(id);   // 새 방식으로 같은 쪽에서 다시 펼침
+  toast(R.flow === 'scroll' ? '위아래로 밀어서 읽어요 · 다음 장은 아래 › 버튼' : '좌우로 넘겨서 읽어요');
+};
 $('#segSpread').onclick = e => { const b = e.target.closest('[data-v]'); if (!b || !RD) return; R.spread = +b.dataset.v; saveR(); paintAa(); try { RD.rendition.spread(R.spread ? 'auto' : 'none', 880); } catch {} reflowSoon(true); };
 
 /* 읽기 화면 열기 */
@@ -1712,7 +1723,7 @@ async function openReader(id) {
   applyReaderStyle(false);
 
   const book = ePub(rec.data);
-  const rendition = book.renderTo('viewer', { width: '100%', height: '100%', flow: 'paginated', spread: R.spread ? 'auto' : 'none', minSpreadWidth: 880, allowScriptedContent: false });
+  const rendition = book.renderTo('viewer', { width: '100%', height: '100%', flow: R.flow === 'scroll' ? 'scrolled-doc' : 'paginated', spread: R.flow === 'scroll' ? 'none' : (R.spread ? 'auto' : 'none'), minSpreadWidth: 880, allowScriptedContent: false });
   const rd = RD = { id, meta, book, rendition, loc: null, toc: [], locReady: false, pct: meta.progress || 0 };
   rendition.hooks.content.register(contents => onFrame(contents));
   rendition.on('relocated', loc => onRelocated(rd, loc));
@@ -1793,11 +1804,28 @@ function closeReader(silent) {
 addEventListener('popstate', () => { if (skipPop) { skipPop--; return; } if (!RD && onSheetPop()) return; if (RD) { closeReader(true); document.body.classList.remove('reading'); setThemeColor('#F5F2EC'); renderLibrary(); } });
 
 /* 넘기기 · 손가락 · 키보드 */
-const next = () => { if (!RD) return; showBars(false); RD.rendition.next(); };
-const prev = () => { if (!RD) return; showBars(false); RD.rendition.prev(); };
+let stuck = 0;
+const next = () => {
+  if (!RD) return; showBars(false);
+  const rd = RD, before = rd.loc && rd.loc.start && rd.loc.start.cfi;
+  if (R.flow === 'scroll') { jumpSection(rd, 1); return; }
+  rd.rendition.next();
+  // 눌렀는데 쪽이 그대로면(일부 아이폰) 다음 장으로 직접 건너뜀
+  setTimeout(() => {
+    if (RD !== rd || !rd.loc || rd.loc.atEnd || rd.loc.start.cfi !== before) { stuck = 0; return; }
+    const nx = rd.book.spine.get(rd.loc.start.index + 1);
+    if (nx) rd.rendition.display(nx.href);
+    if (++stuck >= 2 || !nx) toast('쪽이 안 넘어가면 Aa → 넘김 방식 → ‘위아래 스크롤’로 바꿔 보세요', 3800);
+  }, 800);
+};
+const prev = () => { if (!RD) return; showBars(false); if (R.flow === 'scroll') { jumpSection(RD, -1); return; } RD.rendition.prev(); };
+function jumpSection(rd, d) {   // 스크롤 방식: › ‹ 버튼은 다음·이전 장으로
+  const idx = rd.loc && rd.loc.start ? rd.loc.start.index : 0, sec = rd.book.spine.get(idx + d);
+  if (sec) rd.rendition.display(sec.href); else toast(d > 0 ? '마지막 장이에요' : '첫 장이에요');
+}
 function showBars(on) { $('#reader').classList.toggle('bars', on); if (!on) { $('#aa').classList.add('hidden'); $('#rAa').classList.remove('on'); } }
 function toggleBars() { if (!$('#aa').classList.contains('hidden')) { showBars(true); $('#aa').classList.add('hidden'); $('#rAa').classList.remove('on'); return; } showBars(!$('#reader').classList.contains('bars')); }
-function tapAt(x) { const W = innerWidth; if (x < W * 0.28) prev(); else if (x > W * 0.72) next(); else toggleBars(); }
+function tapAt(x) { const W = innerWidth; if (R.flow === 'scroll') { toggleBars(); return; } if (x < W * 0.28) prev(); else if (x > W * 0.72) next(); else toggleBars(); }
 const hasSel = w => { try { const s = w.getSelection(); return s && String(s).trim().length > 0; } catch { return false; } };
 function onFrame(contents) {
   const doc = contents.document, win = contents.window || doc.defaultView;
@@ -1811,7 +1839,7 @@ function onFrame(contents) {
     lastTouch = Date.now(); if (e.touches.length) return;
     const t = e.changedTouches[0], dx = t.clientX - sx, dy = t.clientY - sy;
     if (hasSel(win)) return;
-    if (Math.abs(dx) > 40 && Math.abs(dx) > Math.abs(dy) * 1.3 && Date.now() - t0 < 800) { dx < 0 ? next() : prev(); return; }
+    if (R.flow !== 'scroll' && Math.abs(dx) > 40 && Math.abs(dx) > Math.abs(dy) * 1.3 && Date.now() - t0 < 800) { dx < 0 ? next() : prev(); return; }
     if (!moved && Date.now() - t0 < 400 && !(e.target.closest && e.target.closest('a'))) { e.preventDefault(); tapAt(fx(t.clientX)); }
   });
   doc.addEventListener('click', e => { if (Date.now() - lastTouch < 700) return; if ((e.target.closest && e.target.closest('a')) || hasSel(win)) return; tapAt(fx(e.clientX)); });
@@ -1819,7 +1847,7 @@ function onFrame(contents) {
 }
 $('#rbg').addEventListener('click', e => tapAt(e.clientX));
 let wheelT = 0;
-function onWheel(e) { if (!RD || Date.now() - wheelT < 420) return; const d = Math.abs(e.deltaY) > Math.abs(e.deltaX) ? e.deltaY : e.deltaX; if (Math.abs(d) < 18) return; wheelT = Date.now(); d > 0 ? next() : prev(); }
+function onWheel(e) { if (!RD || R.flow === 'scroll' || Date.now() - wheelT < 420) return; const d = Math.abs(e.deltaY) > Math.abs(e.deltaX) ? e.deltaY : e.deltaX; if (Math.abs(d) < 18) return; wheelT = Date.now(); d > 0 ? next() : prev(); }
 $('#viewerWrap').addEventListener('wheel', onWheel, { passive: true });
 function onKey(e) {
   if (!RD) return;
@@ -1831,8 +1859,8 @@ function onKey(e) {
 document.addEventListener('keydown', e => { if (RD) onKey(e); else if (e.key === 'Escape') sheetBack(); });
 
 $('#rBack').onclick = () => closeReader();
-$('#rPrev').onclick = () => { RD && RD.rendition.prev(); };
-$('#rNext').onclick = () => { RD && RD.rendition.next(); };
+$('#rPrev').onclick = () => { if (!RD) return; R.flow === 'scroll' ? jumpSection(RD, -1) : RD.rendition.prev(); };
+$('#rNext').onclick = () => { if (!RD) return; R.flow === 'scroll' ? jumpSection(RD, 1) : RD.rendition.next(); };
 $('#rAa').onclick = () => { const a = $('#aa'), on = a.classList.toggle('hidden') === false; $('#rAa').classList.toggle('on', on); paintAa(); };
 const sl = $('#rSlider');
 sl.addEventListener('input', () => { sliding = true; const p = sl.value / 1000; sl.style.setProperty('--p', p * 100 + '%'); $('#rPct').textContent = Math.floor(p * 100) + '%'; });
