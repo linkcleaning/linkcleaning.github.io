@@ -693,7 +693,7 @@
 
 <script>
 'use strict';
-const APP_VER = 'v24';
+const APP_VER = 'v25';
 const $ = s => document.querySelector(s);
 const $$ = s => [...document.querySelectorAll(s)];
 const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
@@ -2784,13 +2784,11 @@ const mimeOf = n => /png$/i.test(n) ? 'image/png' : /webp$/i.test(n) ? 'image/we
 
 /* 저작권이 끝난(1929년 이전) 작품만 골라 둔 인터넷 아카이브 만화 */
 const IA_COMICS = [
-  { id: 'littlenemo00mccagoog', t: '리틀 니모', o: 'Little Nemo', by: '윈저 매케이', y: '1908', d: '꿈나라를 여행하는 소년 니모 — 신문 만화의 전설' },
-  { id: 'LittleNemo1905-1914ByWinsorMccay', t: '리틀 니모 연재 모음', o: 'Little Nemo 1905–1914', by: '윈저 매케이', y: '1905–1914', d: '일요판 컬러 연재를 400쪽 넘게 모은 판' },
+  { id: 'LittleNemo1905-1914ByWinsorMccay', t: '리틀 니모', o: 'Little Nemo 1905–1914', by: '윈저 매케이', y: '1905–1914', d: '일요판 컬러 연재를 400쪽 넘게 모은 판' },
   { id: 'dreamsrarebitfi00mccagoog', t: '레어빗 악몽', o: 'Dreams of the Rarebit Fiend', by: '윈저 매케이', y: '1905', d: '치즈 토스트를 먹고 꾸는 기묘한 악몽들' },
   { id: 'BusterBrownhisd00Outc', t: '버스터 브라운과 강아지 타이크', o: 'Buster Brown, his dog Tige', by: 'R. F. 아웃콜트', y: '1904', d: '장난꾸러기 버스터와 단짝 강아지' },
   { id: 'myresolutionsbus00outc', t: '버스터 브라운의 결심', o: 'My Resolutions, Buster Brown', by: 'R. F. 아웃콜트', y: '1910', d: '매회 끝에 붙는 버스터의 ‘결심’ 모음' },
   { id: 'BusterBrownnewspaperStrip-Year1903', t: '버스터 브라운 신문 연재 1903', o: 'Buster Brown 1903', by: 'R. F. 아웃콜트', y: '1903', d: '첫해 신문 연재분' },
-  { id: 'yellowkidwholive00dumorich', t: '옐로 키드', o: "The Yellow Kid", by: 'R. F. 아웃콜트', y: '1897', d: '‘만화’라는 장르를 연 노란 옷 꼬마' },
   { id: 'BringingUpFatherSeries1', t: '아빠 길들이기 1권', o: 'Bringing Up Father', by: '조지 맥매너스', y: '1919', d: '벼락부자 지그스와 아내 매기의 소동' },
   { id: 'the-doo-dads', t: '두두즈', o: 'The Doo Dads', by: '아치 데일', y: '1920', d: '숲속 작은 요정 마을의 한 컷 대소동' },
   { id: 'ComicCuts01-1890', t: '코믹 컷츠 창간호', o: 'Comic Cuts', by: '영국 만화 잡지', y: '1890', d: '130년 전 영국 어린이들이 보던 만화 잡지' },

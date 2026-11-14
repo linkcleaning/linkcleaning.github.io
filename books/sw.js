@@ -1,6 +1,6 @@
 /* 다락서재 서비스워커 — 화면·라이브러리·글꼴을 저장해 두어 인터넷 없이도 서재와 책을 열 수 있게 함
    (책 파일 자체는 IndexedDB에 저장) */
-const CACHE = 'darak-v24';
+const CACHE = 'darak-v25';
 const CORE = ['./', './index.html', './manifest.webmanifest', './icon-180.png', './icon-192.png', './icon-512.png'];
 const CDN = [
   'https://cdn.tailwindcss.com',
