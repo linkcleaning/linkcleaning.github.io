@@ -594,7 +594,7 @@ small.zero,.seg small.mn.zero{color:#ff8a80!important}
    <button id="spinBtn" class="ev3">🎡 행운 룰렛<small id="spinSub">하루 3번 1만~10만원</small></button>
    <button id="cmtBtn" class="ev2">📝 댓글 이벤트<small id="cmtSub">인증하면 +3만원</small></button>
    <button id="coffeeBtn" class="ev1">☕ 커피 이벤트<small id="cofSub">3,000만원 = 커피 1잔</small></button>
-   <button id="shopBtn" class="shop">🏪 링크 편의점<small>활력 UP 아이템</small></button>
+   <button id="shopBtn" class="shop">🏪 LJ 25시<small>활력 UP 아이템</small></button>
   </div>
   <div class="shd gold rich"><span>💎 부자 라운지</span><small>돈이 많을 때 즐기는 곳</small></div>
   <div class="homebtns lounge">
@@ -623,7 +623,7 @@ small.zero,.seg small.mn.zero{color:#ff8a80!important}
 
 <script>
 'use strict';
-const VER='v72';
+const VER='v73';
 const $=s=>document.querySelector(s);
 const sleep=ms=>new Promise(r=>setTimeout(r,ms));
 const rnd=n=>Math.floor(Math.random()*n);
@@ -1775,7 +1775,7 @@ function renderHome(){
   $('#top3').innerHTML=`<div class="t3h"><span>TOP 3</span><small>전체 보기 ›</small></div><div class="t3r">${rk.slice(0,3).map((p,i)=>`<div class="t3 r${i+1}"><span class="md">${['🥇','🥈','🥉'][i]}</span><span class="av">${avaHTML(p)}</span><b>${esc(pName(p))}${p.id===me.id?' (나)':''}</b><small>${won(assetOf(p.id))}</small><i class="t3rec">${recTxt(p.id)}</i></div>`).join('')}</div>`;
   if(!RECS&&!window._recL){window._recL=1;loadRecs().then(()=>renderHome())}
   $('#meBtn').innerHTML=`<span class="mm">${avaHTML(me)}</span><span class="mecol"><span class="merow"><b>${esc(me.roster?me.name:pName(me))}</b><span class="mymoney ${moneyOf(me.id)<DB.cfg.start?'down':'up'}">💰${won(moneyOf(me.id))}</span></span>${me.roster?`<small>${me.nick} · 시작 ${won(DB.cfg.start)} 대비 ${moneyOf(me.id)>=DB.cfg.start?'+':''}${won(moneyOf(me.id)-DB.cfg.start)}</small>`:''}<small class="merec">📊 ${recTxt(me.id)}</small></span><span class="rk2">${['🥇','🥈','🥉'][myRank-1]||''} ${myRank}위 / ${rk.length}명<i>${DB.meLocked?'순위 보기 ▾':'나 고르기 ▾'}</i></span>`;
-  {const v=vitOf(me.id);$('#shopBig').innerHTML=`<span class="sbi">🏪</span><span class="sbt"><b>링크 편의점 · 선수 업그레이드</b><small>${v<30?'⚠️ 활력이 낮아요! 드링크 한 병 어때요?':'활력이 높을수록 좋은 패가 잘 와요'}</small><span class="vit" style="width:100%"><i style="width:${v}%"></i><em>⚡ 활력 ${v}%${buffTxt(me.id)}</em></span></span><span class="sbgo">GO ›</span>`;$('#shopBig').classList.toggle('low',v<30)}
+  {const v=vitOf(me.id);$('#shopBig').innerHTML=`<span class="sbi">🏪</span><span class="sbt"><b>LJ 25시 · 선수 업그레이드</b><small>${v<30?'⚠️ 활력이 낮아요! 드링크 한 병 어때요?':'활력이 높을수록 좋은 패가 잘 와요'}</small><span class="vit" style="width:100%"><i style="width:${v}%"></i><em>⚡ 활력 ${v}%${buffTxt(me.id)}</em></span></span><span class="sbgo">GO ›</span>`;$('#shopBig').classList.toggle('low',v<30)}
   if(DB.set.opp===DB.cur)DB.set.opp=OPP.find(o=>o.id!==DB.cur).id;
   const opps=OPP.filter(o=>o.id!==DB.cur).sort((a,b)=>moneyOf(b.id)-moneyOf(a.id));
   const top=opps.find(o=>moneyOf(o.id)>0);
@@ -1861,7 +1861,7 @@ async function openBest(tab='w'){
    [{t:'닫기',v:null}],{dismiss:null});
   if(v&&v.startsWith('t:'))return openBest(v.slice(2));
 }
-/* ---------- 🏪 링크 편의점 (활력·버프) ---------- */
+/* ---------- 🏪 LJ 25시 (활력·버프) ---------- */
 const SHOP=[
  {id:'kimbap',ic:'🍙',n:'삼각김밥',d:'출출할 땐 든든하게',price:1000,vit:5},
  {id:'drink',ic:'🧃',n:'링카스 드링크',d:'링크클린 피로회복제 · 한 병에 쭉!',price:3000,vit:10},
@@ -1874,7 +1874,7 @@ function useUpBuffs(id){DB.vital=DB.vital||{};DB.vital[id]=Math.max(0,vitOf(id)-
 function showBossTaunt(){const d=document.createElement('div');d.className='taunt';d.innerHTML='<span>👹</span>나를 이길 수 있겠어?<small>Can you beat me?</small>';document.body.appendChild(d);setTimeout(()=>d.remove(),1900)}
 function shopBody(msg){
   const me=curP(),m=moneyOf(me.id),v=vitOf(me.id),b=(DB.buff||{})[me.id]||{};
-  return `<div class="shophead"><img src="${LOGO_URL}"><div><b>🏪 링크 편의점</b><small>어서 오세요~ 오늘도 힘내서 한 판!</small></div></div>
+  return `<div class="shophead"><img src="${LOGO_URL}"><div><b>🏪 LJ 25시</b><small>어서 오세요~ 오늘도 힘내서 한 판!</small></div></div>
     <p class="shopmsg">${msg||'&nbsp;'}</p>
     <div class="vitbig"><span>⚡ 내 활력</span><div class="vit big"><i style="width:${v}%"></i><em>${v}%</em></div><small>활력이 높을수록 패를 뒤집을 때 <b>짝이 맞는 패</b>가 더 잘 나와요 · 한 판 칠 때마다 20% 줄어요</small></div>
     <div class="res-lines" style="margin:8px 0"><div><span>내 돈</span><b>${won(m)}</b></div>${b.choco||b.charm?`<div><span>다음 판 효과</span><b>${b.choco?'🍫 초코바 ':''}${b.charm?'🧧 부적':''}</b></div>`:''}</div>
@@ -2488,7 +2488,7 @@ const RULES=`<div class="rules">
 <h3>🚫 하루 판수 제한</h3>한 사람만 계속 파산시키지 않도록, 같은 상대와는 하루 정해진 판수까지만 칠 수 있어요 (관리인이 3·5·10판·무제한으로 정해요, 일런마스크는 제한 없음).
 <h3>🐸 일런마스크</h3>가장 센 보스 상대예요. 이기면 딴 돈의 <b>2~5배</b>(관리인이 정함)를 받아요. 강도는 관리인이 쉬움~지옥까지 따로 정해요 (지면 보통처럼 내요).
 <h3>💰 돈</h3>모두 같은 돈으로 시작해요. 이기면 <b>점수 × 점당 금액</b>만큼 상대 지갑에서 가져와요. 상대 돈이 모자라면 <b>올인</b>! 지갑이 비면 관리인이 충전해 줘요. 댓글 이벤트로 직접 채울 수도 있어요.
-<h3>🏪 링크 편의점</h3>삼각김밥·링카스 드링크·영양제로 <b>활력</b>을 올리면 패를 뒤집을 때 짝 맞는 패가 더 잘 나와요 (한 판에 활력 20% 소모). 초코바는 다음 판 이기면 +20%, 행운 부적은 지면 절반만 내요.
+<h3>🏪 LJ 25시</h3>삼각김밥·링카스 드링크·영양제로 <b>활력</b>을 올리면 패를 뒤집을 때 짝 맞는 패가 더 잘 나와요 (한 판에 활력 20% 소모). 초코바는 다음 판 이기면 +20%, 행운 부적은 지면 절반만 내요.
 <h3>📅 출석 · 🎯 오늘의 미션</h3>매일 출석하면 보상, 7일 연속이면 5배 보너스! 오늘의 미션 3개(매일 바뀜)를 깨면 각각 보상, 3개 모두 깨면 올클리어 보너스. (금액은 관리인이 정해요)
 <h3>💸 배수</h3><b>피박</b> 피로 났는데 상대 피 5장 이하 ×2 · <b>광박</b> 광으로 났는데 상대 광 0장 ×2 · <b>멍따</b> 열끗 7장 이상 ×2 · <b>고박</b> 고 했는데 상대가 나면 ×2 · <b>나가리</b> 아무도 못 나면 다음 판 ×2
 </div>`;
