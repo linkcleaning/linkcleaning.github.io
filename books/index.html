@@ -177,6 +177,12 @@
   .hist-cover { background:linear-gradient(160deg,#5B2A1E,#2E1A12) !important; color:#EBD9B4 !important; }
   .hist-cover .t { font-family:Hahmlet,serif; }
   a.np-item { color:inherit; text-decoration:none; }
+  .row-edit { font-size:12.5px; font-weight:700; color:var(--mute); }
+  .row-editing .row-edit { color:var(--accent); }
+  .row-editing [data-hk] { animation:wig .35s ease-in-out infinite alternate; }
+  @keyframes wig { from { transform:rotate(-1.2deg); } to { transform:rotate(1.2deg); } }
+  .hide-x { position:absolute; top:-6px; left:-6px; z-index:5; width:26px; height:26px; border-radius:99px; background:#C0392B; color:#fff; font-size:18px; line-height:25px; text-align:center; font-weight:700; box-shadow:0 2px 6px rgba(0,0,0,.3); }
+  .row-editing .no-scrollbar { padding-top:8px !important; }
   .fd-busy { position:absolute; inset:0; display:grid; place-items:center; text-align:center; padding:8px; background:rgba(20,16,12,.62); color:#fff; font-size:12px; font-weight:700; border-radius:inherit; }
   #cv { position:fixed; inset:0; z-index:52; background:#0E0E0F; color:#EDEDED; }
   body:not(.comic-open) #cv { display:none; }
@@ -744,7 +750,7 @@
 
 <script>
 'use strict';
-const APP_VER = 'v33';
+const APP_VER = 'v34';
 const $ = s => document.querySelector(s);
 const $$ = s => [...document.querySelectorAll(s)];
 const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
@@ -3764,22 +3770,63 @@ $('#npList').addEventListener('input', e => { if (e.target.id === 'ytText') HUB.
   t2.onclick = () => news.scrollTo({ top: 0, behavior: 'smooth' });
 })();
 
+
+/* 첫 화면 줄 편집 — 보기 싫은 표지는 숨기고(내 책은 서재에서 지움), 줄째 숨기기도 */
+const HIDE = LS.get('darak.hide', { cards: [], rows: [] });
+const saveHide = () => LS.set('darak.hide', HIDE);
+let EDIT_ROW = null;
+function decorateRows(box) {
+  box.querySelectorAll('[data-row]').forEach(r => {
+    const id = r.dataset.row;
+    if (HIDE.rows.includes(id)) { r.remove(); return; }
+    const edit = EDIT_ROW === id;
+    r.classList.toggle('row-editing', edit);
+    const eb = r.querySelector('[data-edit]'); if (eb) eb.textContent = edit ? '완료' : '편집';
+    r.querySelectorAll('[data-hk]').forEach(c => {
+      if (HIDE.cards.includes(id + '|' + c.dataset.hk)) { c.remove(); return; }
+      if (edit) { const x = document.createElement('span'); x.className = 'hide-x'; x.textContent = '×'; c.style.position = 'relative'; c.appendChild(x); }
+    });
+    if (edit) {
+      const n = HIDE.cards.filter(k => k.startsWith(id + '|')).length;
+      const bar = document.createElement('div'); bar.className = 'flex items-center gap-2 mt-3 pt-3 border-t border-line text-[12.5px] font-bold';
+      bar.innerHTML = `<span class="flex-1 text-mute">표지를 누르면 숨겨요${id === 'ex-comic' ? ' · 내 만화는 서재에서 지워요' : ''}</span>${n ? `<button class="np-btn !py-1.5" data-unhide="${id}">숨긴 ${n}개 되살리기</button>` : ''}<button class="np-btn !py-1.5" data-rowhide="${id}">이 줄 숨기기</button>`;
+      r.appendChild(bar);
+    }
+  });
+}
+function rowEditClick(e) {
+  const g = s => e.target.closest(s); let x;
+  if ((x = g('[data-edit]'))) { e.stopPropagation(); EDIT_ROW = EDIT_ROW === x.dataset.edit ? null : x.dataset.edit; renderStand(); renderExplore(); return; }
+  if (g('[data-unrows]')) { e.stopPropagation(); HIDE.rows = []; saveHide(); renderStand(); renderExplore(); return; }
+  if ((x = g('[data-rowhide]'))) { e.stopPropagation(); HIDE.rows.push(x.dataset.rowhide); EDIT_ROW = null; saveHide(); renderStand(); renderExplore(); toast('줄을 숨겼어요. 맨 아래에서 다시 보이게 할 수 있어요', 2600); return; }
+  if ((x = g('[data-unhide]'))) { e.stopPropagation(); HIDE.cards = HIDE.cards.filter(k => !k.startsWith(x.dataset.unhide + '|')); saveHide(); renderStand(); renderExplore(); return; }
+  const row = g('[data-row]'); if (!row || row.dataset.row !== EDIT_ROW) return;
+  const c = g('[data-hk]'); if (!c) return;
+  e.stopPropagation(); e.preventDefault();
+  const hk = c.dataset.hk;
+  if (hk.startsWith('bk:')) { deleteBook(hk.slice(3)); return; }
+  HIDE.cards.push(row.dataset.row + '|' + hk); saveHide(); renderStand(); renderExplore();
+}
+$('#standBox').addEventListener('click', rowEditClick, true);
+$('#exploreBox').addEventListener('click', rowEditClick, true);
 /* 서재 첫 화면에서 바로 꺼내 보는 줄들 — 발굴소·만화방 안에 들어가지 않아도 눌러서 바로 펼침 */
 const WIKI_SHELF = [['제주도', '#0E5A60'], ['커피', '#6B4226'], ['인공지능', '#2E3A45'], ['한라산', '#3F6B3A'], ['태양계', '#1F2A55'], ['김치', '#8A3B3B'], ['한글', '#4B5D7A'], ['곰팡이', '#55603A']];
 function renderExplore() {
   const box = $('#exploreBox'); if (!box) return;
   const card = (attrs, cover, name, sub) => `<button class="w-[104px] flex-none text-left" ${attrs}>${cover}<div class="text-[12.5px] font-bold mt-2 leading-tight truncate">${esc(name)}</div><div class="text-[11px] text-mute mt-0.5 truncate">${esc(sub)}</div></button>`;
-  const row = (title, all, cards) => `<div class="dcard"><div class="flex items-end justify-between mb-3"><h2 class="font-bold">${title}</h2><button class="text-[12.5px] font-bold text-mute" data-ex-all="${all}">전체 보기 ›</button></div><div class="flex gap-3.5 overflow-x-auto no-scrollbar -mx-4 px-4 pb-2">${cards}</div></div>`;
+  const row = (title, all, cards) => `<div class="dcard" data-row="ex-${all}"><div class="flex items-end justify-between mb-3"><h2 class="font-bold">${title}</h2><span class="flex items-center gap-3"><button class="row-edit" data-edit="ex-${all}">편집</button><button class="text-[12.5px] font-bold text-mute" data-ex-all="${all}">전체 보기 ›</button></span></div><div class="flex gap-3.5 overflow-x-auto no-scrollbar -mx-4 px-4 pb-2">${cards}</div></div>`;
   const koHave = t => books.find(b => b.gid === 'ko:' + t || (b.source === 'wikisource' && b.title === t));
-  const ko = FD_KO.map(([t, by, kind]) => { const h = koHave(t); return card(`data-ex-ko="${esc(t)}" data-by="${esc(by)}"`, h ? coverHTML(h, { badge: false }) : `<div class="cover cover-c">${genCoverHTML({ title: t, author: by })}</div>`, t, h && h.progress ? `${by} · ${pctText(h.progress)}` : `${by} · ${kind}`); }).join('');
-  const hist = HIST.map((h, i) => card(`data-ex-hist="${i}"`, `<div class="cover cover-c"><div class="gen hist-cover"><div class="t">${esc(h.t)}</div><div class="rule"></div><div class="a">${esc(h.by)}</div></div></div>`, h.t, h.by)).join('');
+  const ko = FD_KO.map(([t, by, kind]) => { const h = koHave(t); return card(`data-ex-ko="${esc(t)}" data-by="${esc(by)}" data-hk="ko:${esc(t)}"`, h ? coverHTML(h, { badge: false }) : `<div class="cover cover-c">${genCoverHTML({ title: t, author: by })}</div>`, t, h && h.progress ? `${by} · ${pctText(h.progress)}` : `${by} · ${kind}`); }).join('');
+  const hist = HIST.map((h, i) => card(`data-ex-hist="${i}" data-hk="hist:${esc(h.t)}"`, `<div class="cover cover-c"><div class="gen hist-cover"><div class="t">${esc(h.t)}</div><div class="rule"></div><div class="a">${esc(h.by)}</div></div></div>`, h.t, h.by)).join('');
   const mine = books.filter(b => b.kind === 'comic').sort((a, b) => (b.lastRead || 0) - (a.lastRead || 0));
-  const comics = mine.map(b => card(`data-ex-book="${b.id}"`, coverHTML(b, { badge: false }), b.title, b.pages ? `${Math.min(b.pages, (b.page || 0) + 1)} / ${b.pages}쪽` : '만화')).join('')
-    + IA_COMICS.filter(c => !mine.some(b => b.iaId === c.id)).map(c => card(`data-ex-ia="${esc(c.id)}"`, `<div class="st-cover" style="background:#E9E1D2"><img src="https://archive.org/services/img/${esc(c.id)}" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.remove()"></div>`, c.t, `${c.by} · ${c.y}`)).join('')
-    + comicFeeds().map(f => card(`data-ex-cf="${esc(f.id)}"`, `<div class="st-cover" style="background:#fff">${CF_THUMB[f.id] ? `<img src="${esc(CF_THUMB[f.id])}" alt="" loading="lazy" referrerpolicy="no-referrer" style="object-fit:contain" onerror="this.remove()">` : ''}<div class="st-shade" style="background:linear-gradient(180deg,rgba(0,0,0,0) 55%,rgba(0,0,0,.6))"></div><div class="st-head">${esc(f.name)}</div></div>`, f.name, '오늘의 웹코믹')).join('')
+  const comics = mine.map(b => card(`data-ex-book="${b.id}" data-hk="bk:${b.id}"`, coverHTML(b, { badge: false }), b.title, b.pages ? `${Math.min(b.pages, (b.page || 0) + 1)} / ${b.pages}쪽` : '만화')).join('')
+    + IA_COMICS.filter(c => !mine.some(b => b.iaId === c.id)).map(c => card(`data-ex-ia="${esc(c.id)}" data-hk="ia:${esc(c.id)}"`, `<div class="st-cover" style="background:#E9E1D2"><img src="https://archive.org/services/img/${esc(c.id)}" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.remove()"></div>`, c.t, `${c.by} · ${c.y}`)).join('')
+    + comicFeeds().map(f => card(`data-ex-cf="${esc(f.id)}" data-hk="cf:${esc(f.id)}"`, `<div class="st-cover" style="background:#fff">${CF_THUMB[f.id] ? `<img src="${esc(CF_THUMB[f.id])}" alt="" loading="lazy" referrerpolicy="no-referrer" style="object-fit:contain" onerror="this.remove()">` : ''}<div class="st-shade" style="background:linear-gradient(180deg,rgba(0,0,0,0) 55%,rgba(0,0,0,.6))"></div><div class="st-head">${esc(f.name)}</div></div>`, f.name, '오늘의 웹코믹')).join('')
     + card('data-ex-addcomic', `<div class="st-cover mg-add !grid"><span class="text-[28px] font-light">＋</span><b class="text-[11.5px]">만화 파일<br>넣기</b></div>`, '내 만화 넣기', '.zip · .cbz');
-  const wiki = WIKI_SHELF.map(([t, c]) => card(`data-ex-wiki="${esc(t)}"`, `<div class="st-cover" style="background:linear-gradient(160deg,${c},${shade(c, -30)})"><div class="st-mast" style="font-size:19px;top:auto;bottom:34px">${esc(t)}</div><div class="st-head" style="opacity:.75">위키북</div></div>`, t, '한 권으로 읽기')).join('');
-  box.innerHTML = row('한국 근현대 명작', 'ko', ko) + row('역사·고전 이야기', 'hist', hist) + row('만화', 'comic', comics) + row('지식 한 권 · 위키북', 'wiki', wiki);
+  const wiki = WIKI_SHELF.map(([t, c]) => card(`data-ex-wiki="${esc(t)}" data-hk="wiki:${esc(t)}"`, `<div class="st-cover" style="background:linear-gradient(160deg,${c},${shade(c, -30)})"><div class="st-mast" style="font-size:19px;top:auto;bottom:34px">${esc(t)}</div><div class="st-head" style="opacity:.75">위키북</div></div>`, t, '한 권으로 읽기')).join('');
+  box.innerHTML = row('한국 근현대 명작', 'ko', ko) + row('역사·고전 이야기', 'hist', hist) + row('만화', 'comic', comics) + row('지식 한 권 · 위키북', 'wiki', wiki) + '<div id="hiddenRows"></div>';
+  decorateRows(box);
+  const hr = HIDE.rows.length; $('#hiddenRows').innerHTML = hr ? `<button class="w-full text-center text-[12.5px] font-bold text-mute py-3" data-unrows>숨긴 줄 ${hr}개 다시 보이기</button>` : '';
 }
 $('#exploreBox').onclick = e => {
   const g = s => e.target.closest(s); let x;
@@ -3844,16 +3891,17 @@ function renderStand() {
   const box = $('#standBox'); if (!box) return;
   const k = kstNow(), dl = `${k.getUTCMonth() + 1}월 ${k.getUTCDate()}일 ${'일월화수목금토'[k.getUTCDay()]}요일`;
   const card = (c, i) => {
-    if (c.type === 'wz') return `<button class="w-[104px] flex-none text-left" data-stand="${i}"><div class="st-cover"><img src="magazine/link-mag-01-cover.jpg" alt=""></div><div class="text-[12.5px] font-bold mt-2 leading-tight">${esc(c.name)}</div><div class="text-[11px] text-mute mt-0.5">${esc(c.sub)}</div></button>`;
+    if (c.type === 'wz') return `<button class="w-[104px] flex-none text-left" data-stand="${i}" data-hk="st:${esc(c.name)}"><div class="st-cover"><img src="magazine/link-mag-01-cover.jpg" alt=""></div><div class="text-[12.5px] font-bold mt-2 leading-tight">${esc(c.name)}</div><div class="text-[11px] text-mute mt-0.5">${esc(c.sub)}</div></button>`;
     const x = standPick(c.ids);
     const cover = c.type === 'paper'
       ? `<div class="st-cover st-paper"><div class="st-pm">${esc(c.name)}</div><div class="st-pd">${esc(dl)}</div>${x ? `<div class="st-ph">${esc(x.title)}</div>${x.thumb ? `<img class="st-pi" src="${esc(x.thumb)}" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.remove()">` : '<div class="st-pl"></div>'}` : '<div class="st-pl"></div><div class="st-pl"></div>'}</div>`
       : `<div class="st-cover">${x && x.thumb ? `<img src="${esc(x.thumb)}" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.remove()">` : ''}<div class="st-shade"></div><div class="st-mast">${esc(c.name)}</div>${x ? `<div class="st-head">${esc(x.title)}</div>` : ''}</div>`;
-    return `<button class="w-[104px] flex-none text-left" data-stand="${i}">${cover}<div class="text-[12.5px] font-bold mt-2 leading-tight truncate">${esc(c.name)}</div><div class="text-[11px] text-mute mt-0.5">${x && x.t ? esc(npAgo(x.t)) : (c.kind === 'news' ? '오늘 지면' : c.kind === 'mag' ? '매거진' : '칼럼')}</div></button>`;
+    return `<button class="w-[104px] flex-none text-left" data-stand="${i}" data-hk="st:${esc(c.name)}">${cover}<div class="text-[12.5px] font-bold mt-2 leading-tight truncate">${esc(c.name)}</div><div class="text-[11px] text-mute mt-0.5">${x && x.t ? esc(npAgo(x.t)) : (c.kind === 'news' ? '오늘 지면' : c.kind === 'mag' ? '매거진' : '칼럼')}</div></button>`;
   };
-  const row = (title, kind, filter) => `<div class="dcard"><div class="flex items-end justify-between mb-3"><h2 class="serif font-bold text-[17px]">${title}</h2><button class="text-[12.5px] font-bold text-mute" data-stand-all="${kind}">전체 보기 ›</button></div>
+  const row = (title, kind, filter) => `<div class="dcard" data-row="st-${kind}"><div class="flex items-end justify-between mb-3"><h2 class="serif font-bold text-[17px]">${title}</h2><span class="flex items-center gap-3"><button class="row-edit" data-edit="st-${kind}">편집</button><button class="text-[12.5px] font-bold text-mute" data-stand-all="${kind}">전체 보기 ›</button></span></div>
     <div class="flex gap-3.5 overflow-x-auto no-scrollbar -mx-4 px-4 sm:mx-0 sm:px-0 pb-2">${STAND_CARDS.map((c, i) => filter(c) ? card(c, i) : '').join('')}</div></div>`;
   box.innerHTML = row('오늘의 신문', 'news', c => c.kind === 'news') + row('매거진', 'mag', c => c.kind !== 'news');
+  decorateRows(box);
 }
 $('#standBox').onclick = e => {
   const all = e.target.closest('[data-stand-all]'); if (all) { openNews(all.dataset.standAll); return; }
