@@ -490,7 +490,7 @@
 
 <script>
 'use strict';
-const APP_VER = 'v13';
+const APP_VER = 'v14';
 const $ = s => document.querySelector(s);
 const $$ = s => [...document.querySelectorAll(s)];
 const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
@@ -1253,7 +1253,9 @@ async function backfillCovers() {
 
 /* ---------- 무료 한국 고전 묶음: 처음 열 때 알아서 서재에 넣어 둠 ----------
    위키문헌에서 실제로 받아지는지 확인한 저작권 만료 작품만 (2026-11 확인) */
-const KO_PACK_VER = 1;
+const KO_PACK_VER = 2;
+/* v2: 옛한글(아래아 등)로 된 원문은 휴대폰 글꼴로 깨져 보여서 묶음에서 빼고, 예전에 자동으로 넣은 것도 정리 */
+const KO_PACK_DROP = ['벙어리 삼룡이', '님의 침묵', '빼앗긴 들에도 봄은 오는가', '심청전', '흥부전', '구운몽', '박씨전', '운영전', '임경업전', '유충렬전', '조웅전', '숙향전'];
 const KO_PACK = [
   ['운수 좋은 날', '현진건', '근대소설'],
   ['빈처', '현진건', '근대소설'],
@@ -1278,7 +1280,6 @@ const KO_PACK = [
   ['봉별기', '이상', '근대소설'],
   ['종생기', '이상', '근대소설'],
   ['지주회시', '이상', '근대소설'],
-  ['벙어리 삼룡이', '나도향', '근대소설'],
   ['물레방아', '나도향', '근대소설'],
   ['뽕', '나도향', '근대소설'],
   ['감자', '김동인', '근대소설'],
@@ -1300,25 +1301,14 @@ const KO_PACK = [
   ['낙엽을 태우면서', '이효석', '수필'],
   ['권태', '이상', '수필'],
   ['진달래꽃', '김소월', '시'],
-  ['님의 침묵', '한용운', '시'],
   ['하늘과 바람과 별과 시', '윤동주', '시'],
   ['향수', '정지용', '시'],
   ['오감도', '이상', '시'],
   ['청포도', '이육사', '시'],
   ['광야 (이육사)', '이육사', '시'],
-  ['빼앗긴 들에도 봄은 오는가', '이상화', '시'],
   ['홍길동전', '허균', '고전소설'],
-  ['심청전', '작자 미상', '고전소설'],
-  ['흥부전', '작자 미상', '고전소설'],
-  ['구운몽', '김만중', '고전소설'],
-  ['박씨전', '작자 미상', '고전소설'],
-  ['운영전', '작자 미상', '고전소설'],
   ['금오신화', '김시습', '고전소설'],
-  ['허생전', '이광수', '고전소설'],
-  ['임경업전', '작자 미상', '고전소설'],
-  ['유충렬전', '작자 미상', '고전소설'],
-  ['조웅전', '작자 미상', '고전소설'],
-  ['숙향전', '작자 미상', '고전소설']
+  ['허생전', '이광수', '고전소설']
 ];
 async function installKoPack(auto) {
   if (installKoPack.running) return; installKoPack.running = true;
@@ -1443,6 +1433,8 @@ function wsClean(html) {
   const ser = new XMLSerializer();
   return { html: [...r.childNodes].map(n => ser.serializeToString(n)).join(''), len: (r.textContent || '').replace(/\s+/g, '').length };
 }
+const OLD_HANGUL = /[\u1100-\u11FF\uA960-\uA97F\uD7B0-\uD7FF\u3164-\u318E]/g;
+function archaicRatio(html) { const t = String(html || '').replace(/<[^>]+>/g, ''); const o = (t.match(OLD_HANGUL) || []).length, h = (t.match(/[\uAC00-\uD7A3]/g) || []).length; return o / ((h + o) || 1); }
 async function buildFromWS(it, setP, depth = 0) {
   setP('본문 찾는 중…');
   const root = await wsParse(it.ws);
@@ -1454,9 +1446,12 @@ async function buildFromWS(it, setP, depth = 0) {
     const vers = (root.links || []).filter(l => l.ns === 0 && l.exists !== false && l.title !== title && !l.title.startsWith(title + '/') && l.title.startsWith(title.replace(/\s*\(.*\)$/, ''))).map(l => l.title);
     const probe = wsClean(root.text || '');
     if (vers.length && (probe.len < 600 || /판본|다음이 있습니다|동음이의/.test(probe.html.slice(0, 400)))) {
-      const pick = vers.find(v => !/(경판|완판|판본|장본|영인|원문|한문)/.test(v)) || vers[0];
-      const r = await buildFromWS({ ...it, ws: pick }, setP, 1);
-      return { ...r, title: pick };
+      const order = vers.filter(v => !/(경판|완판|판본|장본|영인|원문|한문)/.test(v)).concat(vers.filter(v => /(경판|완판|판본|장본|영인|원문|한문)/.test(v)));
+      let lastErr;
+      for (const pick of order.slice(0, 4)) {   // 현대어판부터 시도, 옛한글이면 다음 판본
+        try { const r = await buildFromWS({ ...it, ws: pick }, setP, 1); return { ...r, title: pick }; } catch (e) { lastErr = e; }
+      }
+      throw lastErr || new Error('empty');
     }
   }
   const authorLink = (root.links || []).find(l => /^저자:/.test(l.title || ''));
@@ -1473,6 +1468,7 @@ async function buildFromWS(it, setP, depth = 0) {
     part.filter(c => c && c.len > 20).forEach(c => chapters.push({ title: c.title, html: c.html }));
   }
   if (!chapters.length || chapters.every(c => !c.html)) throw new Error('empty');
+  if (archaicRatio(chapters.map(c => c.html).join('')) > 0.01) throw new Error('archaic');   // 옛한글 원문은 받지 않음
   setP('책으로 만드는 중…');
   if (chapters.reduce((n, c) => n + (c.html || '').length, 0) < 300) throw new Error('empty');
   return { buf: await makeEpub({ title, author, lang: 'ko', id: 'ws-' + title, source: '위키문헌' }, chapters), author, title };
@@ -1488,7 +1484,7 @@ function mapGut(g) {
     years: (g.authors || [])[0] ? [g.authors[0].birth_year, g.authors[0].death_year].filter(x => x != null).join('–') : '',
     lang: g.languages || [], subjects: subj, summary: cleanTxt((g.summaries || [])[0] || ''), cover: f['image/jpeg'] || '', epub: f[epubKey], downloads: g.download_count || 0 };
 }
-const QUICK_KO = ['운수 좋은 날', '메밀꽃 필 무렵', '동백꽃', '봄봄', '날개', '진달래꽃', '님의 침묵', '홍길동전', '춘향전', '심청전', '흥부전', '구운몽', '무정', '감자', '탁류'];
+const QUICK_KO = ['운수 좋은 날', '메밀꽃 필 무렵', '동백꽃', '봄봄', '날개', '진달래꽃', '홍길동전', '무정', '감자', '탁류', '태평천하', '하늘과 바람과 별과 시', '광염 소나타', '레디메이드 인생', '탈출기'];
 const FREE_HINT_KO = `<div class="text-center pt-5 pb-3 px-4"><div class="serif font-bold text-[17px]">한국 고전·근대문학 무료 이북</div><p class="text-[13px] text-mute mt-2 leading-relaxed">저작권이 끝난 한국어 작품을 위키문헌에서 찾아<br>EPUB으로 받아 서재에 저장해요.</p></div>`;
 const srcSeg = () => {
   const left = KO_PACK.filter(p => !books.some(b => b.gid === 'ko:' + p[0])).length;
@@ -1630,7 +1626,7 @@ async function downloadFree(it, quiet) {
   } catch (e) {
     console.warn(e); DL.delete(it.gid); paintFreeBtn(it.gid);
     if (quiet) return false;
-    toast(e && e.name === 'QuotaExceededError' ? '저장 공간이 부족해요' : e && e.message === 'empty' ? '이 항목은 본문이 없어요 (목록·안내 문서예요)' : '받지 못했어요. 인터넷 연결을 확인하고 다시 눌러 주세요', 3400);
+    toast(e && e.name === 'QuotaExceededError' ? '저장 공간이 부족해요' : e && e.message === 'empty' ? '이 항목은 본문이 없어요 (목록·안내 문서예요)' : e && e.message === 'archaic' ? '옛한글로 된 원문이라 글자가 깨져서 받지 않았어요' : '받지 못했어요. 인터넷 연결을 확인하고 다시 눌러 주세요', 3400);
   }
 }
 
@@ -2100,6 +2096,10 @@ let loadedResolve; const loaded = new Promise(r => loadedResolve = r);
 (async function init() {
   try { books = await DB.all('books'); } catch (e) { console.warn(e); books = []; toast('이 브라우저는 저장 공간을 쓸 수 없어요'); }
   books.forEach(setCover);
+  if ((S.koPack | 0) < 2) {
+    for (const b of books.filter(b => b.source === 'wikisource' && KO_PACK_DROP.some(d => b.gid === 'ko:' + d))) { await DB.del('books', b.id).catch(() => {}); await DB.del('files', b.id).catch(() => {}); setCover({ id: b.id }); }
+    books = books.filter(b => !(b.source === 'wikisource' && KO_PACK_DROP.some(d => b.gid === 'ko:' + d))); renderLibrary();
+  }
   if ((S.koPack | 0) < KO_PACK_VER && navigator.onLine !== false) setTimeout(() => installKoPack(true).catch(() => {}), 2500);
   else setTimeout(() => backfillCovers().catch(() => {}), 2500);
   renderLibrary();
