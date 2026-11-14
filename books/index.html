@@ -493,7 +493,7 @@
 
 <script>
 'use strict';
-const APP_VER = 'v6';
+const APP_VER = 'v7';
 const $ = s => document.querySelector(s);
 const $$ = s => [...document.querySelectorAll(s)];
 const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
@@ -1210,7 +1210,7 @@ async function makeEpub(meta, chapters) {
     const f = `c${i + 1}.xhtml`;
     z.file('OEBPS/' + f, `<?xml version="1.0" encoding="utf-8"?>\n<!DOCTYPE html>\n<html xmlns="http://www.w3.org/1999/xhtml" lang="${lang}" xml:lang="${lang}"><head><meta charset="utf-8"/><title>${XE(c.title || meta.title)}</title><link rel="stylesheet" type="text/css" href="style.css"/></head><body>${c.title ? `<h2>${XE(c.title)}</h2>` : ''}${c.html}</body></html>`);
     items.push(`<item id="c${i + 1}" href="${f}" media-type="application/xhtml+xml"/>`); spine.push(`<itemref idref="c${i + 1}"/>`);
-    nav.push(`<li><a href="${f}">${XE(c.title || String(i + 1))}</a></li>`);
+    nav.push(`<li><a href="${f}">${XE(c.title || (chapters.length === 1 ? meta.title : String(i + 1)))}</a></li>`);
   });
   z.file('OEBPS/nav.xhtml', `<?xml version="1.0" encoding="utf-8"?>\n<html xmlns="http://www.w3.org/1999/xhtml" xmlns:epub="http://www.idpf.org/2007/ops"><head><title>목차</title></head><body><nav epub:type="toc"><ol>${nav.join('')}</ol></nav></body></html>`);
   z.file('OEBPS/content.opf', `<?xml version="1.0" encoding="utf-8"?>\n<package xmlns="http://www.idpf.org/2007/opf" version="3.0" unique-identifier="uid"><metadata xmlns:dc="http://purl.org/dc/elements/1.1/"><dc:identifier id="uid">urn:darak:${XE(meta.id)}</dc:identifier><dc:title>${XE(meta.title)}</dc:title><dc:creator>${XE(meta.author || '')}</dc:creator><dc:publisher>${XE(meta.source || '')}</dc:publisher><dc:language>${lang}</dc:language><meta property="dcterms:modified">${new Date().toISOString().replace(/\.\d+Z$/, 'Z')}</meta></metadata><manifest><item id="nav" href="nav.xhtml" media-type="application/xhtml+xml" properties="nav"/><item id="css" href="style.css" media-type="text/css"/>${items.join('')}</manifest><spine>${spine.join('')}</spine></package>`);
@@ -1225,11 +1225,12 @@ function textToChapters(raw) {
   const paras = t.split(/\n[ \t]*\n+/).map(p => p.replace(/[ \t]*\n[ \t]*/g, ' ').replace(/_([^_]+)_/g, '$1').trim()).filter(Boolean);
   const isHead = p => p.length < 90 && !/[.,;:!?]["'”’)]?$/.test(p.replace(/^[IVXLCDM]+\.$/, 'X')) && (
     /^(chapter|book|part|volume|adventure|letter|stave|act|scene|canto|section|chapitre|kapitel|capítulo|capitolo)\b/i.test(p) || /^[IVXLCDM]+\.?(\s|$)/.test(p) || /^\d{1,3}\.?$/.test(p) ||
-    (p === p.toUpperCase() && /[A-Z]{2}/.test(p) && p.split(/\s+/).length <= 10));
+    (p === p.toUpperCase() && (p.match(/[A-Z]/g) || []).length >= 4 && p.split(/\s+/).length <= 10));
   const secs = []; let cur = { heads: [], paras: [] }, front = [];
   for (const p of paras) {
     if (isHead(p)) {
-      if (cur.paras.length) { secs.push(cur); cur = { heads: [p], paras: [] }; }
+      if (cur.paras.length >= 3 || (cur.paras.length && !secs.length && !cur.heads.length)) { secs.push(cur); cur = { heads: [p], paras: [] }; }
+      else if (cur.paras.length) { (secs.length ? secs[secs.length - 1].paras : front).push(...cur.heads, ...cur.paras); cur = { heads: [p], paras: [] }; }   // 짧은 토막(표제지·첫 글자 장식)은 앞 장에 붙임
       else { cur.heads.push(p); if (cur.heads.length > 3) { front.push(...cur.heads.slice(0, -1)); cur.heads = cur.heads.slice(-1); } }
     } else cur.paras.push(p);
   }
