@@ -1,0 +1,22 @@
+{
+  "name": "다락서재 - 나만의 이북 서재",
+  "short_name": "다락서재",
+  "description": "EPUB 책을 여러 권 한 번에 넣고 오프라인에서도 읽는 개인 이북 서재",
+  "lang": "ko",
+  "id": "./",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "any",
+  "background_color": "#F5F2EC",
+  "theme_color": "#F5F2EC",
+  "icons": [
+    { "src": "icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ],
+  "file_handlers": [
+    { "action": "./", "accept": { "application/epub+zip": [".epub"] } }
+  ],
+  "launch_handler": { "client_mode": "focus-existing" }
+}
