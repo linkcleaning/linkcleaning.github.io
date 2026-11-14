@@ -188,8 +188,8 @@
   .res img, .res .noimg { width:64px; height:94px; object-fit:cover; border-radius:4px; flex:none; background:#E9E4DA; }
 
   /* 가져오기 진행 창 */
-  #imp { position:fixed; z-index:70; left:12px; right:12px; bottom:calc(12px + var(--sb)); background:#fff; border-radius:22px; box-shadow:0 18px 50px -14px rgba(0,0,0,.35); overflow:hidden; transform:translateY(130%); transition:transform .28s cubic-bezier(.2,.8,.2,1); }
-  #imp.open { transform:none; }
+  #imp { position:fixed; z-index:70; left:12px; right:12px; bottom:calc(12px + var(--sb)); background:#fff; border-radius:22px; box-shadow:0 18px 50px -14px rgba(0,0,0,.35); overflow:hidden; transform:translateY(calc(100% + 140px)); visibility:hidden; transition:transform .28s cubic-bezier(.2,.8,.2,1), visibility .28s; }
+  #imp.open { transform:none; visibility:visible; }
   @media (min-width:720px) { #imp { left:auto; width:400px; right:20px; } }
   #impList { max-height:38vh; overflow-y:auto; }
   .ir { display:flex; align-items:center; gap:10px; padding:9px 16px; font-size:13.5px; border-top:1px solid #F1EDE6; }
@@ -493,7 +493,7 @@
 
 <script>
 'use strict';
-const APP_VER = 'v5';
+const APP_VER = 'v6';
 const $ = s => document.querySelector(s);
 const $$ = s => [...document.querySelectorAll(s)];
 const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
@@ -1174,6 +1174,137 @@ async function fetchVia(url, kind, ms, onProg) {
   throw err || new Error('fail');
 }
 
+
+/* 문학이 아닌 위키문헌 문서(법령·조례·사전 등)는 결과에서 뺌 */
+const NOT_LIT = /(조례|법률|법$|시행령|시행규칙|규칙$|규정$|고시|훈령|예규|판례|판결|헌법|조약|협정|대백과|백과사전|사전$|선언문$|성명서|연설문|보도자료|대한민국 관보)/;
+
+/* ---------- 외국어: 인터넷 아카이브의 구텐베르크 모음 (브라우저에서 바로 열림) ---------- */
+const IA = 'https://archive.org';
+const IA_LANG = { eng: 'en', fre: 'fr', ger: 'de', spa: 'es', ita: 'it', por: 'pt', dut: 'nl', fin: 'fi', lat: 'la', jpn: 'ja', chi: 'zh', kor: 'ko', rus: 'ru', swe: 'sv', gre: 'el', dan: 'da', pol: 'pl', hun: 'hu' };
+function iaSearchUrl(q, page) {
+  const qq = String(q || '').replace(/[():"\\\[\]{}^~*?!+-]/g, ' ').trim();
+  const query = qq ? `collection:gutenberg AND (title:(${qq}) OR creator:(${qq}))` : 'collection:gutenberg';
+  return `${IA}/advancedsearch.php?q=${encodeURIComponent(query)}&fl[]=identifier&fl[]=title&fl[]=creator&fl[]=downloads&fl[]=language&fl[]=date&sort[]=downloads+desc&rows=30&page=${page}&output=json`;
+}
+function iaAuthor(c) {
+  c = Array.isArray(c) ? c[0] : c; c = String(c || '');
+  const years = (c.match(/(\d{3,4})\s*-\s*(\d{3,4})?/) || []).slice(1).filter(Boolean).join('–');
+  const parts = c.replace(/\d{3,4}\s*-?\s*(\d{3,4})?/g, '').split(',').map(x => x.trim()).filter(x => x && !/^(sir|lord|dame|mrs?\.?|jr\.?|sr\.?)$/i.test(x));
+  return { name: parts.length >= 2 ? `${parts[1]} ${parts[0]}` : (parts[0] || ''), years };
+}
+function mapIA(d) {
+  if (!d || !d.identifier) return null;
+  const a = iaAuthor(d.creator), lang = [].concat(d.language || 'eng').map(l => IA_LANG[l] || l);
+  return { gid: 'ia:' + d.identifier, ia: d.identifier, title: cleanTxt([].concat(d.title)[0]), author: a.name, years: a.years, lang, subjects: [], summary: '', cover: '', downloads: d.downloads || 0 };
+}
+
+/* ---------- 받은 글로 EPUB 만들기 (중계 서버 없이 앱 안에서) ---------- */
+const XE = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&apos;' }[c]));
+async function makeEpub(meta, chapters) {
+  const z = new JSZip(), lang = meta.lang || 'ko';
+  z.file('mimetype', 'application/epub+zip', { compression: 'STORE' });
+  z.file('META-INF/container.xml', '<?xml version="1.0" encoding="UTF-8"?><container version="1.0" xmlns="urn:oasis:names:tc:opendocument:xmlns:container"><rootfiles><rootfile full-path="OEBPS/content.opf" media-type="application/oebps-package+xml"/></rootfiles></container>');
+  z.file('OEBPS/style.css', 'body{line-height:1.75;margin:0 .2em}h2{font-size:1.3em;margin:1.2em 0 1em;line-height:1.45}p{margin:0 0 .9em;text-indent:1em}.poem p,.poem{text-indent:0}blockquote{margin:1em 1.2em}');
+  const items = [], spine = [], nav = [];
+  chapters.forEach((c, i) => {
+    const f = `c${i + 1}.xhtml`;
+    z.file('OEBPS/' + f, `<?xml version="1.0" encoding="utf-8"?>\n<!DOCTYPE html>\n<html xmlns="http://www.w3.org/1999/xhtml" lang="${lang}" xml:lang="${lang}"><head><meta charset="utf-8"/><title>${XE(c.title || meta.title)}</title><link rel="stylesheet" type="text/css" href="style.css"/></head><body>${c.title ? `<h2>${XE(c.title)}</h2>` : ''}${c.html}</body></html>`);
+    items.push(`<item id="c${i + 1}" href="${f}" media-type="application/xhtml+xml"/>`); spine.push(`<itemref idref="c${i + 1}"/>`);
+    nav.push(`<li><a href="${f}">${XE(c.title || String(i + 1))}</a></li>`);
+  });
+  z.file('OEBPS/nav.xhtml', `<?xml version="1.0" encoding="utf-8"?>\n<html xmlns="http://www.w3.org/1999/xhtml" xmlns:epub="http://www.idpf.org/2007/ops"><head><title>목차</title></head><body><nav epub:type="toc"><ol>${nav.join('')}</ol></nav></body></html>`);
+  z.file('OEBPS/content.opf', `<?xml version="1.0" encoding="utf-8"?>\n<package xmlns="http://www.idpf.org/2007/opf" version="3.0" unique-identifier="uid"><metadata xmlns:dc="http://purl.org/dc/elements/1.1/"><dc:identifier id="uid">urn:darak:${XE(meta.id)}</dc:identifier><dc:title>${XE(meta.title)}</dc:title><dc:creator>${XE(meta.author || '')}</dc:creator><dc:publisher>${XE(meta.source || '')}</dc:publisher><dc:language>${lang}</dc:language><meta property="dcterms:modified">${new Date().toISOString().replace(/\.\d+Z$/, 'Z')}</meta></metadata><manifest><item id="nav" href="nav.xhtml" media-type="application/xhtml+xml" properties="nav"/><item id="css" href="style.css" media-type="text/css"/>${items.join('')}</manifest><spine>${spine.join('')}</spine></package>`);
+  return z.generateAsync({ type: 'arraybuffer', compression: 'DEFLATE', mimeType: 'application/epub+zip' });
+}
+
+/* 구텐베르크 본문(글)을 장으로 나누기 */
+function textToChapters(raw) {
+  let t = raw.replace(/\r\n?/g, '\n').replace(/^﻿/, '');
+  const s0 = t.search(/\*\*\*\s*START OF (THE|THIS) PROJECT GUTENBERG[^\n]*/i); if (s0 >= 0) t = t.slice(t.indexOf('\n', s0) + 1);
+  const e0 = t.search(/\*\*\*\s*END OF (THE|THIS) PROJECT GUTENBERG|\n\s*End of (the )?Project Gutenberg/i); if (e0 > 0) t = t.slice(0, e0);
+  const paras = t.split(/\n[ \t]*\n+/).map(p => p.replace(/[ \t]*\n[ \t]*/g, ' ').replace(/_([^_]+)_/g, '$1').trim()).filter(Boolean);
+  const isHead = p => p.length < 90 && !/[.,;:!?]["'”’)]?$/.test(p.replace(/^[IVXLCDM]+\.$/, 'X')) && (
+    /^(chapter|book|part|volume|adventure|letter|stave|act|scene|canto|section|chapitre|kapitel|capítulo|capitolo)\b/i.test(p) || /^[IVXLCDM]+\.?(\s|$)/.test(p) || /^\d{1,3}\.?$/.test(p) ||
+    (p === p.toUpperCase() && /[A-Z]{2}/.test(p) && p.split(/\s+/).length <= 10));
+  const secs = []; let cur = { heads: [], paras: [] }, front = [];
+  for (const p of paras) {
+    if (isHead(p)) {
+      if (cur.paras.length) { secs.push(cur); cur = { heads: [p], paras: [] }; }
+      else { cur.heads.push(p); if (cur.heads.length > 3) { front.push(...cur.heads.slice(0, -1)); cur.heads = cur.heads.slice(-1); } }
+    } else cur.paras.push(p);
+  }
+  if (cur.paras.length || cur.heads.length) secs.push(cur);
+  let chapters = secs.map(x => ({ title: x.heads.join(' · '), paras: x.paras }));
+  if (front.length) chapters.unshift({ title: 'Contents', paras: front });
+  if (chapters.filter(c => c.paras.length > 5).length < 3) {          // 장 구분을 못 찾으면 40문단씩 나눔
+    const all = paras; chapters = [];
+    for (let i = 0; i < all.length; i += 40) chapters.push({ title: String(chapters.length + 1), paras: all.slice(i, i + 40) });
+  }
+  return chapters.filter(c => c.paras.length || c.title).map(c => ({ title: c.title, html: c.paras.map(p => `<p>${XE(p)}</p>`).join('') }));
+}
+async function buildFromIA(it, setP) {
+  const gnum = (String(it.ia).match(/(\d+)gut$/) || [])[1];
+  if (S.proxy && gnum) {   // 내 중계 주소가 있으면 그림이 들어간 원본 EPUB 먼저
+    try { return await fetchVia(`https://www.gutenberg.org/cache/epub/${+gnum}/pg${+gnum}-images-3.epub`, 'epub', 120000, n => setP(fmtSize(n) + ' 받는 중')); } catch {}
+  }
+  setP('본문 찾는 중…');
+  const m = await withTimeout(fetch(`${IA}/metadata/${it.ia}`).then(r => r.json()), 20000);
+  const txts = (m.files || []).map(f => f.name).filter(n => /\.txt$/i.test(n) && !/(_meta|_djvu|_files)\.txt$/i.test(n) && !/readme/i.test(n));
+  const pick = txts.find(n => /-0\.txt$/.test(n)) || txts.find(n => /^pg\d+\.txt$/.test(n)) || txts.find(n => /^\d+\.txt$/.test(n)) || txts.find(n => /-8\.txt$/.test(n)) || txts[0];
+  if (!pick) throw new Error('no text');
+  const host = m.d1 || m.server;
+  const urls = [host && m.dir ? `https://${host}${m.dir}/${pick.split('/').map(encodeURIComponent).join('/')}` : null, `${IA}/download/${it.ia}/${pick.split('/').map(encodeURIComponent).join('/')}`].filter(Boolean);
+  let buf = null, err;
+  for (const u of urls) { try { const r = await fetch(u); if (!r.ok) throw new Error('HTTP ' + r.status); buf = await readAll(r, n => setP(fmtSize(n) + ' 받는 중')); break; } catch (e) { err = e; } }
+  if (!buf) throw err || new Error('download');
+  let text = new TextDecoder('utf-8').decode(buf);
+  if ((text.match(/�/g) || []).length > 10) text = new TextDecoder('windows-1252').decode(buf);
+  setP('책으로 만드는 중…');
+  const chapters = textToChapters(text);
+  if (!chapters.length) throw new Error('empty');
+  return makeEpub({ title: it.title, author: it.author, lang: it.lang[0] || 'en', id: it.ia, source: 'Project Gutenberg' }, chapters);
+}
+
+/* ---------- 한국어: 위키문헌 글을 직접 모아 EPUB으로 ---------- */
+const WS_API = 'https://ko.wikisource.org/w/api.php?format=json&formatversion=2&origin=*&';
+async function wsParse(title) {
+  const j = await withTimeout(fetch(WS_API + 'action=parse&prop=text|links&redirects=1&disableeditsection=1&page=' + encodeURIComponent(title)).then(r => r.json()), 20000);
+  if (j.error) throw new Error(j.error.info || 'parse'); return j.parse;
+}
+function wsClean(html) {
+  const d = new DOMParser().parseFromString(`<div id="dkroot">${html}</div>`, 'text/html'), r = d.getElementById('dkroot');
+  r.querySelectorAll('style,script,link,meta,noscript,.mw-editsection,.ws-noexport,.noprint,.reference,.references,.mw-references-wrap,.navbox,.metadata,#headertemplate,.headertemplate,.ws-header,.mw-empty-elt,img,figure,.thumb,.licenseContainer,.licenseBanner,.toc,#toc,.mw-kartographer-maplink,sup.reference').forEach(e => e.remove());
+  r.querySelectorAll('table').forEach(tb => { if (/퍼블릭 도메인|public domain|저작권|라이선스|이 문서는/i.test(tb.textContent)) tb.remove(); });
+  r.querySelectorAll('a').forEach(a => a.replaceWith(...a.childNodes));
+  r.querySelectorAll('span,font').forEach(sp => { if (!sp.attributes.length || sp.tagName === 'FONT') sp.replaceWith(...sp.childNodes); });
+  r.querySelectorAll('*').forEach(e => [...e.attributes].forEach(at => { if (!(at.name === 'class' && /poem/.test(at.value))) e.removeAttribute(at.name); }));
+  r.querySelectorAll('h1,h2,h3').forEach(h => { const n = d.createElement('h3'); n.innerHTML = h.innerHTML; h.replaceWith(n); });
+  const ser = new XMLSerializer();
+  return { html: [...r.childNodes].map(n => ser.serializeToString(n)).join(''), len: (r.textContent || '').replace(/\s+/g, '').length };
+}
+async function buildFromWS(it, setP) {
+  setP('본문 찾는 중…');
+  const root = await wsParse(it.ws);
+  const title = root.title || it.ws;
+  const authorLink = (root.links || []).find(l => /^저자:/.test(l.title || ''));
+  const author = authorLink ? authorLink.title.replace(/^저자:/, '') : '';
+  const ap = await withTimeout(fetch(WS_API + 'action=query&list=allpages&apnamespace=0&aplimit=300&apprefix=' + encodeURIComponent(title + '/')).then(r => r.json()), 20000).catch(() => ({}));
+  let subs = ((ap.query && ap.query.allpages) || []).map(p => p.title).filter(t => !/\/(해설|주석|토론)$/.test(t));
+  const order = (root.links || []).map(l => l.title);
+  subs.sort((a, b) => { const ia = order.indexOf(a), ib = order.indexOf(b); if (ia >= 0 && ib >= 0) return ia - ib; if (ia >= 0) return -1; if (ib >= 0) return 1; return a.localeCompare(b, 'ko', { numeric: true }); });
+  subs = subs.slice(0, 150);
+  const chapters = [], main = wsClean(root.text || '');
+  if (main.len > 150 || !subs.length) chapters.push({ title: subs.length ? '들어가며' : '', html: main.html });
+  for (let i = 0; i < subs.length; i += 4) {
+    setP(`${Math.min(i + 4, subs.length)}/${subs.length}장 받는 중`);
+    const part = await Promise.all(subs.slice(i, i + 4).map(t => wsParse(t).then(pp => ({ title: t.slice(title.length + 1), ...wsClean(pp.text || '') })).catch(() => null)));
+    part.filter(c => c && c.len > 20).forEach(c => chapters.push({ title: c.title, html: c.html }));
+  }
+  if (!chapters.length || chapters.every(c => !c.html)) throw new Error('empty');
+  setP('책으로 만드는 중…');
+  return { buf: await makeEpub({ title, author, lang: 'ko', id: 'ws-' + title, source: '위키문헌' }, chapters), author };
+}
+
 const flipName = n => { n = String(n || '').replace(/\s*\([^)]*\)/g, '').trim(); const m = n.match(/^([^,]+),\s*(.+)$/); return m ? `${m[2]} ${m[1]}` : n; };
 function mapGut(g) {
   const f = g.formats || {};
@@ -1198,8 +1329,8 @@ async function doFreeSearch(more, popular) {
     $('#searchQ').placeholder = freePlaceholder();
     if (src === 'ko' && !q) { renderFree(); return; }
     url = src === 'ko'
-      ? `https://ko.wikisource.org/w/api.php?action=query&list=search&srsearch=${encodeURIComponent(q)}&srnamespace=0&srlimit=40&srprop=snippet|size&format=json&origin=*`
-      : 'https://gutendex.com/books/?mime_type=application%2Fepub' + (q ? '&search=' + encodeURIComponent(q) : '');
+      ? `https://ko.wikisource.org/w/api.php?action=query&list=search&srsearch=${encodeURIComponent('intitle:' + q)}&srnamespace=0&srlimit=40&srprop=snippet|size&format=json&origin=*`
+      : iaSearchUrl(q, 1);
     $('#searchRes').innerHTML = srcSeg() + (FR.popular ? FREE_HINT + quickChips() : '') + `<div class="flex items-center justify-center gap-2 text-[13.5px] text-mute py-8"><span class="ir work !p-0 !border-0"><span class="dot"></span></span>${q ? (src === 'ko' ? '위키문헌에서 찾는 중…' : '구텐베르크에서 찾는 중…') : '인기 고전 불러오는 중…'}</div>`;
     $('#searchMore').classList.add('hidden'); $('#searchMeta').textContent = '';
     if (q) $('#searchQ').blur();
@@ -1211,17 +1342,26 @@ async function doFreeSearch(more, popular) {
     if (FR !== mine) return;
     if (src === 'ko') {
       const seen = new Set(FR.items.map(x => x.ws));
-      for (const r of (j.query && j.query.search) || []) {
+      let hits = (j.query && j.query.search) || [];
+      if (!more && hits.length < 3 && /intitle%3A/.test(url)) {   // 제목에 없으면 본문 검색으로 한 번 더
+        url = url.replace(/srsearch=intitle%3A/, 'srsearch=');
+        const j2 = await fetchVia(url, 'json', 20000); if (FR !== mine) return;
+        hits = hits.concat((j2.query && j2.query.search) || []); j.continue = j2.continue; j.query = j2.query;
+      }
+      for (const r of hits) {
         const root = String(r.title).split('/')[0];
-        if (seen.has(root) || /^(분류|틀|저자|위키문헌|포털):/.test(root)) continue; seen.add(root);
+        if (seen.has(root) || /^(분류|틀|저자|위키문헌|포털):/.test(root) || NOT_LIT.test(root)) continue; seen.add(root);
         FR.items.push({ gid: 'ko:' + root, ws: root, title: root, author: '', years: '', lang: ['ko'], subjects: [], summary: cleanTxt(stripHtml(r.snippet || '')).slice(0, 160), cover: '', downloads: 0 });
       }
       const off = j.continue && j.continue.sroffset;
       FR.next = off ? url.replace(/&sroffset=\d+/, '') + '&sroffset=' + off : null;
       FR.count = (j.query && j.query.searchinfo && j.query.searchinfo.totalhits) || FR.items.length;
     } else {
-      FR.items.push(...(j.results || []).map(mapGut).filter(Boolean));
-      FR.next = j.next || null; FR.count = j.count || FR.items.length;
+      const docs = (j.response && j.response.docs) || [];
+      FR.items.push(...docs.map(mapIA).filter(Boolean));
+      FR.page = (FR.page || 1);
+      FR.count = (j.response && j.response.numFound) || FR.items.length;
+      FR.next = FR.count > FR.page * 30 ? iaSearchUrl(FR.q, ++FR.page) : null;
     }
     FR.err = null;
   } catch (e) { if (FR !== mine) return; FR.err = e; }
@@ -1239,7 +1379,7 @@ function renderFree() {
   const box = $('#searchRes'), ko = FR.src === 'ko';
   $('#searchMore').textContent = '검색 결과 더 보기';
   $('#searchMore').classList.toggle('hidden', !FR.next);
-  $('#searchMeta').textContent = FR.items.length ? (FR.popular ? `가장 많이 받은 고전 · Project Gutenberg` : `‘${FR.q}’ 검색 결과 ${FR.count.toLocaleString()}건 · ${ko ? '한국어 위키문헌' : 'Project Gutenberg'}`) : '';
+  $('#searchMeta').textContent = FR.items.length ? (FR.popular ? `가장 많이 받은 고전 · Project Gutenberg` : `‘${FR.q}’ 검색 결과 ${ko ? FR.items.length : FR.count.toLocaleString()}건 · ${ko ? '한국어 위키문헌' : 'Project Gutenberg'}`) : '';
   const head = srcSeg() + (FR.popular ? (ko ? FREE_HINT_KO : FREE_HINT) + quickChips() : '');
   if (!FR.items.length) {
     box.innerHTML = head + (FR.popular && ko ? '' : FR.err
@@ -1250,14 +1390,14 @@ function renderFree() {
   box.innerHTML = head + FR.items.map((it, i) => `
     <div class="res" data-fi="${i}">
       ${it.cover ? `<img src="${esc(it.cover)}" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.outerHTML='<div class=noimg></div>'">`
-        : ko ? `<div class="noimg cover-c" style="position:relative;overflow:hidden">${genCoverHTML({ title: it.title, author: '' })}</div>` : `<div class="noimg"></div>`}
+        : `<div class="noimg cover-c" style="position:relative;overflow:hidden">${genCoverHTML({ title: it.title, author: it.author || '' })}</div>`}
       <div class="min-w-0 flex-1">
         <div class="font-bold text-[15px] leading-snug" style="display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden">${esc(it.title)}</div>
         ${ko ? '' : `<div class="text-[12.5px] text-mute mt-1 truncate">${esc([it.author, it.years].filter(Boolean).join(' · ') || '작자 미상')}</div>`}
-        <div class="desc">${esc(it.summary || it.subjects.join(' / '))}</div>
+        ${(it.summary || it.subjects.length) ? `<div class="desc">${esc(it.summary || it.subjects.join(' / '))}</div>` : ''}
         <div class="flex items-center gap-2 mt-2.5 flex-wrap">
           <span class="src al">무료</span>
-          <span class="text-[11px] text-mute">${ko ? '한국어 · 위키문헌' : esc(it.lang.map(l => LANGS[l] || l).join('·')) + ' · ' + it.downloads.toLocaleString() + '회 받음'}</span>
+          <span class="text-[11px] text-mute">${ko ? '한국어 · 위키문헌' : esc(it.lang.map(l => LANGS[l] || l).join('·')) + (it.downloads ? ' · ' + it.downloads.toLocaleString() + '회 받음' : '')}</span>
           <span class="flex-1"></span>${freeBtn(it, i)}
         </div>
       </div>
@@ -1275,24 +1415,26 @@ async function downloadFree(it) {
   const setP = txt => { DL.set(it.gid, txt); paintFreeBtn(it.gid); };
   setP('연결 중…');
   try {
-    const base = `https://www.gutenberg.org/cache/epub/${it.gid}/pg${it.gid}`;
-    const cands = it.ws
-      ? [`https://ws-export.wmcloud.org/?format=epub-3&lang=ko&page=${encodeURIComponent(it.ws.replace(/ /g, '_'))}`]
-      : [...new Set([base + '-images-3.epub', base + '-images.epub', it.epub].filter(Boolean))];
     let buf = null, lastErr;
-    for (const u of cands) {
-      try { buf = await fetchVia(u, 'epub', 120000, n => setP(fmtSize(n) + ' 받는 중')); break; } catch (e) { lastErr = e; }
+    if (it.ws) { const r = await buildFromWS(it, setP); buf = r.buf; if (!it.author) it.author = r.author; }
+    else if (it.ia) buf = await buildFromIA(it, setP);
+    else {
+      const base = `https://www.gutenberg.org/cache/epub/${it.gid}/pg${it.gid}`;
+      const cands = [...new Set([base + '-images-3.epub', base + '-images.epub', it.epub].filter(Boolean))];
+      for (const u of cands) {
+        try { buf = await fetchVia(u, 'epub', 120000, n => setP(fmtSize(n) + ' 받는 중')); break; } catch (e) { lastErr = e; }
+      }
     }
     if (!buf) throw lastErr || new Error('download');
     setP('서재에 꽂는 중…');
     try { navigator.storage && navigator.storage.persist && navigator.storage.persist(); } catch {}
-    const fname = it.ws ? `${it.ws}.epub` : `pg${it.gid}.epub`;
+    const fname = it.ws ? `${it.ws}.epub` : it.ia ? `${it.ia}.epub` : `pg${it.gid}.epub`;
     const info = await parseEpub(buf, fname);
     if (!info.cover && it.cover) { const bl = await fetchVia(it.cover, 'blob', 15000).catch(() => null); if (bl) info.cover = await shrinkImage(bl); }
     if (it.ws && info.cover && info.cover.size < 2500) info.cover = null;   // 위키문헌 기본 표지가 비어 있으면 다락서재 표지로
     const b = { id: uid(), ...info, title: it.title || info.title, author: it.author || info.author, publisher: it.ws ? '위키문헌' : 'Project Gutenberg',
       description: it.summary || info.description || it.subjects.join(' · '), language: it.lang[0] || info.language, category: it.subjects[0] || '',
-      link: it.ws ? `https://ko.wikisource.org/wiki/${encodeURIComponent(it.ws.replace(/ /g, '_'))}` : `https://www.gutenberg.org/ebooks/${it.gid}`, source: it.ws ? 'wikisource' : 'gutenberg', gid: it.gid,
+      link: it.ws ? `https://ko.wikisource.org/wiki/${encodeURIComponent(it.ws.replace(/ /g, '_'))}` : it.ia ? `https://archive.org/details/${it.ia}` : `https://www.gutenberg.org/ebooks/${it.gid}`, source: it.ws ? 'wikisource' : 'gutenberg', gid: it.gid,
       hasFile: true, fileName: fname, size: buf.byteLength, added: Date.now(), lastRead: 0, progress: 0, cfi: null, bookmarks: [] };
     await DB.put('files', { id: b.id, data: buf });
     await DB.put('books', b);
@@ -1301,7 +1443,7 @@ async function downloadFree(it) {
     toast(`‘${b.title.length > 16 ? b.title.slice(0, 16) + '…' : b.title}’ 받았어요 · 바로 읽기를 누르세요`, 3000);
   } catch (e) {
     console.warn(e); DL.delete(it.gid); paintFreeBtn(it.gid);
-    toast(e && e.name === 'QuotaExceededError' ? '저장 공간이 부족해요' : '다운로드에 실패했어요. 잠시 뒤 다시 눌러 주세요', 3200);
+    toast(e && e.name === 'QuotaExceededError' ? '저장 공간이 부족해요' : e && e.message === 'empty' ? '이 항목은 본문이 없어요 (목록·안내 문서예요)' : '받지 못했어요. 인터넷 연결을 확인하고 다시 눌러 주세요', 3400);
   }
 }
 
