@@ -4,7 +4,7 @@
                → 코드 편집에서 아래 내용을 통째로 붙여넣고 배포 → 나온 주소(https://….workers.dev)를
                다락서재 설정 › '무료 고전 다운로드 중계 주소'에 붙여넣기
    보안: 아래 ALLOW에 적힌 곳만 중계해요 (아무 사이트나 중계하는 열린 프록시가 되지 않게). */
-const ALLOW = ['gutendex.com', 'www.gutenberg.org', 'gutenberg.org', 'aleph.gutenberg.org'];
+const ALLOW = ['gutendex.com', 'www.gutenberg.org', 'gutenberg.org', 'aleph.gutenberg.org', 'ws-export.wmcloud.org', 'ko.wikisource.org'];
 const CORS = { 'Access-Control-Allow-Origin': '*', 'Access-Control-Allow-Methods': 'GET, OPTIONS', 'Access-Control-Expose-Headers': 'Content-Length, Content-Type' };
 
 export default {

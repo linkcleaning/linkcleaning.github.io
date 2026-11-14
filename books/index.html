@@ -38,7 +38,9 @@
           --st:env(safe-area-inset-top); --sb:env(safe-area-inset-bottom); }
   * { box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
   html, body { margin:0; background:var(--paper); color:var(--ink); font-family:"SUIT Variable",SUIT,-apple-system,BlinkMacSystemFont,"Apple SD Gothic Neo","Malgun Gothic",sans-serif; letter-spacing:-.01em; }
-  button { font:inherit; color:inherit; background:none; border:0; cursor:pointer; padding:0; }
+  button { font:inherit; color:inherit; background:none; border:0; cursor:pointer; padding:0; touch-action:manipulation; }
+  html { -webkit-text-size-adjust:100%; text-size-adjust:100%; }
+  select { font-size:16px !important; }
   button:focus:not(:focus-visible) { outline:none; }
   input, textarea, select { font:inherit; color:inherit; }
   .hidden { display:none !important; }
@@ -98,6 +100,28 @@
   .ring { --p:0; width:46px; height:46px; border-radius:50%; background:conic-gradient(var(--orange) calc(var(--p)*1%), #ECE7DE 0); display:grid; place-items:center; }
   .ring span { width:36px; height:36px; border-radius:50%; background:#fff; display:grid; place-items:center; font-size:11px; font-weight:800; color:var(--deep); }
 
+  /* 아래쪽 탭 메뉴 — 스마트폰 전용 */
+  #tabbar { position:fixed; left:0; right:0; bottom:0; z-index:40; display:flex; align-items:flex-end; padding:5px 4px calc(4px + var(--sb)); background:rgba(255,255,255,.92); -webkit-backdrop-filter:blur(18px) saturate(1.4); backdrop-filter:blur(18px) saturate(1.4); box-shadow:0 -1px 0 var(--line); }
+  #tabbar button { flex:1; display:flex; flex-direction:column; align-items:center; gap:2px; font-size:10.5px; font-weight:700; color:#959A97; padding:3px 0 2px; letter-spacing:-.02em; }
+  #tabbar button svg { width:25px; height:25px; }
+  #tabbar button.on { color:var(--deep); }
+  #tabbar button.on svg { stroke-width:2.3; }
+  #tabbar .tb-add { color:var(--deep); }
+  #tabbar .tb-add b { width:50px; height:50px; margin-top:-24px; margin-bottom:1px; border-radius:17px; background:var(--orange); color:#fff; display:grid; place-items:center; box-shadow:0 8px 18px -6px rgba(217,121,42,.75), 0 0 0 4px var(--paper); }
+  #tabbar .tb-add b svg { width:26px; height:26px; }
+  #tabbar button:active { opacity:.6; }
+  @media (min-width:640px) { #tabbar { display:none; } }
+  @media (max-width:639px) {
+    #fab, #btnWeb, #btnSet { display:none !important; }
+    #lib { padding-bottom:calc(92px + var(--sb)) !important; }
+    #imp { bottom:calc(76px + var(--sb)); }
+    #top .icon-btn { width:40px; height:40px; }
+    .hero { padding:16px; border-radius:22px; }
+    .big-pct { font-size:50px; }
+    .res { padding:12px; gap:12px; }
+    .res img, .res .noimg { width:58px; height:86px; }
+  }
+  @media (max-width:359px) { .big-pct { font-size:42px; } .go-btn { padding:10px 14px; font-size:14px; } }
   #fab { position:fixed; right:18px; bottom:calc(20px + var(--sb)); z-index:35; width:60px; height:60px; border-radius:20px; background:var(--deep); color:#fff; display:grid; place-items:center; box-shadow:0 14px 30px -10px rgba(14,59,64,.75); }
   #fab svg { width:28px; height:28px; }
   #fab:active { transform:scale(.95); }
@@ -108,7 +132,7 @@
   /* ---------- 시트(아래에서 올라오는 창) ---------- */
   .scrim { position:fixed; inset:0; z-index:60; background:rgba(14,22,21,.42); opacity:0; pointer-events:none; transition:opacity .22s; }
   .scrim.open { opacity:1; pointer-events:auto; }
-  .sheet { position:fixed; left:0; right:0; bottom:0; z-index:61; max-height:calc(100% - 40px - var(--st)); display:flex; flex-direction:column; background:var(--paper); border-radius:26px 26px 0 0; transform:translateY(105%); transition:transform .28s cubic-bezier(.2,.8,.2,1); padding-bottom:var(--sb); box-shadow:0 -10px 40px -10px rgba(0,0,0,.25); }
+  .sheet { position:fixed; left:0; right:0; bottom:0; z-index:61; max-height:calc(100% - 40px - var(--st)); max-height:calc(100dvh - 40px - var(--st)); display:flex; flex-direction:column; background:var(--paper); border-radius:26px 26px 0 0; transform:translateY(105%); transition:transform .28s cubic-bezier(.2,.8,.2,1); padding-bottom:var(--sb); box-shadow:0 -10px 40px -10px rgba(0,0,0,.25); }
   .sheet.open { transform:none; }
   @media (min-width:720px) { .sheet { left:50%; right:auto; width:560px; bottom:50%; border-radius:26px; transform:translate(-50%, 60%) scale(.98); opacity:0; pointer-events:none; transition:transform .22s, opacity .22s; max-height:86vh; padding-bottom:0; }
     .sheet.open { transform:translate(-50%, 50%); opacity:1; pointer-events:auto; } }
@@ -117,7 +141,8 @@
   .sheet .body { overflow-y:auto; -webkit-overflow-scrolling:touch; overscroll-behavior:contain; padding:6px 18px 20px; }
   .field { display:block; }
   .field span { display:block; font-size:12px; font-weight:700; color:var(--mute); margin:0 0 6px 2px; }
-  .field input, .field textarea, .inp { width:100%; border:1px solid var(--line); background:#fff; border-radius:13px; padding:12px 14px; font-size:15.5px; outline:none; }
+  .field input, .field textarea, .inp { width:100%; border:1px solid var(--line); background:#fff; border-radius:13px; padding:12px 14px; font-size:16px; outline:none; -webkit-appearance:none; appearance:none; }
+  input[type=search]::-webkit-search-cancel-button { -webkit-appearance:none; }
   .field input:focus, .field textarea:focus, .inp:focus { border-color:var(--teal); box-shadow:0 0 0 3px rgba(28,124,128,.14); }
   .btn { display:inline-flex; align-items:center; justify-content:center; gap:7px; padding:13px 16px; border-radius:14px; font-weight:700; font-size:15px; }
   .btn-pri { background:var(--deep); color:#fff; }
@@ -139,7 +164,8 @@
   .add-btn.have { background:#EAF5E3; color:#3F7F26; }
   .add-btn.fill { background:var(--deep); }
   .add-btn:active { filter:brightness(.93); }
-  #shSearch { height:calc(100% - 40px - var(--st)); }
+  #shSearch { height:calc(100% - 40px - var(--st)); height:calc(100dvh - 40px - var(--st)); }
+  @media (max-width:639px) { #shSearch { height:calc(100dvh - 10px - var(--st)); max-height:calc(100dvh - 10px - var(--st)); } }
   .tabs { display:flex; background:#EAE5DC; border-radius:14px; padding:3px; gap:2px; }
   .tabs button { flex:1; padding:10px 0; border-radius:11px; font-size:14px; font-weight:600; color:#6B716E; }
   .tabs button.on { background:#fff; color:var(--deep); font-weight:800; box-shadow:0 1px 3px rgba(0,0,0,.08); }
@@ -224,7 +250,7 @@
         <svg viewBox="0 0 40 40" class="w-9 h-9 flex-none" aria-hidden="true"><rect width="40" height="40" rx="12" fill="#0E3B40"/><path d="M9 12.5c3.8-1.6 7.5-1.3 11 1.2v15.6c-3.5-2.3-7.2-2.6-11-1.2z" fill="#F5F2EC"/><path d="M31 12.5c-3.8-1.6-7.5-1.3-11 1.2v15.6c3.5-2.3 7.2-2.6 11-1.2z" fill="#E3DCCD"/><path d="M24.5 12v8.5l2-1.6 2 1.6V11.6c-1.4-.2-2.7 0-4 .4z" fill="#F2994A"/></svg>
         <div class="min-w-0">
           <h1 class="serif font-extrabold text-[21px] leading-none tracking-tight text-teal-deep">다락서재</h1>
-          <p id="libCount" class="text-[11.5px] text-mute mt-1 leading-none">책을 넣어 주세요</p>
+          <p id="libCount" class="text-[11.5px] text-mute mt-1 leading-none whitespace-nowrap overflow-hidden text-ellipsis">책을 넣어 주세요</p>
         </div>
       </div>
       <button class="icon-btn" id="btnWeb" aria-label="인터넷 도서 검색"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5V5a2 2 0 0 1 2-2h11v13.5"/><path d="M4 19.5A2.5 2.5 0 0 0 6.5 22H12"/><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H11"/><circle cx="17" cy="17" r="3.2"/><path d="m21.5 21.5-2.2-2.2"/></svg></button>
@@ -261,6 +287,13 @@
 
     <section id="shelf" class="mt-4"></section>
   </main>
+  <nav id="tabbar" aria-label="메뉴">
+    <button data-nav="lib" class="on"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M4.5 4.5h3.5v15H4.5zM10 4.5h3.5v15H10z"/><path d="m15.6 5.6 3.3-.9 3.6 13.6-3.3.9z"/></svg>서재</button>
+    <button data-nav="kr"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"><circle cx="11" cy="11" r="6.5"/><path d="m20 20-4.2-4.2"/></svg>책 찾기</button>
+    <button data-nav="add" class="tb-add" aria-label="책 추가"><b><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg></b>추가</button>
+    <button data-nav="free"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M3.5 5.5c2.9-1.2 5.7-.9 8.5 1v13c-2.8-1.9-5.6-2.2-8.5-1z"/><path d="M20.5 5.5c-2.9-1.2-5.7-.9-8.5 1v13c2.8-1.9 5.6-2.2 8.5-1z"/></svg>무료 고전</button>
+    <button data-nav="set"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"><path d="M4 7h10M18 7h2M4 17h4M12 17h8"/><circle cx="16" cy="7" r="2.2"/><circle cx="10" cy="17" r="2.2"/></svg>설정</button>
+  </nav>
   <button id="fab" aria-label="책 추가"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg><i></i></button>
 </div>
 
@@ -451,7 +484,7 @@
 
 <script>
 'use strict';
-const APP_VER = 'v3';
+const APP_VER = 'v4';
 const $ = s => document.querySelector(s);
 const $$ = s => [...document.querySelectorAll(s)];
 const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
@@ -547,7 +580,7 @@ const FILTERS = [['all', '전체'], ['reading', '읽는 중'], ['unread', '안 �
 function renderLibrary() {
   const n = books.length, cnt = { all: n, reading: 0, unread: 0, done: 0, paper: 0 };
   books.forEach(b => { cnt[statusOf(b)]++; if (!b.hasFile) cnt.paper++; });
-  $('#libCount').textContent = n ? `책 ${n}권 · 읽는 중 ${cnt.reading} · 완독 ${cnt.done}` : '책을 넣어 주세요';
+  $('#libCount').textContent = n ? `${n}권 · 읽는 중 ${cnt.reading} · 완독 ${cnt.done}` : '책을 넣어 주세요';
   $('#btnView').innerHTML = VIEW_ICONS[S.view];
   $('#sortSel').value = S.sort;
 
@@ -817,8 +850,18 @@ $('#fileEpub').onchange = e => { enqueue(e.target.files); e.target.value = ''; }
 if ('launchQueue' in window) launchQueue.setConsumer(async p => { if (!p.files || !p.files.length) return; const fs = []; for (const h of p.files) fs.push(await h.getFile()); await loaded; enqueue(fs); });
 
 /* ---------------- 시트 열고 닫기 ---------------- */
-function openSheet(id) { $$('.sheet.open').forEach(s => s.id !== id && s.classList.remove('open')); $('#' + id).classList.add('open'); $('#scrim').classList.add('open'); }
-function closeSheets() { $$('.sheet.open').forEach(s => s.classList.remove('open')); $('#scrim').classList.remove('open'); }
+function navMark(k) { $$('#tabbar [data-nav]').forEach(b => b.classList.toggle('on', b.dataset.nav === k)); }
+function openSheet(id) { $$('.sheet.open').forEach(s => s.id !== id && s.classList.remove('open')); $('#' + id).classList.add('open'); $('#scrim').classList.add('open');
+  navMark(id === 'shSearch' ? (searchMode.mode === 'fill' ? 'lib' : searchTab) : id === 'shSet' ? 'set' : id === 'shAdd' ? 'add' : 'lib'); }
+function closeSheets() { $$('.sheet.open').forEach(s => s.classList.remove('open')); $('#scrim').classList.remove('open'); navMark('lib'); }
+$('#tabbar').onclick = e => {
+  const b = e.target.closest('[data-nav]'); if (!b) return;
+  const k = b.dataset.nav;
+  if (k === 'lib') { closeSheets(); scrollTo({ top: 0, behavior: 'smooth' }); }
+  else if (k === 'kr' || k === 'free') openSearch('new', null, '', k);
+  else if (k === 'add') openSheet('shAdd');
+  else if (k === 'set') $('#btnSet').click();
+};
 $('#scrim').onclick = closeSheets;
 $$('.sheet').forEach(sh => {   // 손잡이를 아래로 끌면 닫힘
   let y0 = null;
@@ -843,6 +886,7 @@ addEventListener('scroll', () => $('#top').classList.toggle('scrolled', scrollY 
 
 /* ---------------- 인터넷 도서 검색 (알라딘 · 카카오 · 구글 도서 · 오픈라이브러리) ---------------- */
 let searchMode = { mode: 'new', id: null };
+let searchTab = 'kr';
 const newSR = () => ({ q: '', isb: false, page: 1, items: [], seen: new Set(), loading: false, more: false, srcs: [] });
 let SR = newSR();
 const isIsbn = q => /^(97[89])?\d{9}[\dXx]$/.test(String(q).replace(/[-\s]/g, ''));
@@ -851,7 +895,6 @@ const decodeEnt = s => { if (!s) return ''; const t = document.createElement('te
 const cleanAuthor = s => cleanTxt(String(s || '').replace(/\s*\((지은이|옮긴이|엮은이|그림|글|감수|편|편저|지음|역|저|원작|사진|기획|해설|일러스트)\)/g, '').replace(/\s*,\s*/g, ', ')).replace(/,\s*$/, '');
 const SEARCH_HINT = `<div class="text-center py-10 px-4"><div class="serif font-bold text-[17px]">어떤 책을 찾을까요?</div><p class="text-[13px] text-mute mt-2 leading-relaxed">제목·저자로 찾거나 책 뒷면 바코드 위<br>ISBN 13자리를 넣어 보세요.<br>파일이 없어도 표지·소개와 함께 책장에 꽂혀요.</p></div>`;
 
-let searchTab = 'kr';
 function openSearch(mode, id, q, tab) {
   searchMode = { mode, id };
   searchTab = mode === 'fill' ? 'kr' : (tab || S.tab || 'kr');
@@ -863,10 +906,10 @@ function openSearch(mode, id, q, tab) {
   setTimeout(() => { if (q) doSearch(); else if (innerWidth >= 720) $('#searchQ').focus(); }, 280);
 }
 function setTab(tab, keepQuiet) {
-  searchTab = tab; if (searchMode.mode !== 'fill') { S.tab = tab; saveS(); }
+  searchTab = tab; if (searchMode.mode !== 'fill') { S.tab = tab; saveS(); navMark(tab); }
   $$('#searchTabs button').forEach(b => b.classList.toggle('on', b.dataset.tab === tab));
   const free = tab === 'free';
-  $('#searchQ').placeholder = free ? '영어 제목·작가 (예: Sherlock, Alice)' : '제목, 저자 또는 ISBN';
+  $('#searchQ').placeholder = free ? freePlaceholder() : '제목, 저자, ISBN';
   $('#keyBanner').classList.toggle('hidden', free || !!S.aladin);
   $('#searchManual').classList.toggle('hidden', free);
   $('#searchMeta').textContent = ''; $('#searchMore').classList.add('hidden'); $('#searchBody').scrollTop = 0;
@@ -956,8 +999,9 @@ $('#searchRes').onclick = e => {
   const qc = e.target.closest('[data-q]'); if (qc) { $('#searchQ').value = qc.dataset.q; doSearch(); return; }
   if (e.target.closest('[data-retry]')) { FR.q ? doFreeSearch() : doFreeSearch(false, true); return; }
   const rb = e.target.closest('[data-read]'); if (rb) { openReader(rb.dataset.read); return; }
-  const db = e.target.closest('[data-dl]'); if (db) { downloadFree(FR.items.find(x => x.gid === +db.dataset.dl)); return; }
-  if (e.target.closest('[data-free]')) return;
+  const db = e.target.closest('[data-dl]'); if (db) { downloadFree(FR.items[+db.dataset.dl]); return; }
+  const fs = e.target.closest('[data-fsrc]'); if (fs) { if (fs.dataset.fsrc !== FR.src) { S.freeSrc = fs.dataset.fsrc; saveS(); $('#searchQ').value = ''; doFreeSearch(false, true); } return; }
+  if (e.target.closest('[data-fi]')) return;
   const ab = e.target.closest('[data-add]');
   if (ab) { e.stopPropagation(); const r = SR.items[+ab.dataset.add]; if (searchMode.mode === 'fill') pickResult(r); else { const ex = inLibrary(r); ex ? openDetail(ex.id) : addResult(r); } return; }
   const el = e.target.closest('[data-ri]'); if (el) pickResult(SR.items[+el.dataset.ri]);
@@ -1034,7 +1078,7 @@ async function searchKakao(q, isb, page) {
 /* ======================================================================
    무료 고전 이북 (Project Gutenberg · Gutendex API)
    ====================================================================== */
-const newFR = () => ({ q: '', items: [], next: null, count: 0, loading: false, err: null, popular: false });
+const newFR = () => ({ q: '', items: [], next: null, count: 0, loading: false, err: null, popular: false, src: S.freeSrc || 'ko' });
 let FR = newFR();
 const DL = new Map();   // gid → 진행 문구
 const QUICK = ['Sherlock Holmes', 'Alice', 'Homer', 'Jane Austen', 'Shakespeare', 'Grimm', 'Andersen', 'Peter Pan', 'Little Women', 'Dracula', 'Tolstoy', 'Dostoevsky'];
@@ -1096,14 +1140,23 @@ function mapGut(g) {
     years: (g.authors || [])[0] ? [g.authors[0].birth_year, g.authors[0].death_year].filter(x => x != null).join('–') : '',
     lang: g.languages || [], subjects: subj, summary: cleanTxt((g.summaries || [])[0] || ''), cover: f['image/jpeg'] || '', epub: f[epubKey], downloads: g.download_count || 0 };
 }
+const QUICK_KO = ['운수 좋은 날', '메밀꽃 필 무렵', '동백꽃', '봄봄', '날개', '진달래꽃', '님의 침묵', '홍길동전', '춘향전', '심청전', '흥부전', '구운몽', '무정', '감자', '탁류'];
+const FREE_HINT_KO = `<div class="text-center pt-5 pb-3 px-4"><div class="serif font-bold text-[17px]">한국 고전·근대문학 무료 이북</div><p class="text-[13px] text-mute mt-2 leading-relaxed">저작권이 끝난 한국어 작품을 위키문헌에서 찾아<br>EPUB으로 받아 서재에 저장해요.</p></div>`;
+const srcSeg = () => `<div class="seg mb-3" style="background:#EAE5DC" id="freeSrc"><button data-fsrc="ko" class="${FR.src === 'ko' ? 'on' : ''}" style="${FR.src === 'ko' ? 'background:#fff;color:var(--deep)' : ''}">한국어 · 위키문헌</button><button data-fsrc="en" class="${FR.src === 'en' ? 'on' : ''}" style="${FR.src === 'en' ? 'background:#fff;color:var(--deep)' : ''}">외국어 · 구텐베르크</button></div>`;
+const freePlaceholder = () => (S.freeSrc || 'ko') === 'ko' ? '작품·작가 (예: 운수 좋은 날)' : '영어로 (예: Sherlock, Alice)';
 async function doFreeSearch(more, popular) {
   if (FR.loading) return;
+  const src = S.freeSrc || 'ko';
   let url;
   if (!more) {
     const q = popular ? '' : $('#searchQ').value.trim();
-    FR = newFR(); FR.q = q; FR.popular = !q;
-    url = 'https://gutendex.com/books/?mime_type=application%2Fepub' + (q ? '&search=' + encodeURIComponent(q) : '');
-    $('#searchRes').innerHTML = (FR.popular ? FREE_HINT + quickChips() : '') + `<div class="flex items-center justify-center gap-2 text-[13.5px] text-mute py-8"><span class="ir work !p-0 !border-0"><span class="dot"></span></span>${q ? '구텐베르크에서 찾는 중…' : '인기 고전 불러오는 중…'}</div>`;
+    FR = newFR(); FR.q = q; FR.popular = !q; FR.src = src;
+    $('#searchQ').placeholder = freePlaceholder();
+    if (src === 'ko' && !q) { renderFree(); return; }
+    url = src === 'ko'
+      ? `https://ko.wikisource.org/w/api.php?action=query&list=search&srsearch=${encodeURIComponent(q)}&srnamespace=0&srlimit=40&srprop=snippet|size&format=json&origin=*`
+      : 'https://gutendex.com/books/?mime_type=application%2Fepub' + (q ? '&search=' + encodeURIComponent(q) : '');
+    $('#searchRes').innerHTML = srcSeg() + (FR.popular ? FREE_HINT + quickChips() : '') + `<div class="flex items-center justify-center gap-2 text-[13.5px] text-mute py-8"><span class="ir work !p-0 !border-0"><span class="dot"></span></span>${q ? (src === 'ko' ? '위키문헌에서 찾는 중…' : '구텐베르크에서 찾는 중…') : '인기 고전 불러오는 중…'}</div>`;
     $('#searchMore').classList.add('hidden'); $('#searchMeta').textContent = '';
     if (q) $('#searchQ').blur();
   } else { url = FR.next; if (!url) return; $('#searchMore').textContent = '불러오는 중…'; }
@@ -1112,51 +1165,65 @@ async function doFreeSearch(more, popular) {
   try {
     const j = await fetchVia(url, 'json', 20000);
     if (FR !== mine) return;
-    FR.items.push(...(j.results || []).map(mapGut).filter(Boolean));
-    FR.next = j.next || null; FR.count = j.count || FR.items.length; FR.err = null;
+    if (src === 'ko') {
+      const seen = new Set(FR.items.map(x => x.ws));
+      for (const r of (j.query && j.query.search) || []) {
+        const root = String(r.title).split('/')[0];
+        if (seen.has(root) || /^(분류|틀|저자|위키문헌|포털):/.test(root)) continue; seen.add(root);
+        FR.items.push({ gid: 'ko:' + root, ws: root, title: root, author: '', years: '', lang: ['ko'], subjects: [], summary: cleanTxt(stripHtml(r.snippet || '')).slice(0, 160), cover: '', downloads: 0 });
+      }
+      const off = j.continue && j.continue.sroffset;
+      FR.next = off ? url.replace(/&sroffset=\d+/, '') + '&sroffset=' + off : null;
+      FR.count = (j.query && j.query.searchinfo && j.query.searchinfo.totalhits) || FR.items.length;
+    } else {
+      FR.items.push(...(j.results || []).map(mapGut).filter(Boolean));
+      FR.next = j.next || null; FR.count = j.count || FR.items.length;
+    }
+    FR.err = null;
   } catch (e) { if (FR !== mine) return; FR.err = e; }
   FR.loading = false;
   if (searchTab === 'free') renderFree();
 }
-const quickChips = () => `<div class="flex flex-wrap gap-2 justify-center px-2 pb-5">${QUICK.map(q => `<button class="qchip" data-q="${esc(q)}">${esc(q)}</button>`).join('')}</div>`;
-function freeBtn(it) {
+const quickChips = () => `<div class="flex flex-wrap gap-2 justify-center px-2 pb-5">${(FR.src === 'ko' ? QUICK_KO : QUICK).map(q => `<button class="qchip" data-q="${esc(q)}">${esc(q)}</button>`).join('')}</div>`;
+function freeBtn(it, i) {
   const have = books.find(b => b.gid === it.gid);
   if (have) return `<button class="add-btn read" data-read="${have.id}"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M3 5.5c3-1.3 6-1 9 1v13c-3-2-6-2.3-9-1z"/><path d="M21 5.5c-3-1.3-6-1-9 1v13c3-2 6-2.3 9-1z"/></svg>바로 읽기</button>`;
-  if (DL.has(it.gid)) return `<button class="add-btn ing" data-gid="${it.gid}" disabled>${esc(DL.get(it.gid))}</button>`;
-  return `<button class="add-btn" data-dl="${it.gid}"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M12 4v11M7.5 10.5 12 15l4.5-4.5M5 19.5h14"/></svg>다운로드·서재에 추가</button>`;
+  if (DL.has(it.gid)) return `<button class="add-btn ing" disabled>${esc(DL.get(it.gid))}</button>`;
+  return `<button class="add-btn" data-dl="${i}"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M12 4v11M7.5 10.5 12 15l4.5-4.5M5 19.5h14"/></svg>무료로 받기</button>`;
 }
 function renderFree() {
-  const box = $('#searchRes');
+  const box = $('#searchRes'), ko = FR.src === 'ko';
   $('#searchMore').textContent = '검색 결과 더 보기';
   $('#searchMore').classList.toggle('hidden', !FR.next);
-  $('#searchMeta').textContent = FR.items.length ? (FR.popular ? `가장 많이 받은 고전 · Project Gutenberg` : `‘${FR.q}’ 무료 이북 ${FR.count.toLocaleString()}권 · Project Gutenberg`) : '';
-  const head = FR.popular ? FREE_HINT + quickChips() : '';
+  $('#searchMeta').textContent = FR.items.length ? (FR.popular ? `가장 많이 받은 고전 · Project Gutenberg` : `‘${FR.q}’ 검색 결과 ${FR.count.toLocaleString()}건 · ${ko ? '한국어 위키문헌' : 'Project Gutenberg'}`) : '';
+  const head = srcSeg() + (FR.popular ? (ko ? FREE_HINT_KO : FREE_HINT) + quickChips() : '');
   if (!FR.items.length) {
-    box.innerHTML = head + (FR.err
-      ? `<div class="text-center py-8 px-4"><div class="font-bold text-[15px]">구텐베르크 검색 서버가 응답하지 않아요</div><p class="text-[13px] text-mute mt-2 leading-relaxed">잠시 뒤 다시 시도해 주세요.<br>자주 그러면 설정에서 ‘다운로드 중계 주소’를 넣어 주세요.</p><button class="btn btn-sub mt-4" data-retry>다시 시도</button></div>`
-      : `<div class="text-center py-8"><div class="font-bold text-[15px]">무료 이북이 없어요</div><p class="text-[13px] text-mute mt-2 leading-relaxed">구텐베르크는 대부분 영어 원서예요.<br>영어 제목이나 작가 이름으로 찾아보세요.</p></div>`);
+    box.innerHTML = head + (FR.popular && ko ? '' : FR.err
+      ? `<div class="text-center py-8 px-4"><div class="font-bold text-[15px]">${ko ? '위키문헌' : '구텐베르크'} 검색 서버가 응답하지 않아요</div><p class="text-[13px] text-mute mt-2 leading-relaxed">잠시 뒤 다시 시도해 주세요.<br>자주 그러면 설정에서 ‘다운로드 중계 주소’를 넣어 주세요.</p><button class="btn btn-sub mt-4" data-retry>다시 시도</button></div>`
+      : `<div class="text-center py-8"><div class="font-bold text-[15px]">무료 이북이 없어요</div><p class="text-[13px] text-mute mt-2 leading-relaxed">${ko ? '작품 제목을 띄어쓰기까지 정확히 넣어 보세요.<br>저작권이 끝난 작품(대개 1950년 이전 작고 작가)만 있어요.' : '구텐베르크는 대부분 영어 원서예요.<br>영어 제목이나 작가 이름으로 찾아보세요.'}</p></div>`);
     return;
   }
-  box.innerHTML = head + FR.items.map(it => `
-    <div class="res" data-free="${it.gid}">
-      ${it.cover ? `<img src="${esc(it.cover)}" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.outerHTML='<div class=noimg></div>'">` : `<div class="noimg"></div>`}
+  box.innerHTML = head + FR.items.map((it, i) => `
+    <div class="res" data-fi="${i}">
+      ${it.cover ? `<img src="${esc(it.cover)}" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.outerHTML='<div class=noimg></div>'">`
+        : ko ? `<div class="noimg cover-c" style="position:relative;overflow:hidden">${genCoverHTML({ title: it.title, author: '' })}</div>` : `<div class="noimg"></div>`}
       <div class="min-w-0 flex-1">
         <div class="font-bold text-[15px] leading-snug" style="display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden">${esc(it.title)}</div>
-        <div class="text-[12.5px] text-mute mt-1 truncate">${esc([it.author, it.years].filter(Boolean).join(' · ') || '작자 미상')}</div>
+        ${ko ? '' : `<div class="text-[12.5px] text-mute mt-1 truncate">${esc([it.author, it.years].filter(Boolean).join(' · ') || '작자 미상')}</div>`}
         <div class="desc">${esc(it.summary || it.subjects.join(' / '))}</div>
         <div class="flex items-center gap-2 mt-2.5 flex-wrap">
           <span class="src al">무료</span>
-          <span class="text-[11px] text-mute">${esc(it.lang.map(l => LANGS[l] || l).join('·'))} · ${it.downloads.toLocaleString()}회 받음</span>
-          <span class="flex-1"></span>${freeBtn(it)}
+          <span class="text-[11px] text-mute">${ko ? '한국어 · 위키문헌' : esc(it.lang.map(l => LANGS[l] || l).join('·')) + ' · ' + it.downloads.toLocaleString() + '회 받음'}</span>
+          <span class="flex-1"></span>${freeBtn(it, i)}
         </div>
       </div>
     </div>`).join('');
 }
 function paintFreeBtn(gid) {
-  const it = FR.items.find(x => x.gid === gid); if (!it) return;
-  const card = $(`#searchRes [data-free="${gid}"]`); if (!card) return;
+  const i = FR.items.findIndex(x => x.gid === gid); if (i < 0) return;
+  const card = $(`#searchRes [data-fi="${i}"]`); if (!card) return;
   const old = card.querySelector('.add-btn'); if (!old) return;
-  const tmp = document.createElement('div'); tmp.innerHTML = freeBtn(it); old.replaceWith(tmp.firstElementChild);
+  const tmp = document.createElement('div'); tmp.innerHTML = freeBtn(FR.items[i], i); old.replaceWith(tmp.firstElementChild);
 }
 async function downloadFree(it) {
   if (!it || DL.has(it.gid)) return;
@@ -1165,7 +1232,9 @@ async function downloadFree(it) {
   setP('연결 중…');
   try {
     const base = `https://www.gutenberg.org/cache/epub/${it.gid}/pg${it.gid}`;
-    const cands = [...new Set([base + '-images-3.epub', base + '-images.epub', it.epub].filter(Boolean))];
+    const cands = it.ws
+      ? [`https://ws-export.wmcloud.org/?format=epub-3&lang=ko&page=${encodeURIComponent(it.ws.replace(/ /g, '_'))}`]
+      : [...new Set([base + '-images-3.epub', base + '-images.epub', it.epub].filter(Boolean))];
     let buf = null, lastErr;
     for (const u of cands) {
       try { buf = await fetchVia(u, 'epub', 120000, n => setP(fmtSize(n) + ' 받는 중')); break; } catch (e) { lastErr = e; }
@@ -1173,12 +1242,14 @@ async function downloadFree(it) {
     if (!buf) throw lastErr || new Error('download');
     setP('서재에 꽂는 중…');
     try { navigator.storage && navigator.storage.persist && navigator.storage.persist(); } catch {}
-    const info = await parseEpub(buf, `pg${it.gid}.epub`);
+    const fname = it.ws ? `${it.ws}.epub` : `pg${it.gid}.epub`;
+    const info = await parseEpub(buf, fname);
     if (!info.cover && it.cover) { const bl = await fetchVia(it.cover, 'blob', 15000).catch(() => null); if (bl) info.cover = await shrinkImage(bl); }
-    const b = { id: uid(), ...info, title: it.title || info.title, author: it.author || info.author, publisher: 'Project Gutenberg',
+    if (it.ws && info.cover && info.cover.size < 2500) info.cover = null;   // 위키문헌 기본 표지가 비어 있으면 다락서재 표지로
+    const b = { id: uid(), ...info, title: it.title || info.title, author: it.author || info.author, publisher: it.ws ? '위키문헌' : 'Project Gutenberg',
       description: it.summary || info.description || it.subjects.join(' · '), language: it.lang[0] || info.language, category: it.subjects[0] || '',
-      link: `https://www.gutenberg.org/ebooks/${it.gid}`, source: 'gutenberg', gid: it.gid,
-      hasFile: true, fileName: `pg${it.gid}.epub`, size: buf.byteLength, added: Date.now(), lastRead: 0, progress: 0, cfi: null, bookmarks: [] };
+      link: it.ws ? `https://ko.wikisource.org/wiki/${encodeURIComponent(it.ws.replace(/ /g, '_'))}` : `https://www.gutenberg.org/ebooks/${it.gid}`, source: it.ws ? 'wikisource' : 'gutenberg', gid: it.gid,
+      hasFile: true, fileName: fname, size: buf.byteLength, added: Date.now(), lastRead: 0, progress: 0, cfi: null, bookmarks: [] };
     await DB.put('files', { id: b.id, data: buf });
     await DB.put('books', b);
     books.push(b); setCover(b);
