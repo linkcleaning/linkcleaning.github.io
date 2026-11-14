@@ -31,6 +31,7 @@
 </script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/epubjs@0.3.93/dist/epub.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/dompurify@3.1.7/dist/purify.min.js"></script>
 
 <style>
   @font-face { font-family:'RIDIBatang'; src:url('https://fastly.jsdelivr.net/gh/projectnoonnu/noonfonts_twelve@1.0/RIDIBatang.woff') format('woff'); font-weight:normal; font-display:swap; }
@@ -108,6 +109,51 @@
     body.searching #shSearch { bottom:var(--tbh, 60px); height:calc(100dvh - var(--tbh, 60px) - 8px - var(--st)); max-height:none; border-radius:24px 24px 0 0; padding-bottom:0; box-shadow:none; }
     body.searching #shSearch .grab { visibility:hidden; height:0; margin:8px; }
   }
+  /* ===== 오늘의 신문 ===== */
+  #news, #article { position:fixed; inset:0; z-index:45; overflow-y:auto; -webkit-overflow-scrolling:touch; overscroll-behavior:contain; }
+  #news { background:#F3EEE3; color:#1C1A17; }
+  body:not(.news-open) #news, body:not(.art-open) #article { display:none; }
+  body.news-open #lib, body.news-open #tabbar { visibility:hidden; }
+  .np-top { position:sticky; top:0; z-index:5; background:rgba(243,238,227,.94); -webkit-backdrop-filter:blur(14px); backdrop-filter:blur(14px); padding-top:var(--st); border-bottom:1px solid #DDD3C1; }
+  .np-mast { font-family:Hahmlet, "Gowun Batang", serif; font-weight:800; letter-spacing:-.03em; }
+  .np-rule { height:3px; border-top:2px solid #1C1A17; border-bottom:1px solid #1C1A17; }
+  .np-chip { flex:none; padding:7px 13px; border-radius:999px; font-size:13px; font-weight:700; border:1px solid #CFC4AF; color:#4A443B; background:#FBF8F1; white-space:nowrap; }
+  .np-chip.on { background:#1C1A17; color:#F3EEE3; border-color:#1C1A17; }
+  .np-chip small { font-weight:600; opacity:.6; margin-left:3px; }
+  .np-cat { flex:none; font-size:11px; font-weight:800; letter-spacing:.08em; color:#9A8F7C; padding:0 2px 0 6px; align-self:center; }
+  .np-lead { display:block; text-align:left; width:100%; padding:18px 0 20px; border-bottom:1px solid #D9CFBD; }
+  .np-lead h3 { font-family:Hahmlet, "Gowun Batang", serif; font-weight:800; font-size:25px; line-height:1.3; letter-spacing:-.03em; word-break:keep-all; }
+  .np-lead img { width:100%; aspect-ratio:16/9; object-fit:cover; border-radius:4px; margin-bottom:12px; background:#E6DDCB; }
+  .np-item { display:flex; gap:12px; width:100%; text-align:left; padding:14px 0; border-bottom:1px solid #E2D9C8; }
+  .np-item h4 { font-family:"Gowun Batang", Hahmlet, serif; font-weight:700; font-size:17px; line-height:1.38; word-break:keep-all; }
+  .np-item img { width:84px; height:64px; object-fit:cover; border-radius:3px; flex:none; background:#E6DDCB; }
+  .np-sum { font-size:13.5px; line-height:1.55; color:#5D564B; margin-top:6px; overflow:hidden; display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; }
+  .np-meta { font-size:11.5px; color:#8E8576; margin-top:6px; font-weight:600; }
+  .np-col { columns:1; }
+  @media (min-width:900px) { .np-col { columns:2; column-gap:36px; column-rule:1px solid #D9CFBD; } .np-item { break-inside:avoid; } }
+  .skel { background:linear-gradient(90deg,#E8E0D0 0%,#F3EEE3 50%,#E8E0D0 100%); background-size:200% 100%; animation:skel 1.2s infinite linear; border-radius:4px; }
+  @keyframes skel { to { background-position:-200% 0; } }
+  .np-btn { display:inline-flex; align-items:center; gap:6px; padding:9px 13px; border-radius:12px; font-size:13.5px; font-weight:700; border:1px solid #CFC4AF; background:#FBF8F1; color:#2B2620; white-space:nowrap; }
+  .np-btn.dark { background:#1C1A17; color:#F3EEE3; border-color:#1C1A17; }
+  .np-btn svg { width:17px; height:17px; }
+  .np-btn:active { filter:brightness(.92); }
+  /* 기사 읽기 */
+  #article { --a-bg:#F6F1E7; --a-fg:#2A2621; --a-mute:#8A8173; --a-line:#DDD3C1; background:var(--a-bg); color:var(--a-fg); }
+  #article[data-th="white"] { --a-bg:#FFFFFF; --a-fg:#1D1F1E; --a-mute:#7E8481; --a-line:#E6E6E6; }
+  #article[data-th="night"] { --a-bg:#141618; --a-fg:#C7C3BB; --a-mute:#7E7A73; --a-line:#2A2D30; }
+  #article[data-th="ink"] { --a-bg:#FFFFFF; --a-fg:#000000; --a-mute:#333333; --a-line:#000000; }
+  #article .a-top { position:sticky; top:0; z-index:5; background:var(--a-bg); padding-top:var(--st); border-bottom:1px solid var(--a-line); }
+  #aBody { font-size:var(--a-fs, 19px); line-height:var(--a-lh, 1.85); word-break:keep-all; overflow-wrap:break-word; }
+  #aBody.serif { font-family:'RIDIBatang','Gowun Batang',serif; } #aBody.sans { font-family:"SUIT Variable",SUIT,sans-serif; }
+  #aBody p { margin:0 0 1.05em; } #aBody img { max-width:100%; height:auto; border-radius:4px; margin:1em 0; } #aBody a { color:inherit; }
+  #aBody blockquote { margin:1em 0; padding-left:1em; border-left:3px solid var(--a-line); }
+  .a-zone { position:fixed; top:20%; bottom:20%; width:22%; z-index:3; }
+  #aPrevZone { left:0; } #aNextZone { right:0; }
+  .a-arrow { position:fixed; z-index:6; bottom:calc(var(--sb) + 6px); width:72px; height:38px; display:grid; place-items:center; color:var(--a-fg); opacity:.3; border-radius:12px; }
+  .a-arrow svg { width:22px; height:22px; } .a-arrow:active { opacity:.8; }
+  #aPrev { left:10px; } #aNext { right:10px; }
+  #aAa { position:fixed; z-index:8; left:50%; transform:translateX(-50%); bottom:calc(var(--sb) + 56px); width:min(380px, calc(100% - 20px)); background:var(--a-bg); color:var(--a-fg); border:1px solid var(--a-line); border-radius:20px; padding:14px; box-shadow:0 18px 50px -12px rgba(0,0,0,.35); }
+  #aAa .seg { background:rgba(128,128,128,.12); } #aAa .seg button.on { background:var(--a-bg); }
   /* 아래쪽 탭 메뉴 — 스마트폰 전용 */
   #tabbar { position:fixed; left:0; right:0; bottom:0; z-index:40; display:flex; align-items:flex-end; padding:5px 4px calc(4px + var(--sb)); background:rgba(255,255,255,.92); -webkit-backdrop-filter:blur(18px) saturate(1.4); backdrop-filter:blur(18px) saturate(1.4); box-shadow:0 -1px 0 var(--line); }
   #tabbar button { flex:1; display:flex; flex-direction:column; align-items:center; gap:2px; font-size:10.5px; font-weight:700; color:#959A97; padding:3px 0 2px; letter-spacing:-.02em; }
@@ -279,6 +325,7 @@
       <button class="icon-btn" id="btnFind" aria-label="서재에서 찾기"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg></button>
       <button class="icon-btn" id="btnView" aria-label="보기 방식 바꾸기"></button>
       <button class="icon-btn" id="btnSet" aria-label="설정"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 7h10M18 7h2M4 17h4M12 17h8"/><circle cx="16" cy="7" r="2.2"/><circle cx="10" cy="17" r="2.2"/></svg></button>
+      <button class="icon-btn pc-only" id="btnNewsTop" aria-label="오늘의 신문"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 5.5h13v13a2 2 0 0 0 2 2H6a2 2 0 0 1-2-2z"/><path d="M17 9h3v9.5a2 2 0 0 1-2 2"/><path d="M7.5 9h6M7.5 12.5h6M7.5 16h4"/></svg></button>
       <button class="pc-only btn btn-pri !py-2.5 !px-4 !text-sm ml-2" id="btnAddTop"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>책 추가</button>
     </div>
     <div id="findBar" class="hidden max-w-6xl mx-auto px-4 sm:px-6 pb-3">
@@ -312,7 +359,7 @@
   </main>
   <nav id="tabbar" aria-label="메뉴">
     <button data-nav="lib" class="on"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M4.5 4.5h3.5v15H4.5zM10 4.5h3.5v15H10z"/><path d="m15.6 5.6 3.3-.9 3.6 13.6-3.3.9z"/></svg>서재</button>
-    <button data-nav="kr"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"><circle cx="11" cy="11" r="6.5"/><path d="m20 20-4.2-4.2"/></svg>책 찾기</button>
+    <button data-nav="news"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M4 5.5h13v13a2 2 0 0 0 2 2H6a2 2 0 0 1-2-2z"/><path d="M17 9h3v9.5a2 2 0 0 1-2 2"/><path d="M7.5 9h6M7.5 12.5h6M7.5 16h4"/></svg>신문</button>
     <button data-nav="add" class="tb-add" aria-label="책 추가"><b><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg></b>추가</button>
     <button data-nav="free"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M3.5 5.5c2.9-1.2 5.7-.9 8.5 1v13c-2.8-1.9-5.6-2.2-8.5-1z"/><path d="M20.5 5.5c-2.9-1.2-5.7-.9-8.5 1v13c2.8-1.9 5.6-2.2 8.5-1z"/></svg>무료 고전</button>
     <button data-nav="set"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"><path d="M4 7h10M18 7h2M4 17h4M12 17h8"/><circle cx="16" cy="7" r="2.2"/><circle cx="10" cy="17" r="2.2"/></svg>설정</button>
@@ -390,6 +437,75 @@
     </div>
     <div id="tocList" class="flex-1 overflow-y-auto px-2 pb-6" style="overscroll-behavior:contain"></div>
   </aside>
+</div>
+
+<!-- =========================== 오늘의 신문 =========================== -->
+<div id="news" aria-label="오늘의 신문">
+  <div class="np-top">
+    <div class="max-w-5xl mx-auto px-4 sm:px-6">
+      <div class="flex items-center gap-1 h-[52px] -ml-2">
+        <button class="back-pill" id="npBack" aria-label="서재로"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M15 5l-7 7 7 7"/></svg><span>서재</span></button>
+        <span class="flex-1"></span>
+        <button class="icon-btn" id="npRefresh" aria-label="새로고침"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"><path d="M20 11a8 8 0 1 0-2.3 5.7"/><path d="M20 4v7h-7"/></svg></button>
+        <button class="np-btn dark" id="npBake"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5V5a2 2 0 0 1 2-2h12v18H6.5A2.5 2.5 0 0 1 4 18.5z"/><path d="M9 8h6M9 12h4"/></svg>EPUB으로 굽기</button>
+      </div>
+      <div class="text-center pb-2">
+        <div class="np-rule"></div>
+        <div class="np-mast text-[34px] sm:text-[44px] leading-none pt-3">오늘의 신문</div>
+        <div id="npDate" class="text-[12px] font-bold tracking-wide text-[#6E6658] mt-2 pb-2"></div>
+        <div class="np-rule"></div>
+      </div>
+      <div id="npChips" class="flex gap-1.5 overflow-x-auto no-scrollbar -mx-4 px-4 py-2.5"></div>
+    </div>
+  </div>
+  <main class="max-w-5xl mx-auto px-4 sm:px-6 pb-24">
+    <div id="npNote" class="text-[12px] text-[#8E8576] py-2"></div>
+    <div id="npList"></div>
+  </main>
+</div>
+
+<div id="article" data-th="paper">
+  <div class="a-top">
+    <div class="max-w-3xl mx-auto h-[52px] px-2 flex items-center gap-1">
+      <button class="back-pill !text-[var(--a-fg)]" id="aBack" aria-label="목록으로"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M15 5l-7 7 7 7"/></svg><span>목록</span></button>
+      <div class="flex-1 text-center text-[12.5px] font-bold truncate" style="color:var(--a-mute)" id="aWhere"></div>
+      <button class="icon-btn !text-[var(--a-fg)]" id="aTts" aria-label="음성으로 듣기"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 5 6 9H3v6h3l5 4z"/><path d="M15.5 8.5a5 5 0 0 1 0 7M18.5 5.5a9 9 0 0 1 0 13"/></svg></button>
+      <button class="icon-btn !text-[var(--a-fg)]" id="aAaBtn" aria-label="글자 설정"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 19 8 6l5 13M4.8 14.5h6.4"/><path d="M15.5 19l3-7.5 3 7.5M16.5 16.5h4"/></svg></button>
+    </div>
+  </div>
+  <article class="max-w-3xl mx-auto px-5 sm:px-8 pt-5 pb-28">
+    <div id="aSrc" class="text-[12px] font-extrabold tracking-wide" style="color:var(--orange)"></div>
+    <h1 id="aTitle" class="serif font-extrabold text-[25px] sm:text-[30px] leading-[1.32] tracking-tight mt-2" style="word-break:keep-all"></h1>
+    <div id="aMeta" class="text-[12.5px] mt-2 pb-4" style="color:var(--a-mute);border-bottom:1px solid var(--a-line)"></div>
+    <div id="aBody" class="serif mt-5"></div>
+    <div id="aShort" class="hidden text-[13px] rounded-xl p-3 mt-2" style="background:rgba(128,128,128,.1);color:var(--a-mute)">신문사가 RSS로 요약만 보내 주는 기사예요. 전체 기사는 아래 <b>원문 보기</b>로 읽을 수 있어요.</div>
+    <div class="flex flex-wrap gap-2 mt-6">
+      <a id="aOrig" class="np-btn" target="_blank" rel="noopener"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 4h6v6M20 4l-9 9"/><path d="M18 14v4a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4"/></svg>언론사 원문 보기</a>
+      <button class="np-btn" id="aTts2"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 5 6 9H3v6h3l5 4z"/><path d="M15.5 8.5a5 5 0 0 1 0 7"/></svg><span>기사 음성으로 듣기</span></button>
+    </div>
+    <div id="aPos" class="text-center text-[12px] mt-8" style="color:var(--a-mute)"></div>
+  </article>
+  <div class="a-zone" id="aPrevZone"></div><div class="a-zone" id="aNextZone"></div>
+  <button class="a-arrow" id="aPrev" aria-label="이전 기사"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M15 5l-7 7 7 7"/></svg></button>
+  <button class="a-arrow" id="aNext" aria-label="다음 기사"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M9 5l7 7-7 7"/></svg></button>
+  <div id="aAa" class="hidden">
+    <div class="lbl">글자 크기</div><div class="seg mb-3" id="aFs"></div>
+    <div class="lbl">줄 간격</div><div class="seg mb-3" id="aLh"></div>
+    <div class="lbl">글꼴</div><div class="seg mb-3" id="aFont"><button data-v="serif">명조</button><button data-v="sans">고딕</button></div>
+    <div class="lbl">배경</div><div class="seg" id="aTh"><button data-v="white">백지</button><button data-v="paper">세피아</button><button data-v="night">야간</button><button data-v="ink">잉크</button></div>
+  </div>
+</div>
+
+<!-- 신문 추가 -->
+<div class="sheet" id="shFeed" role="dialog" aria-label="신문 추가">
+  <div class="grab"></div>
+  <div class="body">
+    <h3 class="serif font-bold text-[20px] mt-1 mb-1">신문 추가하기</h3>
+    <p class="text-[12.5px] text-mute mb-4 leading-relaxed">언론사 홈페이지 맨 아래의 'RSS' 주소를 넣으면 목록에 추가돼요. 추가한 신문은 길게 누르면 지울 수 있어요.</p>
+    <label class="field mb-3"><span>신문 이름</span><input id="feedName" placeholder="예: 제주新보" autocomplete="off"></label>
+    <label class="field mb-4"><span>RSS 주소</span><input id="feedUrl" placeholder="https://…/rss/allArticle.xml" inputmode="url" autocomplete="off" spellcheck="false"></label>
+    <button class="btn btn-pri w-full" id="feedSave">추가하고 불러오기</button>
+  </div>
 </div>
 
 <!-- =========================== 시트들 =========================== -->
@@ -508,7 +624,7 @@
 
 <script>
 'use strict';
-const APP_VER = 'v18';
+const APP_VER = 'v19';
 const $ = s => document.querySelector(s);
 const $$ = s => [...document.querySelectorAll(s)];
 const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
@@ -933,6 +1049,7 @@ $('#tabbar').onclick = e => {
   else if (k === 'kr' || k === 'free') openSearch('new', null, '', k);
   else if (k === 'add') openSheet('shAdd');
   else if (k === 'set') $('#btnSet').click();
+  else if (k === 'news') openNews();
 };
 $('#scrim').onclick = sheetBack;
 $$('.sheet').forEach(sh => {   // 손잡이를 아래로 끌면 닫힘
@@ -1402,14 +1519,18 @@ async function makeEpub(meta, chapters) {
   z.file('META-INF/container.xml', '<?xml version="1.0" encoding="UTF-8"?><container version="1.0" xmlns="urn:oasis:names:tc:opendocument:xmlns:container"><rootfiles><rootfile full-path="OEBPS/content.opf" media-type="application/oebps-package+xml"/></rootfiles></container>');
   z.file('OEBPS/style.css', 'body{line-height:1.75;margin:0 .2em}h2{font-size:1.3em;margin:1.2em 0 1em;line-height:1.45}p{margin:0 0 .9em;text-indent:1em}.poem p,.poem{text-indent:0}blockquote{margin:1em 1.2em}');
   const items = [], spine = [], nav = [];
+  const pre = meta.filePrefix || 'c', ncx = [];
   chapters.forEach((c, i) => {
-    const f = `c${i + 1}.xhtml`;
+    const f = `${pre}${i + 1}.xhtml`;
+    ncx.push(`<navPoint id="np${i + 1}" playOrder="${i + 1}"><navLabel><text>${XE(c.title || (chapters.length === 1 ? meta.title : String(i + 1)))}</text></navLabel><content src="${f}"/></navPoint>`);
     z.file('OEBPS/' + f, `<?xml version="1.0" encoding="utf-8"?>\n<!DOCTYPE html>\n<html xmlns="http://www.w3.org/1999/xhtml" lang="${lang}" xml:lang="${lang}"><head><meta charset="utf-8"/><title>${XE(c.title || meta.title)}</title><link rel="stylesheet" type="text/css" href="style.css"/></head><body>${c.title ? `<h2>${XE(c.title)}</h2>` : ''}${c.html}</body></html>`);
     items.push(`<item id="c${i + 1}" href="${f}" media-type="application/xhtml+xml"/>`); spine.push(`<itemref idref="c${i + 1}"/>`);
     nav.push(`<li><a href="${f}">${XE(c.title || (chapters.length === 1 ? meta.title : String(i + 1)))}</a></li>`);
   });
+  z.file('OEBPS/toc.ncx', `<?xml version="1.0" encoding="utf-8"?>\n<ncx xmlns="http://www.daisy.org/z3986/2005/ncx/" version="2005-1"><head><meta name="dtb:uid" content="urn:darak:${XE(meta.id)}"/></head><docTitle><text>${XE(meta.title)}</text></docTitle><navMap>${ncx.join('')}</navMap></ncx>`);
+  if (meta.css) z.file('OEBPS/style.css', meta.css);
   z.file('OEBPS/nav.xhtml', `<?xml version="1.0" encoding="utf-8"?>\n<html xmlns="http://www.w3.org/1999/xhtml" xmlns:epub="http://www.idpf.org/2007/ops"><head><title>목차</title></head><body><nav epub:type="toc"><ol>${nav.join('')}</ol></nav></body></html>`);
-  z.file('OEBPS/content.opf', `<?xml version="1.0" encoding="utf-8"?>\n<package xmlns="http://www.idpf.org/2007/opf" version="3.0" unique-identifier="uid"><metadata xmlns:dc="http://purl.org/dc/elements/1.1/"><dc:identifier id="uid">urn:darak:${XE(meta.id)}</dc:identifier><dc:title>${XE(meta.title)}</dc:title><dc:creator>${XE(meta.author || '')}</dc:creator><dc:publisher>${XE(meta.source || '')}</dc:publisher><dc:language>${lang}</dc:language><meta property="dcterms:modified">${new Date().toISOString().replace(/\.\d+Z$/, 'Z')}</meta></metadata><manifest><item id="nav" href="nav.xhtml" media-type="application/xhtml+xml" properties="nav"/><item id="css" href="style.css" media-type="text/css"/>${items.join('')}</manifest><spine>${spine.join('')}</spine></package>`);
+  z.file('OEBPS/content.opf', `<?xml version="1.0" encoding="utf-8"?>\n<package xmlns="http://www.idpf.org/2007/opf" version="3.0" unique-identifier="uid"><metadata xmlns:dc="http://purl.org/dc/elements/1.1/"><dc:identifier id="uid">urn:darak:${XE(meta.id)}</dc:identifier><dc:title>${XE(meta.title)}</dc:title><dc:creator>${XE(meta.author || '')}</dc:creator><dc:publisher>${XE(meta.source || '')}</dc:publisher><dc:language>${lang}</dc:language><meta property="dcterms:modified">${new Date().toISOString().replace(/\.\d+Z$/, 'Z')}</meta></metadata><manifest><item id="nav" href="nav.xhtml" media-type="application/xhtml+xml" properties="nav"/><item id="css" href="style.css" media-type="text/css"/><item id="ncx" href="toc.ncx" media-type="application/x-dtbncx+xml"/>${items.join('')}</manifest><spine toc="ncx">${spine.join('')}</spine></package>`);
   return z.generateAsync({ type: 'arraybuffer', compression: 'DEFLATE', mimeType: 'application/epub+zip' });
 }
 
@@ -2035,7 +2156,7 @@ function closeReader(silent) {
   renderLibrary();
   if (history.state && history.state.reader) history.back();
 }
-addEventListener('popstate', () => { if (skipPop) { skipPop--; return; } if (!RD && onSheetPop()) return; if (RD) { closeReader(true); document.body.classList.remove('reading'); setThemeColor('#F5F2EC'); renderLibrary(); } });
+addEventListener('popstate', () => { if (skipPop) { skipPop--; return; } if (document.body.classList.contains('art-open')) { closeArticle(true); return; } if (document.body.classList.contains('news-open') && !(history.state && history.state.news)) { closeNews(true); return; } if (!RD && onSheetPop()) return; if (RD) { closeReader(true); document.body.classList.remove('reading'); setThemeColor('#F5F2EC'); renderLibrary(); } });
 
 /* 넘기기 · 손가락 · 키보드 */
 let stuck = 0;
@@ -2167,6 +2288,291 @@ $('#rMark').onclick = async () => {
 
 addEventListener('resize', () => { if (RD) paintAa(); });
 document.addEventListener('visibilitychange', () => { if (document.hidden && RD) DB.put('books', RD.meta).catch(() => {}); });
+
+
+/* ======================================================================
+   오늘의 신문 — 언론사 RSS를 광고 없이 읽고, 하루 치를 EPUB으로 구워 서재에 넣기
+   ====================================================================== */
+const NEWS_FEEDS = [
+  { id: 'yna', name: '연합뉴스', cat: '종합', url: 'https://www.yna.co.kr/rss/news.xml' },
+  { id: 'hani', name: '한겨레', cat: '종합', url: 'https://www.hani.co.kr/rss/' },
+  { id: 'donga', name: '동아일보', cat: '종합', url: 'https://rss.donga.com/total.xml' },
+  { id: 'mk', name: '매일경제', cat: '경제', url: 'https://www.mk.co.kr/rss/30000001/' },
+  { id: 'hk', name: '한국경제', cat: '경제', url: 'https://www.hankyung.com/feed/all-news' },
+  { id: 'jemin', name: '제민일보', cat: '제주', url: 'http://www.jemin.com/rss/allArticle.xml' },
+  { id: 'jejusori', name: '제주의소리', cat: '제주', url: 'https://www.jejusori.net/rss/allArticle.xml' },
+  { id: 'jejunews', name: '제주일보', cat: '제주', url: 'https://www.jejunews.com/rss/allArticle.xml' },
+  { id: 'headlinejeju', name: '헤드라인제주', cat: '제주', url: 'http://www.headlinejeju.co.kr/rss/allArticle.xml' }
+];
+const NP = LS.get('darak.news', { sel: 'cat:제주', fs: 2, lh: 1, font: 'serif', th: 'paper', custom: [] });
+const saveNP = () => LS.set('darak.news', NP);
+const allFeeds = () => NEWS_FEEDS.concat((NP.custom || []).map(c => ({ ...c, cat: '내 신문', custom: true })));
+let NV = { items: [], idx: -1, loading: false };   // 지금 보고 있는 기사 목록
+
+function kstNow() { return new Date(Date.now() + 9 * 3600e3); }
+function npDateLabel() {
+  const k = kstNow(), w = '일월화수목금토'[k.getUTCDay()];
+  return `${k.getUTCFullYear()}년 ${k.getUTCMonth() + 1}월 ${k.getUTCDate()}일 ${w}요일 · ${k.getUTCHours() < 15 ? '조간판' : '석간판'}`;
+}
+function npTime(pub) {   // RSS 시간: 신문사마다 UTC/한국시간이 섞여 있어서 미래 시각이면 한국시간으로 봄
+  if (!pub) return 0;
+  let t = Date.parse(/[zZ]|[+-]\d\d:?\d\d$/.test(pub) || /GMT|UTC/.test(pub) ? pub : String(pub).replace(' ', 'T') + 'Z');
+  if (isNaN(t)) t = Date.parse(pub);
+  if (isNaN(t)) return 0;
+  if (t > Date.now() + 10 * 60e3) t -= 9 * 3600e3;
+  return t;
+}
+function npAgo(t) { if (!t) return ''; const m = Math.round((Date.now() - t) / 60000); if (m < 1) return '방금'; if (m < 60) return m + '분 전'; if (m < 24 * 60) return Math.floor(m / 60) + '시간 전'; const d = new Date(t + 9 * 3600e3); return `${d.getUTCMonth() + 1}.${d.getUTCDate()} ${String(d.getUTCHours()).padStart(2, '0')}:${String(d.getUTCMinutes()).padStart(2, '0')}`; }
+
+/* 광고·스크립트·기자 메일 걷어내기 */
+function cleanArticleHtml(html) {
+  let out = String(html || '');
+  if (window.DOMPurify) out = DOMPurify.sanitize(out, { ALLOWED_TAGS: ['p', 'br', 'b', 'strong', 'i', 'em', 'ul', 'ol', 'li', 'blockquote', 'img', 'figure', 'figcaption', 'h3', 'h4', 'div', 'span'], ALLOWED_ATTR: ['src', 'alt'] });
+  const d = new DOMParser().parseFromString(`<div id="x">${out}</div>`, 'text/html'), r = d.getElementById('x');
+  r.querySelectorAll('script,style,iframe,object,embed,form,input,button,ins,noscript,link,meta').forEach(e => e.remove());
+  r.querySelectorAll('*').forEach(e => [...e.attributes].forEach(a => { if (!(e.tagName === 'IMG' && (a.name === 'src' || a.name === 'alt'))) e.removeAttribute(a.name); }));
+  r.querySelectorAll('img').forEach(im => { if (!/^https?:\/\//.test(im.getAttribute('src') || '') || /ad[sv]?[._-]|banner|pixel|track|1x1/i.test(im.src)) im.remove(); else { im.setAttribute('referrerpolicy', 'no-referrer'); im.setAttribute('loading', 'lazy'); } });
+  let h = r.innerHTML
+    .replace(/[\w.+-]+@[\w-]+\.[\w.]+/g, '')
+    .replace(/\(?\s*(무단\s*전재|재배포\s*금지|무단전재\s*및\s*재배포\s*금지|ⓒ|©|Copyright)[^<\n]*/gi, '')
+    .replace(/\[[^\]]{0,20}(기자|특파원|=)[^\]]{0,20}\]/g, '')
+    .replace(/(\s*<br\s*\/?>\s*){3,}/gi, '<br><br>');
+  return h.trim();
+}
+const textOf = html => { const d = document.createElement('div'); d.innerHTML = String(html).replace(/<\/(p|div|li|h\d)>|<br\s*\/?>/gi, ' $&'); return (d.textContent || '').replace(/\s+/g, ' ').trim(); };
+
+/* RSS 가져오기: 1) rss2json  2) allorigins(원본 XML)  3) 바로 — 앞이 안 되면 다음 */
+async function fetchFeed(f) {
+  const tries = [
+    async () => {
+      const j = await withTimeout(fetch('https://api.rss2json.com/v1/api.json?rss_url=' + encodeURIComponent(f.url)).then(r => r.json()), 12000);
+      if (j.status !== 'ok') throw new Error(j.message || 'rss2json');
+      return (j.items || []).map(it => ({ title: it.title, link: it.link, pub: it.pubDate, html: it.content || it.description || '', thumb: it.thumbnail || (it.enclosure && /image/.test(it.enclosure.type || 'image') && it.enclosure.link) || '' }));
+    },
+    async () => parseRssXml((await withTimeout(fetch('https://api.allorigins.win/get?url=' + encodeURIComponent(f.url)).then(r => r.json()), 12000)).contents),
+    async () => parseRssXml(await withTimeout(fetch(f.url.replace(/^http:/, 'https:')).then(r => r.text()), 8000))
+  ];
+  let err;
+  for (const t of tries) { try { const items = await t(); if (items && items.length) return items; } catch (e) { err = e; } }
+  throw err || new Error('feed');
+}
+function parseRssXml(xml) {
+  const d = new DOMParser().parseFromString(String(xml || ''), 'text/xml');
+  const nodes = [...d.querySelectorAll('item, entry')];
+  return nodes.map(n => {
+    const g = sel => { const e = n.querySelector(sel); return e ? (e.textContent || '').trim() : ''; };
+    const link = g('link') || ((n.querySelector('link') || {}).getAttribute ? n.querySelector('link').getAttribute('href') : '');
+    const enc = n.querySelector('enclosure[type^="image"], media\\:content, content');
+    return { title: g('title'), link, pub: g('pubDate') || g('updated') || g('published') || g('dc\\:date'), html: g('content\\:encoded') || g('description') || g('summary') || g('content'), thumb: enc && enc.getAttribute && enc.getAttribute('url') || '' };
+  });
+}
+function normItems(raw, f) {
+  const korean = f.cat !== '내 신문';
+  return raw.filter(it => it.title && (!korean || /[가-힣]/.test(it.title)))
+    .map(it => { const html = cleanArticleHtml(it.html); const thumb = it.thumb || ((html.match(/<img[^>]+src="([^"]+)"/) || [])[1] || '');
+      return { src: f.name, fid: f.id, title: decodeEnt(it.title).trim(), link: it.link, t: npTime(it.pub), html, text: textOf(html), thumb: /^https?:/.test(thumb) ? thumb : '' }; });
+}
+
+/* 화면 */
+function openNews() {
+  if (document.body.classList.contains('news-open')) return;
+  closeSheets('replace');
+  document.body.classList.add('news-open'); history.pushState({ news: 1 }, '');
+  setThemeColor('#F3EEE3'); navMark('news');
+  $('#npDate').textContent = npDateLabel();
+  paintNpChips(); loadNews(false);
+}
+function closeNews(fromPop) {
+  stopTts(); closeArticle(true);
+  if (!document.body.classList.contains('news-open')) return;
+  document.body.classList.remove('news-open'); setThemeColor('#F5F2EC'); navMark('lib');
+  if (!fromPop && history.state && history.state.news) history.back();
+}
+function npSources() {
+  const sel = NP.sel || 'cat:제주';
+  if (sel.startsWith('cat:')) return allFeeds().filter(f => f.cat === sel.slice(4));
+  return allFeeds().filter(f => f.id === sel);
+}
+function paintNpChips() {
+  const cats = [...new Set(allFeeds().map(f => f.cat))];
+  $('#npChips').innerHTML = cats.map(c => `<span class="np-cat">${esc(c)}</span><button class="np-chip ${NP.sel === 'cat:' + c ? 'on' : ''}" data-sel="cat:${esc(c)}">${esc(c)} 모아보기</button>` +
+    allFeeds().filter(f => f.cat === c).map(f => `<button class="np-chip ${NP.sel === f.id ? 'on' : ''}" data-sel="${esc(f.id)}" ${f.custom ? 'data-custom="1"' : ''}>${esc(f.name)}</button>`).join('')).join('') +
+    `<button class="np-chip" data-addfeed style="border-style:dashed">＋ 신문 추가</button>`;
+  const on = $('#npChips .on'); if (on) on.scrollIntoView({ inline: 'center', block: 'nearest' });
+}
+function npSkeleton() {
+  return `<div class="py-5"><div class="skel h-[200px] mb-4"></div><div class="skel h-6 w-4/5 mb-2"></div><div class="skel h-6 w-3/5 mb-6"></div>${Array.from({ length: 6 }, () => `<div class="flex gap-3 py-3"><div class="flex-1"><div class="skel h-4 w-11/12 mb-2"></div><div class="skel h-4 w-2/3 mb-2"></div><div class="skel h-3 w-1/3"></div></div><div class="skel w-[84px] h-[64px]"></div></div>`).join('')}</div>`;
+}
+async function loadNews(force) {
+  const srcs = npSources(), key = 'darak.news.cache.' + (NP.sel || '');
+  const cached = (() => { try { return JSON.parse(localStorage.getItem(key) || 'null'); } catch { return null; } })();
+  if (cached && !force) { NV.items = cached.items || []; renderNews(cached.at); }
+  else $('#npList').innerHTML = npSkeleton();
+  if (cached && !force && Date.now() - cached.at < 10 * 60e3) return;   // 10분 안에 받은 건 그대로
+  if (NV.loading) return; NV.loading = true;
+  $('#npNote').textContent = `${srcs.map(f => f.name).join(' · ')} 불러오는 중…`;
+  const res = await Promise.all(srcs.map(f => fetchFeed(f).then(r => ({ f, items: normItems(r, f) })).catch(e => ({ f, err: e, items: [] }))));
+  NV.loading = false;
+  const items = res.flatMap(r => r.items).sort((a, b) => (b.t || 0) - (a.t || 0)).slice(0, 40);
+  const failed = res.filter(r => r.err || !r.items.length).map(r => r.f.name);
+  if (!items.length) {
+    if (!cached) $('#npList').innerHTML = `<div class="text-center py-16"><div class="np-mast text-[22px]">신문을 가져오지 못했어요</div><p class="text-[13.5px] text-[#6E6658] mt-3 leading-relaxed">${esc(failed.join(', '))} 서버가 응답하지 않아요.<br>잠시 뒤 위의 새로고침을 눌러 주세요.</p></div>`;
+    $('#npNote').textContent = cached ? `지금은 새 기사를 못 가져와서 ${npAgo(cached.at)} 받아 둔 지면을 보여 줘요` : '';
+    return;
+  }
+  NV.items = items;
+  try { localStorage.setItem(key, JSON.stringify({ at: Date.now(), items })); } catch {}
+  renderNews(Date.now(), failed);
+}
+function renderNews(at, failed) {
+  const items = NV.items;
+  $('#npNote').textContent = `${npSources().map(f => f.name).join(' · ')} · 기사 ${items.length}건 · ${npAgo(at)} 받음${failed && failed.length ? ` · ${failed.join(', ')} 응답 없음` : ''}`;
+  if (!items.length) { $('#npList').innerHTML = ''; return; }
+  const lead = items.find(i => i.thumb) || items[0], rest = items.filter(i => i !== lead);
+  const li = items.indexOf(lead);
+  $('#npList').innerHTML = `
+    <button class="np-lead" data-art="${li}">
+      ${lead.thumb ? `<img src="${esc(lead.thumb)}" alt="" referrerpolicy="no-referrer" onerror="this.remove()">` : ''}
+      <div class="text-[11.5px] font-extrabold tracking-wide" style="color:var(--orange)">${esc(lead.src)} · 1면 머리기사</div>
+      <h3 class="mt-1.5">${esc(lead.title)}</h3>
+      ${lead.text ? `<p class="np-sum !text-[14.5px]">${esc(lead.text.slice(0, 220))}</p>` : ''}
+      <div class="np-meta">${esc(npAgo(lead.t))}</div>
+    </button>
+    <div class="np-col">${rest.map(it => `
+      <button class="np-item" data-art="${items.indexOf(it)}">
+        <div class="flex-1 min-w-0"><h4>${esc(it.title)}</h4>${it.text ? `<p class="np-sum">${esc(it.text.slice(0, 160))}</p>` : ''}<div class="np-meta">${esc(it.src)} · ${esc(npAgo(it.t))}</div></div>
+        ${it.thumb ? `<img src="${esc(it.thumb)}" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.remove()">` : ''}
+      </button>`).join('')}</div>`;
+}
+
+/* 기사 읽기 */
+const A_FS = [[15, '작게'], [17, '조금'], [19, '보통'], [22, '크게'], [26, '아주']];
+const A_LH = [[1.6, '좁게'], [1.85, '보통'], [2.1, '넓게']];
+function paintArtStyle() {
+  const a = $('#article'); a.dataset.th = NP.th || 'paper';
+  a.style.setProperty('--a-fs', (A_FS[NP.fs] || A_FS[2])[0] + 'px'); a.style.setProperty('--a-lh', (A_LH[NP.lh] || A_LH[1])[0]);
+  $('#aBody').className = (NP.font === 'sans' ? 'sans' : 'serif') + ' mt-5';
+  $('#aFs').innerHTML = A_FS.map(([v, l], i) => `<button data-v="${i}" class="${+NP.fs === i ? 'on' : ''}">${l}</button>`).join('');
+  $('#aLh').innerHTML = A_LH.map(([v, l], i) => `<button data-v="${i}" class="${+NP.lh === i ? 'on' : ''}">${l}</button>`).join('');
+  $$('#aFont button').forEach(b => b.classList.toggle('on', b.dataset.v === (NP.font || 'serif')));
+  $$('#aTh button').forEach(b => b.classList.toggle('on', b.dataset.v === (NP.th || 'paper')));
+  setThemeColor(getComputedStyle(a).getPropertyValue('--a-bg').trim() || '#F6F1E7');
+}
+function openArticle(i) {
+  const it = NV.items[i]; if (!it) return;
+  stopTts();
+  NV.idx = i;
+  if (!document.body.classList.contains('art-open')) { document.body.classList.add('art-open'); history.pushState({ article: 1 }, ''); }
+  $('#aWhere').textContent = `${it.src} · ${i + 1} / ${NV.items.length}`;
+  $('#aSrc').textContent = it.src;
+  $('#aTitle').textContent = it.title;
+  const d = it.t ? new Date(it.t + 9 * 3600e3) : null;
+  $('#aMeta').textContent = d ? `${d.getUTCFullYear()}.${d.getUTCMonth() + 1}.${d.getUTCDate()} ${String(d.getUTCHours()).padStart(2, '0')}:${String(d.getUTCMinutes()).padStart(2, '0')} 입력 · ${npAgo(it.t)}` : '';
+  const body = it.html && it.text ? it.html : '';
+  $('#aBody').innerHTML = (it.thumb && !/<img/i.test(body) ? `<img src="${esc(it.thumb)}" alt="" referrerpolicy="no-referrer" onerror="this.remove()">` : '') + (body ? (/<p[\s>]/i.test(body) ? body : body.split(/<br\s*\/?>\s*<br\s*\/?>/i).map(x => `<p>${x}</p>`).join('')) : '');
+  $('#aShort').classList.toggle('hidden', it.text.length > 600);
+  $('#aOrig').href = it.link || '#';
+  $('#aPos').textContent = `${i + 1} / ${NV.items.length}  ·  좌우를 누르면 이전·다음 기사`;
+  $('#aAa').classList.add('hidden');
+  $('#article').scrollTop = 0;
+  paintArtStyle();
+}
+function closeArticle(silent) {
+  stopTts();
+  if (!document.body.classList.contains('art-open')) return;
+  document.body.classList.remove('art-open'); setThemeColor('#F3EEE3');
+  if (!silent && history.state && history.state.article) history.back();
+}
+const artGo = d => { const n = NV.idx + d; if (n < 0) { toast('첫 기사예요'); return; } if (n >= NV.items.length) { toast('마지막 기사예요'); return; } openArticle(n); };
+
+/* 기사 음성으로 듣기 */
+let ttsOn = false;
+function stopTts() { try { speechSynthesis.cancel(); } catch {} ttsOn = false; paintTts(); }
+function paintTts() { $('#aTts2 span').textContent = ttsOn ? '듣기 멈추기' : '기사 음성으로 듣기'; $('#aTts').classList.toggle('on', ttsOn); }
+function toggleTts() {
+  if (!('speechSynthesis' in window)) { toast('이 기기는 음성 읽기를 지원하지 않아요'); return; }
+  if (ttsOn) { stopTts(); return; }
+  const it = NV.items[NV.idx]; if (!it) return;
+  const text = `${it.title}. ${it.text || ''}`.slice(0, 4000);
+  const parts = text.match(/[^.!?。]+[.!?。]?/g) || [text];
+  const v = speechSynthesis.getVoices().find(v => /ko/i.test(v.lang));
+  ttsOn = true; paintTts();
+  parts.forEach((p, k) => { const u = new SpeechSynthesisUtterance(p); u.lang = 'ko-KR'; if (v) u.voice = v; u.rate = 1.02; if (k === parts.length - 1) u.onend = () => { ttsOn = false; paintTts(); }; speechSynthesis.speak(u); });
+}
+
+/* 오늘 신문 EPUB으로 굽기 → 서재에 넣고 파일로도 받기 */
+async function bakeNews() {
+  const items = NV.items.slice(0, 30); if (!items.length) { toast('먼저 기사를 불러와 주세요'); return; }
+  const srcs = npSources(), k = kstNow();
+  const ymd = `${k.getUTCFullYear()}-${String(k.getUTCMonth() + 1).padStart(2, '0')}-${String(k.getUTCDate()).padStart(2, '0')}`;
+  const ed = k.getUTCHours() < 15 ? '조간' : '석간';
+  const paper = srcs.length === 1 ? srcs[0].name : (NP.sel || '').replace('cat:', '') + ' 신문 모음';
+  const title = `[${paper}] ${ymd} ${ed}신문`;
+  const front = `<div class="mast"><div class="rule"></div><h1>오늘의 신문</h1><p class="date">${XE(npDateLabel())} · ${XE(paper)}</p><div class="rule"></div></div><ol class="toc">${items.map(it => `<li><b>${XE(it.title)}</b> <span>${XE(it.src)} · ${XE(npAgo(it.t))}</span></li>`).join('')}</ol>`;
+  const chapters = [{ title: '1면 · 오늘의 목차', html: front }].concat(items.map(it => {
+    const d = new DOMParser().parseFromString(`<div id="x">${it.html || ''}</div>`, 'text/html'), r = d.getElementById('x');
+    r.querySelectorAll('img').forEach(im => im.remove());   // 바깥 그림은 오프라인에서 안 보여서 뺌
+    const ser = new XMLSerializer(), body = [...r.childNodes].map(n => ser.serializeToString(n)).join('');
+    return { title: it.title, html: `<p class="meta">${XE(it.src)} · ${XE(npAgo(it.t))}</p>${body ? (/<p[\s>]/i.test(body) ? body : `<p>${body}</p>`) : ''}<p class="orig">원문: ${XE(it.link || '')}</p>` };
+  }));
+  const css = 'body{line-height:1.8;margin:0 .2em}h2{font-size:1.25em;line-height:1.45;margin:1em 0 .5em}p{margin:0 0 .9em}.meta{font-size:.8em;opacity:.65}.orig{font-size:.75em;opacity:.55;word-break:break-all;margin-top:2em}.mast{text-align:center;margin:1em 0 1.5em}.mast h1{font-size:2em;margin:.4em 0 .2em}.mast .date{font-size:.85em;opacity:.7}.rule{border-top:2px solid currentColor;border-bottom:1px solid currentColor;height:3px}.toc{padding-left:1.2em}.toc li{margin:0 0 .7em;line-height:1.5}.toc span{display:block;font-size:.78em;opacity:.6}';
+  const buf = await makeEpub({ title, author: srcs.map(f => f.name).join(', '), lang: 'ko', id: 'news-' + (NP.sel || '') + '-' + ymd + ed, source: '오늘의 신문', filePrefix: 'chapter_', css }, chapters);
+  const gid = 'news:' + (NP.sel || '') + ':' + ymd + ed;
+  const old = books.find(b => b.gid === gid);
+  if (old) { await DB.del('books', old.id).catch(() => {}); await DB.del('files', old.id).catch(() => {}); books = books.filter(b => b !== old); }
+  const b = { id: uid(), title, author: srcs.map(f => f.name).join(', '), publisher: '오늘의 신문', description: `${npDateLabel()} · 기사 ${items.length}건`, series: '오늘의 신문', vol: +ymd.replace(/-/g, '') * 10 + (ed === '석간' ? 1 : 0), volLabel: `${k.getUTCMonth() + 1}/${k.getUTCDate()} ${ed} · ${paper}`,
+    source: 'news', gid, hasFile: true, fileName: `${title}.epub`, size: buf.byteLength, added: Date.now(), lastRead: 0, progress: 0, cfi: null, bookmarks: [] };
+  await DB.put('files', { id: b.id, data: buf }); await DB.put('books', b); books.push(b); renderLibrary();
+  const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([buf], { type: 'application/epub+zip' })); a.download = `[${paper}]_${ymd}_${ed}신문.epub`;
+  document.body.appendChild(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(a.href), 5000);
+  toast(`‘${title}’을 서재에 넣고 파일로도 받았어요`, 3500);
+}
+
+/* 이벤트 */
+$('#npBack').onclick = () => closeNews();
+$('#btnNewsTop').onclick = () => openNews();
+$('#npRefresh').onclick = () => loadNews(true);
+$('#npBake').onclick = () => bakeNews().catch(e => { console.warn(e); toast('EPUB을 만들지 못했어요'); });
+(function bindChips() {
+  let timer = null, longed = false;
+  const box = $('#npChips');
+  box.addEventListener('pointerdown', e => { const c = e.target.closest('[data-custom]'); longed = false; if (!c) return; timer = setTimeout(() => { longed = true; const id = c.dataset.sel, f = (NP.custom || []).find(x => x.id === id); if (f && confirm(`‘${f.name}’을 목록에서 뺄까요?`)) { NP.custom = NP.custom.filter(x => x.id !== id); if (NP.sel === id) NP.sel = 'cat:제주'; saveNP(); paintNpChips(); loadNews(false); } }, 600); });
+  ['pointerup', 'pointerleave', 'pointercancel'].forEach(ev => box.addEventListener(ev, () => clearTimeout(timer)));
+  box.onclick = e => {
+    if (longed) { longed = false; return; }
+    if (e.target.closest('[data-addfeed]')) { $('#feedName').value = ''; $('#feedUrl').value = ''; openSheet('shFeed'); return; }
+    const c = e.target.closest('[data-sel]'); if (!c || c.dataset.sel === NP.sel) return;
+    NP.sel = c.dataset.sel; saveNP(); paintNpChips(); NV.items = []; loadNews(false); $('#news').scrollTop = 0;
+  };
+})();
+$('#feedSave').onclick = () => {
+  const name = $('#feedName').value.trim(); let url = $('#feedUrl').value.trim();
+  if (!name || !url) { toast('신문 이름과 RSS 주소를 넣어 주세요'); return; }
+  if (!/^https?:\/\//.test(url)) url = 'https://' + url;
+  const id = 'my' + Date.now().toString(36);
+  (NP.custom = NP.custom || []).push({ id, name, url }); NP.sel = id; saveNP();
+  closeSheets(); paintNpChips(); loadNews(true);
+};
+$('#npList').onclick = e => { const b = e.target.closest('[data-art]'); if (b) openArticle(+b.dataset.art); };
+$('#aBack').onclick = () => closeArticle();
+$('#aPrev').onclick = $('#aPrevZone').onclick = () => artGo(-1);
+$('#aNext').onclick = $('#aNextZone').onclick = () => artGo(1);
+$('#aTts').onclick = $('#aTts2').onclick = toggleTts;
+$('#aAaBtn').onclick = () => $('#aAa').classList.toggle('hidden');
+$('#aFs').onclick = e => { const b = e.target.closest('[data-v]'); if (b) { NP.fs = +b.dataset.v; saveNP(); paintArtStyle(); } };
+$('#aLh').onclick = e => { const b = e.target.closest('[data-v]'); if (b) { NP.lh = +b.dataset.v; saveNP(); paintArtStyle(); } };
+$('#aFont').onclick = e => { const b = e.target.closest('[data-v]'); if (b) { NP.font = b.dataset.v; saveNP(); paintArtStyle(); } };
+$('#aTh').onclick = e => { const b = e.target.closest('[data-v]'); if (b) { NP.th = b.dataset.v; saveNP(); paintArtStyle(); } };
+(function bindArtSwipe() {
+  let sx = 0, sy = 0, t0 = 0;
+  const el = $('#article');
+  el.addEventListener('touchstart', e => { const t = e.touches[0]; sx = t.clientX; sy = t.clientY; t0 = Date.now(); }, { passive: true });
+  el.addEventListener('touchend', e => { const t = e.changedTouches[0], dx = t.clientX - sx, dy = t.clientY - sy; if (Math.abs(dx) > 60 && Math.abs(dx) > Math.abs(dy) * 1.5 && Date.now() - t0 < 700) artGo(dx < 0 ? 1 : -1); });
+})();
+document.addEventListener('keydown', e => {
+  if (!document.body.classList.contains('art-open') || ['INPUT', 'TEXTAREA'].includes((e.target && e.target.tagName) || '')) return;
+  if (e.key === 'ArrowRight') artGo(1); else if (e.key === 'ArrowLeft') artGo(-1); else if (e.key === 'Escape') closeArticle();
+});
 
 /* ---------------- 시작 ---------------- */
 let loadedResolve; const loaded = new Promise(r => loadedResolve = r);
