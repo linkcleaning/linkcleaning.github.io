@@ -495,7 +495,7 @@
 
 <script>
 'use strict';
-const APP_VER = 'v10';
+const APP_VER = 'v11';
 const $ = s => document.querySelector(s);
 const $$ = s => [...document.querySelectorAll(s)];
 const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
@@ -1197,7 +1197,57 @@ function iaAuthor(c) {
 function mapIA(d) {
   if (!d || !d.identifier) return null;
   const a = iaAuthor(d.creator), lang = [].concat(d.language || 'eng').map(l => IA_LANG[l] || l);
-  return { gid: 'ia:' + d.identifier, ia: d.identifier, title: cleanTxt([].concat(d.title)[0]), author: a.name, years: a.years, lang, subjects: [], summary: '', cover: '', downloads: d.downloads || 0 };
+  const gnum = (String(d.identifier).match(/(\d+)gut$/) || [])[1];
+  return { gid: 'ia:' + d.identifier, ia: d.identifier, title: cleanTxt([].concat(d.title)[0]), author: a.name, years: a.years, lang, subjects: [], summary: '',
+    cover: gnum ? `https://www.gutenberg.org/cache/epub/${+gnum}/pg${+gnum}.cover.medium.jpg` : '', downloads: d.downloads || 0 };
+}
+
+
+/* ---------- 무료 책 표지 찾기 ----------
+   외국어: 구텐베르크 원래 표지 → 없으면 오픈라이브러리 표지(기기에 저장됨)
+   한국어: 위키문헌엔 표지가 없어서 같은 작품 출간본 표지(알라딘·카카오 키가 있으면 먼저) → 오픈라이브러리 → 구글 도서 */
+function probeImg(u) {
+  return new Promise(r => { const i = new Image(), t = setTimeout(() => r(false), 9000); i.referrerPolicy = 'no-referrer';
+    i.onload = () => { clearTimeout(t); r(i.naturalWidth >= 60 && i.naturalHeight >= 60); }; i.onerror = () => { clearTimeout(t); r(false); }; i.src = u; });
+}
+async function findCover(it) {
+  const title = cleanTxt(it.title || ''), author = cleanTxt(String(it.author || '').split(',')[0]);
+  if (!title) return null;
+  const ia = it.ia || (String(it.gid || '').startsWith('ia:') ? String(it.gid).slice(3) : '');
+  const gnum = (ia.match(/(\d+)gut$/) || [])[1] || (typeof it.gid === 'number' ? it.gid : '');
+  if (gnum) { const u = `https://www.gutenberg.org/cache/epub/${+gnum}/pg${+gnum}.cover.medium.jpg`; if (await probeImg(u)) return { url: u }; }
+  const ko = /[가-힣]/.test(title), key = norm(title).replace(/[^\p{L}\p{N}]/gu, '');
+  const same = r => { const t = norm(r.title || '').replace(/[^\p{L}\p{N}]/gu, ''); return t && key && (t === key || (key.length >= 2 && t.startsWith(key)) || (t.length >= 4 && key.startsWith(t))); };
+  const q = `${title} ${author}`.trim();
+  const tries = [];
+  if (ko && S.aladin) tries.push(() => searchAladin(q, false, 1));
+  if (ko && S.kakao) tries.push(() => searchKakao(q, false, 1));
+  tries.push(async () => {
+    const j = await fetch(`https://openlibrary.org/search.json?title=${encodeURIComponent(title)}${author ? '&author=' + encodeURIComponent(author) : ''}&limit=8&fields=title,cover_i`).then(r => r.json());
+    return (j.docs || []).filter(d => d.cover_i).map(d => ({ title: d.title, thumb: `https://covers.openlibrary.org/b/id/${d.cover_i}-L.jpg`, ol: true }));
+  });
+  tries.push(() => searchGoogle(q, false, 1));
+  for (const f of tries) {
+    try {
+      const rs = await withTimeout(f(), 10000);
+      const hit = (rs || []).find(r => (r.big || r.thumb) && same(r)); if (!hit) continue;
+      const u = hit.big || hit.thumb;
+      if (hit.ol) { const bl = await fetchBlob(u); if (bl) return { blob: bl }; }
+      if (await probeImg(u)) return { url: u };
+    } catch {}
+  }
+  return null;
+}
+/* 예전에 받은 무료 책 중 표지 없는 책은 뒤에서 조용히 표지를 찾아 줌 */
+async function backfillCovers() {
+  const need = books.filter(b => (b.source === 'gutenberg' || b.source === 'wikisource') && !b.cover && !b.coverUrl && !b.coverTried);
+  for (const b of need) {
+    const c = await findCover({ title: b.title, author: b.author, gid: b.gid }).catch(() => null);
+    b.coverTried = true;
+    if (c && c.blob) b.cover = c.blob; else if (c && c.url) b.coverUrl = c.url;
+    setCover(b); await DB.put('books', b).catch(() => {});
+    if (c) renderLibrary();
+  }
 }
 
 /* ---------- 받은 글로 EPUB 만들기 (중계 서버 없이 앱 안에서) ---------- */
@@ -1403,8 +1453,7 @@ function renderFree() {
   }
   box.innerHTML = head + FR.items.map((it, i) => `
     <div class="res" data-fi="${i}">
-      ${it.cover ? `<img src="${esc(it.cover)}" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.outerHTML='<div class=noimg></div>'">`
-        : `<div class="noimg cover-c" style="position:relative;overflow:hidden">${genCoverHTML({ title: it.title, author: it.author || '' })}</div>`}
+      <div class="noimg cover-c" style="position:relative;overflow:hidden">${genCoverHTML({ title: it.title, author: it.author || '' })}${it.cover ? `<img src="${esc(it.cover)}" alt="" loading="lazy" referrerpolicy="no-referrer" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;border-radius:0" onload="if(this.naturalWidth<60)this.remove()" onerror="this.remove()">` : ''}</div>
       <div class="min-w-0 flex-1">
         <div class="font-bold text-[15px] leading-snug" style="display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden">${esc(it.title)}</div>
         ${ko ? '' : `<div class="text-[12.5px] text-mute mt-1 truncate">${esc([it.author, it.years].filter(Boolean).join(' · ') || '작자 미상')}</div>`}
@@ -1444,12 +1493,14 @@ async function downloadFree(it) {
     try { navigator.storage && navigator.storage.persist && navigator.storage.persist(); } catch {}
     const fname = it.ws ? `${it.ws}.epub` : it.ia ? `${it.ia}.epub` : `pg${it.gid}.epub`;
     const info = await parseEpub(buf, fname);
-    if (!info.cover && it.cover) { const bl = await fetchVia(it.cover, 'blob', 15000).catch(() => null); if (bl) info.cover = await shrinkImage(bl); }
-    if (it.ws && info.cover && info.cover.size < 2500) info.cover = null;   // 위키문헌 기본 표지가 비어 있으면 다락서재 표지로
+    if (it.ws && info.cover && info.cover.size < 2500) info.cover = null;
+    let coverUrl = '';
+    if (!info.cover) { setP('표지 찾는 중…'); const c = await findCover(it).catch(() => null); if (c && c.blob) info.cover = c.blob; else if (c && c.url) coverUrl = c.url; }
     const b = { id: uid(), ...info, title: it.title || info.title, author: it.author || info.author, publisher: it.ws ? '위키문헌' : 'Project Gutenberg',
       description: it.summary || info.description || it.subjects.join(' · '), language: it.lang[0] || info.language, category: it.subjects[0] || '',
       link: it.ws ? `https://ko.wikisource.org/wiki/${encodeURIComponent(it.ws.replace(/ /g, '_'))}` : it.ia ? `https://archive.org/details/${it.ia}` : `https://www.gutenberg.org/ebooks/${it.gid}`, source: it.ws ? 'wikisource' : 'gutenberg', gid: it.gid,
       hasFile: true, fileName: fname, size: buf.byteLength, added: Date.now(), lastRead: 0, progress: 0, cfi: null, bookmarks: [] };
+    if (coverUrl) b.coverUrl = coverUrl;
     await DB.put('files', { id: b.id, data: buf });
     await DB.put('books', b);
     books.push(b); setCover(b);
@@ -1928,6 +1979,7 @@ let loadedResolve; const loaded = new Promise(r => loadedResolve = r);
 (async function init() {
   try { books = await DB.all('books'); } catch (e) { console.warn(e); books = []; toast('이 브라우저는 저장 공간을 쓸 수 없어요'); }
   books.forEach(setCover);
+  setTimeout(() => backfillCovers().catch(() => {}), 2500);
   renderLibrary();
   loadedResolve();
   // 버전 꼬리표
