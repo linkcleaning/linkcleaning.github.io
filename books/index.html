@@ -493,7 +493,7 @@
 
 <script>
 'use strict';
-const APP_VER = 'v7';
+const APP_VER = 'v8';
 const $ = s => document.querySelector(s);
 const $$ = s => [...document.querySelectorAll(s)];
 const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
@@ -1283,10 +1283,20 @@ function wsClean(html) {
   const ser = new XMLSerializer();
   return { html: [...r.childNodes].map(n => ser.serializeToString(n)).join(''), len: (r.textContent || '').replace(/\s+/g, '').length };
 }
-async function buildFromWS(it, setP) {
+async function buildFromWS(it, setP, depth = 0) {
   setP('본문 찾는 중…');
   const root = await wsParse(it.ws);
   const title = root.title || it.ws;
+  // 판본 목록 문서(예: 홍길동전 → 경판본·완판본·김유정)면 읽기 쉬운 판본으로 들어감
+  if (depth === 0) {
+    const vers = (root.links || []).filter(l => l.ns === 0 && l.exists !== false && l.title !== title && l.title.startsWith(title.replace(/\s*\(.*\)$/, ''))).map(l => l.title);
+    const probe = wsClean(root.text || '');
+    if (vers.length && (probe.len < 600 || /판본|다음이 있습니다|동음이의/.test(probe.html.slice(0, 400)))) {
+      const pick = vers.find(v => !/(경판|완판|판본|장본|영인|원문|한문)/.test(v)) || vers[0];
+      const r = await buildFromWS({ ...it, ws: pick }, setP, 1);
+      return { ...r, title: pick };
+    }
+  }
   const authorLink = (root.links || []).find(l => /^저자:/.test(l.title || ''));
   const author = authorLink ? authorLink.title.replace(/^저자:/, '') : '';
   const ap = await withTimeout(fetch(WS_API + 'action=query&list=allpages&apnamespace=0&aplimit=300&apprefix=' + encodeURIComponent(title + '/')).then(r => r.json()), 20000).catch(() => ({}));
@@ -1303,7 +1313,8 @@ async function buildFromWS(it, setP) {
   }
   if (!chapters.length || chapters.every(c => !c.html)) throw new Error('empty');
   setP('책으로 만드는 중…');
-  return { buf: await makeEpub({ title, author, lang: 'ko', id: 'ws-' + title, source: '위키문헌' }, chapters), author };
+  if (chapters.reduce((n, c) => n + (c.html || '').length, 0) < 300) throw new Error('empty');
+  return { buf: await makeEpub({ title, author, lang: 'ko', id: 'ws-' + title, source: '위키문헌' }, chapters), author, title };
 }
 
 const flipName = n => { n = String(n || '').replace(/\s*\([^)]*\)/g, '').trim(); const m = n.match(/^([^,]+),\s*(.+)$/); return m ? `${m[2]} ${m[1]}` : n; };
@@ -1417,7 +1428,7 @@ async function downloadFree(it) {
   setP('연결 중…');
   try {
     let buf = null, lastErr;
-    if (it.ws) { const r = await buildFromWS(it, setP); buf = r.buf; if (!it.author) it.author = r.author; }
+    if (it.ws) { const r = await buildFromWS(it, setP); buf = r.buf; if (!it.author) it.author = r.author; if (r.title && r.title !== it.title) it.title = r.title; }
     else if (it.ia) buf = await buildFromIA(it, setP);
     else {
       const base = `https://www.gutenberg.org/cache/epub/${it.gid}/pg${it.gid}`;
