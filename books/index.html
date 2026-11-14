@@ -171,6 +171,12 @@
   .fd-hit-img { position:relative; width:120px; flex:none; aspect-ratio:3/4; border-radius:8px; overflow:hidden; background:linear-gradient(160deg,#0E3B40,#1C7C80); }
   .fd-hit-img img { width:100%; height:100%; object-fit:cover; }
   @media (max-width:420px) { .fd-hit { flex-direction:column; } .fd-hit-img { width:100%; aspect-ratio:16/10; } }
+  .fd-note { font-size:12.5px; line-height:1.6; color:var(--mute); background:#fff; border-radius:14px; padding:12px 14px; margin-top:12px; }
+  .fd-area { width:100%; min-height:200px; border-radius:14px; border:1px solid var(--line); background:#FFFDF8; padding:12px 14px; font-size:16px; line-height:1.6; outline:none; resize:vertical; }
+  .fd-area:focus { border-color:var(--orange); }
+  .hist-cover { background:linear-gradient(160deg,#5B2A1E,#2E1A12) !important; color:#EBD9B4 !important; }
+  .hist-cover .t { font-family:Hahmlet,serif; }
+  a.np-item { color:inherit; text-decoration:none; }
   .fd-busy { position:absolute; inset:0; display:grid; place-items:center; text-align:center; padding:8px; background:rgba(20,16,12,.62); color:#fff; font-size:12px; font-weight:700; border-radius:inherit; }
   #cv { position:fixed; inset:0; z-index:52; background:#0E0E0F; color:#EDEDED; }
   body:not(.comic-open) #cv { display:none; }
@@ -534,6 +540,7 @@
         <button class="np-btn dark" id="npBake"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5V5a2 2 0 0 1 2-2h12v18H6.5A2.5 2.5 0 0 1 4 18.5z"/><path d="M9 8h6M9 12h4"/></svg><span id="npBakeLbl">EPUB으로 굽기</span></button>
       </div>
       <div id="npKinds" class="np-kinds"><button data-kind="news">오늘의 신문</button><button data-kind="mag">매거진 가판대</button><button data-kind="col">IT·교양 칼럼</button><button data-kind="comic">만화방</button><button data-kind="wz">스페셜 웹진</button></div>
+      <div id="fdTabs" class="np-kinds hidden"><button data-fdt="book">무료 책 발굴소</button><button data-fdt="hub">실전·공공 지식관</button></div>
       <div class="text-center pb-2">
         <div class="np-rule"></div>
         <div id="npMast" class="np-mast text-[30px] sm:text-[42px] leading-none pt-3">오늘의 신문</div>
@@ -728,7 +735,7 @@
 
 <script>
 'use strict';
-const APP_VER = 'v29';
+const APP_VER = 'v30';
 const $ = s => document.querySelector(s);
 const $$ = s => [...document.querySelectorAll(s)];
 const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
@@ -2593,12 +2600,14 @@ function npSources() {
 function paintNpHead() {
   const k = npKind(), K = NP_KINDS[k];
   $$('#npKinds button').forEach(b => b.classList.toggle('on', b.dataset.kind === k));
-  $('#npKinds').classList.toggle('hidden', k === 'find');
-  $('#npMast').textContent = K.mast;
-  $('#npDate').textContent = k === 'find' ? '한국 근현대 명작 · 즉석 위키북 · 오픈 라이브러리' : k === 'wz' ? '직접 펴낸 디지털 매거진을 책장 넘기듯 보기' : k === 'comic' ? '내 만화책 · 오늘의 웹코믹 · 무료 고전 만화' : npDateLabel();
+  $('#npKinds').classList.toggle('hidden', k === 'find'); $('#fdTabs').classList.toggle('hidden', k !== 'find');
+  $$('#fdTabs button').forEach(b => b.classList.toggle('on', b.dataset.fdt === (FD.grp || 'book')));
+  $('#npMast').textContent = k === 'find' ? (FD.grp === 'hub' ? '실전·공공 지식관' : '무료 책 발굴소') : K.mast;
+  $('#npDate').textContent = k === 'find' ? (FD.grp === 'hub' ? '정부 보도자료 · 유튜브를 글로 · 역사·고전 · 실무 핸드북' : '한국 근현대 명작 · 즉석 위키북 · 오픈 라이브러리') : k === 'wz' ? '직접 펴낸 디지털 매거진을 책장 넘기듯 보기' : k === 'comic' ? '내 만화책 · 오늘의 웹코믹 · 무료 고전 만화' : npDateLabel();
   $('#npBake').classList.toggle('hidden', k === 'wz' || k === 'comic' || k === 'find'); $('#npRefresh').classList.toggle('hidden', k === 'wz' || k === 'comic' || k === 'find');
   $('#npBakeLbl').textContent = 'EPUB으로 굽기';
   if (k === 'wz') { $('#npChips').innerHTML = `<button class="np-chip" data-addwz style="border-style:dashed">＋ 새 웹진 호수 추가</button>`; return; }
+  if (k === 'find' && FD.grp === 'hub') { $('#npChips').innerHTML = [['gov', '📢 정책·보도자료'], ['yt', '🎬 유튜브를 글로'], ['hist', '📜 역사·고전 이야기'], ['hand', '🔬 실무 핸드북']].map(([v, l]) => `<button class="np-chip ${(FD.hsec || 'gov') === v ? 'on' : ''}" data-hsec="${v}">${l}</button>`).join(''); return; }
   if (k === 'find') { $('#npChips').innerHTML = [['ko', '🇰🇷 한국 명작 문학관'], ['wiki', '📖 즉석 위키북'], ['ol', '🌍 오픈 라이브러리']].map(([v, l]) => `<button class="np-chip ${FD.sec === v ? 'on' : ''}" data-fsec="${v}">${l}</button>`).join(''); return; }
   if (k === 'comic') { $('#npChips').innerHTML = `<button class="np-chip" data-addcomic style="border-style:dashed">＋ 만화 파일 넣기 (.zip·.cbz)</button><button class="np-chip" data-addfeed style="border-style:dashed">＋ 웹툰·만화 RSS 추가</button>`; return; }
   const mine = allFeeds().filter(f => f.kind === k), cats = [...new Set(mine.map(f => f.cat))], sel = npSel();
@@ -2797,7 +2806,7 @@ $('#npRefresh').onclick = () => loadNews(true);
 $('#npBake').onclick = () => bakeNews().catch(e => { console.warn(e); toast('EPUB을 만들지 못했어요'); });
 $('#npKinds').onclick = e => { const b = e.target.closest('[data-kind]'); if (!b || b.dataset.kind === npKind()) return; NP.kind = b.dataset.kind; saveNP(); NV.items = []; NV.eph = null; paintNpHead(); loadNews(false); $('#news').scrollTop = 0; };
 function npAddFeedSheet() {
-  const K = NP_KINDS[npKind()];
+  const K = npKind() === 'find' ? { add: '부처 RSS 추가' } : NP_KINDS[npKind()];
   $('#feedHead').textContent = K.add + '하기'; $('#feedName').value = ''; $('#feedUrl').value = '';
   $('#feedName').placeholder = npKind() === 'news' ? '예: 제주新보' : npKind() === 'mag' ? '예: 엘르 코리아' : npKind() === 'comic' ? '예: 내가 좋아하는 인스타툰' : '예: 내 블로그';
   $('#feedUrl').placeholder = npKind() === 'comic' ? 'https://rss.blog.naver.com/블로그아이디.xml' : 'https://…/rss/allArticle.xml';
@@ -2814,6 +2823,7 @@ function npAddWzSheet() { $('#wzName').value = ''; $('#wzUrl').value = ''; openS
     if (e.target.closest('[data-addfeed]')) { npAddFeedSheet(); return; }
     if (e.target.closest('[data-addwz]')) { npAddWzSheet(); return; }
     if (e.target.closest('[data-addcomic]')) { $('#fileComic').click(); return; }
+    const hs = e.target.closest('[data-hsec]'); if (hs) { FD.hsec = hs.dataset.hsec; saveFD(); paintNpHead(); paintFind(); $('#news').scrollTop = 0; if (FD.hsec === 'gov' && !HUB.gov.items.length && !HUB.gov.loading) hubGovLoad(); return; }
     const fs = e.target.closest('[data-fsec]'); if (fs) { FD.sec = fs.dataset.fsec; saveFD(); paintNpHead(); paintFind(); $('#news').scrollTop = 0; return; }
     const c = e.target.closest('[data-sel]'); if (!c || c.dataset.sel === npSel()) return;
     NP.selBy[npKind()] = c.dataset.sel; saveNP(); paintNpHead(); NV.items = []; NV.eph = null; loadNews(false); $('#news').scrollTop = 0;
@@ -2824,6 +2834,7 @@ $('#feedSave').onclick = () => {
   if (!name || !url) { toast('이름과 RSS 주소를 넣어 주세요'); return; }
   if (!/^https?:\/\//.test(url)) url = 'https://' + url;
   const id = 'my' + Date.now().toString(36);
+  if (npKind() === 'find') { (NP.custom = NP.custom || []).push({ id, name, url, kind: 'gov' }); saveNP(); closeSheets(); hubGovLoad(id); return; }
   (NP.custom = NP.custom || []).push({ id, name, url, kind: npKind() }); NP.selBy[npKind()] = id; saveNP();
   closeSheets(); paintNpHead(); loadNews(true);
 };
@@ -3153,7 +3164,7 @@ document.addEventListener('keydown', e => {
    무료 책 발굴소 — 한국 근현대 명작(위키문헌) · 즉석 위키북(위키백과) · 오픈 라이브러리
    찾은 글은 모두 서재의 책 읽기 화면에서 열림(글자·배경·듣기 공통) → ‘서재에 꽂기’로 EPUB 저장
    ====================================================================== */
-const FD = LS.get('darak.find', { sec: 'ko', bundle: [] });
+const FD = LS.get('darak.find', { sec: 'ko', bundle: [], grp: 'book', hsec: 'gov' });
 const saveFD = () => LS.set('darak.find', FD);
 const FD_KO = [
   ['동백꽃', '김유정', '소설'], ['봄봄', '김유정', '소설'], ['운수 좋은 날', '현진건', '소설'], ['빈처', '현진건', '소설'],
@@ -3165,7 +3176,7 @@ const FD_WIKI_Q = ['제주도', '인공지능', '커피', '삼국지', '세계�
 const FD_OL_Q = ['cookbook', 'botany', 'birds', 'world history', 'Shakespeare', 'art history', 'Korea', 'fairy tales', 'astronomy', 'architecture'];
 const FDS = { ko: { items: [], q: '', busy: '' }, wiki: { q: '', hit: null, alts: [], loading: false }, ol: { q: '', items: [], loading: false, n: 0 } };
 
-function openFind() { FD_OVR = 'find'; NV.items = []; openNews(null, true); }
+function openFind() { FD_OVR = 'find'; NV.items = []; openNews(null, true); if (FD.grp === 'hub' && (FD.hsec || 'gov') === 'gov' && !HUB.gov.items.length && !HUB.gov.loading) hubGovLoad(); }
 
 /* ---------- 공통: 임시 책을 책 읽기 화면으로 ---------- */
 function openEphBook(meta, buf) { openReader(meta.id, { meta: { progress: 0, bookmarks: [], cfi: null, ...meta, _eph: true }, data: buf.slice(0) }); }
@@ -3323,8 +3334,8 @@ async function wikiBook(title) {   // 위키백과 문서 → 장(章) 목록
   return { title: real, chapters: chs, related: uniq, lead };
 }
 const WB_CSS = 'body{line-height:1.8;margin:0 .2em}h2{font-size:1.35em;line-height:1.4;margin:.6em 0 .8em}h3{font-size:1.08em;margin:1.4em 0 .5em}p{margin:0 0 .95em}figure{margin:1.1em 0;text-align:center}figure img,img{max-width:100%;max-height:55vh;width:auto;height:auto;object-fit:contain}figcaption{font-size:.8em;opacity:.7;margin-top:.4em;line-height:1.5}ul,ol{padding-left:1.3em}li{margin:.25em 0}table.wt{border-collapse:collapse;font-size:.82em;margin:1em 0;width:100%}table.wt td,table.wt th{border:1px solid rgba(128,128,128,.4);padding:.3em .45em;vertical-align:top}.part{text-align:center;margin-top:30%}.part h1{font-size:1.8em}.more{font-size:.9em}.more a{color:#D9792A}.src{font-size:.75em;opacity:.6;margin-top:2em}';
-async function wikiEpub(topics, embed) {   // topics: [{title, chapters, related}] — 여러 개면 한 권으로 제본
-  const many = topics.length > 1, chapters = [], images = [];
+async function wikiEpub(topics, embed, opts = {}) {   // topics: [{title, chapters, related}] — 여러 개면 한 권으로 제본
+  const many = topics.length > 1, chapters = (opts.head || []).slice(), images = [];
   let k = 0;
   const fixImgs = async html => {
     if (!embed) return html;
@@ -3340,11 +3351,13 @@ async function wikiEpub(topics, embed) {   // topics: [{title, chapters, related
   for (const t of topics) {
     if (many) chapters.push({ title: t.title, html: `<div class="part"><h1>${XE(t.title)}</h1></div>` });
     for (const c of t.chapters) chapters.push({ title: many ? `${t.title} · ${c.title}` : c.title, html: await fixImgs(c.html) });
-    if (!embed && t.related && t.related.length) chapters.push({ title: '이어서 읽기', html: `<p class="more">아래 주제를 누르면 그 주제의 책이 바로 펼쳐져요.</p><ul class="more">${t.related.map(x => `<li><a href="https://ko.wikipedia.org/wiki/${XE(encodeURIComponent(x.replace(/ /g, '_')))}">${XE(x)}</a></li>`).join('')}</ul><p class="src">출처: 한국어 위키백과 ‘${XE(t.title)}’ (CC BY-SA 4.0)</p>` });
+    if (opts.noRelated) {}
+    else if (!embed && t.related && t.related.length) chapters.push({ title: '이어서 읽기', html: `<p class="more">아래 주제를 누르면 그 주제의 책이 바로 펼쳐져요.</p><ul class="more">${t.related.map(x => `<li><a href="https://ko.wikipedia.org/wiki/${XE(encodeURIComponent(x.replace(/ /g, '_')))}">${XE(x)}</a></li>`).join('')}</ul><p class="src">출처: 한국어 위키백과 ‘${XE(t.title)}’ (CC BY-SA 4.0)</p>` });
     else chapters.push({ title: many ? `${t.title} · 출처` : '출처', html: `<p class="src">이 책은 한국어 위키백과 ‘${XE(t.title)}’ 문서로 만들었어요. 글은 CC BY-SA 4.0 라이선스를 따라요.</p>${t.related && t.related.length ? `<p class="more">함께 읽을 주제: ${t.related.map(XE).join(' · ')}</p>` : ''}` });
   }
-  const title = many ? '나만의 맞춤 백과사전' : topics[0].title;
-  return makeEpub({ title, author: '위키백과', lang: 'ko', id: 'wb-' + topics.map(t => t.title).join('+') + (embed ? '' : '-r'), source: '한국어 위키백과', css: WB_CSS, images }, chapters);
+  chapters.push(...(opts.tail || []));
+  const title = opts.title || (many ? '나만의 맞춤 백과사전' : topics[0].title);
+  return makeEpub({ title, author: opts.author || '위키백과', lang: 'ko', id: 'wb-' + (opts.title || '') + topics.map(t => t.title).join('+') + (embed ? '' : '-r'), source: '한국어 위키백과', css: opts.css || WB_CSS, images }, chapters);
 }
 async function openWikiBook(title) {
   toast(`‘${title}’ 책을 엮는 중…`, 1800);
@@ -3354,20 +3367,20 @@ async function openWikiBook(title) {
     openEphBook({ id: 'eph-wb-' + wb.title, title: wb.title, author: '위키백과', _wiki: true, _save: () => saveWikiBooks([wb.title]) }, buf);
   } catch (e) { console.warn(e); toast(e && e.message === 'empty' ? '이 주제는 책으로 엮을 본문이 없어요' : '위키백과가 응답하지 않아요. 잠시 뒤 다시 눌러 주세요', 3000); }
 }
-async function saveWikiBooks(titles, download) {
+async function saveWikiBooks(titles, download, opts = {}) {
   const topics = [];
   for (const t of titles) { try { topics.push(await wikiBook(t)); } catch {} }
   if (!topics.length) throw new Error('empty');
-  const buf = await wikiEpub(topics, true);
-  const title = topics.length > 1 ? `나만의 맞춤 백과사전 (${topics.map(t => t.title).slice(0, 3).join('·')}${topics.length > 3 ? ' 외' : ''})` : topics[0].title;
+  const buf = await wikiEpub(topics, true, opts);
+  const title = opts.title ? opts.title : topics.length > 1 ? `나만의 맞춤 백과사전 (${topics.map(t => t.title).slice(0, 3).join('·')}${topics.length > 3 ? ' 외' : ''})` : topics[0].title;
   let cover = null; const lead = topics.map(t => t.lead).find(Boolean);
   if (lead) { try { const rr = await withTimeout(fetch(lead), 12000); if (rr.ok) cover = await shrinkImage(await rr.blob()); } catch {} }
-  const b = { id: uid(), title, author: '위키백과', publisher: '한국어 위키백과', description: topics.map(t => t.title).join(' · ') + ' — 위키백과로 엮은 책 (CC BY-SA 4.0)', source: 'wikibook',
-    gid: 'wb:' + topics.map(t => t.title).join('+'), hasFile: true, fileName: `${title}.epub`, size: buf.byteLength, added: Date.now(), lastRead: 0, progress: 0, cfi: null, bookmarks: [] };
+  const b = { id: uid(), title, author: opts.author || '위키백과', publisher: '한국어 위키백과', description: opts.desc || (topics.map(t => t.title).join(' · ') + ' — 위키백과로 엮은 책 (CC BY-SA 4.0)'), source: 'wikibook',
+    gid: opts.gid || ('wb:' + topics.map(t => t.title).join('+')), hasFile: true, fileName: `${title}.epub`, size: buf.byteLength, added: Date.now(), lastRead: 0, progress: 0, cfi: null, bookmarks: [] };
   if (cover) b.cover = cover;
   const old = books.find(x => x.gid === b.gid); if (old) { await DB.del('books', old.id).catch(() => {}); await DB.del('files', old.id).catch(() => {}); books = books.filter(x => x !== old); }
   await DB.put('files', { id: b.id, data: buf }); await DB.put('books', b); books.push(b); setCover(b); renderLibrary();
-  if (download) { const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([buf], { type: 'application/epub+zip' })); a.download = (topics.length > 1 ? '나만의 맞춤 백과사전' : title) + '.epub'; document.body.appendChild(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(a.href), 5000); }
+  if (download) { const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([buf], { type: 'application/epub+zip' })); a.download = (opts.title || (topics.length > 1 ? '나만의 맞춤 백과사전' : title)) + '.epub'; document.body.appendChild(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(a.href), 5000); }
   return b;
 }
 function renderFdWiki() {
@@ -3464,6 +3477,7 @@ async function openOlText(i) {
 function paintFind() {
   if (npKind() !== 'find' || !document.body.classList.contains('news-open')) return;
   const keep = document.activeElement && document.activeElement.id === 'fdQ';
+  if (FD.grp === 'hub') { $('#npNote').textContent = { gov: '정부 부처 보도자료 · 공공누리 출처표시', yt: '유튜브 영상 정보 · 붙여 넣은 스크립트', hist: '한국어 위키문헌 · 위키백과', hand: '한국어 위키백과 · OpenAlex' }[FD.hsec || 'gov']; $('#npList').innerHTML = `<div class="pt-2">${renderHub()}</div>`; if (keep) { const q = $('#fdQ'); if (q) { q.focus(); } } return; }
   $('#npNote').textContent = FD.sec === 'ko' ? '한국어 위키문헌 · 저작권이 끝난 작품' : FD.sec === 'wiki' ? '한국어 위키백과 · CC BY-SA 4.0' : 'Open Library · 인터넷 아카이브';
   $('#npList').innerHTML = `<div class="pt-2">${FD.sec === 'ko' ? renderFdKo() : FD.sec === 'wiki' ? renderFdWiki() : renderFdOl()}</div>`;
   if (keep) { const q = $('#fdQ'); if (q) { q.focus(); q.setSelectionRange(q.value.length, q.value.length); } }
@@ -3471,7 +3485,8 @@ function paintFind() {
 $('#npList').addEventListener('submit', e => {
   const f = e.target.closest('[data-fdform]'); if (!f) return; e.preventDefault();
   const q = $('#fdQ').value; $('#fdQ').blur();
-  if (f.dataset.fdform === 'ko') fdKoSearch(q); else if (f.dataset.fdform === 'wiki') fdWikiSearch(q); else fdOlSearch(q);
+  const ff = f.dataset.fdform;
+  if (ff === 'ko') fdKoSearch(q); else if (ff === 'wiki') fdWikiSearch(q); else if (ff === 'yt') hubYtLookup(q); else if (ff === 'hand') hubHandbook(q); else fdOlSearch(q);
 });
 $('#npList').addEventListener('click', e => {
   if (npKind() !== 'find') return;
@@ -3487,8 +3502,240 @@ $('#npList').addEventListener('click', e => {
   if ((x = g('[data-oq]'))) { fdOlSearch(x.dataset.oq); return; }
   if ((x = g('[data-ol]'))) { openOlSheet(+x.dataset.ol); return; }
 });
+$('#fdTabs').onclick = e => { const b = e.target.closest('[data-fdt]'); if (!b || b.dataset.fdt === FD.grp) return; FD.grp = b.dataset.fdt; saveFD(); paintNpHead(); paintFind(); $('#news').scrollTop = 0; if (FD.grp === 'hub' && (FD.hsec || 'gov') === 'gov' && !HUB.gov.items.length && !HUB.gov.loading) hubGovLoad(); };
 $('#olBody').onclick = e => { const a = e.target.closest('[data-olpages]'), b = e.target.closest('[data-oltext]'); if (a) openOlPages(+a.dataset.olpages); if (b) openOlText(+b.dataset.oltext); };
 
+
+/* ======================================================================
+   실전·공공 지식관 — 정부 보도자료 · 유튜브→글 · 역사·고전 이야기 · 실무 핸드북 편찬기
+   ====================================================================== */
+const GOV_FEEDS = [
+  { id: 'mcst', kind: 'gov', name: '문화체육관광부 보도자료', url: 'http://www.mcst.go.kr/common/rss/press.jsp' },
+  { id: 'moel-n', kind: 'gov', name: '고용노동부 알려드립니다', url: 'https://www.moel.go.kr/rss/notice.do' },
+  { id: 'moel-p', kind: 'gov', name: '고용노동부 정책자료', url: 'https://www.moel.go.kr/rss/policy.do' }
+];
+const govFeeds = () => GOV_FEEDS.concat((NP.custom || []).filter(c => c.kind === 'gov').map(c => ({ ...c, custom: true })));
+const HIST = [
+  { t: '삼국유사', by: '일연', d: '단군·주몽·향가가 담긴 신화와 설화의 보물창고' },
+  { t: '삼국사기', by: '김부식', d: '고구려·백제·신라의 공식 역사' },
+  { t: '열하일기', by: '박지원', d: '청나라 여행길에서 쓴 조선 최고의 기행문' },
+  { t: '난중일기', by: '이순신', d: '임진왜란 7년, 장군이 직접 쓴 진중 일기' },
+  { t: '목민심서', by: '정약용', d: '백성을 돌보는 관리의 마음가짐' },
+  { t: '홍길동전', by: '허균', d: '아버지를 아버지라 부르지 못한 의적 이야기' },
+  { t: '춘향전', by: '작자 미상', d: '춘향과 몽룡, 남원의 사랑 이야기' },
+  { t: '금오신화', by: '김시습', d: '한국 최초의 한문 소설집, 다섯 편의 기이한 이야기' },
+  { t: '단군 신화', by: '건국 신화', d: '곰이 사람이 된 이야기, 고조선의 시작' },
+  { t: '박씨전', by: '작자 미상', d: '추녀라 놀림받던 박씨 부인의 활약' }
+];
+const HAND_Q = ['친환경 세제', '오존 살균', '스마트팜', '표고버섯 재배', '프로그레시브 웹 앱', '곰팡이', '커피 로스팅', '제주 감귤'];
+const HUB = { gov: { feed: 'mcst', items: [], loading: false }, yt: { url: '', meta: null, text: '' }, hand: { q: '', busy: '' }, hist: { busy: '' } };
+
+/* ---------- 1. 정부 보도자료 ---------- */
+async function hubGovLoad(id) {
+  const f = govFeeds().find(x => x.id === (id || HUB.gov.feed)) || GOV_FEEDS[0];
+  HUB.gov.feed = f.id; HUB.gov.loading = true; HUB.gov.items = []; HUB.gov.err = false; paintFind();
+  try { const raw = await fetchFeed(f); HUB.gov.items = raw.map(it => ({ title: decodeEnt(String(it.title || '')).replace(/<[^>]+>/g, '').trim(), link: it.link, t: npTime(it.pub), html: cleanArticleHtml(it.html || ''), src: f.name })).filter(x => x.title).slice(0, 30); }
+  catch (e) { HUB.gov.err = true; }
+  HUB.gov.loading = false; paintFind();
+}
+async function hubGovScrap() {
+  const items = HUB.gov.items; if (!items.length) return;
+  const f = govFeeds().find(x => x.id === HUB.gov.feed) || {};
+  const k = kstNow(), ymd = `${k.getUTCFullYear()}-${String(k.getUTCMonth() + 1).padStart(2, '0')}-${String(k.getUTCDate()).padStart(2, '0')}`;
+  const title = `[${f.name}] ${ymd} 브리핑`;
+  const chapters = [{ title: '목차', html: `<p class="meta">${XE(f.name)} · ${XE(ymd)} · 공공누리 출처표시</p><ol>${items.map(i => `<li>${XE(i.title)}</li>`).join('')}</ol>` }]
+    .concat(items.map(i => ({ title: i.title, html: `<p class="meta">${XE(npStamp(i.t))} · ${XE(i.src)}</p>${textOf(i.html).length > 40 ? i.html.replace(/<img[^>]*>/g, '') : ''}<p class="orig"><a href="${XE(i.link || '')}">원문 보기 →</a></p>` })));
+  const css = 'body{line-height:1.8}h2{font-size:1.2em;line-height:1.45}.meta{font-size:.8em;opacity:.65}.orig{font-size:.85em;margin-top:1.4em}.orig a{color:#D9691F}ol{padding-left:1.3em}li{margin:.4em 0}';
+  const buf = await makeEpub({ title, author: f.name, lang: 'ko', id: 'gov-' + f.id + ymd, source: '정부 보도자료', css }, chapters);
+  const b = { id: uid(), title, author: f.name, publisher: '정부 보도자료(공공누리)', description: `${items.length}건 · ${ymd}`, source: 'gov', gid: 'gov:' + f.id + ':' + ymd, series: '정책·비즈니스 브리핑', vol: +ymd.replace(/-/g, ''), volLabel: `${k.getUTCMonth() + 1}/${k.getUTCDate()} · ${f.name.split(' ')[0]}`,
+    hasFile: true, fileName: title + '.epub', size: buf.byteLength, added: Date.now(), lastRead: 0, progress: 0, cfi: null, bookmarks: [] };
+  const old = books.find(x => x.gid === b.gid); if (old) { await DB.del('books', old.id).catch(() => {}); await DB.del('files', old.id).catch(() => {}); books = books.filter(x => x !== old); }
+  await DB.put('files', { id: b.id, data: buf }); await DB.put('books', b); books.push(b); renderLibrary();
+  toast(`‘${title}’을 서재에 EPUB으로 꽂았어요`, 2800);
+}
+function renderHubGov() {
+  const G = HUB.gov;
+  return `
+    <div class="fd-note">정책브리핑(korea.kr) RSS는 2026년 7월에 서비스가 끝나서, 대신 <b>부처 보도자료·공지</b>를 모아 보여 드려요. 부처 RSS는 제목만 보내 주는 곳이 많아 본문은 ‘원문 보기’로 이어져요.</div>
+    <div class="flex flex-wrap gap-1.5 mt-3">${govFeeds().map(f => `<button class="np-chip ${G.feed === f.id ? 'on' : ''}" data-gov="${esc(f.id)}">${esc(f.name)}</button>`).join('')}<button class="np-chip" data-govadd style="border:1.5px dashed #CFC4AF">＋ 부처 RSS 추가</button></div>
+    ${G.loading ? '<div class="text-center text-mute text-[13.5px] py-12">보도자료를 받는 중…</div>' : G.items.length ? `
+      <div class="flex items-center justify-between mt-5 mb-2"><div class="text-[13px] font-bold text-mute">${G.items.length}건</div><button class="np-btn dark" data-govscrap>⬇ 묶어서 서재에 EPUB 저장</button></div>
+      <div class="flex flex-col">${G.items.map((x, i) => `<a class="np-item" href="${esc(x.link || '#')}" target="_blank" rel="noopener"><div class="flex-1 min-w-0"><h4>${esc(x.title)}</h4>${textOf(x.html).length > 40 ? `<p class="np-sum">${esc(textOf(x.html).slice(0, 140))}</p>` : ''}<div class="np-meta">${esc(npStamp(x.t))} · 원문 보기 ↗</div></div></a>`).join('')}</div>`
+      : `<div class="text-center text-mute text-[13.5px] py-10">${G.err ? '이 부처 서버가 지금 응답하지 않아요. 잠시 뒤 다시 눌러 주세요.' : ''}</div>`}`;
+}
+
+/* ---------- 2. 유튜브 → 읽는 글 ---------- */
+function ytId(u) { const m = String(u || '').match(/(?:youtu\.be\/|v=|shorts\/|embed\/|live\/)([\w-]{11})/); return m ? m[1] : ''; }
+async function hubYtLookup(url) {
+  const id = ytId(url); HUB.yt.url = url; HUB.yt.meta = null;
+  if (!id) { toast('유튜브 주소를 확인해 주세요'); paintFind(); return; }
+  HUB.yt.loading = true; paintFind();
+  try {
+    const j = await withTimeout(fetch('https://noembed.com/embed?url=' + encodeURIComponent('https://www.youtube.com/watch?v=' + id)).then(r => r.json()), 12000);
+    if (j.error) throw new Error(j.error);
+    HUB.yt.meta = { id, title: j.title || '', channel: j.author_name || '', thumb: `https://i.ytimg.com/vi/${id}/hqdefault.jpg`, link: 'https://www.youtube.com/watch?v=' + id };
+  } catch (e) { HUB.yt.meta = { id, title: '', channel: '', thumb: `https://i.ytimg.com/vi/${id}/hqdefault.jpg`, link: 'https://www.youtube.com/watch?v=' + id }; toast('영상 정보를 못 가져왔어요. 제목은 직접 넣어도 돼요'); }
+  HUB.yt.loading = false; paintFind();
+}
+/* 스크립트 정리: 시간 표시·[음악]·줄바꿈을 걷어 내고 문단과 장으로 */
+function cleanScript(raw) {
+  const lines = String(raw || '').replace(/\r/g, '').split('\n').map(l => l.trim());
+  const units = []; let curT = null;
+  const TS = /^\(?\[?((?:\d{1,2}:)?\d{1,2}:\d{2})\]?\)?\s*/;
+  for (let l of lines) {
+    if (!l) { units.push({ br: true }); continue; }
+    const m = l.match(TS); if (m) { curT = m[1]; l = l.slice(m[0].length).trim(); }
+    if (/^((?:\d{1,2}:)?\d{1,2}:\d{2})$/.test(l)) { curT = l; continue; }
+    l = l.replace(/\[(음악|박수|웃음|music|applause|laughter|Music|Applause)\]/gi, '').replace(/^>>\s*/, '').replace(/\s+/g, ' ').trim();
+    if (!l || /^(자막|Transcript|스크립트|대본)$/.test(l)) continue;
+    units.push({ t: curT, s: l });
+  }
+  const secOf = t => { if (!t) return 0; const p = t.split(':').map(Number); return p.length === 3 ? p[0] * 3600 + p[1] * 60 + p[2] : p[0] * 60 + p[1]; };
+  const chapters = []; let ch = null, para = [], paraLen = 0;
+  const flushPara = () => { if (para.length) { const txt = para.join(' ').replace(/\s+([,.?!])/g, '$1'); ch.paras.push(txt); } para = []; paraLen = 0; };
+  const newCh = t => { if (ch) { flushPara(); if (ch.paras.length) chapters.push(ch); } ch = { t, paras: [] }; };
+  newCh(units.find(u => u.t) ? units.find(u => u.t).t : null);
+  let lastCut = 0, chLen = 0;
+  for (const u of units) {
+    if (u.br) { flushPara(); continue; }
+    const sec = secOf(u.t);
+    if (u.t && sec - lastCut >= 300 && chLen > 800) { newCh(u.t); lastCut = sec; chLen = 0; }
+    else if (!u.t && chLen > 2400) { newCh(null); chLen = 0; }
+    para.push(u.s); paraLen += u.s.length; chLen += u.s.length;
+    if (paraLen > 320 && /[.?!다요죠까]$/.test(u.s)) flushPara();
+  }
+  newCh(null);
+  return chapters.map((c, i) => ({ title: c.t ? `${c.t} 부터` : `${i + 1}장`, html: c.paras.map(p => `<p>${XE(p)}</p>`).join('') }));
+}
+async function hubYtBind() {
+  const text = ($('#ytText') || {}).value || HUB.yt.text || '';
+  HUB.yt.text = text;
+  const titleIn = (($('#ytTitle') || {}).value || '').trim();
+  const meta = HUB.yt.meta || {};
+  const body = cleanScript(text);
+  if (!body.length || body.reduce((n, c) => n + c.html.length, 0) < 80) { toast('스크립트를 붙여 넣어 주세요 (유튜브 ‘스크립트 표시’에서 복사)'); return; }
+  const title = titleIn || meta.title || '붙여 넣은 글';
+  const front = { title: '이 글에 대하여', html: `${meta.id ? `<figure><img src="${XE(meta.thumb)}" alt=""/></figure>` : ''}<h1 style="font-size:1.4em;line-height:1.4">${XE(title)}</h1><p class="meta">${XE(meta.channel || '')}${meta.channel ? ' · ' : ''}유튜브 영상 스크립트를 글로 정리</p>${meta.link ? `<p class="orig"><a href="${XE(meta.link)}">영상 보기 →</a></p>` : ''}<p class="meta">시간 표시와 줄바꿈을 정리해 문단으로 엮었어요. 장 제목의 시간은 영상 속 위치예요.</p>` };
+  const css = 'body{line-height:1.85}h2{font-size:1.1em;opacity:.7;letter-spacing:.02em}p{margin:0 0 1em;text-indent:0}figure{margin:0 0 1em;text-align:center}img{max-width:100%}.meta{font-size:.82em;opacity:.65}.orig a{color:#D9691F}';
+  const chapters = [front].concat(body);
+  const buf = await makeEpub({ title, author: meta.channel || '유튜브', lang: 'ko', id: 'yt-' + (meta.id || Date.now()), source: 'YouTube 스크립트', css }, chapters);
+  openEphBook({ id: 'eph-yt-' + (meta.id || 'paste'), title, author: meta.channel || '', _save: async () => {
+    const b2 = await makeEpub({ title, author: meta.channel || '유튜브', lang: 'ko', id: 'yt-' + (meta.id || Date.now()), source: 'YouTube 스크립트', css }, [{ ...front, html: front.html.replace(/<figure>.*?<\/figure>/, '') }].concat(body));
+    let cover = null; if (meta.id) { try { const rr = await withTimeout(fetch(meta.thumb), 10000); if (rr.ok) cover = await shrinkImage(await rr.blob()); } catch {} }
+    const b = { id: uid(), title, author: meta.channel || '', publisher: '유튜브 → 읽는 글', description: '영상 스크립트를 글로 정리한 책', source: 'youtube', link: meta.link || '', hasFile: true, fileName: title + '.epub', size: b2.byteLength, added: Date.now(), lastRead: 0, progress: 0, cfi: null, bookmarks: [] };
+    if (cover) b.cover = cover;
+    await DB.put('files', { id: b.id, data: b2 }); await DB.put('books', b); books.push(b); setCover(b); renderLibrary(); return b;
+  } }, buf);
+}
+function renderHubYt() {
+  const Y = HUB.yt, m = Y.meta;
+  return `
+    <form class="fd-search" data-fdform="yt"><input id="fdQ" value="${esc(Y.url)}" placeholder="유튜브 주소 붙여 넣기" inputmode="url" autocomplete="off"><button class="btn btn-pri !px-4">불러오기</button></form>
+    ${Y.loading ? '<div class="text-center text-mute text-[13.5px] py-6">영상 정보를 받는 중…</div>' : m ? `
+      <div class="fd-hit mt-4"><div class="fd-hit-img !aspect-video" style="aspect-ratio:16/9"><img src="${esc(m.thumb)}" alt="" referrerpolicy="no-referrer"></div>
+        <div class="min-w-0 flex-1"><div class="font-bold text-[16px] leading-snug">${esc(m.title || '제목을 못 가져왔어요')}</div><div class="text-[12.5px] text-mute mt-1">${esc(m.channel)}</div><a class="text-[12.5px] font-bold mt-2 inline-block" style="color:var(--accent)" href="${esc(m.link)}" target="_blank" rel="noopener">영상에서 스크립트 복사하기 ↗</a></div></div>` : ''}
+    <div class="dcard !mt-4">
+      <div class="font-bold text-[15px]">스마트 텍스트 클리너 &amp; 이북 제본</div>
+      <p class="text-[12.5px] text-mute mt-1 leading-relaxed">유튜브 영상 아래 <b>…더보기 → 스크립트 표시</b>를 눌러 나온 글을 통째로 복사해 붙여 넣으세요. <b>00:00</b> 시간 표시와 줄바꿈을 걷어 내고 문단·장으로 나눠 책으로 엮어요. 강의 노트·회의록 같은 아무 글이어도 돼요.</p>
+      <label class="field mt-3"><span>책 제목 (비우면 영상 제목)</span><input id="ytTitle" autocomplete="off" placeholder="${esc(m && m.title || '예: 곰팡이 제거 강의 정리')}"></label>
+      <textarea id="ytText" class="fd-area mt-3" placeholder="0:00&#10;안녕하세요 오늘은&#10;0:04&#10;욕실 곰팡이를 없애는 방법을…">${esc(Y.text)}</textarea>
+      <button class="btn btn-pri w-full mt-3" data-ytbind>글로 정리해서 책으로 펼치기</button>
+    </div>
+    <p class="text-[12px] text-mute mt-3 leading-relaxed">유튜브는 다른 앱이 자막을 바로 가져가는 것을 막아 두어서, 스크립트는 복사해 붙여 넣는 방식이에요. 만든 책은 나만 보는 용도로 써 주세요.</p>`;
+}
+
+/* ---------- 3. 역사·고전 이야기관 ---------- */
+const HIST_CSS = 'body{line-height:1.9;margin:0 .3em;font-family:serif}h2{font-size:1.3em;text-align:center;margin:1.2em 0 1.2em;letter-spacing:.05em}h2:after{content:"❦";display:block;font-size:.7em;opacity:.45;margin-top:.5em}h3{font-size:1.05em;margin:1.5em 0 .5em;text-align:center}p{margin:0 0 1em;text-indent:1em}figure{margin:1em 0;text-align:center}img{max-width:100%;max-height:50vh}figcaption{font-size:.8em;opacity:.7}.part{text-align:center;margin-top:30%}.part h1{font-size:1.9em;letter-spacing:.1em}.src{font-size:.75em;opacity:.6;margin-top:2em;text-indent:0}ul,ol{padding-left:1.3em}table.wt{border-collapse:collapse;font-size:.82em;width:100%}table.wt td,table.wt th{border:1px solid rgba(128,128,128,.4);padding:.3em}';
+async function openHistory(h) {
+  if (HUB.hist.busy) return;
+  HUB.hist.busy = h.t; paintFind();
+  try {
+    // 한글 번역본이 위키문헌에 넉넉히 있으면 그 책을, 아니면(한문 원문뿐) 위키백과 해설을 이야기책으로
+    let ws = null;
+    try {
+      const r = await buildFromWS({ gid: 'ko:' + h.t, ws: h.t, title: h.t, lang: ['ko'], subjects: [] }, () => {});
+      const z = await JSZip.loadAsync(r.buf); let txt = '';
+      for (const f of Object.keys(z.files).filter(n => /\.xhtml$/.test(n) && !/nav/.test(n)).slice(0, 6)) txt += await z.file(f).async('string');
+      txt = txt.replace(/<[^>]+>/g, '');
+      const ko = (txt.match(/[가-힣]/g) || []).length, han = (txt.match(/[一-鿿]/g) || []).length;
+      if (ko > 1500 && ko > han * 2) ws = r;
+    } catch {}
+    if (ws) {
+      const it = { gid: 'ko:' + h.t, ws: h.t, title: ws.title.replace(/^번역:/, ''), author: ws.author || h.by, lang: ['ko'], subjects: [], summary: h.d };
+      openEphBook({ id: 'eph-h-' + h.t, title: it.title, author: it.author, _save: () => storeFreeBuf(it, ws.buf.slice(0)) }, ws.buf);
+    } else {
+      const wb = await wikiBook(h.t);
+      const opts = { title: `${h.t} 이야기`, author: h.by, css: HIST_CSS, noRelated: true, gid: 'hist:' + h.t, desc: `${h.d} — 위키백과 해설로 엮은 이야기책 (CC BY-SA 4.0)`,
+        head: [{ title: '', html: `<div class="part"><h1>${XE(h.t)}</h1><p style="text-indent:0;opacity:.7">${XE(h.by)}</p><p style="text-indent:0;opacity:.6;font-size:.85em">${XE(h.d)}</p></div>` }],
+        tail: [{ title: '원문에 대하여', html: `<p>위키문헌에는 이 책의 원문이 한문으로 실려 있어요. 이 책은 우리말 해설로 엮었어요.</p><p class="src">원문: ko.wikisource.org/wiki/${XE(h.t)}</p>` }] };
+      const buf = await wikiEpub([wb], false, opts);
+      openEphBook({ id: 'eph-h-' + h.t, title: opts.title, author: h.by, _save: () => saveWikiBooks([wb.title], false, opts) }, buf);
+    }
+  } catch (e) { console.warn(e); toast('지금은 불러올 수 없어요. 잠시 뒤 다시 눌러 주세요'); }
+  HUB.hist.busy = ''; paintFind();
+}
+function renderHubHist() {
+  return `
+    <p class="text-[12.5px] text-mute mt-1 leading-relaxed">저작권이 끝난 우리 역사 기록·고전을 이야기책처럼 펼쳐요. 위키문헌에 우리말 번역이 있으면 그 글을, 한문 원문뿐이면 위키백과의 우리말 해설로 엮어요.</p>
+    <div class="mg-grid mt-4">${HIST.map((h, i) => `<button class="mg-card" data-hist="${i}"><div class="relative"><div class="cover cover-c"><div class="gen hist-cover"><div class="t">${esc(h.t)}</div><div class="rule"></div><div class="a">${esc(h.by)}</div></div></div>${HUB.hist.busy === h.t ? '<div class="fd-busy">펼치는 중…</div>' : ''}</div><h4>${esc(h.t)}</h4><div class="text-[11.5px] text-mute mt-1 leading-snug">${esc(h.d)}</div></button>`).join('')}</div>`;
+}
+
+/* ---------- 4. 주제별 실무 핸드북 편찬기 (위키백과 + OpenAlex) ---------- */
+function oaAbstract(inv) { if (!inv) return ''; const arr = []; for (const [w, ps] of Object.entries(inv)) for (const p of ps) arr[p] = w; return arr.filter(Boolean).join(' '); }
+async function openAlexChapter(q) {
+  try {
+    const j = await withTimeout(fetch(`https://api.openalex.org/works?search=${encodeURIComponent(q)}&per-page=5&filter=has_abstract:true&sort=relevance_score:desc&select=title,publication_year,abstract_inverted_index,doi,authorships`).then(r => r.json()), 15000);
+    const rs = (j.results || []).filter(r => r.title);
+    if (!rs.length) return null;
+    return { title: '부록 · 세계 연구 논문 요약', html: `<p>OpenAlex(전 세계 학술 논문 공개 목록)에서 ‘${XE(q)}’와 관련된 논문 ${rs.length}편의 요약을 모았어요. 대부분 영어예요.</p>` + rs.map(r => `<h3>${XE(r.title)}</h3><p class="src" style="margin-top:0">${XE([(r.authorships || []).slice(0, 3).map(a => a.author && a.author.display_name).filter(Boolean).join(', '), r.publication_year].filter(Boolean).join(' · '))}</p><p>${XE(oaAbstract(r.abstract_inverted_index).slice(0, 1600))}</p>${r.doi ? `<p class="src"><a href="${XE(r.doi)}">${XE(r.doi)}</a></p>` : ''}`).join('') };
+  } catch { return null; }
+}
+async function hubHandbook(q) {
+  q = String(q || '').trim(); if (!q) { toast('주제를 넣어 주세요'); return; }
+  if (HUB.hand.busy) return;
+  HUB.hand.q = q; HUB.hand.busy = '관련 문서 찾는 중…'; paintFind();
+  try {
+    const j = await wpGet('action=query&list=search&srlimit=8&srprop=&srsearch=' + encodeURIComponent(q));
+    const titles = ((j.query && j.query.search) || []).map(x => x.title);
+    if (!titles.length) throw new Error('none');
+    const topics = [];
+    for (const t of titles) {
+      if (topics.length >= 5) break;
+      HUB.hand.busy = `${topics.length + 1}/5 · ‘${t}’ 엮는 중…`; const el = $('#handProg'); if (el) el.textContent = HUB.hand.busy;
+      try { topics.push(await wikiBook(t)); } catch {}
+    }
+    if (!topics.length) throw new Error('none');
+    HUB.hand.busy = '세계 연구 논문 찾는 중…'; { const el = $('#handProg'); if (el) el.textContent = HUB.hand.busy; }
+    const oa = await openAlexChapter(q);
+    const title = `${q} 실무 핸드북`;
+    const intro = { title: '머리말', html: `<div class="part"><h1>${XE(title)}</h1></div><p>이 핸드북은 ‘${XE(q)}’와 관련된 위키백과 문서 ${topics.length}개${oa ? '와 세계 연구 논문 요약' : ''}을 한 권으로 엮은 것이에요.</p><ol>${topics.map(t => `<li>${XE(t.title)}</li>`).join('')}</ol><p class="src">글: 한국어 위키백과(CC BY-SA 4.0)${oa ? ', OpenAlex(CC0)' : ''}</p>` };
+    const opts = { title, author: '다락서재 편찬', head: [intro], tail: oa ? [oa] : [], gid: 'hand:' + q, desc: `${q} — 위키백과 문서 ${topics.length}개${oa ? ' + 연구 논문 요약' : ''}로 엮은 핸드북`, noRelated: true };
+    const buf = await wikiEpub(topics, false, opts);
+    openEphBook({ id: 'eph-hand-' + q, title, author: '다락서재 편찬', _wiki: true, _save: () => saveWikiBooks(topics.map(t => t.title), true, opts) }, buf);
+  } catch (e) { console.warn(e); toast(e && e.message === 'none' ? '관련 문서를 못 찾았어요. 다른 낱말로 넣어 보세요' : '편찬하지 못했어요. 잠시 뒤 다시 눌러 주세요'); }
+  HUB.hand.busy = ''; paintFind();
+}
+function renderHubHand() {
+  const H = HUB.hand;
+  return `
+    <form class="fd-search" data-fdform="hand"><input id="fdQ" value="${esc(H.q)}" placeholder="주제 (예: 친환경 세제, 스마트팜)" autocomplete="off"><button class="btn btn-pri !px-4">편찬</button></form>
+    <div class="flex flex-wrap gap-1.5 mt-3">${HAND_Q.map(q => `<button class="np-chip" data-handq="${esc(q)}">${esc(q)}</button>`).join('')}</div>
+    ${H.busy ? `<div class="dcard !mt-5 text-center py-8"><div class="font-bold text-[15px]">‘${esc(H.q)}’ 핸드북 편찬 중</div><div id="handProg" class="text-[13px] text-mute mt-2">${esc(H.busy)}</div></div>` : `
+    <div class="text-center px-4 pt-10 pb-4"><div class="font-bold text-[18px]">주제별 단행본 자동 편찬기</div><p class="text-[13px] text-mute mt-2 leading-relaxed">주제를 넣으면 관련 위키백과 문서를 <b>최대 5개</b>까지 모으고<br>세계 연구 논문 요약을 부록으로 붙여<br><b>‘맞춤형 전문 실무 핸드북’</b> 한 권으로 엮어요.<br>읽기 화면 위 ⬇를 누르면 그림까지 담아 서재에 꽂고 파일로도 받아요.</p></div>`}`;
+}
+
+function renderHub() { const s = FD.hsec || 'gov'; return s === 'gov' ? renderHubGov() : s === 'yt' ? renderHubYt() : s === 'hist' ? renderHubHist() : renderHubHand(); }
+$('#npList').addEventListener('click', e => {
+  if (npKind() !== 'find' || FD.grp !== 'hub') return;
+  const g = sel => e.target.closest(sel); let x;
+  if ((x = g('[data-gov]'))) { hubGovLoad(x.dataset.gov); return; }
+  if (g('[data-govadd]')) { npAddFeedSheet(); return; }
+  if (g('[data-govscrap]')) { hubGovScrap().catch(() => toast('저장하지 못했어요')); return; }
+  if (g('[data-ytbind]')) { hubYtBind().catch(err => { console.warn(err); toast('책으로 엮지 못했어요'); }); return; }
+  if ((x = g('[data-hist]'))) { openHistory(HIST[+x.dataset.hist]); return; }
+  if ((x = g('[data-handq]'))) { hubHandbook(x.dataset.handq); return; }
+});
+$('#npList').addEventListener('input', e => { if (e.target.id === 'ytText') HUB.yt.text = e.target.value; });
 
 /* 서재 첫 화면 숫자 카드 (날씨돌처럼 한눈에) */
 function renderStats(cnt) {
