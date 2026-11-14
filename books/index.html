@@ -135,6 +135,17 @@
   #wzFrame { flex:1; width:100%; border:0; background:#111; }
   body:not(.eph) #reader .eph-only { display:none; }
   body.eph #reader div.eph-only { display:flex; }
+  .st-cover { position:relative; aspect-ratio:3/4; border-radius:5px; overflow:hidden; box-shadow:0 8px 18px -10px rgba(40,30,20,.55), 0 0 0 1px rgba(0,0,0,.05); background:#2B2620; }
+  .st-cover img { position:absolute; inset:0; width:100%; height:100%; object-fit:cover; }
+  .st-cover .st-shade { position:absolute; inset:0; background:linear-gradient(180deg,rgba(0,0,0,.45) 0%,rgba(0,0,0,0) 34%,rgba(0,0,0,0) 52%,rgba(0,0,0,.72) 100%); }
+  .st-cover .st-mast { position:absolute; left:7px; right:7px; top:7px; color:#fff; font-family:Hahmlet,serif; font-weight:800; font-size:16px; line-height:1.05; letter-spacing:-.02em; text-shadow:0 1px 6px rgba(0,0,0,.35); }
+  .st-cover .st-head { position:absolute; left:7px; right:7px; bottom:7px; color:#fff; font-size:10.5px; font-weight:700; line-height:1.35; overflow:hidden; display:-webkit-box; -webkit-line-clamp:3; -webkit-box-orient:vertical; }
+  .st-paper { background:#F7F2E7; color:#1C1A17; padding:7px 7px 0; }
+  .st-paper .st-pm { font-family:Hahmlet,serif; font-weight:800; font-size:14px; text-align:center; letter-spacing:-.03em; border-top:2px solid #1C1A17; border-bottom:1px solid #1C1A17; padding:3px 0 2px; }
+  .st-paper .st-pd { font-size:8px; text-align:center; color:#6E6658; margin:2px 0 5px; font-weight:700; }
+  .st-paper .st-ph { font-family:"Gowun Batang",Hahmlet,serif; font-weight:700; font-size:11px; line-height:1.32; overflow:hidden; display:-webkit-box; -webkit-line-clamp:4; -webkit-box-orient:vertical; word-break:keep-all; }
+  .st-paper .st-pi { position:static; display:block; width:100%; height:52px; object-fit:cover; margin-top:5px; border-radius:2px; }
+  .st-paper .st-pl { height:4px; background:repeating-linear-gradient(180deg,#CFC4AF 0 1px,transparent 1px 6px); height:30px; margin-top:6px; }
   .np-art { flex:1; height:36px; border-radius:11px; font-size:13.5px; font-weight:700; background:rgba(128,128,128,.13); }
   #rTts.on { color:var(--orange); }
   body.news-open #lib, body.news-open #tabbar { visibility:hidden; }
@@ -347,6 +358,7 @@
   <main class="max-w-6xl mx-auto px-4 sm:px-6">
     <section id="heroBox" class="mt-2"></section>
     <section id="readingBox" class="mt-6"></section>
+    <section id="standBox"></section>
     <section id="seriesBox"></section>
 
     <section id="shelfHead" class="mt-7">
@@ -625,7 +637,7 @@
 
 <script>
 'use strict';
-const APP_VER = 'v21';
+const APP_VER = 'v22';
 const $ = s => document.querySelector(s);
 const $$ = s => [...document.querySelectorAll(s)];
 const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
@@ -787,6 +799,8 @@ function renderLibrary() {
           <div class="text-[11px] text-mute mt-0.5">${statusOf(b) === 'unread' ? '새 호' : statusOf(b) === 'done' ? '다 읽음' : pctText(b.progress)}</div>
         </button>`).join('')}</div></div>`;
   }).join('');
+
+  try { renderStand(); } catch (e) {}
 
   // 읽는 중 가로 줄
   const others = reading.slice(1, 12);
@@ -2470,6 +2484,7 @@ async function loadNews(force) {
     return;
   }
   NV.items = items; NV.stamp = Date.now(); NV.eph = null;
+  if (standNote(items)) try { renderStand(); } catch {}
   try { localStorage.setItem(key, JSON.stringify({ at: NV.stamp, items })); } catch { try { localStorage.setItem(key, JSON.stringify({ at: NV.stamp, items: items.map(i => ({ ...i, html: i.html.slice(0, 6000) })) })); } catch {} }
   renderNews(NV.stamp, failed);
 }
@@ -2683,6 +2698,69 @@ $('#rSave').onclick = e => { e.stopPropagation(); bakeNews().catch(err => { cons
 $('#rArtPrev').onclick = e => { e.stopPropagation(); if (RD) { ttsStop(); jumpSection(RD, -1); } };
 $('#rArtNext').onclick = e => { e.stopPropagation(); if (RD) { ttsStop(); jumpSection(RD, 1); } };
 
+
+/* 서재 첫 화면의 ‘가판대’ 줄 — 월간 링크 매거진처럼 표지를 가로로 */
+const STAND = LS.get('darak.stand', { at: 0, f: {} });
+const STAND_CARDS = [
+  { type: 'paper', kind: 'news', sel: 'cat:제주', name: '제주 신문', ids: ['jemin', 'jejusori', 'jejunews', 'headlinejeju'] },
+  { type: 'paper', kind: 'news', sel: 'cat:종합', name: '종합 신문', ids: ['yna', 'hani', 'donga'] },
+  { type: 'paper', kind: 'news', sel: 'cat:경제', name: '경제 신문', ids: ['mk', 'hk'] },
+  { type: 'mag', kind: 'mag', sel: 'gq', name: 'GQ', ids: ['gq'] },
+  { type: 'mag', kind: 'mag', sel: 'vogue', name: 'VOGUE', ids: ['vogue'] },
+  { type: 'mag', kind: 'mag', sel: 'wkorea', name: 'W', ids: ['wkorea'] },
+  { type: 'mag', kind: 'mag', sel: 'allure', name: '얼루어', ids: ['allure'] },
+  { type: 'mag', kind: 'mag', sel: 'marie', name: '마리끌레르', ids: ['marie'] },
+  { type: 'mag', kind: 'mag', sel: 'maison', name: '메종', ids: ['maison'] },
+  { type: 'mag', kind: 'col', sel: 'yozm', name: '요즘IT', ids: ['yozm'] },
+  { type: 'mag', kind: 'col', sel: 'cat:IT', name: 'IT 칼럼', ids: ['itworld', 'bloter', 'geeknews'] },
+  { type: 'wz', kind: 'wz', name: '링크클린 웹진', sub: '플립북' }
+];
+function standNote(items) {   // 가판대에서 받은 글로 표지 갱신
+  let ch = false;
+  for (const it of items || []) {
+    const cur = STAND.f[it.fid];
+    if (!cur || (it.t || 0) > (cur.t || 0) || (!cur.thumb && it.thumb && (it.t || 0) >= (cur.t || 0) - 6 * 3600e3)) {
+      if (cur && cur.thumb && !it.thumb && (it.t || 0) - (cur.t || 0) < 6 * 3600e3) continue;   // 사진 있는 표지를 조금 더 오래 유지
+      STAND.f[it.fid] = { title: it.title, thumb: it.thumb || '', t: it.t || 0 }; ch = true;
+    }
+  }
+  if (ch) LS.set('darak.stand', STAND);
+  return ch;
+}
+function standPick(ids) { let best = null; for (const id of ids) { const x = STAND.f[id]; if (x && (!best || (x.t || 0) > (best.t || 0))) best = x; } return best; }
+function renderStand() {
+  const box = $('#standBox'); if (!box) return;
+  const k = kstNow(), dl = `${k.getUTCMonth() + 1}월 ${k.getUTCDate()}일 ${'일월화수목금토'[k.getUTCDay()]}요일`;
+  box.innerHTML = `<div class="mt-6"><div class="flex items-end justify-between mb-3"><h2 class="serif font-bold text-[17px]">오늘의 가판대</h2><button class="text-[12.5px] font-bold text-mute" data-stand-all>전체 보기 ›</button></div>
+    <div class="flex gap-3.5 overflow-x-auto no-scrollbar -mx-4 px-4 sm:mx-0 sm:px-0 pb-2">${STAND_CARDS.map((c, i) => {
+      if (c.type === 'wz') return `<button class="w-[104px] flex-none text-left" data-stand="${i}"><div class="st-cover"><img src="magazine/link-mag-01-cover.jpg" alt=""></div><div class="text-[12.5px] font-bold mt-2 leading-tight">${esc(c.name)}</div><div class="text-[11px] text-mute mt-0.5">${esc(c.sub)}</div></button>`;
+      const x = standPick(c.ids);
+      const cover = c.type === 'paper'
+        ? `<div class="st-cover st-paper"><div class="st-pm">${esc(c.name)}</div><div class="st-pd">${esc(dl)}</div>${x ? `<div class="st-ph">${esc(x.title)}</div>${x.thumb ? `<img class="st-pi" src="${esc(x.thumb)}" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.remove()">` : '<div class="st-pl"></div>'}` : '<div class="st-pl"></div><div class="st-pl"></div>'}</div>`
+        : `<div class="st-cover">${x && x.thumb ? `<img src="${esc(x.thumb)}" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.remove()">` : ''}<div class="st-shade"></div><div class="st-mast">${esc(c.name)}</div>${x ? `<div class="st-head">${esc(x.title)}</div>` : ''}</div>`;
+      return `<button class="w-[104px] flex-none text-left" data-stand="${i}">${cover}<div class="text-[12.5px] font-bold mt-2 leading-tight truncate">${esc(c.name)}</div><div class="text-[11px] text-mute mt-0.5">${x && x.t ? esc(npAgo(x.t)) : (c.kind === 'news' ? '오늘 지면' : c.kind === 'mag' ? '매거진' : '칼럼')}</div></button>`;
+    }).join('')}</div></div>`;
+}
+$('#standBox').onclick = e => {
+  if (e.target.closest('[data-stand-all]')) { openNews(); return; }
+  const b = e.target.closest('[data-stand]'); if (!b) return;
+  const c = STAND_CARDS[+b.dataset.stand];
+  if (c.type === 'wz') { openNews('wz'); setTimeout(() => openWz('wz-link1'), 50); return; }
+  NP.selBy[c.kind] = c.sel; NV.items = []; NV.eph = null; openNews(c.kind);
+};
+async function standPrefetch(force) {   // 한 시간에 한 번, 표지에 쓸 최신 글만 조용히 받아 둠
+  if (navigator.onLine === false || (!force && Date.now() - STAND.at < 60 * 60e3)) return;
+  STAND.at = Date.now(); LS.set('darak.stand', STAND);
+  const ids = [...new Set(STAND_CARDS.flatMap(c => c.ids || []))];
+  let ch = false;
+  for (const id of ids) {
+    const f = NEWS_FEEDS.find(x => x.id === id); if (!f) continue;
+    try { if (standNote(normItems(await fetchFeed(f), f).slice(0, 8))) ch = true; } catch {}
+    await new Promise(r => setTimeout(r, 350));
+  }
+  if (ch && !document.body.classList.contains('reading')) renderStand();
+}
+
 /* ---------------- 시작 ---------------- */
 let loadedResolve; const loaded = new Promise(r => loadedResolve = r);
 (async function init() {
@@ -2695,6 +2773,7 @@ let loadedResolve; const loaded = new Promise(r => loadedResolve = r);
   if ((S.koPack | 0) < KO_PACK_VER && navigator.onLine !== false) setTimeout(() => installKoPack(true).catch(() => {}), 2500);
   else setTimeout(() => backfillCovers().catch(() => {}), 2500);
   setTimeout(() => syncMagazines(), 1200);
+  setTimeout(() => standPrefetch(), 3500);
   renderLibrary();
   loadedResolve();
   // 버전 꼬리표
