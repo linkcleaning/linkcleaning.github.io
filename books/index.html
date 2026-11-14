@@ -709,7 +709,7 @@
 
 <script>
 'use strict';
-const APP_VER = 'v26';
+const APP_VER = 'v27';
 const $ = s => document.querySelector(s);
 const $$ = s => [...document.querySelectorAll(s)];
 const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
@@ -3098,9 +3098,9 @@ const FD = LS.get('darak.find', { sec: 'ko', bundle: [] });
 const saveFD = () => LS.set('darak.find', FD);
 const FD_KO = [
   ['동백꽃', '김유정', '소설'], ['봄봄', '김유정', '소설'], ['운수 좋은 날', '현진건', '소설'], ['빈처', '현진건', '소설'],
-  ['날개', '이상', '소설'], ['벙어리 삼룡이', '나도향', '소설'], ['하늘과 바람과 별과 시', '윤동주', '시집'], ['진달래꽃', '김소월', '시집'],
+  ['날개', '이상', '소설'], ['물레방아', '나도향', '소설'], ['하늘과 바람과 별과 시', '윤동주', '시집'], ['진달래꽃', '김소월', '시집'],
   ['메밀꽃 필 무렵', '이효석', '소설'], ['감자', '김동인', '소설'], ['광염 소나타', '김동인', '소설'], ['무정', '이광수', '장편소설'],
-  ['님의 침묵', '한용운', '시집'], ['레디메이드 인생', '채만식', '소설'], ['탈출기', '최서해', '소설'], ['만무방', '김유정', '소설']
+  ['술 권하는 사회', '현진건', '소설'], ['레디메이드 인생', '채만식', '소설'], ['탈출기', '최서해', '소설'], ['만무방', '김유정', '소설']
 ];
 const FD_WIKI_Q = ['제주도', '인공지능', '커피', '삼국지', '세계사', '한라산', '태양계', '한글', '김치', '조선'];
 const FD_OL_Q = ['cookbook', 'botany', 'birds', 'world history', 'Shakespeare', 'art history', 'Korea', 'fairy tales', 'astronomy', 'architecture'];
@@ -3246,7 +3246,7 @@ async function wikiBook(title) {   // 위키백과 문서 → 장(章) 목록
     if (n.nodeType === 1 || (n.nodeType === 3 && n.textContent.trim())) cur.nodes.push(n);
   }
   flush();
-  if (!related.length) r.querySelectorAll('[data-wl]').forEach(a => { if (related.length < 14) related.push(a.getAttribute('data-wl')); });
+  if (related.length < 8) r.querySelectorAll('[data-wl]').forEach(a => { const t = a.getAttribute('data-wl'); if (related.length < 14 && !related.includes(t) && !/^\d+년$|^\d+월 \d+일$/.test(t)) related.push(t); });
   const ser = new XMLSerializer();
   const tidy = nodes => {
     const box = d.createElement('div'); nodes.forEach(n => box.appendChild(n));
@@ -3336,7 +3336,7 @@ async function fdOlSearch(q) {
   q = String(q || '').trim(); FDS.ol.q = q; FDS.ol.items = []; if (!q) { paintFind(); return; }
   FDS.ol.loading = true; FDS.ol.err = false; paintFind();
   try {
-    const j = await withTimeout(fetch(`https://openlibrary.org/search.json?q=${encodeURIComponent(q)}&has_fulltext=true&limit=60&fields=key,title,author_name,first_publish_year,cover_i,ia,public_scan_b,ebook_access,language`).then(r => r.json()), 20000);
+    const j = await withTimeout(fetch(`https://openlibrary.org/search.json?q=${encodeURIComponent(q)}&has_fulltext=true&limit=100&fields=key,title,author_name,first_publish_year,cover_i,ia,public_scan_b,ebook_access,language`).then(r => r.json()), 20000);
     const docs = (j.docs || []).filter(x => (x.public_scan_b === true || x.ebook_access === 'public') && x.ia && x.ia.length);
     FDS.ol.items = docs.slice(0, 30); FDS.ol.n = j.numFound || 0;
   } catch (e) { FDS.ol.err = true; }
