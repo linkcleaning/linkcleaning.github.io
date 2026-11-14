@@ -1,0 +1,15 @@
+{
+  "name": "미니게임천국",
+  "short_name": "미니게임천국",
+  "description": "가족이 함께 즐기는 미니게임 모음 — 눈치 100, 10초 연타, 복불복 룰렛, 묵찌빠",
+  "start_url": "./index.html",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#fbf3e8",
+  "theme_color": "#fbf3e8",
+  "icons": [
+    {"src": "icon-192.png", "sizes": "192x192", "type": "image/png"},
+    {"src": "icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any maskable"}
+  ]
+}
