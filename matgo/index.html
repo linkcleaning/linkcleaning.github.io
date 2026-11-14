@@ -623,7 +623,7 @@ small.zero,.seg small.mn.zero{color:#ff8a80!important}
 
 <script>
 'use strict';
-const VER='v73';
+const VER='v74';
 const $=s=>document.querySelector(s);
 const sleep=ms=>new Promise(r=>setTimeout(r,ms));
 const rnd=n=>Math.floor(Math.random()*n);
@@ -665,7 +665,7 @@ const avaHTML=p=>p.roster?oppSVG(oppOf(p.id)):esc(p.emoji||'🙂');
 /* ---------- 돈(게임머니) · 관리자 — 링크 더비와 같은 온라인 저장소 공유 ---------- */
 const ADMIN_ID='link';                 // 관리인: 한승우(링크돌이)
 const LEAGUE_URL='https://link-derby-default-rtdb.asia-southeast1.firebasedatabase.app';
-const CFG_DEF={tutuStr:2,msStr:4,tutuPer:500,msPer:1000,msX:3,cmt:30000,att:10000,qMul:1,wMul:1,coffee:30000000,start:30000,per:100,bonus:6,event:true,tutuX:3,dailyMax:3,wMoney:50000,mMoney:100000,mCoffee:true};
+const CFG_DEF={tutuStr:3,msStr:5,tutuPer:500,msPer:1000,msX:3,cmt:30000,att:10000,qMul:1,wMul:1,coffee:30000000,start:30000,per:100,bonus:6,event:true,tutuX:3,dailyMax:3,wMoney:50000,mMoney:100000,mCoffee:true};
 const SEASON_V=2;   // 시작 금액 3만원 새 시즌
 const LG={online:false,
   async req(path,method,body){const ac=window.AbortController?new AbortController():null,tm=setTimeout(()=>ac&&ac.abort(),6000);try{const r=await fetch(`${LEAGUE_URL}/derby/${path}.json`,{signal:ac?ac.signal:undefined,method:method||'GET',cache:'no-store',headers:{'Content-Type':'application/json'},body:body===undefined?undefined:JSON.stringify(body)});if(!r.ok)return null;this.online=true;const j=await r.json();return j===null?{}:j}catch(e){this.online=false;return null}finally{clearTimeout(tm)}}};
@@ -913,8 +913,8 @@ const oppOf=id=>id==='tutu'?BOSS:id==='mansur'?MANSUR:(OPP.find(o=>o.id===id)||O
 const isBoss=id=>id==='tutu'||id==='mansur';
 const bossPer=id=>id==='mansur'?(DB.cfg.msPer||1000):(DB.cfg.tutuPer||500);
 const bossMult=id=>id==='mansur'?(DB.cfg.msX||3):tutuX();
-const BSTR=[{n:'쉬움',luck:0,lv:0,st:'★☆☆'},{n:'보통',luck:.15,lv:1,st:'★★☆'},{n:'강함',luck:.3,lv:2,st:'★★★'},{n:'아주 강함',luck:.5,lv:2,st:'★★★★'},{n:'최강',luck:.7,lv:2,st:'★★★★★'},{n:'지옥',luck:.85,lv:2,st:'★★★★★★'}];
-const bossStr=id=>{const v=id==='mansur'?DB.cfg.msStr:DB.cfg.tutuStr;return BSTR[v??(id==='mansur'?4:2)]||BSTR[2]};
+const BSTR=[{n:'쉬움',luck:0,lv:0,jinx:0,st:'★☆☆'},{n:'보통',luck:.15,lv:1,jinx:0,st:'★★☆'},{n:'강함',luck:.3,lv:2,jinx:.1,st:'★★★'},{n:'아주 강함',luck:.5,lv:2,jinx:.2,st:'★★★★'},{n:'최강',luck:.7,lv:2,jinx:.3,st:'★★★★★'},{n:'지옥',luck:.85,lv:2,jinx:.45,st:'★★★★★★'},{n:'악마',luck:.95,lv:2,jinx:.6,st:'😈😈😈'}];
+const bossStr=id=>{const v=id==='mansur'?DB.cfg.msStr:DB.cfg.tutuStr;return BSTR[v??(id==='mansur'?5:3)]||BSTR[3]};
 const bossLuck=id=>bossStr(id).luck;
 const bossStars=id=>bossStr(id).st;
 const bossEn=id=>id==='mansur'?'MINSUR · FINAL BOSS':'ILLUN MASK';
@@ -1326,6 +1326,9 @@ async function playCard(p,card,pick){
     const hm=H?H.m:-1,okM=m=>S.floor.some(f=>f.m===m&&!(m===hm&&kH===1));
     const ix=S.deck.findIndex((c,i)=>i<S.deck.length-1&&c.t!=='B'&&(okM(c.m)||(m=>m===hm&&kH===0)(c.m)));
     if(ix>=0){const c=S.deck.splice(ix,1)[0];S.deck.push(c);if(p===0){S.vitHits++;say('⚡ 활력 발동! 좋은 패가 온다~')}else if(Math.random()<.4)say(['크르르… 운도 실력이지','크하하! 또 맞았다','네 패는 내 거다…'][rnd(3)])}
+  }else if(p===0&&S.opp.boss&&!S.pvp&&S.deck.length>1&&Math.random()<bossStr(S.opp.id).jinx){
+    const hm=H?H.m:-1,ix=S.deck.findIndex((c,i)=>i<S.deck.length-1&&c.t!=='B'&&c.m!==hm&&!S.floor.some(f=>f.m===c.m));
+    if(ix>=0){const c=S.deck.splice(ix,1)[0];S.deck.push(c)}
   }
   const flipB=[];   // 뒤집다 나온 보너스패 (뒤에 싸면 묻히고 피 돌려줌)
   while(S.deck.length){
@@ -1643,7 +1646,7 @@ function aiChoose(p){
     const fm=S.floor.filter(x=>x.m===c.m),same=hand.filter(x=>x.m===c.m);
     let s=0,pick=null;
     if(same.length===3&&fm.length===1)s=same.reduce((a,x)=>a+val(x,p),0)+val(fm[0],p)+9;
-    else if(fm.length===0){s=-val(c,o)*(lv>=2?.8:.4);if(unseen(c.m,p)===0)s+=1.5;if(same.length>=2&&lv>=1)s-=1.2}
+    else if(fm.length===0){s=-val(c,o)*(lv>=2?.8:.4);if(unseen(c.m,p)===0)s+=1.5;if(same.length>=2&&lv>=1)s-=1.2;if(S.opp.boss&&p===1&&S.hands[o].some(x=>x.m===c.m))s-=2+val(c,o)}
     else if(fm.length===1){s=val(c,p)+val(fm[0],p)+(lv>=2?val(fm[0],o)*.5:0);if(lv>=2&&unseen(c.m,p)===2)s-=2.2}
     else if(fm.length===2){const b=fm.slice().sort((a,b)=>(val(b,p)+(lv>=2?val(b,o)*.4:0))-(val(a,p)+(lv>=2?val(a,o)*.4:0)));pick=b[0];s=val(c,p)+val(pick,p)+(lv>=2?val(pick,o)*.5:0)+.5}
     else s=val(c,p)+fm.reduce((a,x)=>a+val(x,p),0)+6;
@@ -2571,8 +2574,8 @@ async function adminPanel(msg=''){
     <div class="lbl">💎 민수르 점당 금액 <small style="opacity:.7">(✎로 얼마든지)</small></div>${seg('msPer',[1000,10000,100000,1000000],wonS)}<button class="btn alt" style="width:100%;margin-top:6px;padding:8px" data-v="msPerSet">✎ 민수르 점당 직접 입력 (지금 ${won(DB.cfg.msPer||1000)})</button>
     <div class="lbl">💎 민수르 이기면 배수</div>${seg('msX',[1,2,3,5,10],v=>v+'배')}
     <div class="lbl">👹 일런마스크 이기면 배수</div>${seg('tutuX',[2,3,4,5],v=>v+'배')}
-    <div class="lbl">👹 일런마스크 강도</div>${seg('tutuStr',[0,1,2,3,4,5],v=>BSTR[v].n)}
-    <div class="lbl">💎 민수르 강도</div>${seg('msStr',[0,1,2,3,4,5],v=>BSTR[v].n)}<p style="font-size:11px;opacity:.75;margin:4px 0 0">쉬움 운 0% · 보통 15% · 강함 30% · 아주 강함 50% · 최강 70% · 지옥 85% (뒤집을 때 좋은 패가 올 확률)</p>
+    <div class="lbl">👹 일런마스크 강도</div>${seg('tutuStr',[0,1,2,3,4,5,6],v=>BSTR[v].n)}
+    <div class="lbl">💎 민수르 강도</div>${seg('msStr',[0,1,2,3,4,5,6],v=>BSTR[v].n)}<p style="font-size:11px;opacity:.75;margin:4px 0 0">쉬움 운 0% · 보통 15% · 강함 30% · 아주 강함 50% · 최강 70% · 지옥 85% · 악마 95% (뒤집을 때 좋은 패가 올 확률)</p>
     <div class="lbl">🚫 같은 상대와 하루 최대 판수 (파산 방지)</div>${seg('dailyMax',[3,5,10,0],v=>v?v+'판':'♾️ 무제한')}
     <div class="lbl">🏅 주간 1등 상금 (자동 지급)</div>${seg('wMoney',[0,50000,100000,1000000,10000000],wonS)}
     <div class="lbl">🏆 월간 1등 상금 (자동 지급)</div>${seg('mMoney',[0,100000,1000000,10000000,50000000],wonS)}
