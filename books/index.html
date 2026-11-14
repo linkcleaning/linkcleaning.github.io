@@ -495,7 +495,7 @@
 
 <script>
 'use strict';
-const APP_VER = 'v11';
+const APP_VER = 'v12';
 const $ = s => document.querySelector(s);
 const $$ = s => [...document.querySelectorAll(s)];
 const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
@@ -992,7 +992,7 @@ async function doSearch(more) {
   if (S.aladin) srcs.push(['알라딘', searchAladin]);
   if (S.kakao) srcs.push(['카카오', searchKakao]);
   srcs.push(['구글 도서', searchGoogle]);
-  if (!S.aladin || SR.isb) srcs.push(['오픈라이브러리', searchOpenLib]);
+  if (!S.aladin || SR.isb) srcs.push(['오픈라이브러리', searchOpenLib]);   // 키가 없을 때 대신 찾는 곳
   const res = await Promise.all(srcs.map(([n, f]) => f(key, SR.isb, SR.page).then(r => ({ n, r })).catch(err => ({ n, r: [], err }))));
   for (const { r } of res) for (const it of r) {
     if (!it.title) continue;
@@ -1018,7 +1018,7 @@ function renderResults() {
   $('#searchMore').classList.toggle('hidden', !SR.more);
   $('#searchMeta').textContent = SR.items.length ? `‘${SR.q}’ 검색 결과 ${SR.items.length}건${SR.more ? '+' : ''} · ${SR.srcs.join(' · ')}` : '';
   if (!SR.items.length) {
-    box.innerHTML = `<div class="text-center py-10"><div class="font-bold text-[15px]">검색 결과가 없어요</div><p class="text-[13px] text-mute mt-2 leading-relaxed">${S.aladin ? '띄어쓰기나 다른 낱말로 다시 찾아보세요.' : '한국 책은 위에 알라딘 키를 넣으면<br>훨씬 잘 찾아요.'}</p></div>`;
+    box.innerHTML = `<div class="text-center py-10"><div class="font-bold text-[15px]">검색 결과가 없어요</div><p class="text-[13px] text-mute mt-2 leading-relaxed">${S.aladin ? '띄어쓰기나 다른 낱말로 다시 찾아보세요.' : (googleBusy ? '키 없이 쓰는 구글 도서 검색이 오늘 사용량을 다 썼어요.<br>' : '') + '한국 책은 위에 <b>알라딘 키</b>를 넣어야 잘 나와요.'}</p></div>`;
     return;
   }
   box.innerHTML = SR.items.map((r, i) => {
@@ -1091,10 +1091,13 @@ async function searchAladin(q, isb, page) {
   return (d.item || []).map(it => ({ src: '알라딘', title: decodeEnt(it.title), author: cleanAuthor(decodeEnt(it.author)), publisher: decodeEnt(it.publisher), year: (it.pubDate || '').slice(0, 4), pubdate: it.pubDate || '',
     isbn: it.isbn13 || it.isbn || '', description: stripHtml(decodeEnt(it.description)), thumb: it.cover || '', big: it.cover || '', link: it.link || '', cat: (it.categoryName || '').split('>').slice(-1)[0] }));
 }
+let googleBusy = false;
 async function searchGoogle(q, isb, page) {
   if (isb && page > 1) return [];
   const r = await fetch(`https://www.googleapis.com/books/v1/volumes?q=${isb ? 'isbn:' + q : encodeURIComponent(q)}&maxResults=15&startIndex=${(page - 1) * 15}&printType=books`);
   const j = await r.json();
+  googleBusy = r.status === 429;
+  if (!r.ok) throw new Error('google ' + r.status);
   return (j.items || []).map(it => { const v = it.volumeInfo || {}; const ids = v.industryIdentifiers || [];
     const isbn = (ids.find(x => x.type === 'ISBN_13') || ids.find(x => x.type === 'ISBN_10') || {}).identifier || '';
     let th = (v.imageLinks && (v.imageLinks.thumbnail || v.imageLinks.smallThumbnail)) || '';
@@ -1183,9 +1186,10 @@ const NOT_LIT = /(조례|법률|법$|시행령|시행규칙|규칙$|규정$|고�
 /* ---------- 외국어: 인터넷 아카이브의 구텐베르크 모음 (브라우저에서 바로 열림) ---------- */
 const IA = 'https://archive.org';
 const IA_LANG = { eng: 'en', fre: 'fr', ger: 'de', spa: 'es', ita: 'it', por: 'pt', dut: 'nl', fin: 'fi', lat: 'la', jpn: 'ja', chi: 'zh', kor: 'ko', rus: 'ru', swe: 'sv', gre: 'el', dan: 'da', pol: 'pl', hun: 'hu' };
-function iaSearchUrl(q, page) {
+function iaSearchUrl(q, page, field) {   // 본문(txt)이 있는 책만, 제목에서 먼저 찾기
   const qq = String(q || '').replace(/[():"\\\[\]{}^~*?!+-]/g, ' ').trim();
-  const query = qq ? `collection:gutenberg AND (title:(${qq}) OR creator:(${qq}))` : 'collection:gutenberg';
+  const base = 'collection:gutenberg AND mediatype:texts AND format:(Text)';
+  const query = qq ? `${base} AND ${field || 'title'}:(${qq})` : base;
   return `${IA}/advancedsearch.php?q=${encodeURIComponent(query)}&fl[]=identifier&fl[]=title&fl[]=creator&fl[]=downloads&fl[]=language&fl[]=date&sort[]=downloads+desc&rows=30&page=${page}&output=json`;
 }
 function iaAuthor(c) {
@@ -1198,7 +1202,7 @@ function mapIA(d) {
   if (!d || !d.identifier) return null;
   const a = iaAuthor(d.creator), lang = [].concat(d.language || 'eng').map(l => IA_LANG[l] || l);
   const gnum = (String(d.identifier).match(/(\d+)gut$/) || [])[1];
-  return { gid: 'ia:' + d.identifier, ia: d.identifier, title: cleanTxt([].concat(d.title)[0]), author: a.name, years: a.years, lang, subjects: [], summary: '',
+  return { gid: 'ia:' + d.identifier, ia: d.identifier, title: cleanTxt(decodeEnt([].concat(d.title)[0])), author: a.name, years: a.years, lang, subjects: [], summary: '',
     cover: gnum ? `https://www.gutenberg.org/cache/epub/${+gnum}/pg${+gnum}.cover.medium.jpg` : '', downloads: d.downloads || 0 };
 }
 
@@ -1421,7 +1425,14 @@ async function doFreeSearch(more, popular) {
       FR.next = off ? url.replace(/&sroffset=\d+/, '') + '&sroffset=' + off : null;
       FR.count = (j.query && j.query.searchinfo && j.query.searchinfo.totalhits) || FR.items.length;
     } else {
-      const docs = (j.response && j.response.docs) || [];
+      let docs = (j.response && j.response.docs) || [];
+      if (!more && FR.q) {   // 첫 쪽에는 작가 이름으로 찾은 책도 뒤에 덧붙임 (예: Jane Austen)
+        const j2 = await fetchVia(iaSearchUrl(FR.q, 1, 'creator'), 'json', 20000).catch(() => null);
+        if (FR !== mine) return;
+        const seenId = new Set(docs.map(d => d.identifier));
+        docs = docs.concat(((j2 && j2.response && j2.response.docs) || []).filter(d => !seenId.has(d.identifier)));
+        if (j2 && j2.response) j.response.numFound = Math.max(j.response.numFound || 0, docs.length);
+      }
       FR.items.push(...docs.map(mapIA).filter(Boolean));
       FR.page = (FR.page || 1);
       FR.count = (j.response && j.response.numFound) || FR.items.length;
