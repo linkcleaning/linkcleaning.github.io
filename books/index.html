@@ -212,6 +212,7 @@
   #viewerWrap { position:absolute; top:calc(var(--st) + 30px); bottom:calc(var(--sb) + 34px); left:var(--m, 18px); right:var(--m, 18px); }
   #viewer { width:100%; height:100%; }
   #viewer iframe { background:transparent !important; }
+  #viewer.fxl .epub-container { align-items:center !important; }   /* 잡지처럼 판형이 고정된 책은 세로 가운데 */
   .rbar { position:absolute; left:0; right:0; z-index:5; background:var(--r-bar); color:var(--r-fg); -webkit-backdrop-filter:blur(18px); backdrop-filter:blur(18px); transition:transform .22s ease, opacity .22s ease; }
   #rTop { top:0; padding-top:var(--st); box-shadow:0 1px 0 var(--r-line); }
   #rBottom { bottom:0; padding-bottom:max(var(--sb), 8px); box-shadow:0 -1px 0 var(--r-line); }
@@ -291,6 +292,7 @@
   <main class="max-w-6xl mx-auto px-4 sm:px-6">
     <section id="heroBox" class="mt-2"></section>
     <section id="readingBox" class="mt-6"></section>
+    <section id="seriesBox"></section>
 
     <section id="shelfHead" class="mt-7">
       <div class="flex items-end justify-between mb-3">
@@ -506,7 +508,7 @@
 
 <script>
 'use strict';
-const APP_VER = 'v17';
+const APP_VER = 'v18';
 const $ = s => document.querySelector(s);
 const $$ = s => [...document.querySelectorAll(s)];
 const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
@@ -597,11 +599,11 @@ const VIEW_ICONS = {
   grid: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 6h16M4 12h16M4 18h16"/></svg>',
   list: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="4" y="4" width="6.5" height="6.5" rx="1.6"/><rect x="13.5" y="4" width="6.5" height="6.5" rx="1.6"/><rect x="4" y="13.5" width="6.5" height="6.5" rx="1.6"/><rect x="13.5" y="13.5" width="6.5" height="6.5" rx="1.6"/></svg>'
 };
-const FILTERS = [['all', '전체'], ['reading', '읽는 중'], ['unread', '안 읽음'], ['done', '완독'], ['free', '무료 고전'], ['paper', '기록용']];
+const FILTERS = [['all', '전체'], ['reading', '읽는 중'], ['unread', '안 읽음'], ['done', '완독'], ['free', '무료 고전'], ['mag', '매거진'], ['paper', '기록용']];
 
 function renderLibrary() {
   const n = books.length, cnt = { all: n, reading: 0, unread: 0, done: 0, paper: 0, free: 0 };
-  books.forEach(b => { cnt[statusOf(b)]++; if (!b.hasFile) cnt.paper++; if (b.source === 'wikisource' || b.source === 'gutenberg') cnt.free++; });
+  books.forEach(b => { cnt[statusOf(b)]++; if (!b.hasFile) cnt.paper++; if (b.source === 'wikisource' || b.source === 'gutenberg') cnt.free++; if (b.series) cnt.mag = (cnt.mag || 0) + 1; });
   $('#libCount').textContent = n ? `${n}권 · 읽는 중 ${cnt.reading} · 완독 ${cnt.done}` : '책을 넣어 주세요';
   $('#btnView').innerHTML = VIEW_ICONS[S.view];
   $('#sortSel').value = S.sort;
@@ -656,6 +658,19 @@ function renderLibrary() {
       </div>`;
   }
 
+  // 시리즈(예: 월간 링크 매거진) 가로 줄 — 호 순서대로
+  const seriesMap = {};
+  books.filter(b => b.series).forEach(b => (seriesMap[b.series] = seriesMap[b.series] || []).push(b));
+  $('#seriesBox').innerHTML = Object.entries(seriesMap).map(([name, list]) => {
+    list.sort((a, b) => (a.vol || 0) - (b.vol || 0));
+    return `<div class="mt-6"><div class="flex items-end justify-between mb-3"><h2 class="serif font-bold text-[17px]">${esc(name)}</h2><span class="text-[12px] text-mute">시리즈 · ${list.length}권</span></div>
+      <div class="flex gap-3.5 overflow-x-auto no-scrollbar -mx-4 px-4 sm:mx-0 sm:px-0 pb-2">${list.map(b => `
+        <button class="book w-[104px] flex-none" data-id="${b.id}">${coverHTML(b, { badge: false })}
+          <div class="text-[12.5px] font-bold mt-2 leading-tight">${esc(b.volLabel || (b.vol ? b.vol + '호' : b.title))}</div>
+          <div class="text-[11px] text-mute mt-0.5">${statusOf(b) === 'unread' ? '새 호' : statusOf(b) === 'done' ? '다 읽음' : pctText(b.progress)}</div>
+        </button>`).join('')}</div></div>`;
+  }).join('');
+
   // 읽는 중 가로 줄
   const others = reading.slice(1, 12);
   $('#readingBox').innerHTML = others.length ? `
@@ -670,11 +685,11 @@ function renderLibrary() {
     </div>` : '';
 
   // 필터 칩
-  $('#chips').innerHTML = FILTERS.filter(([k]) => (k !== 'paper' || cnt.paper) && (k !== 'free' || cnt.free)).map(([k, l]) => `<button class="chip ${S.filter === k ? 'on' : ''}" data-filter="${k}">${l}<b>${cnt[k]}</b></button>`).join('');
+  $('#chips').innerHTML = FILTERS.filter(([k]) => (k !== 'paper' || cnt.paper) && (k !== 'free' || cnt.free) && (k !== 'mag' || cnt.mag)).map(([k, l]) => `<button class="chip ${S.filter === k ? 'on' : ''}" data-filter="${k}">${l}<b>${cnt[k] || 0}</b></button>`).join('');
   $('#shelfHead').classList.toggle('hidden', !n);
 
   // 책장
-  let list = books.filter(b => S.filter === 'all' ? true : S.filter === 'paper' ? !b.hasFile : S.filter === 'free' ? (b.source === 'wikisource' || b.source === 'gutenberg') : statusOf(b) === S.filter);
+  let list = books.filter(b => S.filter === 'all' ? true : S.filter === 'paper' ? !b.hasFile : S.filter === 'mag' ? !!b.series : S.filter === 'free' ? (b.source === 'wikisource' || b.source === 'gutenberg') : statusOf(b) === S.filter);
   if (findQ) { const q = findQ.toLowerCase().replace(/\s+/g, ''); list = list.filter(b => ((b.title || '') + (b.author || '') + (b.publisher || '')).toLowerCase().replace(/\s+/g, '').includes(q)); }
   const cmp = { recent: (a, b) => (b.lastRead || 0) - (a.lastRead || 0) || b.added - a.added, added: (a, b) => b.added - a.added,
     title: (a, b) => (a.title || '').localeCompare(b.title || '', 'ko'), author: (a, b) => (a.author || '').localeCompare(b.author || '', 'ko') || (a.title || '').localeCompare(b.title || '', 'ko'),
@@ -1353,6 +1368,32 @@ async function installKoPack(auto) {
   if (searchTab === 'free' && curSheet() === 'shSearch') renderFree();
 }
 
+
+/* ---------- 월간 링크 매거진: 새 호가 올라오면 알아서 서재에 넣음 (magazine/index.json) ---------- */
+async function syncMagazines() {
+  if (syncMagazines.running || navigator.onLine === false) return; syncMagazines.running = true;
+  try {
+    const idx = await fetch('magazine/index.json?t=' + Date.now(), { cache: 'no-store' }).then(r => r.ok ? r.json() : null);
+    if (!idx || !idx.issues) return;
+    let added = [];
+    for (const it of idx.issues) {
+      const gid = 'mag:' + it.id;
+      const have = books.find(b => b.gid === gid);
+      if (have) { if (have.volLabel !== it.label || have.description !== it.desc) { Object.assign(have, { volLabel: it.label, description: it.desc }); await DB.put('books', have).catch(() => {}); } continue; }
+      const r = await fetch(it.epub); if (!r.ok) continue;
+      const buf = await r.arrayBuffer();
+      const info = await parseEpub(buf, it.id + '.epub');
+      const b = { id: uid(), ...info, title: it.title, author: idx.publisher ? idx.publisher : info.author, publisher: idx.publisher || '링크클린', description: it.desc || info.description,
+        series: idx.series, vol: it.vol, volLabel: it.label, pubdate: it.date, source: 'magazine', gid, hasFile: true, fileName: it.id + '.epub', size: buf.byteLength,
+        added: Date.now(), lastRead: 0, progress: 0, cfi: null, bookmarks: [] };
+      await DB.put('files', { id: b.id, data: buf }); await DB.put('books', b);
+      books.push(b); setCover(b); added.push(it.label || it.title);
+    }
+    if (added.length) { renderLibrary(); toast(`${idx.series} ${added.length > 1 ? added.length + '권이' : added[0] + '가'} 서재에 들어왔어요`, 3200); }
+  } catch (e) { console.warn('magazine', e); }
+  finally { syncMagazines.running = false; }
+}
+
 /* ---------- 받은 글로 EPUB 만들기 (중계 서버 없이 앱 안에서) ---------- */
 const XE = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&apos;' }[c]));
 async function makeEpub(meta, chapters) {
@@ -1912,9 +1953,11 @@ async function openReader(id) {
   rendition.hooks.content.register(contents => onFrame(contents));
   rendition.on('relocated', loc => onRelocated(rd, loc));
   rendition.on('keyup', onKey);
+  rendition.on('rendered', () => setTimeout(centerFxl, 60));
   try { rendition.themes.fontSize(R.size + '%'); } catch {}
   try { await withTimeout(book.opened, 30000); } catch (e) { console.warn(e); toast('이 책을 열 수 없어요'); closeReader(); return; }
   if (RD !== rd) return;
+  $('#viewer').classList.toggle('fxl', ((book.package && book.package.metadata && book.package.metadata.layout) || '') === 'pre-paginated');
   book.loaded.navigation.then(nav => { if (RD === rd) { rd.toc = flattenToc(nav && nav.toc || [], book); renderToc(); if (rd.loc) onRelocated(rd, rd.loc); } }).catch(() => {});
   if (meta.locations) { try { book.locations.load(meta.locations); rd.locReady = book.locations.length() > 0; } catch {} }
   try { await rendition.display(meta.cfi || undefined); } catch { try { await rendition.display(); } catch {} }
@@ -1973,6 +2016,12 @@ function onRelocated(rd, loc) {
   const m = rd.meta; m.cfi = loc.start.cfi; m.progress = p; m.lastRead = Date.now(); m.chapter = ch ? ch.label : '';
   clearTimeout(rd.saveT); rd.saveT = setTimeout(() => DB.put('books', m).catch(() => {}), 500);
 }
+/* 잡지처럼 판형이 고정된 쪽은 화면 세로 가운데에 */
+function centerFxl() {
+  if (!$('#viewer').classList.contains('fxl')) return;
+  $$('#viewer iframe').forEach(f => { try { const h = f.contentDocument.body.getBoundingClientRect().height; f.style.transform = `translateY(${Math.max(0, (f.clientHeight - h) / 2)}px)`; } catch {} });
+}
+addEventListener('resize', () => setTimeout(centerFxl, 300));
 function closeReader(silent) {
   const rd = RD; if (!rd) return;
   clearTimeout(rd.saveT); clearTimeout(rd.hideT);
@@ -2025,8 +2074,9 @@ function onFrame(contents) {
   const doc = contents.document, win = contents.window || doc.defaultView;
   const st = doc.createElement('style'); st.textContent = FRAME_CSS; (doc.head || doc.documentElement).appendChild(st);
   applyFrameVars(doc);
-  const fx = x => { const fr = win.frameElement; return (fr ? fr.getBoundingClientRect().left : 0) + x; };
-  const fy = y => { const fr = win.frameElement; return (fr ? fr.getBoundingClientRect().top : 0) + y; };
+  const scl = () => { const fr = win.frameElement; if (!fr) return 1; const r = fr.getBoundingClientRect(); return (fr.offsetWidth && r.width) ? r.width / fr.offsetWidth : 1; };
+  const fx = x => { const fr = win.frameElement; return (fr ? fr.getBoundingClientRect().left : 0) + x * scl(); };
+  const fy = y => { const fr = win.frameElement; return (fr ? fr.getBoundingClientRect().top : 0) + y * scl(); };
   let sx = 0, sy = 0, t0 = 0, moved = false, lastTouch = 0;
   doc.addEventListener('touchstart', e => { const t = e.touches[0]; sx = t.clientX; sy = t.clientY; t0 = Date.now(); moved = false; }, { passive: true });
   doc.addEventListener('touchmove', e => { const t = e.touches[0]; if (Math.abs(t.clientX - sx) > 10 || Math.abs(t.clientY - sy) > 10) moved = true; }, { passive: true });
@@ -2129,6 +2179,7 @@ let loadedResolve; const loaded = new Promise(r => loadedResolve = r);
   }
   if ((S.koPack | 0) < KO_PACK_VER && navigator.onLine !== false) setTimeout(() => installKoPack(true).catch(() => {}), 2500);
   else setTimeout(() => backfillCovers().catch(() => {}), 2500);
+  setTimeout(() => syncMagazines(), 1200);
   renderLibrary();
   loadedResolve();
   // 버전 꼬리표

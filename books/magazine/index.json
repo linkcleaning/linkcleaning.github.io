@@ -1,0 +1,30 @@
+{
+ "series": "월간 링크 매거진",
+ "publisher": "링크클린",
+ "issues": [
+  {
+   "vol": 1,
+   "id": "link-mag-01",
+   "title": "월간 링크 매거진 1호 (창간호)",
+   "label": "1호 · 10월호",
+   "date": "2026-10-10",
+   "desc": "창간호 · 커버스토리 「바닷바람이 남긴 흔적을 지우다」 — 서귀포 바닷바람이 남긴 유막/염분 때 복원기, 집에서 따라 하는 호텔식 물때 관리 3단계, 쓰레기로 가득했던 집이 새집처럼 바뀌기까지.",
+   "epub": "magazine/link-mag-01.epub",
+   "cover": "magazine/link-mag-01-cover.jpg",
+   "pages": 7,
+   "size": 1809943
+  },
+  {
+   "vol": 2,
+   "id": "link-mag-02",
+   "title": "월간 링크 매거진 2호 (12월호)",
+   "label": "2호 · 12월호",
+   "date": "2026-12-01",
+   "desc": "12월호 · 커버스토리 「매일 아침, 9년의 출근길」 — 겨울 결로·곰팡이 잡는 3단계 홈케어, 쓰레기집이 다시 집이 되기까지.",
+   "epub": "magazine/link-mag-02.epub",
+   "cover": "magazine/link-mag-02-cover.jpg",
+   "pages": 7,
+   "size": 1671822
+  }
+ ]
+}
