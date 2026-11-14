@@ -637,7 +637,7 @@
 
 <script>
 'use strict';
-const APP_VER = 'v22';
+const APP_VER = 'v23';
 const $ = s => document.querySelector(s);
 const $$ = s => [...document.querySelectorAll(s)];
 const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
@@ -2731,18 +2731,20 @@ function standPick(ids) { let best = null; for (const id of ids) { const x = STA
 function renderStand() {
   const box = $('#standBox'); if (!box) return;
   const k = kstNow(), dl = `${k.getUTCMonth() + 1}월 ${k.getUTCDate()}일 ${'일월화수목금토'[k.getUTCDay()]}요일`;
-  box.innerHTML = `<div class="mt-6"><div class="flex items-end justify-between mb-3"><h2 class="serif font-bold text-[17px]">오늘의 가판대</h2><button class="text-[12.5px] font-bold text-mute" data-stand-all>전체 보기 ›</button></div>
-    <div class="flex gap-3.5 overflow-x-auto no-scrollbar -mx-4 px-4 sm:mx-0 sm:px-0 pb-2">${STAND_CARDS.map((c, i) => {
-      if (c.type === 'wz') return `<button class="w-[104px] flex-none text-left" data-stand="${i}"><div class="st-cover"><img src="magazine/link-mag-01-cover.jpg" alt=""></div><div class="text-[12.5px] font-bold mt-2 leading-tight">${esc(c.name)}</div><div class="text-[11px] text-mute mt-0.5">${esc(c.sub)}</div></button>`;
-      const x = standPick(c.ids);
-      const cover = c.type === 'paper'
-        ? `<div class="st-cover st-paper"><div class="st-pm">${esc(c.name)}</div><div class="st-pd">${esc(dl)}</div>${x ? `<div class="st-ph">${esc(x.title)}</div>${x.thumb ? `<img class="st-pi" src="${esc(x.thumb)}" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.remove()">` : '<div class="st-pl"></div>'}` : '<div class="st-pl"></div><div class="st-pl"></div>'}</div>`
-        : `<div class="st-cover">${x && x.thumb ? `<img src="${esc(x.thumb)}" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.remove()">` : ''}<div class="st-shade"></div><div class="st-mast">${esc(c.name)}</div>${x ? `<div class="st-head">${esc(x.title)}</div>` : ''}</div>`;
-      return `<button class="w-[104px] flex-none text-left" data-stand="${i}">${cover}<div class="text-[12.5px] font-bold mt-2 leading-tight truncate">${esc(c.name)}</div><div class="text-[11px] text-mute mt-0.5">${x && x.t ? esc(npAgo(x.t)) : (c.kind === 'news' ? '오늘 지면' : c.kind === 'mag' ? '매거진' : '칼럼')}</div></button>`;
-    }).join('')}</div></div>`;
+  const card = (c, i) => {
+    if (c.type === 'wz') return `<button class="w-[104px] flex-none text-left" data-stand="${i}"><div class="st-cover"><img src="magazine/link-mag-01-cover.jpg" alt=""></div><div class="text-[12.5px] font-bold mt-2 leading-tight">${esc(c.name)}</div><div class="text-[11px] text-mute mt-0.5">${esc(c.sub)}</div></button>`;
+    const x = standPick(c.ids);
+    const cover = c.type === 'paper'
+      ? `<div class="st-cover st-paper"><div class="st-pm">${esc(c.name)}</div><div class="st-pd">${esc(dl)}</div>${x ? `<div class="st-ph">${esc(x.title)}</div>${x.thumb ? `<img class="st-pi" src="${esc(x.thumb)}" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.remove()">` : '<div class="st-pl"></div>'}` : '<div class="st-pl"></div><div class="st-pl"></div>'}</div>`
+      : `<div class="st-cover">${x && x.thumb ? `<img src="${esc(x.thumb)}" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.remove()">` : ''}<div class="st-shade"></div><div class="st-mast">${esc(c.name)}</div>${x ? `<div class="st-head">${esc(x.title)}</div>` : ''}</div>`;
+    return `<button class="w-[104px] flex-none text-left" data-stand="${i}">${cover}<div class="text-[12.5px] font-bold mt-2 leading-tight truncate">${esc(c.name)}</div><div class="text-[11px] text-mute mt-0.5">${x && x.t ? esc(npAgo(x.t)) : (c.kind === 'news' ? '오늘 지면' : c.kind === 'mag' ? '매거진' : '칼럼')}</div></button>`;
+  };
+  const row = (title, kind, filter) => `<div class="mt-6"><div class="flex items-end justify-between mb-3"><h2 class="serif font-bold text-[17px]">${title}</h2><button class="text-[12.5px] font-bold text-mute" data-stand-all="${kind}">전체 보기 ›</button></div>
+    <div class="flex gap-3.5 overflow-x-auto no-scrollbar -mx-4 px-4 sm:mx-0 sm:px-0 pb-2">${STAND_CARDS.map((c, i) => filter(c) ? card(c, i) : '').join('')}</div></div>`;
+  box.innerHTML = row('오늘의 신문', 'news', c => c.kind === 'news') + row('매거진', 'mag', c => c.kind !== 'news');
 }
 $('#standBox').onclick = e => {
-  if (e.target.closest('[data-stand-all]')) { openNews(); return; }
+  const all = e.target.closest('[data-stand-all]'); if (all) { openNews(all.dataset.standAll); return; }
   const b = e.target.closest('[data-stand]'); if (!b) return;
   const c = STAND_CARDS[+b.dataset.stand];
   if (c.type === 'wz') { openNews('wz'); setTimeout(() => openWz('wz-link1'), 50); return; }
