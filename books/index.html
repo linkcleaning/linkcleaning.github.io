@@ -148,6 +148,38 @@
   .st-paper .st-pl { height:4px; background:repeating-linear-gradient(180deg,#CFC4AF 0 1px,transparent 1px 6px); height:30px; margin-top:6px; }
   .np-art { flex:1; height:36px; border-radius:11px; font-size:13.5px; font-weight:700; background:rgba(128,128,128,.13); }
   #rTts.on { color:var(--orange); }
+  #cv { position:fixed; inset:0; z-index:52; background:#0E0E0F; color:#EDEDED; }
+  body:not(.comic-open) #cv { display:none; }
+  #cvStage { position:absolute; inset:0; overflow:auto; -webkit-overflow-scrolling:touch; overscroll-behavior:contain; touch-action:pan-x pan-y pinch-zoom; user-select:none; -webkit-user-select:none; }
+  #cv.m-scroll .cv-list { max-width:860px; margin:0 auto; padding:calc(var(--st) + 4px) 0 calc(var(--sb) + 60px); }
+  .cv-pg { position:relative; min-height:60vh; background:#18181A; }
+  .cv-pg.ok { min-height:0; background:none; }
+  .cv-pg img { display:block; width:100%; height:auto; }
+  .cv-pg img:not([src]) { visibility:hidden; }
+  .cv-no { position:absolute; left:50%; top:40%; transform:translateX(-50%); font-size:12px; color:#555; }
+  .cv-pg.ok .cv-no { display:none; }
+  .cv-cap { font-size:13.5px; font-weight:700; padding:22px 16px 10px; color:#BDBDBD; }
+  #cv.m-page #cvStage { display:flex; flex-direction:column; }
+  .cv-spread { display:flex; justify-content:center; align-items:center; flex:1; min-height:100%; padding:var(--st) 0 var(--sb); }
+  #cv.f-height .cv-spread { height:100%; }
+  #cv.f-height .cv-spread img { max-height:100%; max-width:100%; object-fit:contain; }
+  #cv.f-height .cv-spread.two img { max-width:50%; }
+  #cv.f-width .cv-spread { align-items:flex-start; }
+  #cv.f-width .cv-spread img { width:100%; height:auto; }
+  #cv.f-width .cv-spread.two img { width:50%; }
+  .cv-pcap { position:absolute; left:0; right:0; bottom:calc(var(--sb) + 26px); text-align:center; font-size:12px; color:#9a9a9a; padding:0 20px; pointer-events:none; }
+  .cv-load { position:absolute; inset:0; display:grid; place-items:center; color:#888; font-size:14px; }
+  .cv-bar { position:absolute; left:0; right:0; z-index:5; background:rgba(16,16,18,.93); -webkit-backdrop-filter:blur(16px); backdrop-filter:blur(16px); transition:transform .22s, opacity .22s; }
+  #cvTop { top:0; padding-top:var(--st); border-bottom:1px solid rgba(255,255,255,.07); }
+  #cvBot { bottom:0; padding-bottom:var(--sb); border-top:1px solid rgba(255,255,255,.07); }
+  #cv:not(.bars) #cvTop { transform:translateY(-100%); opacity:0; pointer-events:none; }
+  #cv:not(.bars) #cvBot { transform:translateY(100%); opacity:0; pointer-events:none; }
+  #cvMini { position:absolute; z-index:3; left:50%; transform:translateX(-50%); bottom:calc(var(--sb) + 6px); font-size:11px; color:rgba(255,255,255,.42); pointer-events:none; font-variant-numeric:tabular-nums; }
+  #cv.bars #cvMini { opacity:0; }
+  #cvSlider { accent-color:var(--orange); }
+  .cv-seg { display:flex; background:rgba(255,255,255,.08); border-radius:10px; padding:3px; }
+  .cv-seg button { flex:1; padding:7px 4px; font-size:12.5px; font-weight:700; border-radius:8px; color:#A9A9A9; white-space:nowrap; }
+  .cv-seg button.on { background:#EDEDED; color:#111; }
   body.news-open #lib, body.news-open #tabbar { visibility:hidden; }
   .np-top { position:sticky; top:0; z-index:5; background:rgba(243,238,227,.94); -webkit-backdrop-filter:blur(14px); backdrop-filter:blur(14px); padding-top:var(--st); border-bottom:1px solid #DDD3C1; }
   .np-mast { font-family:Hahmlet, "Gowun Batang", serif; font-weight:800; letter-spacing:-.03em; }
@@ -472,7 +504,7 @@
         <button class="icon-btn" id="npRefresh" aria-label="새로고침"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"><path d="M20 11a8 8 0 1 0-2.3 5.7"/><path d="M20 4v7h-7"/></svg></button>
         <button class="np-btn dark" id="npBake"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5V5a2 2 0 0 1 2-2h12v18H6.5A2.5 2.5 0 0 1 4 18.5z"/><path d="M9 8h6M9 12h4"/></svg><span id="npBakeLbl">EPUB으로 굽기</span></button>
       </div>
-      <div id="npKinds" class="np-kinds"><button data-kind="news">오늘의 신문</button><button data-kind="mag">매거진 가판대</button><button data-kind="col">IT·교양 칼럼</button><button data-kind="wz">스페셜 웹진</button></div>
+      <div id="npKinds" class="np-kinds"><button data-kind="news">오늘의 신문</button><button data-kind="mag">매거진 가판대</button><button data-kind="col">IT·교양 칼럼</button><button data-kind="comic">만화방</button><button data-kind="wz">스페셜 웹진</button></div>
       <div class="text-center pb-2">
         <div class="np-rule"></div>
         <div id="npMast" class="np-mast text-[30px] sm:text-[42px] leading-none pt-3">오늘의 신문</div>
@@ -486,6 +518,29 @@
     <div id="npNote" class="text-[12px] text-[#8E8576] py-2"></div>
     <div id="npList"></div>
   </main>
+</div>
+
+<div id="cv" aria-label="만화 보기">
+  <div id="cvStage"></div>
+  <div id="cvMini"></div>
+  <header id="cvTop" class="cv-bar">
+    <div class="max-w-4xl mx-auto h-[54px] px-1.5 flex items-center gap-1">
+      <button class="r-btn !text-white" id="cvBack" aria-label="닫기"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 5l-7 7 7 7"/></svg></button>
+      <div class="flex-1 min-w-0 px-1"><div id="cvTitle" class="font-bold text-[15px] truncate"></div><div id="cvPos" class="text-[11.5px] opacity-60 tabular-nums"></div></div>
+      <a id="cvOrig" class="r-btn !text-white hidden" target="_blank" rel="noopener" aria-label="원본 보기"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 4h6v6M20 4l-9 9"/><path d="M18 14v4a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4"/></svg></a>
+      <button class="np-btn !py-2 hidden" id="cvSave">서재에 꽂기</button>
+    </div>
+  </header>
+  <footer id="cvBot" class="cv-bar">
+    <div class="max-w-xl mx-auto px-4 pt-3 pb-2">
+      <input type="range" id="cvSlider" min="0" max="0" value="0" class="w-full" aria-label="쪽 이동">
+      <div class="grid grid-cols-[52px_1fr] items-center gap-x-2 gap-y-2 mt-2 text-[12px]">
+        <span class="opacity-60 font-bold">보기</span><div class="cv-seg" id="cvMode"><button data-v="scroll">웹툰(세로)</button><button data-v="single">한 쪽</button><button data-v="double">두 쪽</button></div>
+        <span class="opacity-60 font-bold">넘김</span><div class="cv-seg" id="cvDir"><button data-v="ltr">좌→우 · 한국</button><button data-v="rtl">우→좌 · 일본</button></div>
+        <span class="opacity-60 font-bold" id="cvFitL">맞춤</span><div class="cv-seg" id="cvFitRow"><div class="contents" id="cvFit"><button data-v="width">가로 폭 맞춤</button><button data-v="height">세로 높이 맞춤</button></div></div>
+      </div>
+    </div>
+  </footer>
 </div>
 
 <div id="wz" aria-label="스페셜 웹진">
@@ -631,13 +686,14 @@
 <div id="drop"><div class="box"><div class="serif text-[26px] font-bold">여기에 놓으면 책장에 꽂아요</div><div class="opacity-70 mt-2 text-[15px]">EPUB 파일 여러 개도 한 번에</div></div></div>
 <div id="toast"></div>
 
-<input type="file" id="fileEpub" class="hidden" accept=".epub,application/epub+zip" multiple>
+<input type="file" id="fileEpub" class="hidden" accept=".epub,application/epub+zip,.cbz,.zip" multiple>
+<input type="file" id="fileComic" class="hidden" accept=".cbz,.zip,application/zip,application/x-cbz" multiple>
 <input type="file" id="fileAttach" class="hidden" accept=".epub,application/epub+zip">
 <input type="file" id="fileCover" class="hidden" accept="image/*">
 
 <script>
 'use strict';
-const APP_VER = 'v23';
+const APP_VER = 'v24';
 const $ = s => document.querySelector(s);
 const $$ = s => [...document.querySelectorAll(s)];
 const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
@@ -728,11 +784,11 @@ const VIEW_ICONS = {
   grid: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 6h16M4 12h16M4 18h16"/></svg>',
   list: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="4" y="4" width="6.5" height="6.5" rx="1.6"/><rect x="13.5" y="4" width="6.5" height="6.5" rx="1.6"/><rect x="4" y="13.5" width="6.5" height="6.5" rx="1.6"/><rect x="13.5" y="13.5" width="6.5" height="6.5" rx="1.6"/></svg>'
 };
-const FILTERS = [['all', '전체'], ['reading', '읽는 중'], ['unread', '안 읽음'], ['done', '완독'], ['free', '무료 고전'], ['mag', '매거진'], ['paper', '기록용']];
+const FILTERS = [['all', '전체'], ['reading', '읽는 중'], ['unread', '안 읽음'], ['done', '완독'], ['free', '무료 고전'], ['mag', '매거진'], ['comic', '만화'], ['paper', '기록용']];
 
 function renderLibrary() {
   const n = books.length, cnt = { all: n, reading: 0, unread: 0, done: 0, paper: 0, free: 0 };
-  books.forEach(b => { cnt[statusOf(b)]++; if (!b.hasFile) cnt.paper++; if (b.source === 'wikisource' || b.source === 'gutenberg') cnt.free++; if (b.series) cnt.mag = (cnt.mag || 0) + 1; });
+  books.forEach(b => { cnt[statusOf(b)]++; if (!b.hasFile) cnt.paper++; if (b.source === 'wikisource' || b.source === 'gutenberg') cnt.free++; if (b.series) cnt.mag = (cnt.mag || 0) + 1; if (b.kind === 'comic') cnt.comic = (cnt.comic || 0) + 1; });
   $('#libCount').textContent = n ? `${n}권 · 읽는 중 ${cnt.reading} · 완독 ${cnt.done}` : '책을 넣어 주세요';
   $('#btnView').innerHTML = VIEW_ICONS[S.view];
   $('#sortSel').value = S.sort;
@@ -816,11 +872,11 @@ function renderLibrary() {
     </div>` : '';
 
   // 필터 칩
-  $('#chips').innerHTML = FILTERS.filter(([k]) => (k !== 'paper' || cnt.paper) && (k !== 'free' || cnt.free) && (k !== 'mag' || cnt.mag)).map(([k, l]) => `<button class="chip ${S.filter === k ? 'on' : ''}" data-filter="${k}">${l}<b>${cnt[k] || 0}</b></button>`).join('');
+  $('#chips').innerHTML = FILTERS.filter(([k]) => (k !== 'paper' || cnt.paper) && (k !== 'free' || cnt.free) && (k !== 'mag' || cnt.mag) && (k !== 'comic' || cnt.comic)).map(([k, l]) => `<button class="chip ${S.filter === k ? 'on' : ''}" data-filter="${k}">${l}<b>${cnt[k] || 0}</b></button>`).join('');
   $('#shelfHead').classList.toggle('hidden', !n);
 
   // 책장
-  let list = books.filter(b => S.filter === 'all' ? true : S.filter === 'paper' ? !b.hasFile : S.filter === 'mag' ? !!b.series : S.filter === 'free' ? (b.source === 'wikisource' || b.source === 'gutenberg') : statusOf(b) === S.filter);
+  let list = books.filter(b => S.filter === 'all' ? true : S.filter === 'paper' ? !b.hasFile : S.filter === 'mag' ? !!b.series : S.filter === 'comic' ? b.kind === 'comic' : S.filter === 'free' ? (b.source === 'wikisource' || b.source === 'gutenberg') : statusOf(b) === S.filter);
   if (findQ) { const q = findQ.toLowerCase().replace(/\s+/g, ''); list = list.filter(b => ((b.title || '') + (b.author || '') + (b.publisher || '')).toLowerCase().replace(/\s+/g, '').includes(q)); }
   const cmp = { recent: (a, b) => (b.lastRead || 0) - (a.lastRead || 0) || b.added - a.added, added: (a, b) => b.added - a.added,
     title: (a, b) => (a.title || '').localeCompare(b.title || '', 'ko'), author: (a, b) => (a.author || '').localeCompare(b.author || '', 'ko') || (a.title || '').localeCompare(b.title || '', 'ko'),
@@ -962,7 +1018,11 @@ async function runImport() {
     set(r, 'work', null, '읽는 중');
     r.scrollIntoView({ block: 'nearest' });
     try {
-      if (!/\.epub$/i.test(f.name) && f.type !== 'application/epub+zip') { set(r, 'skip', null, 'EPUB 아님'); }
+      if (/\.(cbz|zip)$/i.test(f.name)) {
+        const res = await importComic(f, done);
+        if (res.dup) set(r, 'skip', res.title, '이미 있어요'); else { ok++; set(r, 'ok', res.b.title, `만화 · ${res.b.pages}쪽`); }
+      }
+      else if (!/\.epub$/i.test(f.name) && f.type !== 'application/epub+zip') { set(r, 'skip', null, 'EPUB·만화 아님'); }
       else {
         const buf = await f.arrayBuffer();
         const info = await parseEpub(buf, f.name);
@@ -977,7 +1037,7 @@ async function runImport() {
           renderLibrary();
         }
       }
-    } catch (e) { console.warn(f.name, e); set(r, 'fail', null, String(e && e.name === 'QuotaExceededError' ? '저장 공간 부족' : '열 수 없음')); }
+    } catch (e) { console.warn(f.name, e); set(r, 'fail', null, String(e && e.name === 'QuotaExceededError' ? '저장 공간 부족' : e && e.message === 'noimg' ? '그림이 없어요' : '열 수 없음')); }
     done++;
     $('#impBar').style.width = (done / total * 100) + '%';
     pull();
@@ -1009,7 +1069,7 @@ $('#fileEpub').onchange = e => { enqueue(e.target.files); e.target.value = ''; }
         else res();
       });
       for (const en of entries) await walk(en);
-      enqueue(files.filter(f => /\.epub$/i.test(f.name)));
+      enqueue(files.filter(f => /\.(epub|cbz|zip)$/i.test(f.name)));
     } else enqueue(e.dataTransfer.files);
   });
 })();
@@ -2076,6 +2136,7 @@ $('#segSpread').onclick = e => { const b = e.target.closest('[data-v]'); if (!b 
 /* 읽기 화면 열기 */
 async function openReader(id, eph) {
   const meta = eph ? eph.meta : books.find(b => b.id === id); if (!meta) return;
+  if (meta.kind === 'comic') { openComicBook(meta); return; }
   const rec = eph ? { data: eph.data } : await DB.get('files', id).catch(() => null);
   if (!rec || !rec.data) { toast('책 파일을 찾을 수 없어요'); openDetail(id); return; }
   if (RD) closeReader(true);
@@ -2180,7 +2241,7 @@ function closeReader(silent) {
   renderLibrary();
   if (history.state && history.state.reader) history.back();
 }
-addEventListener('popstate', () => { if (skipPop) { skipPop--; return; } if (document.body.classList.contains('wz-open')) { closeWz(true); return; } if (document.body.classList.contains('news-open') && !(history.state && history.state.news)) { closeNews(true); return; } if (!RD && onSheetPop()) return; if (RD) { closeReader(true); document.body.classList.remove('reading'); setThemeColor('#F5F2EC'); renderLibrary(); } });
+addEventListener('popstate', () => { if (skipPop) { skipPop--; return; } if (document.body.classList.contains('comic-open')) { closeComic(true); return; } if (document.body.classList.contains('wz-open')) { closeWz(true); return; } if (document.body.classList.contains('news-open') && !(history.state && history.state.news)) { closeNews(true); return; } if (!RD && onSheetPop()) return; if (RD) { closeReader(true); document.body.classList.remove('reading'); setThemeColor('#F5F2EC'); renderLibrary(); } });
 
 /* 넘기기 · 손가락 · 키보드 */
 let stuck = 0;
@@ -2345,6 +2406,7 @@ const NP_KINDS = {
   news: { mast: '오늘의 신문', short: '신문', series: '오늘의 신문', def: 'cat:제주', unit: '신문', add: '신문 추가' },
   mag: { mast: '매거진 가판대', short: '매거진', series: '매거진 가판대', def: 'cat:패션·라이프', unit: '매거진', add: '잡지 추가' },
   col: { mast: 'IT·교양 칼럼', short: '칼럼', series: 'IT·교양 칼럼', def: 'cat:IT', unit: '칼럼 모음', add: '피드 추가' },
+  comic: { mast: '만화방', short: '만화', add: '웹툰·만화 RSS 추가' },
   wz: { mast: '스페셜 웹진', short: '웹진' }
 };
 const WZ_DEFAULT = [{ id: 'wz-link1', title: '월간 링크클린 창간호', url: 'https://heyzine.com/flip-book/b9ddb9090b.html', cover: 'magazine/link-mag-01-cover.jpg', sub: '링크클린 · 2026년 10월' }];
@@ -2452,10 +2514,11 @@ function paintNpHead() {
   const k = npKind(), K = NP_KINDS[k];
   $$('#npKinds button').forEach(b => b.classList.toggle('on', b.dataset.kind === k));
   $('#npMast').textContent = K.mast;
-  $('#npDate').textContent = k === 'wz' ? '직접 펴낸 디지털 매거진을 책장 넘기듯 보기' : npDateLabel();
-  $('#npBake').classList.toggle('hidden', k === 'wz'); $('#npRefresh').classList.toggle('hidden', k === 'wz');
+  $('#npDate').textContent = k === 'wz' ? '직접 펴낸 디지털 매거진을 책장 넘기듯 보기' : k === 'comic' ? '내 만화책 · 오늘의 웹코믹 · 무료 고전 만화' : npDateLabel();
+  $('#npBake').classList.toggle('hidden', k === 'wz' || k === 'comic'); $('#npRefresh').classList.toggle('hidden', k === 'wz' || k === 'comic');
   $('#npBakeLbl').textContent = 'EPUB으로 굽기';
   if (k === 'wz') { $('#npChips').innerHTML = `<button class="np-chip" data-addwz style="border-style:dashed">＋ 새 웹진 호수 추가</button>`; return; }
+  if (k === 'comic') { $('#npChips').innerHTML = `<button class="np-chip" data-addcomic style="border-style:dashed">＋ 만화 파일 넣기 (.zip·.cbz)</button><button class="np-chip" data-addfeed style="border-style:dashed">＋ 웹툰·만화 RSS 추가</button>`; return; }
   const mine = allFeeds().filter(f => f.kind === k), cats = [...new Set(mine.map(f => f.cat))], sel = npSel();
   $('#npChips').innerHTML = cats.map(c => `<span class="np-cat">${esc(c)}</span><button class="np-chip ${sel === 'cat:' + c ? 'on' : ''}" data-sel="cat:${esc(c)}">${esc(c)} 모아보기</button>` +
     mine.filter(f => f.cat === c).map(f => `<button class="np-chip ${sel === f.id ? 'on' : ''}" data-sel="${esc(f.id)}" ${f.custom ? 'data-custom="1"' : ''}>${esc(f.name)}</button>`).join('')).join('') +
@@ -2468,6 +2531,7 @@ function npSkeleton() {
 }
 async function loadNews(force) {
   if (npKind() === 'wz') { NV.items = []; renderWz(); return; }
+  if (npKind() === 'comic') { NV.items = []; renderComicRoom(); return; }
   const srcs = npSources(), key = 'darak.news.cache.' + npKind() + '.' + npSel(), ticket = (loadNews.t = (loadNews.t || 0) + 1);
   const cached = (() => { try { return JSON.parse(localStorage.getItem(key) || 'null'); } catch { return null; } })();
   if (cached && !force) { NV.items = cached.items || []; NV.stamp = cached.at; renderNews(cached.at); }
@@ -2652,7 +2716,8 @@ $('#npKinds').onclick = e => { const b = e.target.closest('[data-kind]'); if (!b
 function npAddFeedSheet() {
   const K = NP_KINDS[npKind()];
   $('#feedHead').textContent = K.add + '하기'; $('#feedName').value = ''; $('#feedUrl').value = '';
-  $('#feedName').placeholder = npKind() === 'news' ? '예: 제주新보' : npKind() === 'mag' ? '예: 엘르 코리아' : '예: 내 블로그';
+  $('#feedName').placeholder = npKind() === 'news' ? '예: 제주新보' : npKind() === 'mag' ? '예: 엘르 코리아' : npKind() === 'comic' ? '예: 내가 좋아하는 인스타툰' : '예: 내 블로그';
+  $('#feedUrl').placeholder = npKind() === 'comic' ? 'https://rss.blog.naver.com/블로그아이디.xml' : 'https://…/rss/allArticle.xml';
   openSheet('shFeed');
 }
 function npAddWzSheet() { $('#wzName').value = ''; $('#wzUrl').value = ''; openSheet('shWz'); }
@@ -2665,6 +2730,7 @@ function npAddWzSheet() { $('#wzName').value = ''; $('#wzUrl').value = ''; openS
     if (longed) { longed = false; return; }
     if (e.target.closest('[data-addfeed]')) { npAddFeedSheet(); return; }
     if (e.target.closest('[data-addwz]')) { npAddWzSheet(); return; }
+    if (e.target.closest('[data-addcomic]')) { $('#fileComic').click(); return; }
     const c = e.target.closest('[data-sel]'); if (!c || c.dataset.sel === npSel()) return;
     NP.selBy[npKind()] = c.dataset.sel; saveNP(); paintNpHead(); NV.items = []; NV.eph = null; loadNews(false); $('#news').scrollTop = 0;
   };
@@ -2688,6 +2754,13 @@ $('#npList').onclick = e => {
   const del = e.target.closest('[data-wzdel]');
   if (del) { const w = (NP.wz || []).find(x => x.id === del.dataset.wzdel); if (w && confirm(`‘${w.title}’을 웹진 책장에서 뺄까요?`)) { NP.wz = NP.wz.filter(x => x !== w); saveNP(); renderWz(); } return; }
   if (e.target.closest('[data-addwz]')) { npAddWzSheet(); return; }
+  if (e.target.closest('[data-addcomic]')) { $('#fileComic').click(); return; }
+  if (e.target.closest('[data-addcfeed]')) { npAddFeedSheet(); return; }
+  const cdel = e.target.closest('[data-cfdel]');
+  if (cdel) { const f = (NP.custom || []).find(x => x.id === cdel.dataset.cfdel); if (f && confirm(`‘${f.name}’을 목록에서 뺄까요?`)) { NP.custom = NP.custom.filter(x => x !== f); saveNP(); renderComicRoom(); } return; }
+  const cb = e.target.closest('[data-comic-book]'); if (cb) { const m = books.find(b => b.id === cb.dataset.comicBook); if (m) openComicBook(m); return; }
+  const cf = e.target.closest('[data-cfeed]'); if (cf) { const f = comicFeeds().find(x => x.id === cf.dataset.cfeed); if (f) openComicFeed(f); return; }
+  const ia = e.target.closest('[data-ia]'); if (ia) { const c = IA_COMICS.find(x => x.id === ia.dataset.ia); if (c) openIaComic(c); return; }
   const w = e.target.closest('[data-wz]'); if (w) { openWz(w.dataset.wz); return; }
   const bk = e.target.closest('[data-book]'); if (bk) { openReader(bk.dataset.book); return; }
   const b = e.target.closest('[data-art]'); if (b) openNewsArticle(+b.dataset.art);
@@ -2698,6 +2771,301 @@ $('#rSave').onclick = e => { e.stopPropagation(); bakeNews().catch(err => { cons
 $('#rArtPrev').onclick = e => { e.stopPropagation(); if (RD) { ttsStop(); jumpSection(RD, -1); } };
 $('#rArtNext').onclick = e => { e.stopPropagation(); if (RD) { ttsStop(); jumpSection(RD, 1); } };
 
+
+/* ======================================================================
+   만화방 — 내 만화 파일(.zip·.cbz) · 무료 고전 만화(퍼블릭 도메인) · 연재 웹코믹 RSS
+   만화 전용 보기 화면: 웹툰(세로) · 한 쪽 · 두 쪽 / 좌→우 · 우→좌 / 가로 맞춤 · 세로 맞춤
+   ====================================================================== */
+const CM = LS.get('darak.comic', { mode: 'single', dir: 'ltr', fit: 'height' });
+const saveCM = () => LS.set('darak.comic', CM);
+const IMG_RE = /\.(jpe?g|png|webp|gif|avif|bmp)$/i;
+const natCmp = (a, b) => a.localeCompare(b, undefined, { numeric: true, sensitivity: 'base' });
+const mimeOf = n => /png$/i.test(n) ? 'image/png' : /webp$/i.test(n) ? 'image/webp' : /gif$/i.test(n) ? 'image/gif' : /avif$/i.test(n) ? 'image/avif' : /bmp$/i.test(n) ? 'image/bmp' : 'image/jpeg';
+
+/* 저작권이 끝난(1929년 이전) 작품만 골라 둔 인터넷 아카이브 만화 */
+const IA_COMICS = [
+  { id: 'littlenemo00mccagoog', t: '리틀 니모', o: 'Little Nemo', by: '윈저 매케이', y: '1908', d: '꿈나라를 여행하는 소년 니모 — 신문 만화의 전설' },
+  { id: 'LittleNemo1905-1914ByWinsorMccay', t: '리틀 니모 연재 모음', o: 'Little Nemo 1905–1914', by: '윈저 매케이', y: '1905–1914', d: '일요판 컬러 연재를 400쪽 넘게 모은 판' },
+  { id: 'dreamsrarebitfi00mccagoog', t: '레어빗 악몽', o: 'Dreams of the Rarebit Fiend', by: '윈저 매케이', y: '1905', d: '치즈 토스트를 먹고 꾸는 기묘한 악몽들' },
+  { id: 'BusterBrownhisd00Outc', t: '버스터 브라운과 강아지 타이크', o: 'Buster Brown, his dog Tige', by: 'R. F. 아웃콜트', y: '1904', d: '장난꾸러기 버스터와 단짝 강아지' },
+  { id: 'myresolutionsbus00outc', t: '버스터 브라운의 결심', o: 'My Resolutions, Buster Brown', by: 'R. F. 아웃콜트', y: '1910', d: '매회 끝에 붙는 버스터의 ‘결심’ 모음' },
+  { id: 'BusterBrownnewspaperStrip-Year1903', t: '버스터 브라운 신문 연재 1903', o: 'Buster Brown 1903', by: 'R. F. 아웃콜트', y: '1903', d: '첫해 신문 연재분' },
+  { id: 'yellowkidwholive00dumorich', t: '옐로 키드', o: "The Yellow Kid", by: 'R. F. 아웃콜트', y: '1897', d: '‘만화’라는 장르를 연 노란 옷 꼬마' },
+  { id: 'BringingUpFatherSeries1', t: '아빠 길들이기 1권', o: 'Bringing Up Father', by: '조지 맥매너스', y: '1919', d: '벼락부자 지그스와 아내 매기의 소동' },
+  { id: 'the-doo-dads', t: '두두즈', o: 'The Doo Dads', by: '아치 데일', y: '1920', d: '숲속 작은 요정 마을의 한 컷 대소동' },
+  { id: 'ComicCuts01-1890', t: '코믹 컷츠 창간호', o: 'Comic Cuts', by: '영국 만화 잡지', y: '1890', d: '130년 전 영국 어린이들이 보던 만화 잡지' },
+  { id: 'corriere-dei-piccoli-1908-01', t: '코리에레 데이 피콜리', o: 'Corriere dei Piccoli', by: '이탈리아 어린이 잡지', y: '1908', d: '이탈리아 첫 어린이 만화 주간지' }
+];
+const COMIC_FEEDS = [
+  { id: 'xkcd', kind: 'comic', name: 'xkcd', sub: '과학·공대 유머 · 영문', url: 'https://xkcd.com/rss.xml' },
+  { id: 'smbc', kind: 'comic', name: 'SMBC', sub: '매일 한 편 · 영문', url: 'https://www.smbc-comics.com/comic/rss' },
+  { id: 'pdl', kind: 'comic', name: 'Poorly Drawn Lines', sub: '엉뚱한 네 컷 · 영문', url: 'https://poorlydrawnlines.com/feed/' },
+  { id: 'commitstrip', kind: 'comic', name: '커밋스트립', sub: '개발자 만화 · 영문', url: 'https://www.commitstrip.com/en/feed/' }
+];
+const comicFeeds = () => COMIC_FEEDS.concat((NP.custom || []).filter(c => c.kind === 'comic').map(c => ({ ...c, sub: '내가 추가한 만화', custom: true })));
+const CF_THUMB = LS.get('darak.comic.thumbs', {});
+
+/* --- 파일에서 만화 꺼내기 --- */
+async function zipPages(buf) {
+  const z = await JSZip.loadAsync(buf);
+  const ents = Object.values(z.files).filter(f => !f.dir && IMG_RE.test(f.name) && !/(^|\/)(__MACOSX|\.)/.test(f.name)).sort((a, b) => natCmp(a.name, b.name));
+  return ents;
+}
+function blobToImg(blob) { return new Promise((res, rej) => { const u = URL.createObjectURL(blob), im = new Image(); im.onload = () => res({ im, u }); im.onerror = () => { URL.revokeObjectURL(u); rej(new Error('img')); }; im.src = u; }); }
+async function thumbBlob(blob, w = 360) {
+  const { im, u } = await blobToImg(blob);
+  const s = Math.min(1, w / (im.naturalWidth || w)), c = document.createElement('canvas');
+  c.width = Math.max(1, Math.round(im.naturalWidth * s)); c.height = Math.max(1, Math.round(im.naturalHeight * s));
+  c.getContext('2d').drawImage(im, 0, 0, c.width, c.height); URL.revokeObjectURL(u);
+  return await new Promise(r => c.toBlob(r, 'image/jpeg', 0.82));
+}
+async function importComic(f, order = 0) {
+  const buf = await f.arrayBuffer();
+  const ents = await zipPages(buf);
+  if (!ents.length) throw new Error('noimg');
+  const title = f.name.replace(/\.(zip|cbz)$/i, '').replace(/[_]+/g, ' ').replace(/\s+/g, ' ').trim() || '이름 없는 만화';
+  const dup = books.find(b => b.kind === 'comic' && b.size === f.size && b.title === title);
+  if (dup) return { dup: true, title };
+  const first = await ents[0].async('blob');
+  const cover = await thumbBlob(new Blob([first], { type: mimeOf(ents[0].name) })).catch(() => null);
+  const b = { id: uid(), title, author: '', publisher: '', description: `만화 · ${ents.length}쪽`, kind: 'comic', comicSrc: 'zip', pages: ents.length, page: 0,
+    hasFile: true, fileName: f.name, size: f.size, cover: cover || undefined, added: Date.now() + order, lastRead: 0, progress: 0, cfi: null, bookmarks: [] };
+  await DB.put('files', { id: b.id, data: buf }); await DB.put('books', b);
+  books.push(b); setCover(b); renderLibrary();
+  return { b };
+}
+
+/* --- 인터넷 아카이브 쪽 목록 --- */
+async function iaPageList(id) {
+  const m = await withTimeout(fetch('https://archive.org/metadata/' + id).then(r => r.json()), 15000);
+  const files = m.files || [], jp = files.find(f => /_jp2\.zip$/i.test(f.name));
+  try {
+    const pre = jp ? jp.name.replace(/_jp2\.zip$/i, '') : id;
+    const j = await withTimeout(fetch(`https://${m.server}/BookReader/BookReaderJSIA.php?id=${encodeURIComponent(id)}&itemPath=${encodeURIComponent(m.dir)}&server=${encodeURIComponent(m.server)}&format=json&subPrefix=${encodeURIComponent(pre)}`).then(r => r.json()), 15000);
+    const pages = ((j.data && j.data.brOptions && j.data.brOptions.data) || []).flat().filter(p => p && p.uri);
+    if (pages.length) return pages.map(p => p.uri + (p.width > 1800 ? '&scale=2' : '') + '&rotate=0');
+  } catch (e) { console.warn('jsia', e); }
+  const n = +(m.metadata && m.metadata.imagecount) || 0;
+  if (n) return Array.from({ length: n }, (_, i) => `https://archive.org/download/${id}/page/n${i}_w1200.jpg`);
+  throw new Error('nopages');
+}
+
+/* --- 만화 보기 화면 --- */
+let CV = null;
+function cvClasses() {
+  const c = $('#cv'), m = CV && CV.forceMode || CM.mode;
+  c.className = ['m-' + (m === 'scroll' ? 'scroll' : 'page'), m === 'double' ? 'm-double' : '', 'f-' + CM.fit, 'd-' + CM.dir, c.classList.contains('bars') ? 'bars' : ''].filter(Boolean).join(' ');
+  $$('#cvMode button').forEach(b => b.classList.toggle('on', b.dataset.v === m));
+  $$('#cvDir button').forEach(b => b.classList.toggle('on', b.dataset.v === CM.dir));
+  $$('#cvFit button').forEach(b => b.classList.toggle('on', b.dataset.v === CM.fit));
+  $('#cvFitRow').classList.toggle('opacity-40', m === 'scroll');
+  $('#cvSlider').style.direction = CM.dir === 'rtl' && m !== 'scroll' ? 'rtl' : 'ltr';
+}
+async function cvUrl(i) {
+  const cv = CV; if (!cv || i < 0 || i >= cv.n) return '';
+  if (cv.urls) return cv.urls[i].url || cv.urls[i];
+  if (cv.cache.has(i)) { const v = cv.cache.get(i); cv.cache.delete(i); cv.cache.set(i, v); return v; }
+  const e = cv.ents[i], blob = await e.async('blob');
+  if (CV !== cv) return '';
+  const u = URL.createObjectURL(new Blob([blob], { type: mimeOf(e.name) }));
+  cv.cache.set(i, u);
+  while (cv.cache.size > 28) {   // 메모리 아끼기: 오래 안 본 쪽은 풀어 줌
+    const [k, v] = cv.cache.entries().next().value; cv.cache.delete(k); URL.revokeObjectURL(v);
+    const im = cv.mode === 'scroll' && $(`#cvStage .cv-pg[data-i="${k}"] img`); if (im) { im.removeAttribute('src'); im.dataset.on = ''; }
+  }
+  return u;
+}
+const isRemote = () => CV && !!CV.urls;
+function cvImg(u) { return `<img src="${esc(u)}" alt="" ${isRemote() ? 'referrerpolicy="no-referrer"' : ''} draggable="false">`; }
+function spreadOf(i) {   // 두 쪽 보기: 표지는 혼자, 그다음부터 2쪽씩
+  if (!CV || (CV.forceMode || CM.mode) !== 'double' || i === 0) return [i];
+  const a = i % 2 === 1 ? i : i - 1; return a + 1 < CV.n ? [a, a + 1] : [a];
+}
+async function cvRender() {
+  const cv = CV; if (!cv) return;
+  const mode = cv.forceMode || CM.mode; cv.mode = mode;
+  cvClasses();
+  const st = $('#cvStage');
+  if (cv.io) { cv.io.disconnect(); cv.io = null; }
+  if (mode === 'scroll') {
+    st.innerHTML = `<div class="cv-list">${Array.from({ length: cv.n }, (_, i) => `${cv.urls && cv.urls[i].cap ? `<div class="cv-cap">${esc(cv.urls[i].cap)}</div>` : ''}<div class="cv-pg" data-i="${i}"><img alt="" ${isRemote() ? 'referrerpolicy="no-referrer"' : ''} draggable="false"><span class="cv-no">${i + 1}</span></div>`).join('')}</div>`;
+    cv.io = new IntersectionObserver(ents => ents.forEach(async en => {
+      if (!en.isIntersecting) return; const pg = en.target, im = pg.querySelector('img'); if (im.dataset.on) return;
+      im.dataset.on = '1'; const u = await cvUrl(+pg.dataset.i); if (u && CV === cv) { im.onload = () => pg.classList.add('ok'); im.src = u; }
+    }), { root: st, rootMargin: '150% 0px' });
+    $$('#cvStage .cv-pg').forEach(p => cv.io.observe(p));
+    const tgt = $(`#cvStage .cv-pg[data-i="${cv.i}"]`); if (tgt) { st.scrollTop = Math.max(0, tgt.offsetTop - (tgt.previousElementSibling && tgt.previousElementSibling.classList.contains('cv-cap') ? tgt.previousElementSibling.offsetHeight : 0)); }
+    cvPaint();
+    return;
+  }
+  await cvShow(cv.i);
+}
+async function cvShow(i) {
+  const cv = CV; if (!cv) return;
+  const sp = spreadOf(Math.max(0, Math.min(cv.n - 1, i))); cv.i = sp[0];
+  const tag = (cv.tag = (cv.tag || 0) + 1);
+  const urls = await Promise.all(sp.map(cvUrl)); if (CV !== cv || tag !== cv.tag) return;
+  const order = CM.dir === 'rtl' ? urls.slice().reverse() : urls;
+  const st = $('#cvStage');
+  st.innerHTML = `<div class="cv-spread ${sp.length === 2 ? 'two' : ''}">${order.map(cvImg).join('')}</div>${cv.urls && cv.urls[cv.i].cap ? `<div class="cv-pcap">${esc(cv.urls[cv.i].cap)}</div>` : ''}`;
+  st.scrollTop = 0;
+  cvPaint();
+  const nx = spreadOf(sp[sp.length - 1] + 1); nx.forEach(k => cvUrl(k).then(u => { if (u && isRemote()) { const p = new Image(); p.referrerPolicy = 'no-referrer'; p.src = u; } }));   // 다음 쪽 미리 받기
+}
+function cvPaint() {
+  const cv = CV; if (!cv) return;
+  const sp = cv.mode === 'scroll' ? [cv.i] : spreadOf(cv.i), last = sp[sp.length - 1];
+  const lbl = sp.length === 2 ? `${sp[0] + 1}–${sp[1] + 1} / ${cv.n}` : `${sp[0] + 1} / ${cv.n}`;
+  $('#cvPos').textContent = lbl; $('#cvMini').textContent = lbl;
+  const s = $('#cvSlider'); s.max = Math.max(0, cv.n - 1); s.value = cv.i;
+  const m = cv.meta; m.page = cv.i; m.progress = cv.n <= 1 ? 1 : (last >= cv.n - 1 ? 1 : (last + 1) / cv.n); m.lastRead = Date.now();
+  clearTimeout(cv.saveT); cv.saveT = setTimeout(() => DB.put('books', m).catch(() => {}), 400);
+}
+function cvGo(d) {   // d: +1 다음 / -1 이전 (읽는 순서 기준)
+  const cv = CV; if (!cv || cv.mode === 'scroll') return;
+  const sp = spreadOf(cv.i);
+  if (d > 0) { const n = sp[sp.length - 1] + 1; if (n >= cv.n) { toast('마지막 쪽이에요'); return; } cvShow(n); }
+  else { if (cv.i <= 0) { toast('첫 쪽이에요'); return; } const p = spreadOf(cv.i - 1); cvShow(p[0]); }
+}
+function cvBars(on) { $('#cv').classList.toggle('bars', on == null ? !$('#cv').classList.contains('bars') : on); }
+async function openComicView(meta, src, opts = {}) {
+  if (CV) closeComic(true);
+  closeSheets('replace');
+  const cv = CV = { meta, n: 0, i: 0, cache: new Map(), forceMode: opts.mode || null, urls: null, ents: null };
+  $('#cvTitle').textContent = meta.title; $('#cvStage').innerHTML = '<div class="cv-load">만화를 펼치는 중…</div>';
+  $('#cvSave').classList.toggle('hidden', !opts.savable);
+  $('#cvOrig').classList.toggle('hidden', !opts.orig); if (opts.orig) $('#cvOrig').href = opts.orig;
+  document.body.classList.add('comic-open'); $('#cv').classList.add('bars'); cvClasses();
+  history.pushState({ comic: 1 }, ''); setThemeColor('#0E0E0F');
+  try {
+    if (src.ents) cv.ents = src.ents; else cv.urls = src.urls;
+    cv.n = (cv.ents || cv.urls).length;
+    if (!cv.n) throw new Error('empty');
+    cv.i = Math.max(0, Math.min(cv.n - 1, meta.page || 0));
+    await cvRender();
+    clearTimeout(cv.hideT); cv.hideT = setTimeout(() => CV === cv && cvBars(false), 1800);
+  } catch (e) { console.warn(e); toast('만화를 열 수 없어요'); closeComic(); }
+}
+async function openComicBook(meta) {
+  try {
+    if (meta.comicSrc === 'ia') {
+      let urls = meta.urls;
+      if (!urls || !urls.length) { toast('쪽 목록을 받는 중…', 1500); urls = await iaPageList(meta.iaId); meta.urls = urls; DB.put('books', meta).catch(() => {}); }
+      openComicView(meta, { urls }, { orig: 'https://archive.org/details/' + meta.iaId });
+      return;
+    }
+    const rec = await DB.get('files', meta.id).catch(() => null);
+    if (!rec || !rec.data) { toast('만화 파일을 찾을 수 없어요'); return; }
+    const ents = await zipPages(rec.data);
+    openComicView(meta, { ents });
+  } catch (e) { console.warn(e); toast('만화를 열 수 없어요'); }
+}
+function closeComic(fromPop) {
+  const cv = CV; if (!cv) return;
+  clearTimeout(cv.saveT); clearTimeout(cv.hideT); if (cv.io) cv.io.disconnect();
+  DB.put('books', cv.meta).catch(() => {});
+  cv.cache.forEach(u => URL.revokeObjectURL(u)); CV = null;
+  $('#cvStage').innerHTML = ''; document.body.classList.remove('comic-open');
+  setThemeColor(document.body.classList.contains('news-open') ? '#F3EEE3' : '#F5F2EC');
+  renderLibrary(); if (document.body.classList.contains('news-open') && npKind() === 'comic') renderComicRoom();
+  if (!fromPop && history.state && history.state.comic) history.back();
+}
+async function openIaComic(c) {
+  const have = books.find(b => b.kind === 'comic' && b.iaId === c.id);
+  if (have) { openComicBook(have); return; }
+  try {
+    toast('쪽 목록을 받는 중…', 1500);
+    const urls = await iaPageList(c.id);
+    const meta = { id: 'eph-ia-' + c.id, _eph: true, title: c.t, author: c.by, kind: 'comic', comicSrc: 'ia', iaId: c.id, urls, pages: urls.length, page: 0, progress: 0, bookmarks: [] };
+    openComicView(meta, { urls }, { savable: true, orig: 'https://archive.org/details/' + c.id });
+  } catch (e) { console.warn(e); toast('지금은 이 만화를 열 수 없어요. 잠시 뒤 다시 눌러 주세요'); }
+}
+async function saveIaComic() {
+  const cv = CV; if (!cv || !cv.meta._eph || cv.meta.comicSrc !== 'ia') return;
+  const c = IA_COMICS.find(x => x.id === cv.meta.iaId) || {};
+  const b = { ...cv.meta, id: uid(), description: `${c.o || ''} · ${c.y || ''} · ${cv.n}쪽 · 인터넷 아카이브 (인터넷 연결 필요)`, coverUrl: `https://archive.org/services/img/${cv.meta.iaId}`, hasFile: true, source: 'ia-comic', added: Date.now(), lastRead: Date.now() };
+  delete b._eph;
+  await DB.put('books', b); books.push(b); cv.meta = b; $('#cvSave').classList.add('hidden');
+  toast(`‘${b.title}’을 서재에 꽂았어요. 읽던 쪽도 기억해요`, 2800);
+}
+async function openComicFeed(f) {
+  try {
+    toast('최신 만화를 받는 중…', 1500);
+    const raw = await fetchFeed(f);
+    const pages = [];
+    raw.forEach(it => {
+      const html = cleanArticleHtml(it.html || '');
+      const srcs = [...html.matchAll(/<img[^>]+src="([^"]+)"/g)].map(m => m[1].replace(/&amp;/g, '&'));
+      if (!srcs.length && it.thumb) srcs.push(it.thumb);
+      srcs.forEach((u, k) => pages.push({ url: u, cap: k === 0 ? decodeEnt(String(it.title || '')).replace(/<[^>]+>/g, '') : '' }));
+    });
+    if (!pages.length) { toast('이 피드에는 만화 그림이 없어요'); return; }
+    CF_THUMB[f.id] = pages[0].url; LS.set('darak.comic.thumbs', CF_THUMB);
+    const meta = { id: 'eph-cf-' + f.id, _eph: true, title: `${f.name} 최신 ${raw.length}편`, kind: 'comic', page: 0, progress: 0, bookmarks: [] };
+    openComicView(meta, { urls: pages }, { mode: 'scroll' });
+  } catch (e) { console.warn(e); toast('이 만화 피드를 지금 가져올 수 없어요'); }
+}
+
+/* --- 만화방 화면 (가판대 안 탭) --- */
+function renderComicRoom() {
+  $('#npNote').textContent = '만화 파일(.zip·.cbz)은 기기 안에만 저장돼요. 고전 만화와 웹코믹은 인터넷으로 바로 봐요.';
+  const mine = books.filter(b => b.kind === 'comic').sort((a, b) => (b.lastRead || 0) - (a.lastRead || 0) || b.added - a.added);
+  $('#npList').innerHTML = `
+    <h3 class="serif font-bold text-[18px] mt-3 mb-3">내 만화책 <span class="text-[12px] text-mute font-sans font-semibold ml-1">${mine.length}권</span></h3>
+    <div class="mg-grid">
+      ${mine.map(b => `<button class="mg-card book" data-comic-book="${b.id}">${coverHTML(b, { badge: false })}<h4>${esc(b.title)}</h4><div class="np-meta">${b.pages ? `${Math.min(b.pages, (b.page || 0) + 1)} / ${b.pages}쪽` : ''}${b.comicSrc === 'ia' ? ' · 온라인' : ''}</div></button>`).join('')}
+      <button class="mg-card" data-addcomic><div class="mg-cover mg-add"><span>＋</span><b>만화 파일 넣기</b><small class="text-[11px] opacity-70">.zip · .cbz</small></div></button>
+    </div>
+    <h3 class="serif font-bold text-[18px] mt-9 mb-1">오늘의 웹코믹</h3>
+    <p class="text-[12.5px] text-mute mb-3">새 편이 올라오면 바로 볼 수 있는 무료 연재 만화예요.</p>
+    <div class="flex gap-3.5 overflow-x-auto no-scrollbar -mx-4 px-4 pb-2">
+      ${comicFeeds().map(f => `<div class="relative w-[128px] flex-none"><button class="block w-full text-left" data-cfeed="${esc(f.id)}"><div class="st-cover !bg-white">${CF_THUMB[f.id] ? `<img src="${esc(CF_THUMB[f.id])}" alt="" loading="lazy" referrerpolicy="no-referrer" style="object-fit:contain;background:#fff" onerror="this.remove()">` : ''}<div class="st-shade" style="background:linear-gradient(180deg,rgba(0,0,0,0) 55%,rgba(0,0,0,.65))"></div><div class="st-head !text-[12px]">${esc(f.name)}</div></div><div class="text-[11.5px] text-mute mt-1.5 truncate">${esc(f.sub)}</div></button>${f.custom ? `<button class="mg-del" data-cfdel="${esc(f.id)}" aria-label="지우기">×</button>` : ''}</div>`).join('')}
+      <button class="w-[128px] flex-none text-left" data-addcfeed><div class="st-cover mg-add !grid"><span class="text-[30px] font-light">＋</span><b class="text-[12px]">웹툰·만화<br>RSS 추가</b></div><div class="text-[11.5px] text-mute mt-1.5">블로그·인스타툰 주소</div></button>
+    </div>
+    <h3 class="serif font-bold text-[18px] mt-9 mb-1">무료 고전 만화</h3>
+    <p class="text-[12.5px] text-mute mb-3">저작권이 끝난 1929년 이전 작품만 골라 담았어요. 인터넷 아카이브에서 한 쪽씩 바로 불러와요.</p>
+    <div class="mg-grid">${IA_COMICS.map(c => { const have = books.find(b => b.iaId === c.id); return `
+      <button class="mg-card" data-ia="${esc(c.id)}"><div class="mg-cover" style="background:#E9E1D2"><img src="https://archive.org/services/img/${esc(c.id)}" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.remove()"><span class="mg-src">${esc(c.y)}</span></div>
+        <h4>${esc(c.t)}</h4><div class="np-meta">${esc(c.by)}${have ? ` · ${have.pages ? Math.min(have.pages, (have.page || 0) + 1) + '쪽까지' : '서재에 있음'}` : ''}</div><div class="text-[11.5px] text-mute mt-1 leading-snug">${esc(c.d)}</div></button>`; }).join('')}</div>`;
+}
+
+/* --- 이벤트 --- */
+$('#fileComic').onchange = e => { enqueue(e.target.files); e.target.value = ''; };
+$('#cvBack').onclick = () => closeComic();
+$('#cvSave').onclick = () => saveIaComic().catch(() => toast('서재에 꽂지 못했어요'));
+$('#cvMode').onclick = e => { const b = e.target.closest('[data-v]'); if (!b || !CV) return; if (CV.forceMode) CV.forceMode = null; CM.mode = b.dataset.v; saveCM(); if (CM.mode !== 'scroll') CV.i = spreadOf(CV.i)[0]; cvRender(); };
+$('#cvDir').onclick = e => { const b = e.target.closest('[data-v]'); if (!b || !CV) return; CM.dir = b.dataset.v; saveCM(); cvRender(); };
+$('#cvFit').onclick = e => { const b = e.target.closest('[data-v]'); if (!b || !CV) return; CM.fit = b.dataset.v; saveCM(); cvClasses(); };
+$('#cvSlider').oninput = e => { const cv = CV; if (!cv) return; const i = +e.target.value; $('#cvPos').textContent = `${i + 1} / ${cv.n}`; };
+$('#cvSlider').onchange = e => { const cv = CV; if (!cv) return; const i = +e.target.value; if (cv.mode === 'scroll') { cv.i = i; const t = $(`#cvStage .cv-pg[data-i="${i}"]`); if (t) $('#cvStage').scrollTop = t.offsetTop; cvPaint(); } else cvShow(i); };
+(function bindCvStage() {
+  const st = $('#cvStage'); let sx = 0, sy = 0, t0 = 0, moved = false, raf = 0;
+  st.addEventListener('pointerdown', e => { sx = e.clientX; sy = e.clientY; t0 = Date.now(); moved = false; });
+  st.addEventListener('pointermove', e => { if (Math.abs(e.clientX - sx) > 10 || Math.abs(e.clientY - sy) > 10) moved = true; });
+  st.addEventListener('pointerup', e => {
+    const cv = CV; if (!cv) return;
+    const dx = e.clientX - sx, dy = e.clientY - sy, W = innerWidth;
+    if (cv.mode !== 'scroll' && Math.abs(dx) > 50 && Math.abs(dx) > Math.abs(dy) * 1.3 && Date.now() - t0 < 800) { cvBars(false); cvGo((dx < 0) === (CM.dir === 'ltr') ? 1 : -1); return; }
+    if (moved || Date.now() - t0 > 450) return;
+    if (cv.mode === 'scroll') { cvBars(); return; }
+    const x = e.clientX;
+    if (x < W * 0.3) { cvBars(false); cvGo(CM.dir === 'rtl' ? 1 : -1); }
+    else if (x > W * 0.7) { cvBars(false); cvGo(CM.dir === 'rtl' ? -1 : 1); }
+    else cvBars();
+  });
+  st.addEventListener('scroll', () => {   // 웹툰 보기: 화면 가운데 쪽 번호 기억
+    const cv = CV; if (!cv || cv.mode !== 'scroll' || raf) return;
+    raf = requestAnimationFrame(() => { raf = 0; const el = document.elementFromPoint(innerWidth / 2, innerHeight / 2), pg = el && el.closest && el.closest('.cv-pg'); if (pg && +pg.dataset.i !== cv.i) { cv.i = +pg.dataset.i; cvPaint(); } if ($('#cv').classList.contains('bars') && Date.now() - (cv.barT || 0) > 600) cvBars(false); });
+  }, { passive: true });
+})();
+$('#cv').addEventListener('click', e => { if (e.target.closest('.cv-bar')) { const cv = CV; if (cv) cv.barT = Date.now(); } });
+document.addEventListener('keydown', e => {
+  if (!CV || ['INPUT', 'TEXTAREA'].includes((e.target && e.target.tagName) || '')) return;
+  const fw = CM.dir === 'rtl' ? -1 : 1;
+  if (e.key === 'ArrowRight') { e.preventDefault(); cvGo(fw); } else if (e.key === 'ArrowLeft') { e.preventDefault(); cvGo(-fw); }
+  else if (e.key === ' ' || e.key === 'PageDown') { if (CV.mode !== 'scroll') { e.preventDefault(); cvGo(1); } } else if (e.key === 'PageUp') { if (CV.mode !== 'scroll') { e.preventDefault(); cvGo(-1); } }
+  else if (e.key === 'Escape') closeComic();
+});
 
 /* 서재 첫 화면의 ‘가판대’ 줄 — 월간 링크 매거진처럼 표지를 가로로 */
 const STAND = LS.get('darak.stand', { at: 0, f: {} });
