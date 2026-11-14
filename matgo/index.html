@@ -623,7 +623,7 @@ small.zero,.seg small.mn.zero{color:#ff8a80!important}
 
 <script>
 'use strict';
-const VER='v74';
+const VER='v75';
 const $=s=>document.querySelector(s);
 const sleep=ms=>new Promise(r=>setTimeout(r,ms));
 const rnd=n=>Math.floor(Math.random()*n);
@@ -2284,7 +2284,7 @@ async function vipHiLo(b0){
     const c=cardOfMonth(cur);
     const v=await modal(`<h2>🃏 하이로우 ${step?`· ${step}연속 성공!`:''}</h2><div class="hlc"><div class="pc">${svgOf(c)}</div><div class="hlm">${cur}월</div></div><p>다음 패가 <b>${cur}월</b>보다 높을까요, 낮을까요?<br><small>같은 달이면 실패 · 지금 판돈 <b style="color:#f5c24a">${won(pot)}</b></small></p>`,
       [hi?{t:`⬆️ 높다 (×${mh.toFixed(2)})`,v:'h'}:null,lo?{t:`⬇️ 낮다 (×${ml.toFixed(2)})`,v:'l'}:null,step?{t:`💰 그만하고 ${won(pot)} 받기`,cls:'alt',v:'stop'}:null].filter(Boolean),{cls:'vbtn'});
-    if(v==='stop'){await payWallet(DB.cur,pot);SFX.win();confetti();return vipDone(`🃏 ${won(pot)}을 챙겼어요!`,pot-bet)}
+    if(v==='stop'){await payWallet(DB.cur,pot);SFX.win();confetti();return vipDone(`🃏 ${won(bet)} 걸고<br>${won(pot)} 받았어요!`,pot-bet)}
     const nx=1+rnd(12),nc=cardOfMonth(nx),ok=v==='h'?nx>cur:nx<cur;SFX.flip();
     await showFlip(c,nc,ok?'성공!':'실패…',ok);
     if(!ok){SFX.lose();return vipDone(`😢 ${nx}월이 나왔어요… ${won(bet)}을 잃었어요`,-bet)}
@@ -2295,7 +2295,7 @@ async function showFlip(a,b,txt,ok){const d=document.createElement('div');d.clas
 let VIPL=null;
 async function vipDone(msg,delta){
   await syncDown();renderHome();const m=moneyOf(DB.cur),L=VIPL,can=L&&m>=L.bet;
-  const v=await modal(`<h2>${msg}</h2><p>${delta>=0?'+':''}${won(delta)} · 👛 ${won(m)}</p>`,
+  const v=await modal(`<h2>${msg}</h2><p>${delta>=0?'순이익 +':'손해 '}${won(Math.abs(delta))} · 👛 ${won(m)}</p>`,
     [can?{t:`🔁 한 번 더! (${won(L.bet)})`,cls:'big',v:'again'}:null,L&&m>=5000?{t:'💰 판돈 바꿔서 계속',cls:'alt',v:'bet'}:null,{t:'🎰 다른 게임',cls:'alt',v:'vip'},{t:'🚪 나가기',cls:'gray',v:'out'}].filter(Boolean),{cls:'vbtn'});
   if(v==='again')return L.fn(L.bet);
   if(v==='bet')return L.fn();
