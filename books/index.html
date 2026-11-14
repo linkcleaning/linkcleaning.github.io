@@ -130,9 +130,19 @@
   .opt:active { background:#FBFAF7; }
   .opt .ic { width:46px; height:46px; border-radius:14px; display:grid; place-items:center; flex:none; }
   .opt .ic svg { width:24px; height:24px; }
-  .res { display:flex; gap:12px; align-items:flex-start; width:100%; text-align:left; background:#fff; border-radius:16px; padding:12px; }
+  .res { display:flex; gap:13px; align-items:flex-start; width:100%; text-align:left; background:#fff; border-radius:18px; padding:13px; cursor:pointer; }
+  .res .desc { font-size:12.5px; line-height:1.5; color:#5E6562; margin-top:6px; overflow:hidden; display:-webkit-box; -webkit-line-clamp:3; -webkit-box-orient:vertical; word-break:keep-all; }
+  .src { font-size:10.5px; font-weight:700; padding:3px 7px; border-radius:6px; background:#F1EDE6; color:#7D827F; white-space:nowrap; }
+  .src.al { background:#E3F0EE; color:#1C7C80; }
+  .add-btn { display:inline-flex; align-items:center; gap:5px; font-size:13px; font-weight:700; padding:8px 12px; border-radius:11px; background:var(--orange); color:#fff; white-space:nowrap; flex:none; }
+  .add-btn svg { width:15px; height:15px; }
+  .add-btn.have { background:#EAF5E3; color:#3F7F26; }
+  .add-btn.fill { background:var(--deep); }
+  .add-btn:active { filter:brightness(.93); }
+  #shSearch { height:calc(100% - 40px - var(--st)); }
+  @media (min-width:720px) { #shSearch { height:82vh; } }
   .res:active { background:#FBFAF7; }
-  .res img, .res .noimg { width:48px; height:70px; object-fit:cover; border-radius:4px; flex:none; background:#E9E4DA; }
+  .res img, .res .noimg { width:64px; height:94px; object-fit:cover; border-radius:4px; flex:none; background:#E9E4DA; }
 
   /* 가져오기 진행 창 */
   #imp { position:fixed; z-index:70; left:12px; right:12px; bottom:calc(12px + var(--sb)); background:#fff; border-radius:22px; box-shadow:0 18px 50px -14px rgba(0,0,0,.35); overflow:hidden; transform:translateY(130%); transition:transform .28s cubic-bezier(.2,.8,.2,1); }
@@ -149,7 +159,7 @@
   #drop.on { opacity:1; }
   #drop .box { border:3px dashed rgba(255,255,255,.6); border-radius:30px; padding:46px 54px; text-align:center; }
 
-  #toast { position:fixed; left:50%; top:calc(14px + var(--st)); transform:translate(-50%, -220%); visibility:hidden; z-index:100; background:var(--ink); color:#fff; padding:11px 18px; border-radius:14px; font-size:14px; font-weight:600; transition:transform .25s, visibility .25s; max-width:calc(100% - 32px); text-align:center; }
+  #toast { position:fixed; left:50%; top:calc(14px + var(--st)); transform:translate(-50%, -220%); visibility:hidden; z-index:100; background:var(--ink); color:#fff; padding:11px 18px; border-radius:14px; font-size:14px; font-weight:600; transition:transform .25s, visibility .25s; max-width:calc(100% - 32px); text-align:center; word-break:keep-all; }
   #toast.on { transform:translate(-50%, 0); visibility:visible; }
 
   /* ---------- 리더 ---------- */
@@ -208,6 +218,7 @@
           <p id="libCount" class="text-[11.5px] text-mute mt-1 leading-none">책을 넣어 주세요</p>
         </div>
       </div>
+      <button class="icon-btn" id="btnWeb" aria-label="인터넷 도서 검색"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5V5a2 2 0 0 1 2-2h11v13.5"/><path d="M4 19.5A2.5 2.5 0 0 0 6.5 22H12"/><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H11"/><circle cx="17" cy="17" r="3.2"/><path d="m21.5 21.5-2.2-2.2"/></svg></button>
       <button class="icon-btn" id="btnFind" aria-label="서재에서 찾기"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg></button>
       <button class="icon-btn" id="btnView" aria-label="보기 방식 바꾸기"></button>
       <button class="icon-btn" id="btnSet" aria-label="설정"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 7h10M18 7h2M4 17h4M12 17h8"/><circle cx="16" cy="7" r="2.2"/><circle cx="10" cy="17" r="2.2"/></svg></button>
@@ -326,7 +337,7 @@
       </button>
       <button class="opt" id="optSearch">
         <div class="ic" style="background:#E3F0EE;color:#1C7C80"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5M8 11h6"/></svg></div>
-        <div class="min-w-0"><div class="font-bold text-[15.5px]">제목·ISBN으로 찾아 등록</div><div class="text-[12.5px] text-mute mt-0.5">종이책이나 다른 데서 읽는 책도 기록해요</div></div>
+        <div class="min-w-0"><div class="font-bold text-[15.5px]">인터넷 도서 검색으로 추가</div><div class="text-[12.5px] text-mute mt-0.5">알라딘에서 찾아 표지·소개까지 한 번에 꽂아요</div></div>
       </button>
       <button class="opt" id="optManual">
         <div class="ic" style="background:#EAF5E3;color:#4E9A30"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20h4L19 9l-4-4L4 16z"/><path d="M13.5 6.5l4 4"/></svg></div>
@@ -341,15 +352,25 @@
 <div class="sheet" id="shSearch" role="dialog" aria-label="도서 검색">
   <div class="grab"></div>
   <div class="px-[18px] pt-1 pb-3">
-    <h3 class="serif font-bold text-[20px] mb-3" id="searchTitle">책 찾기</h3>
+    <div class="flex items-center justify-between mb-3">
+      <h3 class="serif font-bold text-[20px]" id="searchTitle">인터넷 도서 검색</h3>
+      <button class="icon-btn !w-9 !h-9" id="searchClose" aria-label="닫기"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M6 6l12 12M18 6 6 18"/></svg></button>
+    </div>
     <form id="searchForm" class="flex gap-2">
-      <input id="searchQ" class="inp flex-1" placeholder="책 제목 또는 ISBN 13자리" autocomplete="off" enterkeyhint="search">
+      <input id="searchQ" class="inp flex-1" type="search" placeholder="제목, 저자 또는 ISBN" autocomplete="off" enterkeyhint="search">
       <button class="btn btn-pri !px-5" type="submit">검색</button>
     </form>
+    <div id="keyBanner" class="hidden mt-3 bg-white rounded-[16px] p-3.5">
+      <div class="text-[13px] font-bold">알라딘 TTB 키를 넣으면 한국 책이 정확하게 나와요</div>
+      <div class="text-[12px] text-mute mt-1 leading-relaxed">알라딘 → 마이페이지 → <b>TTB 서비스(Open API)</b>에서 무료로 받아요. 키가 없으면 구글 도서로 찾아요.</div>
+      <div class="flex gap-2 mt-2.5"><input id="aladinKeyQuick" class="inp !py-2.5 !text-[14px] flex-1" placeholder="ttb로 시작하는 키" autocomplete="off" spellcheck="false"><button class="btn btn-acc !py-2.5 !text-[14px]" id="aladinKeySave" type="button">저장</button></div>
+    </div>
+    <div id="searchMeta" class="text-[11.5px] text-mute mt-2.5 min-h-[14px]"></div>
   </div>
-  <div class="body !pt-0">
-    <div id="searchRes" class="space-y-2"></div>
-    <button id="searchManual" class="btn btn-sub w-full mt-3">찾는 책이 없어요 — 직접 입력</button>
+  <div class="body !pt-0" id="searchBody">
+    <div id="searchRes" class="space-y-2.5"></div>
+    <button id="searchMore" class="btn btn-sub w-full mt-3 hidden">검색 결과 더 보기</button>
+    <button id="searchManual" class="btn btn-sub w-full mt-2 !text-mute !font-semibold !text-[14px]">찾는 책이 없어요 — 직접 입력</button>
   </div>
 </div>
 
@@ -371,8 +392,13 @@
       <p class="text-[12px] text-mute mt-3 leading-relaxed">책 파일은 이 기기의 브라우저 안에만 저장돼요. 인터넷이 없어도 읽을 수 있지만, 브라우저 데이터를 지우면 함께 지워져요. 아이폰은 꼭 <b>공유 → 홈 화면에 추가</b>로 설치해서 쓰세요.</p>
     </div>
     <div class="bg-white rounded-[18px] p-4 mb-3">
+      <div class="font-bold text-[15px]">알라딘 TTB 키 <span class="text-mute font-semibold text-[12px]">(추천)</span></div>
+      <p class="text-[12.5px] text-mute mt-1 mb-3 leading-relaxed">인터넷 도서 검색에 알라딘 오픈 API를 써요. 알라딘 로그인 → 마이페이지 → TTB 서비스(Open API)에서 무료로 발급받아 붙여 넣어 주세요.</p>
+      <input id="aladinKey" class="inp" placeholder="ttb로 시작하는 키" autocomplete="off" spellcheck="false">
+    </div>
+    <div class="bg-white rounded-[18px] p-4 mb-3">
       <div class="font-bold text-[15px]">카카오 도서검색 키 <span class="text-mute font-semibold text-[12px]">(선택)</span></div>
-      <p class="text-[12.5px] text-mute mt-1 mb-3 leading-relaxed">기본은 구글 도서·오픈라이브러리로 찾아요. 한국 책이 잘 안 나오면 카카오 개발자센터의 REST API 키를 넣어 주세요.</p>
+      <p class="text-[12.5px] text-mute mt-1 mb-3 leading-relaxed">넣으면 카카오(다음) 책 검색 결과도 함께 보여 줘요. 카카오 개발자센터의 REST API 키예요.</p>
       <input id="kakaoKey" class="inp" placeholder="REST API 키" autocomplete="off" spellcheck="false">
     </div>
     <div class="bg-white rounded-[18px] p-4 mb-3">
@@ -406,7 +432,7 @@
 
 <script>
 'use strict';
-const APP_VER = 'v1';
+const APP_VER = 'v2';
 const $ = s => document.querySelector(s);
 const $$ = s => [...document.querySelectorAll(s)];
 const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
@@ -446,7 +472,7 @@ let books = [];
 const coverURL = new Map();
 const LS = { get(k, d) { try { return Object.assign({}, d, JSON.parse(localStorage.getItem(k) || '{}')); } catch { return { ...d }; } },
              set(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch {} } };
-const S = LS.get('darak.lib', { view: 'grid', sort: 'recent', filter: 'all', kakao: '' });
+const S = LS.get('darak.lib', { view: 'grid', sort: 'recent', filter: 'all', kakao: '', aladin: '' });
 const R = LS.get('darak.reader', { size: 100, font: 'ridi', lh: 1.8, theme: 'paper', margin: 1, spread: 1 });
 const saveS = () => LS.set('darak.lib', S);
 const saveR = () => LS.set('darak.reader', R);
@@ -785,6 +811,7 @@ $$('.sheet').forEach(sh => {   // 손잡이를 아래로 끌면 닫힘
 $('#fab').onclick = $('#btnAddTop').onclick = () => openSheet('shAdd');
 $('#optFiles').onclick = () => { closeSheets(); $('#fileEpub').click(); };
 $('#optSearch').onclick = () => openSearch('new');
+$('#btnWeb').onclick = () => openSearch('new');
 $('#optManual').onclick = () => openDetail(null, {});
 
 /* 헤더 버튼들 */
@@ -794,77 +821,182 @@ $('#btnFind').onclick = () => { const fb = $('#findBar'), on = fb.classList.togg
 $('#findInput').oninput = e => { findQ = e.target.value.trim(); renderLibrary(); };
 addEventListener('scroll', () => $('#top').classList.toggle('scrolled', scrollY > 4), { passive: true });
 
-/* ---------------- 도서 검색 (구글 도서 · 오픈라이브러리 · 카카오) ---------------- */
+/* ---------------- 인터넷 도서 검색 (알라딘 · 카카오 · 구글 도서 · 오픈라이브러리) ---------------- */
 let searchMode = { mode: 'new', id: null };
+const newSR = () => ({ q: '', isb: false, page: 1, items: [], seen: new Set(), loading: false, more: false, srcs: [] });
+let SR = newSR();
+const isIsbn = q => /^(97[89])?\d{9}[\dXx]$/.test(String(q).replace(/[-\s]/g, ''));
+const norm = s => String(s || '').toLowerCase().replace(/\([^)]*\)|[\s\-:·,.'"!?~]/g, '');
+const decodeEnt = s => { if (!s) return ''; const t = document.createElement('textarea'); t.innerHTML = String(s); return t.value.trim(); };
+const cleanAuthor = s => cleanTxt(String(s || '').replace(/\s*\((지은이|옮긴이|엮은이|그림|글|감수|편|편저|지음|역|저|원작|사진|기획|해설|일러스트)\)/g, '').replace(/\s*,\s*/g, ', ')).replace(/,\s*$/, '');
+const SEARCH_HINT = `<div class="text-center py-10 px-4"><div class="serif font-bold text-[17px]">어떤 책을 찾을까요?</div><p class="text-[13px] text-mute mt-2 leading-relaxed">제목·저자로 찾거나 책 뒷면 바코드 위<br>ISBN 13자리를 넣어 보세요.<br>파일이 없어도 표지·소개와 함께 책장에 꽂혀요.</p></div>`;
+
 function openSearch(mode, id, q) {
   searchMode = { mode, id };
-  $('#searchTitle').textContent = mode === 'fill' ? '책 정보 찾아 채우기' : '제목·ISBN으로 등록';
-  $('#searchQ').value = q || ''; $('#searchRes').innerHTML = `<p class="text-[13px] text-mute text-center py-6">책 제목, 저자, 또는 책 뒷면 바코드 위 ISBN 13자리를 넣어 주세요</p>`;
+  SR = newSR();
+  $('#searchTitle').textContent = mode === 'fill' ? '책 정보 찾아 채우기' : '인터넷 도서 검색';
+  $('#searchQ').value = q || '';
+  $('#searchRes').innerHTML = SEARCH_HINT; $('#searchMeta').textContent = '';
+  $('#searchMore').classList.add('hidden');
+  $('#keyBanner').classList.toggle('hidden', !!S.aladin); $('#aladinKeyQuick').value = '';
   openSheet('shSearch');
   setTimeout(() => { if (q) doSearch(); else $('#searchQ').focus(); }, 280);
 }
+$('#searchClose').onclick = closeSheets;
+$('#aladinKeySave').onclick = () => {
+  const k = $('#aladinKeyQuick').value.trim(); if (!k) { $('#aladinKeyQuick').focus(); return; }
+  S.aladin = k; saveS(); $('#keyBanner').classList.add('hidden'); toast('알라딘 검색을 켰어요');
+  if ($('#searchQ').value.trim()) doSearch();
+};
 $('#searchForm').onsubmit = e => { e.preventDefault(); doSearch(); };
+$('#searchMore').onclick = () => doSearch(true);
 $('#searchManual').onclick = () => { if (searchMode.mode === 'fill') openDetail(searchMode.id); else openDetail(null, { title: isIsbn($('#searchQ').value) ? '' : $('#searchQ').value.trim(), isbn: isIsbn($('#searchQ').value) ? $('#searchQ').value.replace(/\D/g, '') : '' }); };
-const isIsbn = q => /^(97[89])?\d{9}[\dXx]$/.test(String(q).replace(/[-\s]/g, ''));
-let lastResults = [];
-async function doSearch() {
-  const q = $('#searchQ').value.trim(); if (!q) return;
-  const isb = isIsbn(q), key = isb ? q.replace(/[-\s]/g, '') : q;
-  const box = $('#searchRes');
-  box.innerHTML = `<div class="flex items-center justify-center gap-2 text-[13.5px] text-mute py-8"><span class="ir work !p-0 !border-0"><span class="dot"></span></span>찾는 중…</div>`;
-  const jobs = [];
-  if (S.kakao) jobs.push(searchKakao(key, isb).catch(() => []));
-  jobs.push(searchGoogle(key, isb).catch(() => []), searchOpenLib(key, isb).catch(() => []));
-  const all = (await Promise.all(jobs)).flat();
-  const seen = new Set(); lastResults = [];
-  for (const r of all) { const k = r.isbn || (r.title + '|' + r.author).replace(/\s/g, ''); if (seen.has(k)) continue; seen.add(k); lastResults.push(r); }
-  lastResults = lastResults.slice(0, 24);
-  if (!lastResults.length) { box.innerHTML = `<p class="text-[13.5px] text-mute text-center py-8">검색 결과가 없어요.<br>${S.kakao ? '' : '한국 책은 설정에서 카카오 키를 넣으면 더 잘 찾아요.'}</p>`; return; }
-  box.innerHTML = lastResults.map((r, i) => `
-    <button class="res" data-ri="${i}">
-      ${r.thumb ? `<img src="${esc(r.thumb)}" alt="" loading="lazy" referrerpolicy="no-referrer">` : `<div class="noimg"></div>`}
-      <div class="min-w-0 flex-1">
-        <div class="font-bold text-[14.5px] leading-snug" style="display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden">${esc(r.title)}</div>
-        <div class="text-[12.5px] text-mute mt-1 truncate">${esc([r.author, r.publisher, r.year].filter(Boolean).join(' · '))}</div>
-        <div class="text-[11px] text-mute mt-1 opacity-80">${r.isbn ? 'ISBN ' + esc(r.isbn) + ' · ' : ''}${esc(r.src)}</div>
-      </div>
-    </button>`).join('');
+
+async function doSearch(more) {
+  if (SR.loading) return;
+  if (!more) {
+    const q = $('#searchQ').value.trim(); if (!q) { $('#searchQ').focus(); return; }
+    $('#searchQ').blur();
+    SR = newSR(); SR.q = q; SR.isb = isIsbn(q);
+    $('#searchRes').innerHTML = `<div class="flex items-center justify-center gap-2 text-[13.5px] text-mute py-10"><span class="ir work !p-0 !border-0"><span class="dot"></span></span>찾는 중…</div>`;
+    $('#searchMore').classList.add('hidden'); $('#searchBody').scrollTop = 0;
+  } else { SR.page++; $('#searchMore').textContent = '불러오는 중…'; }
+  SR.loading = true;
+  const key = SR.isb ? SR.q.replace(/[-\s]/g, '') : SR.q;
+  const srcs = [];
+  if (S.aladin) srcs.push(['알라딘', searchAladin]);
+  if (S.kakao) srcs.push(['카카오', searchKakao]);
+  srcs.push(['구글 도서', searchGoogle]);
+  if (!S.aladin || SR.isb) srcs.push(['오픈라이브러리', searchOpenLib]);
+  const res = await Promise.all(srcs.map(([n, f]) => f(key, SR.isb, SR.page).then(r => ({ n, r })).catch(err => ({ n, r: [], err }))));
+  for (const { r } of res) for (const it of r) {
+    if (!it.title) continue;
+    const k = it.isbn ? 'i' + it.isbn : norm(it.title) + '|' + norm(it.author);
+    const k2 = norm(it.title) + '|' + norm(it.author).slice(0, 6);
+    if (SR.seen.has(k) || SR.seen.has(k2)) continue;
+    SR.seen.add(k); SR.seen.add(k2); SR.items.push(it);
+  }
+  SR.more = !SR.isb && res.some(x => x.r.length >= 10) && SR.page < 10;
+  SR.srcs = res.filter(x => !x.err).map(x => x.n);
+  SR.loading = false;
+  const al = res.find(x => x.n === '알라딘' && x.err);
+  if (al && !more) toast(/key|ttb|키/i.test(String(al.err && al.err.message)) ? '알라딘 키를 다시 확인해 주세요' : '알라딘 검색이 잠시 안 돼요 — 다른 곳 결과를 보여 줄게요', 3200);
+  renderResults();
 }
-$('#searchRes').onclick = e => { const el = e.target.closest('[data-ri]'); if (el) pickResult(lastResults[+el.dataset.ri]); };
-async function searchGoogle(q, isb) {
-  const r = await fetch(`https://www.googleapis.com/books/v1/volumes?q=${isb ? 'isbn:' + q : encodeURIComponent(q)}&maxResults=15&printType=books`);
+function inLibrary(r) {
+  const t = norm(r.title), a = norm(r.author);
+  return books.find(b => (r.isbn && b.isbn && String(b.isbn) === String(r.isbn)) || (norm(b.title) === t && (!a || !b.author || norm(b.author) === a)));
+}
+function renderResults() {
+  const box = $('#searchRes'), fill = searchMode.mode === 'fill';
+  $('#searchMore').textContent = '검색 결과 더 보기';
+  $('#searchMore').classList.toggle('hidden', !SR.more);
+  $('#searchMeta').textContent = SR.items.length ? `‘${SR.q}’ 검색 결과 ${SR.items.length}건${SR.more ? '+' : ''} · ${SR.srcs.join(' · ')}` : '';
+  if (!SR.items.length) {
+    box.innerHTML = `<div class="text-center py-10"><div class="font-bold text-[15px]">검색 결과가 없어요</div><p class="text-[13px] text-mute mt-2 leading-relaxed">${S.aladin ? '띄어쓰기나 다른 낱말로 다시 찾아보세요.' : '한국 책은 위에 알라딘 키를 넣으면<br>훨씬 잘 찾아요.'}</p></div>`;
+    return;
+  }
+  box.innerHTML = SR.items.map((r, i) => {
+    const have = !fill && inLibrary(r);
+    const btn = fill ? `<button class="add-btn fill" data-add="${i}">이 정보로 채우기</button>`
+      : have ? `<button class="add-btn have" data-add="${i}"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>서재에 있음</button>`
+      : `<button class="add-btn" data-add="${i}"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>서재에 추가</button>`;
+    return `<div class="res" data-ri="${i}" role="button" tabindex="0">
+      ${r.thumb ? `<img src="${esc(r.thumb)}" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.outerHTML='<div class=noimg></div>'">` : `<div class="noimg"></div>`}
+      <div class="min-w-0 flex-1">
+        <div class="font-bold text-[15px] leading-snug" style="display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;word-break:keep-all">${esc(r.title)}</div>
+        <div class="text-[12.5px] text-mute mt-1 truncate">${esc([r.author, r.publisher, r.year].filter(Boolean).join(' · '))}</div>
+        ${r.description ? `<div class="desc">${esc(r.description)}</div>` : ''}
+        <div class="flex items-center gap-2 mt-2.5">
+          <span class="src ${r.src === '알라딘' ? 'al' : ''}">${esc(r.src)}</span>
+          ${r.cat ? `<span class="text-[11px] text-mute truncate">${esc(r.cat)}</span>` : ''}
+          <span class="flex-1"></span>${btn}
+        </div>
+      </div>
+    </div>`;
+  }).join('');
+}
+$('#searchRes').onclick = e => {
+  const ab = e.target.closest('[data-add]');
+  if (ab) { e.stopPropagation(); const r = SR.items[+ab.dataset.add]; if (searchMode.mode === 'fill') pickResult(r); else { const ex = inLibrary(r); ex ? openDetail(ex.id) : addResult(r); } return; }
+  const el = e.target.closest('[data-ri]'); if (el) pickResult(SR.items[+el.dataset.ri]);
+};
+
+/* 검색 결과를 파일 없이 바로 책장에 꽂기 (표지는 받아 둘 수 있으면 기기에 저장) */
+async function addResult(r) {
+  if (!r) return;
+  const b = { id: uid(), hasFile: false, title: r.title, author: r.author, publisher: r.publisher || '', isbn: r.isbn || '', description: r.description || '',
+    pubdate: r.pubdate || (r.year ? String(r.year) : ''), category: r.cat || '', link: r.link || '', source: r.src,
+    coverUrl: r.big || r.thumb || '', added: Date.now(), lastRead: 0, progress: 0, cfi: null, bookmarks: [] };
+  books.push(b);
+  try { await DB.put('books', b); } catch (e) { books.pop(); toast('저장하지 못했어요'); return; }
+  renderLibrary(); renderResults();
+  toast(`‘${b.title.length > 18 ? b.title.slice(0, 18) + '…' : b.title}’ 서재에 꽂았어요`);
+  if (b.coverUrl) {
+    const im = new Image(); im.referrerPolicy = 'no-referrer'; im.src = b.coverUrl;   // 서비스워커가 표지 그림을 저장해 두게 미리 불러옴
+    fetchBlob(b.coverUrl).then(async bl => { if (bl) { b.cover = bl; setCover(b); await DB.put('books', b).catch(() => {}); renderLibrary(); } });
+  }
+}
+
+function jsonp(url, ms = 12000) {
+  return new Promise((res, rej) => {
+    const cb = '__darak' + uid().replace(/\W/g, ''), sc = document.createElement('script');
+    const done = () => { clearTimeout(t); try { delete window[cb]; } catch { window[cb] = undefined; } sc.remove(); };
+    const t = setTimeout(() => { done(); rej(new Error('timeout')); }, ms);
+    window[cb] = d => { done(); res(d); };
+    sc.onerror = () => { done(); rej(new Error('network')); };
+    sc.src = url + (url.includes('?') ? '&' : '?') + 'callback=' + cb;
+    document.head.appendChild(sc);
+  });
+}
+async function searchAladin(q, isb, page) {
+  const base = 'https://www.aladin.co.kr/ttb/api/', k = encodeURIComponent(S.aladin);
+  if (isb && page > 1) return [];
+  const url = isb
+    ? `${base}ItemLookUp.aspx?ttbkey=${k}&itemIdType=${q.length === 13 ? 'ISBN13' : 'ISBN'}&ItemId=${q}&output=js&Version=20131101&Cover=Big`
+    : `${base}ItemSearch.aspx?ttbkey=${k}&Query=${encodeURIComponent(q)}&QueryType=Keyword&MaxResults=20&start=${page}&SearchTarget=Book&output=js&Version=20131101&Cover=Big`;
+  const d = await jsonp(url);
+  if (!d || d.errorCode) throw new Error((d && d.errorMessage) || 'aladin');
+  return (d.item || []).map(it => ({ src: '알라딘', title: decodeEnt(it.title), author: cleanAuthor(decodeEnt(it.author)), publisher: decodeEnt(it.publisher), year: (it.pubDate || '').slice(0, 4), pubdate: it.pubDate || '',
+    isbn: it.isbn13 || it.isbn || '', description: stripHtml(decodeEnt(it.description)), thumb: it.cover || '', big: it.cover || '', link: it.link || '', cat: (it.categoryName || '').split('>').slice(-1)[0] }));
+}
+async function searchGoogle(q, isb, page) {
+  if (isb && page > 1) return [];
+  const r = await fetch(`https://www.googleapis.com/books/v1/volumes?q=${isb ? 'isbn:' + q : encodeURIComponent(q)}&maxResults=15&startIndex=${(page - 1) * 15}&printType=books`);
   const j = await r.json();
   return (j.items || []).map(it => { const v = it.volumeInfo || {}; const ids = v.industryIdentifiers || [];
     const isbn = (ids.find(x => x.type === 'ISBN_13') || ids.find(x => x.type === 'ISBN_10') || {}).identifier || '';
     let th = (v.imageLinks && (v.imageLinks.thumbnail || v.imageLinks.smallThumbnail)) || '';
     th = th.replace(/^http:/, 'https:').replace('&edge=curl', '');
-    return { src: '구글 도서', title: [v.title, v.subtitle].filter(Boolean).join(': '), author: (v.authors || []).join(', '), publisher: v.publisher || '', year: (v.publishedDate || '').slice(0, 4), isbn, description: v.description || '', thumb: th, big: th.replace('zoom=1', 'zoom=2') };
+    return { src: '구글 도서', title: [v.title, v.subtitle].filter(Boolean).join(': '), author: (v.authors || []).join(', '), publisher: v.publisher || '', year: (v.publishedDate || '').slice(0, 4), pubdate: v.publishedDate || '',
+      isbn, description: stripHtml(v.description || ''), thumb: th, big: th.replace('zoom=1', 'zoom=2'), link: v.infoLink || '', cat: (v.categories || [])[0] || '' };
   });
 }
-async function searchOpenLib(q, isb) {
-  const r = await fetch(`https://openlibrary.org/search.json?${isb ? 'isbn=' + q : 'q=' + encodeURIComponent(q)}&limit=10&fields=title,author_name,publisher,first_publish_year,isbn,cover_i`);
+async function searchOpenLib(q, isb, page) {
+  if (isb && page > 1) return [];
+  const r = await fetch(`https://openlibrary.org/search.json?${isb ? 'isbn=' + q : 'q=' + encodeURIComponent(q)}&limit=10&page=${page}&fields=title,author_name,publisher,first_publish_year,isbn,cover_i`);
   const j = await r.json();
   return (j.docs || []).map(d => ({ src: '오픈라이브러리', title: d.title || '', author: (d.author_name || []).join(', '), publisher: (d.publisher || [])[0] || '', year: d.first_publish_year || '',
     isbn: isb ? q : ((d.isbn || []).find(x => x.length === 13) || (d.isbn || [])[0] || ''), description: '',
     thumb: d.cover_i ? `https://covers.openlibrary.org/b/id/${d.cover_i}-M.jpg` : '', big: d.cover_i ? `https://covers.openlibrary.org/b/id/${d.cover_i}-L.jpg` : '' }));
 }
-async function searchKakao(q, isb) {
-  const r = await fetch(`https://dapi.kakao.com/v3/search/book?query=${encodeURIComponent(q)}&size=15${isb ? '&target=isbn' : ''}`, { headers: { Authorization: 'KakaoAK ' + S.kakao } });
+async function searchKakao(q, isb, page) {
+  if (isb && page > 1) return [];
+  const r = await fetch(`https://dapi.kakao.com/v3/search/book?query=${encodeURIComponent(q)}&size=15&page=${page}${isb ? '&target=isbn' : ''}`, { headers: { Authorization: 'KakaoAK ' + S.kakao } });
   if (!r.ok) throw new Error('kakao ' + r.status);
   const j = await r.json();
   return (j.documents || []).map(d => { const parts = (d.isbn || '').split(' ').filter(Boolean);
-    return { src: '카카오', title: d.title || '', author: (d.authors || []).join(', '), publisher: d.publisher || '', year: (d.datetime || '').slice(0, 4),
-      isbn: parts.find(x => x.length === 13) || parts[0] || '', description: d.contents || '', thumb: d.thumbnail || '', big: d.thumbnail || '' }; });
+    return { src: '카카오', title: d.title || '', author: (d.authors || []).join(', '), publisher: d.publisher || '', year: (d.datetime || '').slice(0, 4), pubdate: (d.datetime || '').slice(0, 10),
+      isbn: parts.find(x => x.length === 13) || parts[0] || '', description: d.contents || '', thumb: d.thumbnail || '', big: d.thumbnail || '', link: d.url || '' }; });
 }
 async function fetchBlob(url) {
   try { const r = await withTimeout(fetch(url, { mode: 'cors' }), 9000); if (!r.ok) return null; const b = await r.blob(); return /^image\//.test(b.type) && b.size > 200 ? await shrinkImage(b) : null; } catch { return null; }
 }
 function pickResult(r) {
   if (!r) return;
-  if (searchMode.mode === 'fill') {
-    const b = books.find(x => x.id === searchMode.id); if (!b) return;
-    openDetail(b.id, { title: r.title, author: r.author, publisher: r.publisher, isbn: r.isbn, description: r.description, _cover: r.big || r.thumb });
-  } else openDetail(null, { title: r.title, author: r.author, publisher: r.publisher, isbn: r.isbn, description: r.description, _cover: r.big || r.thumb });
+  const pf = { title: r.title, author: r.author, publisher: r.publisher, isbn: r.isbn, description: r.description, _cover: r.big || r.thumb };
+  if (searchMode.mode === 'fill') { const b = books.find(x => x.id === searchMode.id); if (!b) return; openDetail(b.id, pf); }
+  else { const ex = inLibrary(r); ex ? openDetail(ex.id) : openDetail(null, pf); }
 }
 
 /* ---------------- 책 정보 창 (보기·편집·새로 등록) ---------------- */
@@ -987,7 +1119,7 @@ $('#fileAttach').onchange = async e => {
 
 /* ---------------- 설정 ---------------- */
 $('#btnSet').onclick = async () => {
-  $('#kakaoKey').value = S.kakao || '';
+  $('#kakaoKey').value = S.kakao || ''; $('#aladinKey').value = S.aladin || '';
   openSheet('shSet');
   try {
     const est = await navigator.storage.estimate();
@@ -996,6 +1128,7 @@ $('#btnSet').onclick = async () => {
     $('#storeBar').style.width = q ? Math.max(1, used / q * 100) + '%' : '0';
   } catch { $('#storeInfo').textContent = `책 ${books.length}권`; }
 };
+$('#aladinKey').onchange = e => { S.aladin = e.target.value.trim(); saveS(); toast(S.aladin ? '알라딘 검색을 켰어요' : '알라딘 검색을 껐어요'); };
 $('#kakaoKey').onchange = e => { S.kakao = e.target.value.trim(); saveS(); toast(S.kakao ? '카카오 검색을 켰어요' : '카카오 검색을 껐어요'); };
 $('#btnExport').onclick = () => {
   const rows = [['제목', '저자', '출판사', 'ISBN', '진척도(%)', '상태', '추가한 날', '마지막으로 읽은 날']];

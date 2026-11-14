@@ -1,6 +1,6 @@
 /* 다락서재 서비스워커 — 화면·라이브러리·글꼴을 저장해 두어 인터넷 없이도 서재와 책을 열 수 있게 함
    (책 파일 자체는 IndexedDB에 저장) */
-const CACHE = 'darak-v1';
+const CACHE = 'darak-v2';
 const CORE = ['./', './index.html', './manifest.webmanifest', './icon-180.png', './icon-192.png', './icon-512.png'];
 const CDN = [
   'https://cdn.tailwindcss.com',
@@ -11,7 +11,7 @@ const CDN = [
   'https://fonts.googleapis.com/css2?family=Gowun+Batang:wght@400;700&display=swap',
   'https://fastly.jsdelivr.net/gh/projectnoonnu/noonfonts_twelve@1.0/RIDIBatang.woff'
 ];
-const NO_CACHE = /googleapis\.com\/books|openlibrary\.org\/search|dapi\.kakao\.com/;   // 도서 검색 결과는 저장 안 함
+const NO_CACHE = /aladin\.co\.kr\/ttb|googleapis\.com\/books|openlibrary\.org\/search|dapi\.kakao\.com/;   // 도서 검색 결과는 저장 안 함
 
 self.addEventListener('install', e => {
   e.waitUntil(caches.open(CACHE).then(async c => {
