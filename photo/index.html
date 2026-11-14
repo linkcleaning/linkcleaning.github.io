@@ -508,23 +508,25 @@ details.tips[open] .chev{transform:rotate(90deg)}
       </div>
 
       <div class="card" id="diagCard">
-        <div class="ct-row"><span class="ct">사진 진단</span><span class="lbl" id="diagNote">스캔 직후 자동 분석</span></div>
+        <div class="ct-row"><span class="ct" style="display:flex;align-items:center;gap:6px"><i class="dot ok"></i>자동 복원 완료</span><button class="mini-btn hidden" id="btnRecrop"><i data-lucide="crop"></i>자르기 다시</button></div>
         <div class="dgrid" id="diagGrid"></div>
         <div class="rec-line" id="diagRec"></div>
-        <button class="btn acc block" id="btnAutoFix"><i data-lucide="wand-sparkles"></i>추천대로 한 번에 복원</button>
+        <button class="btn acc block hidden" id="btnAutoFix"><i data-lucide="wand-sparkles"></i>자동 복원으로 되돌리기</button>
       </div>
-
-      <div class="sec"><span>원클릭 복원</span><button class="mini-btn" id="btnUndo" disabled><i data-lucide="undo-2"></i>되돌리기</button></div>
-      <div class="card" id="presetList"></div>
-
-      <div class="sec"><span>세밀하게 조절</span><button class="mini-btn" id="btnAdjReset"><i data-lucide="rotate-ccw"></i>초기화</button></div>
-      <div class="card stack" id="sliders" style="gap:4px"></div>
-
-      <div class="grid2 mt8">
+      <div class="grid2">
         <button class="btn sec" id="btnSaveArchive"><i data-lucide="archive"></i>보관함에 저장</button>
         <button class="btn sec" id="btnDownloadImg"><i data-lucide="download"></i>사진 저장</button>
       </div>
       <button class="btn pri block" data-go="motion"><i data-lucide="clapperboard"></i>움직이는 사진 만들기</button>
+      <details class="card tips mt8" id="manualBox">
+        <summary><span style="display:flex;align-items:center;gap:8px"><i data-lucide="sliders-horizontal" style="width:20px;height:20px;color:var(--brand)"></i>직접 고르기 · 밝기 조절 <span class="lbl">(안 해도 돼요)</span></span><i data-lucide="chevron-right" class="chev"></i></summary>
+
+      <div class="sec" style="margin-top:12px"><span>복원 항목</span><button class="mini-btn" id="btnUndo" disabled><i data-lucide="undo-2"></i>되돌리기</button></div>
+      <div id="presetList" style="padding:4px 0"></div>
+
+      <div class="sec"><span>세밀하게 조절</span><button class="mini-btn" id="btnAdjReset"><i data-lucide="rotate-ccw"></i>초기화</button></div>
+      <div class="card stack" id="sliders" style="gap:4px;padding:8px 0 0"></div>
+      </details>
     </div>
   </section>
 
@@ -541,6 +543,14 @@ details.tips[open] .chev{transform:rotate(90deg)}
         <p class="hint"><b style="color:var(--ink)">얼굴</b>을 톡 누르면 그곳을 중심으로 움직여요</p>
       </div>
 
+      <div class="card" id="faceCard">
+        <div class="opt" style="border:0;padding:0">
+          <span class="ri" id="faceIcon"><i data-lucide="scan-face"></i></span>
+          <div style="flex:1;min-width:0"><div class="ot" id="faceT">얼굴 찾는 중</div><div class="od" id="faceD">처음 한 번은 10초쯤 걸려요</div></div>
+          <button class="sw on" id="swFace" aria-label="얼굴 움직임"></button>
+        </div>
+        <div class="chips" id="ampChips" style="margin-top:10px"><button class="chip" data-a="0.7">은은하게</button><button class="chip on" data-a="1">자연스럽게</button><button class="chip" data-a="1.45">생생하게</button></div>
+      </div>
       <div class="sec"><span>움직임 스타일</span></div>
       <div class="grid2" id="styleCards">
         <button class="stile on" data-s="live"><span class="ri"><i data-lucide="smile"></i></span><b>살아있는 시선과 미소</b><span class="d">숨 쉬듯 은은하게 살아나는 인물</span><span class="rtag ai aitag hidden" id="liveAi">AI</span></button>
@@ -559,7 +569,7 @@ details.tips[open] .chev{transform:rotate(90deg)}
         <div class="opt"><div style="flex:1"><div class="ot">손글씨 자막</div><div class="od">영상 끝에 제목과 연도가 떠올라요</div></div><button class="sw on" id="swCap" aria-label="자막"></button></div>
         <div id="capBox" style="padding:0 0 12px"><input class="field pen" id="capText" maxlength="30" placeholder="예) 1987년 여름, 제주 한림"></div>
         <div class="opt"><div style="flex:1"><div class="ot">잔잔한 오르골 음악</div><div class="od">영상 파일에 음악이 함께 들어가요</div></div><button class="sw on" id="swMusic" aria-label="음악"></button></div>
-        <div class="opt"><div style="flex:1"><div class="ot">빛망울 효과</div><div class="od">금빛 보케가 천천히 떠올라요</div></div><button class="sw on" id="swBokeh" aria-label="빛망울"></button></div>
+        <div class="opt"><div style="flex:1"><div class="ot">빛망울 효과</div><div class="od">금빛 보케가 천천히 떠올라요</div></div><button class="sw" id="swBokeh" aria-label="빛망울"></button></div>
         <div class="opt"><div style="flex:1"><div class="ot">필름 입자</div><div class="od">오래된 필름 같은 자글자글한 질감</div></div><button class="sw on" id="swGrain" aria-label="필름 입자"></button></div>
       </div>
       <button class="btn pri block" id="btnExport"><i data-lucide="video"></i><span id="exportLbl">4초 추억 영상 만들기</span></button>
@@ -716,7 +726,7 @@ details.tips[open] .chev{transform:rotate(90deg)}
     <div class="sheet-h"><h2 id="batchTitle"></h2><button class="icon-btn" data-close aria-label="닫기"><i data-lucide="x"></i></button></div>
     <p class="rd" style="margin:-6px 4px 10px">사진을 누르면 복원 스튜디오로 가요</p>
     <div class="thumbs" id="batchThumbs"></div>
-    <button class="btn pri block mt8" id="batchSaveAll"><i data-lucide="archive"></i>모두 보관함에 저장</button>
+    <button class="btn pri block mt8" id="batchSaveAll"><i data-lucide="archive"></i>모두 자동 복원해서 보관</button>
     <button class="btn ghost block mt8" id="batchClear">목록 비우기</button>
   </div>
 </div>
@@ -782,7 +792,7 @@ details.tips[open] .chev{transform:rotate(90deg)}
 
 <script>
 'use strict';
-const VERSION = 'v3';
+const VERSION = 'v4';
 /* ================= 도구 ================= */
 const $ = s => document.querySelector(s);
 const $$ = s => [...document.querySelectorAll(s)];
@@ -862,13 +872,13 @@ function rangeFill(inp) {
 
 /* ================= 상태 ================= */
 const ADJ_DEFAULT = { sharp: 0, temp: 0, sat: 0, contrast: 0, bright: 0 };
-const P_DEFAULT = { dust: 0, yellow: 0, fade: 0, hd: 0, color: 0 };
-const ORDER = ['dust', 'yellow', 'fade', 'hd', 'color'];
+const P_DEFAULT = { dust: 0, yellow: 0, fade: 0, tone: 0, hd: 0, color: 0 };
+const ORDER = ['dust', 'yellow', 'fade', 'tone', 'hd', 'color'];
 const S = {
   src: null, quads: [], sel: 0, mode: 'single', warped: null, fine: 0, ratio: 'orig', glare: true, autoC: true,
   scanned: null, presetCv: null, final: null, cache: new Map(), aiUsed: false,
   p: { ...P_DEFAULT }, tone: 'natural', adj: { ...ADJ_DEFAULT }, hist: [], diag: null, currentId: null,
-  focus: { x: .5, y: .38 }, motion: 'live', vratio: 'orig', dur: 4, bokeh: true, grain: true, music: true, cap: true, capText: '',
+  focus: { x: .5, y: .38 }, motion: 'live', vratio: 'orig', dur: 4, bokeh: false, grain: true, faceAnim: true, faceAmp: 1, faces: null, facesFor: null, facePromise: null, autoP: null, autoTone: 'natural', lastSrc: null, lastQuad: null, music: true, cap: true, capText: '',
   video: null, videoType: '', tab: 'scan', cmpMode: 'slide', batch: [], af: { q: '', dec: 'all', sort: 'recent' }
 };
 
@@ -948,9 +958,9 @@ function fxAutoContrast(c) { const id = getData(c); IP.levels(id.data, .004, fal
 // 먼지·긁힘 제거 (마이헤리티지 Photo Repair 참고: 약/보통/강)
 function fxDust(src, k) {
   const c = copyCanvas(src), id = getData(c), d = id.data, w = c.width, h = c.height;
-  const th = [0, 30, 21, 14][k];
+  const th = [0, 30, 24, 18][k];
   for (let pass = 0; pass < (k === 3 ? 2 : 1); pass++) {
-    const L = IP.lumArr(d), M = IP.pseudoMedian(L, w, h, [0, 2, 3, 4][k]);
+    const L = IP.lumArr(d), M = IP.pseudoMedian(L, w, h, [0, 2, 3, 3][k]);
     for (let i = 0, p = 0; i < L.length; i++, p += 4) {
       const diff = M[i] - L[i], a = diff < 0 ? -diff : diff;
       if (a > th) { const f = smooth(th, th * 1.7, a); d[p] += diff * f; d[p + 1] += diff * f; d[p + 2] += diff * f; }
@@ -987,6 +997,42 @@ function fxFade(src, k) {
     d[i] = sc(r); d[i + 1] = sc(g); d[i + 2] = sc(b);
   }
   ctx2(c).putImageData(id, 0, 0); return c;
+}
+// 자동 밝기·색 맞춤: 노출(중간 밝기) · 화이트밸런스(컬러 사진) · 은은한 생기
+function fxTone(src, k, kind) {
+  const c = copyCanvas(src), id = getData(c), d = id.data, n = d.length / 4, hist = new Uint32Array(256);
+  for (let p = 0; p < d.length; p += 4) hist[IP.lum(d[p], d[p + 1], d[p + 2]) | 0]++;
+  let acc = 0, med = 128; for (let i = 0; i < 256; i++) { acc += hist[i]; if (acc > n / 2) { med = Math.max(8, i); break; } }
+  const gam = clamp(Math.log(.47) / Math.log(med / 255), .72, 1.38), amt = [0, .7, .9, 1][k];
+  const lut = new Float32Array(256); for (let i = 0; i < 256; i++) lut[i] = 255 * Math.pow(i / 255, lerp(1, gam, amt));
+  let gr = 1, gg = 1, gb = 1;
+  if (kind === '컬러') {
+    let r = 0, g = 0, b = 0, m = 0;
+    for (let p = 0; p < d.length; p += 16) { const L = IP.lum(d[p], d[p + 1], d[p + 2]); if (L > 40 && L < 220) { r += d[p]; g += d[p + 1]; b += d[p + 2]; m++; } }
+    if (m) { r /= m; g /= m; b /= m; const a = (r + g + b) / 3, w = .45 * amt; gr = clamp(lerp(1, a / r, w), .85, 1.18); gg = clamp(lerp(1, a / g, w), .85, 1.18); gb = clamp(lerp(1, a / b, w), .85, 1.18); }
+  }
+  const vib = kind === '컬러' ? .14 * amt : 0;
+  for (let p = 0; p < d.length; p += 4) {
+    let r = lut[d[p]] * gr, g = lut[d[p + 1]] * gg, b = lut[d[p + 2]] * gb;
+    if (vib) { const mx = Math.max(r, g, b), mn = Math.min(r, g, b), sat = mx ? (mx - mn) / mx : 0, L = IP.lum(r, g, b), f = 1 + vib * (1 - sat); r = L + (r - L) * f; g = L + (g - L) * f; b = L + (b - L) * f; }
+    d[p] = r; d[p + 1] = g; d[p + 2] = b;
+  }
+  IP.levels(d, .002, false, 1.35);
+  ctx2(c).putImageData(id, 0, 0); return c;
+}
+function autoRecipe(d) {
+  const p = { ...P_DEFAULT };
+  for (const k of d.rec) {
+    p[k] = k === 'dust' ? (d.dust > 250 ? 2 : 1) : k === 'yellow' ? (d.yellow > 55 ? 3 : 2) : k === 'fade' ? (d.fade > 40 ? 3 : 2) : k === 'hd' ? (d.sharp < 30 ? 3 : 2) : 2;
+  }
+  p.tone = 2;
+  return { p, tone: d.kind === '세피아' ? 'warm' : 'natural' };
+}
+const LOCAL_FX = { dust: fxDust, yellow: fxYellow, fade: fxFade, tone: (x, l, d) => fxTone(x, l, d && d.kind), hd: fxHD, color: (x, l, d, tone) => fxColor(x, l, tone) };
+function localRestore(c) {
+  const d = diagnose(c), r = autoRecipe(d); let x = c;
+  for (const k of ORDER) if (r.p[k]) x = LOCAL_FX[k](x, r.p[k], d, r.tone);
+  return x;
 }
 function fxHD(src, k) {
   const c = copyCanvas(src), id = getData(c), d = id.data, w = c.width, h = c.height;
@@ -1049,25 +1095,31 @@ function fxAdjust(src, a) {
 // 사진 진단
 function diagnose(c) {
   const s = fitCanvas(c, 400), d = getData(s).data, w = s.width, h = s.height, n = w * h;
-  let sat = 0, rb = 0, yel = 0; const hist = new Uint32Array(256);
+  let sat = 0, rb = 0, yel = 0, cm = 0, a1 = 0, a2 = 0, b1 = 0, b2 = 0, l1 = 0, l2 = 0, la = 0, lb = 0; const hist = new Uint32Array(256);
   for (let p = 0; p < d.length; p += 4) {
-    const r = d[p], g = d[p + 1], b = d[p + 2], mx = Math.max(r, g, b), mn = Math.min(r, g, b);
-    sat += mx ? (mx - mn) / mx : 0; rb += r - b; yel += (r + g) / 2 - b; hist[IP.lum(r, g, b) | 0]++;
+    const r = d[p], g = d[p + 1], b = d[p + 2], mx = Math.max(r, g, b), mn = Math.min(r, g, b), Lp = IP.lum(r, g, b);
+    sat += mx ? (mx - mn) / mx : 0; rb += r - b; yel += (r + g) / 2 - b; hist[Lp | 0]++;
+    if (Lp > 35 && Lp < 225) { const x1 = r - b, x2 = g - b; a1 += x1; a2 += x1 * x1; b1 += x2; b2 += x2 * x2; l1 += Lp; l2 += Lp * Lp; la += x1 * Lp; lb += x2 * Lp; cm++; }
   }
-  sat /= n; rb /= n; yel /= n;
+  sat /= n; rb /= n; yel /= n; cm = cm || 1;
+  // 밝기로 설명되지 않는 색 차이(잔차)가 작으면 '색이 입혀진 흑백'(세피아·누렇게 뜬 흑백)
+  const vL = Math.max(1, l2 / cm - (l1 / cm) ** 2), cA = la / cm - (a1 / cm) * (l1 / cm), cB = lb / cm - (b1 / cm) * (l1 / cm);
+  const sdRB = Math.sqrt(Math.max(0, a2 / cm - (a1 / cm) ** 2 - cA * cA / vL)), sdGB = Math.sqrt(Math.max(0, b2 / cm - (b1 / cm) ** 2 - cB * cB / vL));
   let p1 = 0, p99 = 255, acc = 0;
   for (let i = 0; i < 256; i++) { acc += hist[i]; if (acc > n * .01) { p1 = i; break; } }
   acc = 0; for (let i = 255; i >= 0; i--) { acc += hist[i]; if (acc > n * .01) { p99 = i; break; } }
-  const kind = sat < .1 ? (rb > 9 ? '세피아' : '흑백') : '컬러';
+  const toned = sat < .1 || (sat < .8 && sdRB < 12 && sdGB < 9);
+  const kind = toned ? (rb > 9 ? '세피아' : '흑백') : '컬러';
   const fade = Math.round(clamp((235 - (p99 - p1)) / 1.35, 0, 100));
   const yellow = Math.round(clamp((yel - 4) / 40 * 100, 0, 100));
   const L = IP.lumArr(d); let s1 = 0, s2 = 0, cnt = 0;
   for (let y = 1; y < h - 1; y++) for (let x = 1; x < w - 1; x++) { const i = y * w + x, v = 4 * L[i] - L[i - 1] - L[i + 1] - L[i - w] - L[i + w]; s1 += v; s2 += v * v; cnt++; }
   const sharp = Math.round(clamp(Math.sqrt(Math.max(0, s2 / cnt - (s1 / cnt) ** 2)) * 4.2, 0, 100));
-  const M = IP.pseudoMedian(L, w, h); let dust = 0;
-  for (let i = 0; i < n; i++) if (Math.abs(L[i] - M[i]) > 32) dust++;
+  const M = IP.pseudoMedian(L, w, h), O = new Uint8Array(n); let dust = 0;
+  for (let i = 0; i < n; i++) O[i] = Math.abs(L[i] - M[i]) > 40 ? 1 : 0;
+  for (let y = 1; y < h - 1; y++) for (let x = 1; x < w - 1; x++) { const i = y * w + x; if (O[i] && O[i - 1] + O[i + 1] + O[i - w] + O[i + w] + O[i - w - 1] + O[i - w + 1] + O[i + w - 1] + O[i + w + 1] <= 1) dust++; }
   const rec = [];
-  if (dust > 70) rec.push('dust');
+  if (dust > 60) rec.push('dust');
   if (kind === '컬러') { if (yellow > 30) rec.push('yellow'); if (fade > 22) rec.push('fade'); }
   if (sharp < 50 || fade > 32) rec.push('hd');
   if (kind !== '컬러') rec.push('color');
@@ -1466,13 +1518,20 @@ function applyPvTransform() {
   let cw = w, ch = h; if (w / h > t) cw = h * t; else ch = w / t;
   cr.classList.remove('hidden'); Object.assign(cr.style, { left: (w - cw) / 2 + 'px', top: (h - ch) / 2 + 'px', width: cw + 'px', height: ch + 'px' });
 }
+function autoFinishFrom(warped) {
+  const c = fitCanvas(warped, 1600); fxGlare(c); fxAutoContrast(c);
+  S.lastSrc = S.src; S.lastQuad = S.quads && S.quads[0] ? S.quads[0].map(p => ({ ...p })) : null;
+  $('#editor').classList.add('hidden'); $('#scanHome').classList.remove('hidden'); S.src = null; S.warped = null;
+  loadIntoStudio(c); go('restore');
+}
 async function finishScan() {
   loading(true, '스캔 마무리 중', '기울기 · 반사 · 대비 보정'); await nextPaint();
   try {
     let c = rotateFine(S.warped, S.fine); c = cropRatio(c, S.ratio); c = fitCanvas(c, 1600);
     if (S.glare) fxGlare(c); if (S.autoC) fxAutoContrast(c);
+    S.lastSrc = S.src; S.lastQuad = S.quads && S.quads[0] ? S.quads[0].map(p => ({ ...p })) : null;
     $('#editor').classList.add('hidden'); $('#scanHome').classList.remove('hidden'); S.src = null; S.warped = null;
-    loadIntoStudio(c); go('restore'); toast('스캔 완료. 진단 결과를 확인해 보세요');
+    loadIntoStudio(c); go('restore');
   } catch (e) { console.error(e); toast('스캔 중 문제가 생겼어요. 다시 시도해 주세요'); }
   finally { loading(false); }
 }
@@ -1506,9 +1565,8 @@ async function loadFile(file, mode) {
     } else {
       const r = detectQuad(S.src, 384); S.quads = [r.q];
       if (r.ok || r.full) {
-        S.warped = r.full ? copyCanvas(S.src) : warp(S.src, r.q); S.fine = 0; S.ratio = 'orig';
-        openEditor(); syncStep2UI(); setStep(2);
-        toast(r.full ? '이미 잘린 사진이라 그대로 썼어요' : '테두리를 찾아 반듯하게 폈어요');
+        S.fine = 0; S.ratio = 'orig';
+        autoFinishFrom(r.full ? copyCanvas(S.src) : warp(S.src, r.q));
       } else { openEditor(); toast('테두리를 못 찾았어요. 손가락으로 맞춰 주세요'); }
     }
   } catch (e) { console.error(e); toast('사진을 열 수 없어요. 다른 사진으로 해 주세요'); }
@@ -1632,8 +1690,8 @@ async function camShot() {
       CAM.count++; CAM.needChange = true; updateCam(); toast(`${CAM.count}장째 찍었어요`);
     } else {
       stopCam();
-      S.src = src; S.mode = 'single'; S.quads = [q]; S.sel = 0; S.warped = warp(src, q); S.fine = 0; S.ratio = 'orig';
-      openEditor(); syncStep2UI(); setStep(2); toast('반듯하게 폈어요. 어긋났으면 모서리 고치기');
+      S.src = src; S.mode = 'single'; S.quads = [q]; S.sel = 0; S.fine = 0; S.ratio = 'orig';
+      autoFinishFrom(warp(src, q));
     }
   } catch (e) { console.error(e); toast('찍는 중 문제가 생겼어요. 다시 해 주세요'); }
   finally { CAM.busy = false; }
@@ -1646,8 +1704,8 @@ async function camFinish() {
 async function startFromComposite(shots) {
   try {
     const c = await composeGlare(shots);
-    S.src = c; S.mode = 'single'; S.quads = [insetCorners(c, 0)]; S.sel = 0; S.warped = c; S.fine = 0; S.ratio = 'orig';
-    openEditor(); syncStep2UI(); setStep(2); toast(`${shots.length}장을 합쳐 반사를 지웠어요`);
+    S.src = c; S.mode = 'single'; S.quads = [insetCorners(c, 0)]; S.sel = 0; S.fine = 0; S.ratio = 'orig';
+    loading(false); autoFinishFrom(c);
   } catch (e) { console.error(e); toast('합치는 중 문제가 생겼어요. 다시 찍어 주세요'); }
   finally { loading(false); }
 }
@@ -1662,6 +1720,7 @@ function updateGlareSheet() {
 
 /* ================= 탭2: 복원 스튜디오 ================= */
 const PRESETS = [
+  { k: 'tone', name: '자동 밝기 · 색 맞춤', desc: '어둡거나 칙칙한 사진을 알맞은 밝기와 색으로', icon: 'sun' },
   { k: 'hd', name: '고화질 디지털 복원', desc: '노이즈를 정리하고 윤곽을 또렷하게, 바랜 대비 복구', icon: 'sparkles', ai: true },
   { k: 'color', name: '흑백 → 컬러 복원', desc: '따뜻한 피부톤과 자연스러운 색을 입혀요', icon: 'palette', ai: true },
   { k: 'yellow', name: '빛바랜 황변 제거', desc: '누렇게 뜬 색을 하얗고 깨끗하게', icon: 'sun-dim' },
@@ -1669,30 +1728,33 @@ const PRESETS = [
   { k: 'fade', name: '바랜 색 되살리기', desc: '80~90년대 컬러 사진의 날아간 색을 살려요', icon: 'droplet' }
 ];
 const TONES = [['natural', '자연스럽게'], ['warm', '따뜻하게'], ['film', '필름 느낌']];
-function loadIntoStudio(c, { id = null, recipe = null, caption = '' } = {}) {
+function loadIntoStudio(c, { id = null, recipe = null, caption = '', auto = true } = {}) {
   S.scanned = fitCanvas(c, 1600); S.presetCv = S.scanned; S.final = S.scanned; S.cache.clear(); S.currentId = id; S.hist = [];
   S.p = { ...P_DEFAULT }; S.tone = 'natural'; S.adj = { ...ADJ_DEFAULT }; S.focus = { x: .5, y: .38 }; S.video = null; S.aiUsed = false; S.capText = caption;
   $('#capText').value = caption;
   S.diag = diagnose(S.scanned); renderDiag(); hideVideoResult(); MOTION.dirty = true;
-  if (recipe) { Object.assign(S.p, recipe.p || {}); S.tone = recipe.tone || 'natural'; Object.assign(S.adj, recipe.adj || {}); }
-  renderPresets(); buildSliders(); updateUndo();
-  if (recipe && Object.values(S.p).some(Boolean)) runPipeline(); else { renderCompare(); }
-  detectFace(); renderHome();
+  const ar = autoRecipe(S.diag); S.autoP = ar.p; S.autoTone = ar.tone; S.faces = null; S.facesFor = null;
+  if (recipe) { S.p = { ...P_DEFAULT }; Object.assign(S.p, recipe.p || {}); S.tone = recipe.tone || 'natural'; Object.assign(S.adj, recipe.adj || {}); }
+  else if (auto) { S.p = { ...ar.p }; S.tone = ar.tone; }
+  renderDiag(); renderPresets(); buildSliders(); updateUndo();
+  $('#btnRecrop').classList.toggle('hidden', !S.lastSrc); $('#manualBox').open = false;
+  if (Object.values(S.p).some(Boolean)) runPipeline(); else renderCompare();
+  renderHome();
 }
 function renderDiag() {
   const d = S.diag; if (!d) return;
-  const cell = (lbl, val, unit, st) => `<div class="dcell"><div class="lbl"><i class="dot ${st}"></i>${lbl}</div><span class="num">${val}</span>${unit ? `<span class="unit">${unit}</span>` : ''}</div>`;
+  const cell = (lbl, val, unit, st) => `<div class="dcell"><div class="lbl"><i class="dot ${st}"></i>${lbl}</div><span class="num"${String(val).length > 2 ? ' style="font-size:19px"' : ''}>${val}</span>${unit ? `<span class="unit">${unit}</span>` : ''}</div>`;
   $('#diagGrid').innerHTML =
     cell('종류', d.kind, '', d.kind === '컬러' ? 'ok' : 'warn') +
     cell('바램', d.fade, '%', d.fade > 32 ? 'bad' : d.fade > 18 ? 'warn' : 'ok') +
-    (d.kind === '컬러' ? cell('누런 기', d.yellow, '%', d.yellow > 45 ? 'bad' : d.yellow > 25 ? 'warn' : 'ok') : cell('잡티', d.dust > 200 ? '많음' : d.dust > 70 ? '보통' : '적음', '', d.dust > 200 ? 'bad' : d.dust > 70 ? 'warn' : 'ok')) +
+    (d.kind === '컬러' ? cell('누런 기', d.yellow, '%', d.yellow > 45 ? 'bad' : d.yellow > 25 ? 'warn' : 'ok') : cell('잡티', d.dust > 250 ? '많음' : d.dust > 60 ? '보통' : '적음', '', d.dust > 250 ? 'bad' : d.dust > 60 ? 'warn' : 'ok')) +
     cell('선명도', d.sharp, '점', d.sharp < 35 ? 'bad' : d.sharp < 55 ? 'warn' : 'ok');
-  const names = d.rec.map(k => PRESETS.find(p => p.k === k).name);
-  $('#diagRec').innerHTML = names.length ? `추천 복원 <b>${names.map(esc).join(' · ')}</b>` : '상태가 좋은 사진이에요. 필요한 것만 골라 쓰세요';
-  $('#btnAutoFix').classList.toggle('hidden', !names.length);
+  const names = ORDER.filter(k => S.autoP && S.autoP[k]).map(k => PRESETS.find(p => p.k === k).name);
+  $('#diagRec').innerHTML = `사진 상태를 보고 알아서 고쳤어요 <b>${names.map(esc).join(' · ')}</b>`;
 }
 function renderPresets() {
   const ai = AI.active();
+  $('#btnAutoFix').classList.toggle('hidden', !S.autoP || (JSON.stringify(S.p) === JSON.stringify(S.autoP) && S.tone === S.autoTone && !Object.values(S.adj).some(Boolean)));
   $('#presetList').innerHTML = PRESETS.map(p => {
     const lv = S.p[p.k], rec = S.diag && S.diag.rec.includes(p.k);
     return `<div class="pre ${lv ? 'on' : ''}" data-k="${p.k}">
@@ -1712,7 +1774,7 @@ async function runPipeline() {
   if (!S.scanned) return;
   if (pipeBusy) { pipeAgain = true; return; }
   pipeBusy = true;
-  loading(true, '사진을 복원하는 중', '잠시만 기다려 주세요');
+  loading(true, '최상의 상태로 복원하는 중', '먼지 · 바램 · 밝기 · 선명도를 알아서 맞춰요');
   await nextPaint();
   try {
     let c = S.scanned, key = '', ai = false;
@@ -1741,8 +1803,7 @@ async function stageRun(k, lv, c) {
     }
   }
   await nextPaint();
-  const fn = { dust: fxDust, yellow: fxYellow, fade: fxFade, hd: fxHD, color: (x, l) => fxColor(x, l, S.tone) }[k];
-  return { c: fn(c, lv), ai: false };
+  return { c: LOCAL_FX[k](c, lv, S.diag, S.tone), ai: false };
 }
 function applyAdjust() { if (!S.presetCv) return; S.final = fxAdjust(S.presetCv, S.adj); renderCompare(); MOTION.dirty = true; renderHome(); }
 let cmpPos = 50;
@@ -1909,9 +1970,14 @@ function prepareAssets(W, H) {
   let seed = 7; const rnd = () => (seed = (seed * 16807) % 2147483647) / 2147483647;
   const parts = Array.from({ length: 26 }, () => ({ x: rnd(), y: rnd(), r: .012 + rnd() * .04, sp: .08 + rnd() * .22, ph: rnd() * 6.28, a: .25 + rnd() * .5, drift: (rnd() - .5) * .06 }));
   const dust = Array.from({ length: 40 }, () => ({ x: rnd(), y: rnd(), s: rnd() }));
-  return { W, H, px, py, pw, ph, photo, orig, fg, soft, bg, grain, parts, dust };
+  let rigs = [], abW = 1, abH = 1;
+  if (S.faceAnim && S.faces && S.faces.length) {
+    const ab = fitCanvas(S.final, Math.max(W, H) * 1.12), abd = getData(ab).data; abW = ab.width; abH = ab.height;
+    rigs = S.faces.map((f, i) => buildRig(f, abW, abH, abd, i)).filter(Boolean);
+  }
+  return { W, H, px, py, pw, ph, photo, orig, fg, soft, bg, grain, parts, dust, rigs, abW, abH };
 }
-function drawLayer(ctx, img, A, s, cx, cy) { const half = .5 / s; cx = clamp(cx, half, 1 - half); cy = clamp(cy, half, 1 - half); const w = A.pw * s, h = A.ph * s; ctx.drawImage(img, A.px + A.pw / 2 - cx * w, A.py + A.ph / 2 - cy * h, w, h); }
+function drawLayer(ctx, img, A, s, cx, cy) { const half = .5 / s; cx = clamp(cx, half, 1 - half); cy = clamp(cy, half, 1 - half); const w = A.pw * s, h = A.ph * s, r = { x: A.px + A.pw / 2 - cx * w, y: A.py + A.ph / 2 - cy * h, w, h }; ctx.drawImage(img, r.x, r.y, w, h); return r; }
 function drawLayerFree(ctx, img, A, s, cx, cy) { const w = A.pw * s, h = A.ph * s; ctx.drawImage(img, A.px + A.pw / 2 - cx * w, A.py + A.ph / 2 - cy * h, w, h); }
 function pill(ctx, x, y, text, size, bg, fg, alpha) {
   if (alpha <= 0) return;
@@ -1926,19 +1992,18 @@ function renderFrame(ctx, A, t, style) {
   ctx.fillStyle = '#0b1213'; ctx.fillRect(0, 0, W, H);
   if (A.bg) { const z = 1.08 + .04 * e; ctx.drawImage(A.bg, (W - W * z) / 2, (H - H * z) / 2, W * z, H * z); ctx.fillStyle = 'rgba(8,14,15,.38)'; ctx.fillRect(0, 0, W, H); }
   ctx.save(); ctx.beginPath(); ctx.rect(px, py, pw, ph); ctx.clip();
+  const animFaces = A.rigs && A.rigs.length && style !== 'pan';
+  if (animFaces) for (const g of A.rigs) updateRig(g, t, S.dur, S.faceAmp);
   if (style === 'live') {
-    const br = Math.sin(t * TAU * 2), sway = Math.sin(t * TAU);
-    const s = 1.07 + .02 * e + .008 * br, cx = .5 + (f.x - .5) * .4 + sway * .004, cy = .5 + (f.y - .5) * .4 - br * .002;
-    drawLayer(ctx, A.photo, A, s, cx, cy);
-    const s2 = s * (1 + .016 * (br * .5 + .5)), half = .5 / s, ccx = clamp(cx, half, 1 - half), ccy = clamp(cy, half, 1 - half);
-    const fxp = px + pw / 2 + (f.x - ccx) * pw * s, fyp = py + ph / 2 + (f.y - ccy) * ph * s;
-    ctx.globalAlpha = .92; ctx.drawImage(A.fg, fxp - f.x * pw * s2, fyp - f.y * ph * s2 - br * ph * .002, pw * s2, ph * s2); ctx.globalAlpha = 1;
+    const sway = Math.sin(t * TAU), hasF = animFaces;
+    const s = hasF ? 1.035 + .045 * e : 1.06 + .03 * e + .006 * Math.sin(t * TAU * 2), cx = lerp(.5, f.x, .5) + sway * .004, cy = lerp(.5, f.y, .5) + Math.sin(t * TAU + 1) * .003;
+    const r = drawLayer(ctx, A.photo, A, s, cx, cy); drawPatches(ctx, A, r);
     ctx.globalCompositeOperation = 'screen';
-    const lg = ctx.createRadialGradient(px + pw * (.2 + .15 * sway), py + ph * .15, 0, px + pw * .3, py + ph * .2, Math.max(pw, ph) * .7);
-    lg.addColorStop(0, `rgba(255,190,110,${.1 + .05 * br})`); lg.addColorStop(1, 'rgba(255,190,110,0)'); ctx.fillStyle = lg; ctx.fillRect(px, py, pw, ph);
+    const lg = ctx.createRadialGradient(px + pw * (.2 + .15 * sway), py + ph * .12, 0, px + pw * .3, py + ph * .2, Math.max(pw, ph) * .7);
+    lg.addColorStop(0, `rgba(255,200,130,${.06 + .03 * sway})`); lg.addColorStop(1, 'rgba(255,190,110,0)'); ctx.fillStyle = lg; ctx.fillRect(px, py, pw, ph);
     ctx.globalCompositeOperation = 'source-over';
   } else if (style === 'zoom') {
-    drawLayer(ctx, A.photo, A, 1 + .4 * e, lerp(.5, f.x, e), lerp(.5, f.y, e));
+    const r = drawLayer(ctx, A.photo, A, 1 + .4 * e, lerp(.5, f.x, e), lerp(.5, f.y, e)); drawPatches(ctx, A, r);
     ctx.globalCompositeOperation = 'soft-light'; ctx.fillStyle = 'rgba(255,165,80,.32)'; ctx.fillRect(px, py, pw, ph);
     ctx.globalCompositeOperation = 'screen';
     const lx = px + pw * (1.1 - t * .9), lg = ctx.createRadialGradient(lx, py + ph * .25, 0, lx, py + ph * .25, Math.max(pw, ph) * .55);
@@ -1956,7 +2021,7 @@ function renderFrame(ctx, A, t, style) {
     drawLayer(ctx, A.orig, A, s, cx, cy);
     if (sw > 0) {
       const lx = px + pw * sw;
-      ctx.save(); ctx.beginPath(); ctx.rect(px, py, lx - px, ph); ctx.clip(); drawLayer(ctx, A.photo, A, s, cx, cy); ctx.restore();
+      ctx.save(); ctx.beginPath(); ctx.rect(px, py, lx - px, ph); ctx.clip(); drawPatches(ctx, A, drawLayer(ctx, A.photo, A, s, cx, cy)); ctx.restore();
       if (sw < 1) {
         ctx.globalCompositeOperation = 'screen';
         const g = ctx.createLinearGradient(lx - pw * .08, 0, lx + pw * .02, 0);
@@ -2029,12 +2094,159 @@ function initFocusTap() {
     ring.classList.add('show'); setTimeout(() => ring.classList.remove('show'), 900); toast('이 부분을 중심으로 움직일게요');
   });
 }
-async function detectFace() {
-  try {
-    if (!('FaceDetector' in window)) return;
-    const small = fitCanvas(S.scanned, 800), faces = await new FaceDetector({ fastMode: true, maxDetectedFaces: 3 }).detect(small);
-    if (faces && faces.length) { const b = faces.reduce((a, c) => c.boundingBox.width > a.boundingBox.width ? c : a).boundingBox; S.focus = { x: (b.x + b.width / 2) / small.width, y: (b.y + b.height / 2) / small.height }; MOTION.dirty = true; }
-  } catch (e) {}
+/* ---- 얼굴 인식 (MediaPipe Face Mesh: 얼굴마다 468개 지점 + 눈동자) ---- */
+const FM_BASE = 'https://cdn.jsdelivr.net/npm/@mediapipe/face_mesh@0.4.1633559619/';
+let fmPromise = null;
+const withTimeout = (pr, ms) => Promise.race([pr, new Promise((_, rej) => setTimeout(() => rej(new Error('timeout')), ms))]);
+function loadFaceMesh() {
+  if (fmPromise) return fmPromise;
+  fmPromise = new Promise((res, rej) => {
+    if (window.FaceMesh) return res();
+    const sc = document.createElement('script'); sc.src = FM_BASE + 'face_mesh.js'; sc.crossOrigin = 'anonymous';
+    sc.onload = res; sc.onerror = () => rej(new Error('load')); document.head.appendChild(sc);
+  }).then(async () => {
+    const fm = new FaceMesh({ locateFile: f => FM_BASE + f });
+    fm.setOptions({ maxNumFaces: 6, refineLandmarks: true, minDetectionConfidence: .45, minTrackingConfidence: .45 });
+    await fm.initialize(); return fm;
+  }).catch(e => { fmPromise = null; throw e; });
+  return fmPromise;
+}
+function meshOn(fm, cv) {
+  return withTimeout(new Promise(res => { fm.onResults(r => res(r.multiFaceLandmarks || [])); try { fm.reset && fm.reset(); } catch (e) {} fm.send({ image: cv }).catch(() => res([])); }), 12000).catch(() => []);
+}
+function setFaceStat(state) {
+  const n = S.faces ? S.faces.length : 0;
+  const [t, d, dot] = state === 'loading' ? ['얼굴 찾는 중', '처음 한 번은 10초쯤 걸려요', 'off'] : state === 'error' ? ['얼굴 인식을 불러오지 못했어요', '인터넷 연결을 확인해 주세요. 카메라 움직임만 들어가요', 'bad']
+    : !S.faceAnim ? ['얼굴 움직임 꺼짐', '카메라 움직임만 들어가요', 'off'] : n ? [`얼굴 ${n}명 인식`, '눈 깜빡임 · 미소 · 시선 · 고개 · 숨쉬기', 'ok'] : ['얼굴을 찾지 못했어요', '얼굴이 아주 작거나 옆모습이면 어려워요. 카메라 움직임만 들어가요', 'warn'];
+  $('#faceT').innerHTML = `<i class="dot ${dot}" style="margin-right:6px"></i>${t}`; $('#faceD').textContent = d;
+  $('#ampChips').classList.toggle('hidden', !S.faceAnim || !n);
+}
+async function detectFaces() {
+  if (!S.final) return;
+  if (S.facesFor === S.scanned && S.faces) { setFaceStat(); return; }
+  if (S.facePromise && S.facesFor === S.scanned) return S.facePromise;
+  S.facesFor = S.scanned; S.faces = null; setFaceStat('loading');
+  const target = S.scanned;
+  S.facePromise = (async () => {
+    let err = false;
+    try {
+      const fm = await withTimeout(loadFaceMesh(), 30000), img = fitCanvas(S.final, 1280), W = img.width, H = img.height, found = [];
+      const add = (lms, x0, y0, sw, sh) => {
+        for (const lm of lms) {
+          if (lm.length < 468) continue;
+          const a = new Float32Array(lm.length * 2);
+          for (let i = 0; i < lm.length; i++) { a[2 * i] = (x0 + lm[i].x * sw) / W; a[2 * i + 1] = (y0 + lm[i].y * sh) / H; }
+          const c = [(a[468] + a[908]) / 2, (a[21] + a[305]) / 2], fw = Math.abs(a[908] - a[468]);
+          if (fw * W < 12 || found.some(f => Math.hypot(f.c[0] - c[0], (f.c[1] - c[1]) * H / W) < Math.max(f.fw, fw) * .5)) continue;
+          found.push({ pts: a, c, fw });
+        }
+      };
+      add(await meshOn(fm, img), 0, 0, W, H);
+      if (found.length < 6 && Math.max(W, H) >= 600) {
+        const tw = W * .6, th = H * .6;
+        for (const [tx, ty] of [[0, 0], [W - tw, 0], [0, H - th], [W - tw, H - th]]) {
+          const t = mkCanvas(tw * 1.6, th * 1.6); t.getContext('2d').drawImage(img, tx, ty, tw, th, 0, 0, t.width, t.height);
+          add(await meshOn(fm, t), tx, ty, tw, th);
+        }
+      }
+      found.sort((a, b) => b.fw - a.fw);
+      if (S.facesFor !== target) return;
+      S.faces = found.slice(0, 8).map(f => f.pts);
+      if (found.length) { const tw = found.reduce((s2, f) => s2 + f.fw, 0); S.focus = { x: found.reduce((s2, f) => s2 + f.c[0] * f.fw, 0) / tw, y: found.reduce((s2, f) => s2 + f.c[1] * f.fw, 0) / tw }; }
+    } catch (e) { console.warn('얼굴 인식 실패', e); err = true; if (S.facesFor === target) S.faces = []; }
+    S.facePromise = null; MOTION.dirty = true; setFaceStat(err ? 'error' : undefined);
+  })();
+  return S.facePromise;
+}
+/* ---- 얼굴 리그: 눈꺼풀·눈동자·입꼬리·고개·가슴을 미리 계산한 가중치로 매 프레임 살짝 비틀기 ---- */
+const EYE_IDX = [[[33, 246, 161, 160, 159, 158, 157, 173, 133], [33, 7, 163, 144, 145, 153, 154, 155, 133], 468], [[263, 466, 388, 387, 386, 385, 384, 398, 362], [263, 249, 390, 373, 374, 380, 381, 382, 362], 473]];
+function interpPL(us, vs, u) { if (u <= us[0]) return vs[0]; for (let i = 1; i < us.length; i++) if (u <= us[i]) { const t = (u - us[i - 1]) / ((us[i] - us[i - 1]) || 1); return vs[i - 1] + (vs[i] - vs[i - 1]) * t; } return vs[vs.length - 1]; }
+function sampleInto(od, o, src, w, h, x, y) {
+  if (x < 0) x = 0; else if (x > w - 1.001) x = w - 1.001; if (y < 0) y = 0; else if (y > h - 1.001) y = h - 1.001;
+  const x0 = x | 0, y0 = y | 0, fx = x - x0, fy = y - y0, i00 = (y0 * w + x0) * 4, i10 = i00 + 4, i01 = i00 + w * 4, i11 = i01 + 4;
+  for (let c = 0; c < 3; c++) od[o + c] = (src[i00 + c] * (1 - fx) + src[i10 + c] * fx) * (1 - fy) + (src[i01 + c] * (1 - fx) + src[i11 + c] * fx) * fy;
+}
+function buildRig(f, W, H, data, idx) {
+  const P = i => [f[2 * i] * W, f[2 * i + 1] * H];
+  const lc = P(234), rc = P(454), fore = P(10), chin = P(152), fw = Math.hypot(rc[0] - lc[0], rc[1] - lc[1]), fh = Math.hypot(chin[0] - fore[0], chin[1] - fore[1]);
+  if (fw < 16 || fh < 16) return null;
+  const cx = (lc[0] + rc[0] + fore[0] + chin[0]) / 4, cy = (fore[1] + chin[1]) / 2, rx = fw * .6, ry = fh * .62, ux = (chin[0] - fore[0]) / fh, uy = (chin[1] - fore[1]) / fh;
+  const x0 = Math.max(0, Math.floor(cx - rx * 1.4)), x1 = Math.min(W, Math.ceil(cx + rx * 1.4)), y0 = Math.max(0, Math.floor(cy - ry * 1.4)), y1 = Math.min(H, Math.ceil(chin[1] + fh * .95));
+  const w = x1 - x0, h = y1 - y0; if (w < 8 || h < 8) return null;
+  const base = new Uint8ClampedArray(w * h * 4);
+  for (let y = 0; y < h; y++) base.set(data.subarray(((y + y0) * W + x0) * 4, ((y + y0) * W + x1) * 4), y * w * 4);
+  const L = p => [p[0] - x0, p[1] - y0];
+  const pv = L([chin[0] + ux * fh * .28, chin[1] + uy * fh * .28]), chest = L([chin[0] + ux * fh * .75, chin[1] + uy * fh * .75]);
+  const m1 = L(P(61)), m2 = L(P(291)); let ax = m2[0] - m1[0], ay = m2[1] - m1[1]; const al = Math.hypot(ax, ay) || 1; ax /= al; ay /= al;
+  let upx = ay, upy = -ax; if (upx * -ux + upy * -uy < 0) { upx = -upx; upy = -upy; }
+  const sk = fw * .028, d1 = [(-ax * .5 + upx) * sk, (-ay * .5 + upy) * sk], d2 = [(ax * .5 + upx) * sk, (ay * .5 + upy) * sk], sg = fw * .075;
+  const n = w * h, WH = new Float32Array(n), G1 = new Float32Array(n), G2 = new Float32Array(n), GB = new Float32Array(n), AL = new Uint8ClampedArray(n), act = [];
+  const ccx = cx - x0, ccy = cy - y0, sbx = fw * .75, sby = fh * .32, edgeK = .12 * Math.min(w, h);
+  for (let y = 0; y < h; y++) for (let x = 0; x < w; x++) {
+    const i = y * w + x, we = smooth(0, 1, Math.min(x, w - 1 - x, y, h - 1 - y) / edgeK);
+    if (we <= 0) continue;
+    const ex = (x - ccx) / rx, ey = (y - ccy) / ry, wh = (1 - smooth(.95, 1.32, Math.sqrt(ex * ex + ey * ey))) * we;
+    const g1 = Math.exp(-((x - m1[0]) ** 2 + (y - m1[1]) ** 2) / (2 * sg * sg)) * we, g2 = Math.exp(-((x - m2[0]) ** 2 + (y - m2[1]) ** 2) / (2 * sg * sg)) * we;
+    const gb = Math.exp(-((x - chest[0]) ** 2 / (2 * sbx * sbx) + (y - chest[1]) ** 2 / (2 * sby * sby))) * we;
+    const tot = wh + g1 + g2 + gb; if (tot < .004) continue;
+    WH[i] = wh; G1[i] = g1; G2[i] = g2; GB[i] = gb; AL[i] = clamp(tot * 4, 0, 1) * 255 * Math.min(1, we * 1.5); act.push(i);
+  }
+  const eyes = EYE_IDX.map(([up, lo, iris]) => {
+    let U = up.map(i => L(P(i))), Lo = lo.map(i => L(P(i)));
+    const a = U[0], b = U[U.length - 1], o = a[0] <= b[0] ? a : b, q = o === a ? b : a, ew = Math.hypot(q[0] - o[0], q[1] - o[1]); if (ew < 5) return null;
+    const e0 = (q[0] - o[0]) / ew, e1 = (q[1] - o[1]) / ew, n0 = -e1, n1 = e0;
+    const toUV = p => [(p[0] - o[0]) * e0 + (p[1] - o[1]) * e1, (p[0] - o[0]) * n0 + (p[1] - o[1]) * n1];
+    let Uuv = U.map(toUV).sort((p, r) => p[0] - r[0]), Luv = Lo.map(toUV).sort((p, r) => p[0] - r[0]);
+    const mv = A2 => A2.reduce((s2, p) => s2 + p[1], 0) / A2.length; if (mv(Uuv) > mv(Luv)) [Uuv, Luv] = [Luv, Uuv];
+    const op = Math.max(...Luv.map(p => p[1])) - Math.min(...Uuv.map(p => p[1])); if (op < 1.5) return null;
+    const ir = f.length > iris * 2 + 1 ? toUV(L(P(iris))) : [ew / 2, (mv(Uuv) + mv(Luv)) / 2];
+    const vTop = Math.min(...Uuv.map(p => p[1])) - Math.max(op * 2.2, ew * .35), vBot = Math.max(...Luv.map(p => p[1])) + 1;
+    const corners = [[0, vTop], [ew, vTop], [ew, vBot], [0, vBot]].map(([u, v]) => [o[0] + u * e0 + v * n0, o[1] + u * e1 + v * n1]);
+    const bx0 = Math.max(0, Math.floor(Math.min(...corners.map(c => c[0]))) - 1), bx1 = Math.min(w - 1, Math.ceil(Math.max(...corners.map(c => c[0]))) + 1);
+    const by0 = Math.max(0, Math.floor(Math.min(...corners.map(c => c[1]))) - 1), by1 = Math.min(h - 1, Math.ceil(Math.max(...corners.map(c => c[1]))) + 1);
+    return { ox: o[0], oy: o[1], e0, e1, n0, n1, ew, Uu: Uuv.map(p => p[0]), Uv: Uuv.map(p => p[1]), Lu: Luv.map(p => p[0]), Lv: Luv.map(p => p[1]), iu: ir[0], iv: ir[1], ir: Math.max(1.5, op * .55), bx0, bx1, by0, by1 };
+  }).filter(Boolean);
+  for (const e of eyes) for (let y = e.by0; y <= e.by1; y++) for (let x = e.bx0; x <= e.bx1; x++) { const i = y * w + x; if (!AL[i]) act.push(i); AL[i] = 255; }
+  const cv = mkCanvas(w, h), cx2 = ctx2(cv), out = cx2.createImageData(w, h);
+  for (const i of act) out.data[i * 4 + 3] = AL[i];
+  return { x0, y0, w, h, fw, fh, base, buf: new Uint8ClampedArray(base.length), WH, G1, G2, GB, act: Int32Array.from(new Set(act)), pvx: pv[0], pvy: pv[1], d1, d2, eyes, cv, cx2, out, phase: (idx * .37 + .13) % 1 };
+}
+function eyePass(rig, e, c, gz) {
+  const src = rig.base, dst = rig.buf, w = rig.w, h = rig.h;
+  for (let y = e.by0; y <= e.by1; y++) for (let x = e.bx0; x <= e.bx1; x++) {
+    const dx = x - e.ox, dy = y - e.oy, u = dx * e.e0 + dy * e.e1, v = dx * e.n0 + dy * e.n1;
+    if (u <= 0 || u >= e.ew) continue;
+    const vt = interpPL(e.Uu, e.Uv, u), vb = interpPL(e.Lu, e.Lv, u), op = vb - vt; if (op < .6) continue;
+    const top = vt - Math.max(op * 2.2, e.ew * .35); if (v < top || v > vb) continue;
+    const wx = Math.pow(Math.sin(Math.PI * u / e.ew), .6), vt2 = vt + c * wx * op * .96;
+    let vs = v <= vt2 ? top + (v - top) * (vt - top) / Math.max(.01, vt2 - top) : (vb - vt2 < .4 ? vt : vb - (vb - v) * op / (vb - vt2)), us = u;
+    if (gz && v > vt2) { const g = Math.exp(-((u - e.iu) ** 2 + (v - e.iv) ** 2) / (2 * e.ir * e.ir * 1.6)); us = u - gz * e.ew * g; }
+    const o = (y * w + x) * 4; sampleInto(dst, o, src, w, h, e.ox + us * e.e0 + vs * e.n0, e.oy + us * e.e1 + vs * e.n1);
+    if (c > .45) { const dd = Math.abs(v - vt2); if (dd < 1.4) { const k = 1 - (c - .45) * .6 * wx * (1 - dd / 1.4); dst[o] *= k; dst[o + 1] *= k; dst[o + 2] *= k; } }
+  }
+}
+function updateRig(rig, t, D, amp) {
+  const TAU = Math.PI * 2, ph = rig.phase * TAU;
+  let c = 0;
+  for (const tb of [.27, .74]) { const t0 = (tb + rig.phase * .09) % 1, u = ((t - t0 + 1) % 1) * D / .26; if (u < 1) c = Math.max(c, u < .38 ? smooth(0, .38, u) : 1 - smooth(.38, 1, u)); }
+  const th = amp * .02 * Math.sin(TAU * t + ph), tx = amp * .011 * rig.fw * Math.sin(TAU * t + ph + 1.3), ty = amp * .007 * rig.fh * Math.sin(TAU * 2 * t + ph);
+  const sm = Math.min(1.3, amp) * (smooth(.08, .4, t) - smooth(.8, .97, t)), cyc = Math.max(1, Math.round(D / 3.4)), br = amp * rig.fh * .014 * (.5 - .5 * Math.cos(TAU * cyc * t));
+  const gz = amp * (.1 * (smooth(.42, .5, t) - smooth(.6, .68, t)) - .07 * (smooth(.12, .19, t) - smooth(.3, .36, t)));
+  let src = rig.base;
+  if (c > .01 || Math.abs(gz) > .004) { rig.buf.set(rig.base); for (const e of rig.eyes) eyePass(rig, e, c, gz); src = rig.buf; }
+  const cs = Math.cos(th) - 1, sn = Math.sin(th), od = rig.out.data, w = rig.w, h = rig.h, act = rig.act, WH = rig.WH, G1 = rig.G1, G2 = rig.G2, GB = rig.GB;
+  const d1x = rig.d1[0] * sm, d1y = rig.d1[1] * sm, d2x = rig.d2[0] * sm, d2y = rig.d2[1] * sm;
+  for (let k = 0; k < act.length; k++) {
+    const i = act[k], x = i % w, y = (i / w) | 0, qx = x - rig.pvx, qy = y - rig.pvy, wh = WH[i], g1 = G1[i], g2 = G2[i];
+    const dx = wh * (qx * cs - qy * sn + tx) + g1 * d1x + g2 * d2x, dy = wh * (qx * sn + qy * cs + ty) + g1 * d1y + g2 * d2y - GB[i] * br;
+    sampleInto(od, i * 4, src, w, h, x - dx, y - dy);
+  }
+  rig.cx2.putImageData(rig.out, 0, 0);
+}
+function drawPatches(ctx, A, r) {
+  if (!A.rigs || !A.rigs.length || !r) return;
+  const kx = r.w / A.abW, ky = r.h / A.abH;
+  for (const g of A.rigs) ctx.drawImage(g.cv, r.x + g.x0 * kx, r.y + g.y0 * ky, g.w * kx, g.h * ky);
 }
 function pickMime(audio) {
   if (!window.MediaRecorder) return null;
@@ -2069,6 +2281,7 @@ async function exportVideo() {
     catch (e) { console.warn(e); loading(false); toast('AI 연결이 안 돼 휴대폰 엔진으로 만들게요'); }
   }
   if (pickMime(false) === null) { ac && ac.close(); toast('이 브라우저는 영상 녹화를 지원하지 않아요'); return; }
+  if (S.faceAnim && S.facePromise) { loading(true, '얼굴을 찾는 중', '눈 깜빡임과 미소를 넣으려고 얼굴을 살펴봐요'); try { await S.facePromise; } catch (e) {} }
   MOTION.recording = true; stopPreview();
   loading(true, '추억 영상을 만드는 중', '화면을 끄거나 다른 앱으로 가지 마세요', true);
   await fontsReady();
@@ -2452,7 +2665,7 @@ function go(tab) {
   $$('#v-restore [data-empty],#v-motion [data-empty]').forEach(el => el.classList.toggle('hidden', has));
   $$('#v-restore [data-full],#v-motion [data-full]').forEach(el => el.classList.toggle('hidden', !has));
   window.scrollTo({ top: 0 });
-  if (tab === 'motion' && has) requestAnimationFrame(startPreview); else stopPreview();
+  if (tab === 'motion' && has) { requestAnimationFrame(startPreview); if (S.faceAnim) detectFaces(); else setFaceStat(); } else stopPreview();
   if (tab === 'restore' && has) requestAnimationFrame(renderCompare);
   if (tab === 'archive') renderArchive();
   if (tab === 'scan') { if (!$('#editor').classList.contains('hidden')) requestAnimationFrame(() => $('#step1').classList.contains('hidden') ? buildPreview() : layoutEditor()); else renderHome(); }
@@ -2502,10 +2715,14 @@ function bind() {
   $('#batchRow').onclick = openBatch;
   $('#batchThumbs').onclick = e => { const b = e.target.closest('[data-i]'); if (!b) return; const it = S.batch[+b.dataset.i]; it.done = true; closeSheet('#batchSheet'); loadIntoStudio(it.c); go('restore'); };
   $('#batchSaveAll').onclick = async () => {
-    loading(true, '보관함에 넣는 중', '', true);
+    loading(true, '자동 복원해서 보관하는 중', '한 장씩 최상의 상태로 고쳐요', true);
     try {
-      for (let i = 0; i < S.batch.length; i++) { const r = newRec(), c = S.batch[i].c; r.createdAt += i; r.image = await canvasToBlob(c, 'image/jpeg', .92); r.thumb = await canvasToBlob(fitCanvas(c, 700), 'image/jpeg', .85); r.updatedAt = Date.now(); await DB.put(r); setBar((i + 1) / S.batch.length * 100); }
-      toast(`사진 ${S.batch.length}장을 보관했어요`); S.batch = []; closeSheet('#batchSheet'); go('archive');
+      for (let i = 0; i < S.batch.length; i++) {
+        const r = newRec(), c = S.batch[i].c; await nextPaint(); const fixed = localRestore(c);
+        r.createdAt += i; r.image = await canvasToBlob(fixed, 'image/jpeg', .92); r.original = await canvasToBlob(c, 'image/jpeg', .9); r.thumb = await canvasToBlob(fitCanvas(fixed, 700), 'image/jpeg', .85);
+        r.recipe = { ...autoRecipe(diagnose(c)), adj: { ...ADJ_DEFAULT } }; r.updatedAt = Date.now(); await DB.put(r); setBar((i + 1) / S.batch.length * 100);
+      }
+      toast(`사진 ${S.batch.length}장을 자동 복원해서 보관했어요`); S.batch = []; closeSheet('#batchSheet'); go('archive');
     } catch (e) { toast('저장에 실패했어요'); } finally { loading(false); }
   };
   $('#batchClear').onclick = () => { S.batch = []; closeSheet('#batchSheet'); renderHome(); };
@@ -2518,11 +2735,10 @@ function bind() {
     if (sw) S.p[k] = S.p[k] ? 0 : 2; else if (lv) S.p[k] = +lv.dataset.lv; else S.tone = tn.dataset.tone;
     renderPresets(); runPipeline();
   });
-  $('#btnAutoFix').onclick = () => {
-    pushHist(); S.diag.rec.forEach(k => { S.p[k] = S.p[k] || (k === 'dust' && S.diag.dust > 200 ? 3 : 2); });
-    if (S.diag.kind === '세피아') S.tone = 'warm';
-    renderPresets(); runPipeline(); toast('추천 복원을 적용했어요');
-  };
+  $('#btnAutoFix').onclick = () => { pushHist(); S.p = { ...S.autoP }; S.tone = S.autoTone; S.adj = { ...ADJ_DEFAULT }; renderPresets(); buildSliders(); runPipeline(); toast('자동 복원 상태로 돌렸어요'); };
+  $('#btnRecrop').onclick = () => { if (!S.lastSrc) return; S.src = S.lastSrc; S.quads = [S.lastQuad ? S.lastQuad.map(p => ({ ...p })) : insetCorners(S.lastSrc, 0)]; S.mode = 'single'; S.sel = 0; go('scan'); openEditor(); };
+  $('#swFace').onclick = e => { S.faceAnim = !S.faceAnim; e.currentTarget.classList.toggle('on', S.faceAnim); if (S.faceAnim) detectFaces(); else setFaceStat(); MOTION.dirty = true; };
+  $$('#ampChips .chip').forEach(c => c.onclick = () => { S.faceAmp = +c.dataset.a; $$('#ampChips .chip').forEach(x => x.classList.toggle('on', x === c)); });
   $('#btnUndo').onclick = () => { const h = S.hist.pop(); if (!h) return; S.p = h.p; S.tone = h.tone; S.adj = h.adj; renderPresets(); buildSliders(); updateUndo(); runPipeline(); };
   $('#btnAdjReset').onclick = () => { pushHist(); S.adj = { ...ADJ_DEFAULT }; buildSliders(); applyAdjust(); };
   $('#btnSaveArchive').onclick = () => saveCurrent(false);
