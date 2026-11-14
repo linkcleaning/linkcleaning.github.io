@@ -624,7 +624,7 @@
 
 <script>
 'use strict';
-const APP_VER = 'v19';
+const APP_VER = 'v20';
 const $ = s => document.querySelector(s);
 const $$ = s => [...document.querySelectorAll(s)];
 const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
@@ -1496,12 +1496,17 @@ async function syncMagazines() {
     for (const it of idx.issues) {
       const gid = 'mag:' + it.id;
       const have = books.find(b => b.gid === gid);
-      if (have) { if (have.volLabel !== it.label || have.description !== it.desc) { Object.assign(have, { volLabel: it.label, description: it.desc }); await DB.put('books', have).catch(() => {}); } continue; }
+      if (have) {
+        if ((have.rev || 1) !== (it.rev || 1)) {   // 잡지 지면을 고쳐 올렸으면 파일만 새로 받음(읽던 위치는 그대로)
+          const r = await fetch(it.epub, { cache: 'no-store' });
+          if (r.ok) { const buf = await r.arrayBuffer(); await DB.put('files', { id: have.id, data: buf }); have.size = buf.byteLength; have.rev = it.rev || 1; }
+        }
+        Object.assign(have, { volLabel: it.label, description: it.desc }); await DB.put('books', have).catch(() => {}); continue; }
       const r = await fetch(it.epub); if (!r.ok) continue;
       const buf = await r.arrayBuffer();
       const info = await parseEpub(buf, it.id + '.epub');
       const b = { id: uid(), ...info, title: it.title, author: idx.publisher ? idx.publisher : info.author, publisher: idx.publisher || '링크클린', description: it.desc || info.description,
-        series: idx.series, vol: it.vol, volLabel: it.label, pubdate: it.date, source: 'magazine', gid, hasFile: true, fileName: it.id + '.epub', size: buf.byteLength,
+        series: idx.series, vol: it.vol, volLabel: it.label, pubdate: it.date, source: 'magazine', gid, rev: it.rev || 1, hasFile: true, fileName: it.id + '.epub', size: buf.byteLength,
         added: Date.now(), lastRead: 0, progress: 0, cfi: null, bookmarks: [] };
       await DB.put('files', { id: b.id, data: buf }); await DB.put('books', b);
       books.push(b); setCover(b); added.push(it.label || it.title);

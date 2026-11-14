@@ -12,7 +12,8 @@
    "epub": "magazine/link-mag-01.epub",
    "cover": "magazine/link-mag-01-cover.jpg",
    "pages": 7,
-   "size": 1809943
+   "size": 1653939,
+   "rev": 2
   },
   {
    "vol": 2,
@@ -24,7 +25,8 @@
    "epub": "magazine/link-mag-02.epub",
    "cover": "magazine/link-mag-02-cover.jpg",
    "pages": 7,
-   "size": 1671822
+   "size": 1527914,
+   "rev": 2
   }
  ]
 }
