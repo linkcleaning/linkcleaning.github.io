@@ -709,7 +709,7 @@
 
 <script>
 'use strict';
-const APP_VER = 'v27';
+const APP_VER = 'v28';
 const $ = s => document.querySelector(s);
 const $$ = s => [...document.querySelectorAll(s)];
 const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
@@ -1709,6 +1709,37 @@ function wsClean(html) {
   const ser = new XMLSerializer();
   return { html: [...r.childNodes].map(n => ser.serializeToString(n)).join(''), len: (r.textContent || '').replace(/\s+/g, '').length };
 }
+
+/* 옛한글(아래아·반치음·옛이응 등)을 요즘 글자로 바꿔 깨지지 않게 */
+const OH_L = { 0x1140: 0x110B, 0x114C: 0x110B, 0x1159: 0x110B, 0x112B: 0x1107, 0x112C: 0x1106, 0x1157: 0x1111, 0x1158: 0x1112, 0x112D: 0x1101, 0x112E: 0x1102, 0x112F: 0x1104, 0x1130: 0x1105, 0x1131: 0x1106, 0x1132: 0x1108, 0x1133: 0x1108, 0x1134: 0x110A, 0x1135: 0x110A, 0x1136: 0x110D, 0x1137: 0x110E, 0x1138: 0x110F, 0x1139: 0x1110, 0x113A: 0x1111, 0x113B: 0x1112, 0x111E: 0x1101, 0x111F: 0x1102, 0x1120: 0x1104, 0x1121: 0x110A, 0x1122: 0x1101, 0x1123: 0x1104, 0x1124: 0x1108, 0x1125: 0x110A, 0x1126: 0x110D, 0x1127: 0x110D, 0x1128: 0x110E, 0x1129: 0x1110, 0x112A: 0x1111, 0x1113: 0x1102, 0x1114: 0x1102, 0x1115: 0x1102, 0x1116: 0x1102, 0x1117: 0x1103, 0x1118: 0x1105, 0x1119: 0x1105, 0x111A: 0x1105, 0x111B: 0x1105, 0x111C: 0x1106, 0x111D: 0x1106, 0x113C: 0x1109, 0x113D: 0x110A, 0x113E: 0x1109, 0x113F: 0x110A, 0x1141: 0x110B, 0x1142: 0x110B, 0x1143: 0x110B, 0x1144: 0x110B, 0x1145: 0x110B, 0x1146: 0x110B, 0x1147: 0x110B, 0x1148: 0x110B, 0x1149: 0x110B, 0x114A: 0x110B, 0x114B: 0x110B, 0x114D: 0x110C, 0x114E: 0x110C, 0x114F: 0x110D, 0x1150: 0x110C, 0x1151: 0x110D, 0x1152: 0x110E, 0x1153: 0x110E, 0x1154: 0x110E, 0x1155: 0x110E, 0x1156: 0x1111, 0x115A: 0x1100, 0x115B: 0x1102, 0x115C: 0x1102, 0x115D: 0x1102, 0x115E: 0x1103 };
+const OH_V = { 0x119E: 0x1161, 0x11A1: 0x1162, 0x119F: 0x1165, 0x11A0: 0x1173, 0x11A2: 0x1161, 0x1176: 0x1161, 0x1177: 0x1161, 0x1178: 0x1163, 0x1179: 0x1163, 0x117A: 0x1165, 0x117B: 0x1165, 0x117C: 0x1165, 0x117D: 0x1167, 0x117E: 0x1167, 0x117F: 0x1169, 0x1180: 0x116A, 0x1181: 0x116C, 0x1182: 0x1169, 0x1183: 0x1169, 0x1184: 0x116D, 0x1185: 0x116D, 0x1186: 0x116D, 0x1187: 0x116D, 0x1188: 0x116D, 0x1189: 0x116E, 0x118A: 0x116E, 0x118B: 0x116F, 0x118C: 0x1171, 0x118D: 0x116E, 0x118E: 0x1172, 0x118F: 0x1172, 0x1190: 0x1172, 0x1191: 0x1172, 0x1192: 0x1172, 0x1193: 0x1172, 0x1194: 0x1172, 0x1195: 0x1173, 0x1196: 0x1173, 0x1197: 0x1174, 0x1198: 0x1175, 0x1199: 0x1175, 0x119A: 0x1175, 0x119B: 0x1175, 0x119C: 0x1175, 0x119D: 0x1175, 0x11A3: 0x1161, 0x11A4: 0x1163, 0x11A5: 0x1167, 0x11A6: 0x1169, 0x11A7: 0x116D };
+const OH_T = { 0x11EB: 0x11BA, 0x11F0: 0x11BC, 0x11EE: 0x11BC, 0x11EF: 0x11BC, 0x11F1: 0x11BC, 0x11F2: 0x11BC, 0x11E6: 0x11B8, 0x11E7: 0x11B8, 0x11E8: 0x11B8, 0x11E9: 0x11B8, 0x11EA: 0x11B8, 0x11E4: 0x11B8, 0x11E5: 0x11B8, 0x11DD: 0x11B7, 0x11DE: 0x11B7, 0x11DF: 0x11B7, 0x11E0: 0x11B7, 0x11E1: 0x11B7, 0x11E2: 0x11B7, 0x11E3: 0x11B8, 0x11C3: 0x11A8, 0x11C4: 0x11A8, 0x11C5: 0x11AB, 0x11C6: 0x11AB, 0x11C7: 0x11AB, 0x11C8: 0x11AB, 0x11C9: 0x11AB, 0x11CA: 0x11AE, 0x11CB: 0x11AE, 0x11CC: 0x11AF, 0x11CD: 0x11AF, 0x11CE: 0x11AF, 0x11CF: 0x11AF, 0x11D0: 0x11AF, 0x11D1: 0x11B0, 0x11D2: 0x11B0, 0x11D3: 0x11B2, 0x11D4: 0x11B2, 0x11D5: 0x11B2, 0x11D6: 0x11B3, 0x11D7: 0x11AF, 0x11D8: 0x11AF, 0x11D9: 0x11AF, 0x11DA: 0x11B1, 0x11DB: 0x11B1, 0x11DC: 0x11B1, 0x11EC: 0x11BC, 0x11ED: 0x11BC, 0x11F3: 0x11C1, 0x11F4: 0x11C1, 0x11F5: 0x11C2, 0x11F6: 0x11C2, 0x11F7: 0x11C2, 0x11F8: 0x11C2, 0x11FA: 0x11A8, 0x11FB: 0x11A8, 0x11FC: 0x11A8, 0x11FD: 0x11A8, 0x11FE: 0x11A8, 0x11FF: 0x11AB };
+const OH_ANY = /[ᄀ-ᇿꥠ-꥿ힰ-퟿ㅥ-ㆎ〮〯]/;
+function modernHangul(str) {
+  if (!OH_ANY.test(str)) return str;
+  let out = '';
+  for (const ch of String(str).normalize('NFD')) {
+    const c = ch.codePointAt(0);
+    if (c === 0x302E || c === 0x302F || c === 0x115F || c === 0x1160) continue;   // 방점·채움 문자
+    if (c >= 0x1100 && c <= 0x115E) { out += String.fromCharCode(c <= 0x1112 ? c : (OH_L[c] || 0x110B)); continue; }
+    if (c >= 0xA960 && c <= 0xA97F) { out += String.fromCharCode(0x110B); continue; }
+    if (c >= 0x1161 && c <= 0x11A7) { out += String.fromCharCode(c <= 0x1175 ? c : (OH_V[c] || 0x1161)); continue; }
+    if (c >= 0xD7B0 && c <= 0xD7C6) { out += String.fromCharCode(0x1161); continue; }
+    if (c >= 0x11A8 && c <= 0x11FF) { const t = c <= 0x11C2 ? c : OH_T[c]; if (t) out += String.fromCharCode(t); continue; }
+    if (c >= 0xD7CB && c <= 0xD7FB) continue;
+    if (c === 0x318D) { out += 'ㅏ'; continue; }
+    if (c >= 0x3165 && c <= 0x318E) { const m = { 0x3180: 'ㅇ', 0x3181: 'ㅇ', 0x3182: 'ㅅ', 0x3183: 'ㅅ', 0x3184: 'ㅍ', 0x3186: 'ㅇ', 0x3187: 'ㅛ', 0x3188: 'ㅛ', 0x3189: 'ㅛ', 0x318A: 'ㅠ', 0x318B: 'ㅠ', 0x318C: 'ㅠ', 0x318E: 'ㅐ', 0x317F: 'ㅅ', 0x3178: 'ㅂ', 0x3179: 'ㅂ' }; out += m[c] || ''; continue; }
+    out += ch;
+  }
+  return out.normalize('NFC').replace(/[\u1100-\u1112](?![\u1161-\u1175])/g, m => 'ㄱㄲㄴㄷㄸㄹㅁㅂㅃㅅㅆㅇㅈㅉㅊㅋㅌㅍㅎ'[m.charCodeAt(0) - 0x1100]).replace(/[\u1161-\u1175\u11A8-\u11C2]/g, '');
+}
+function modernHtml(html) {   // 태그는 그대로 두고 글자만
+  return OH_ANY.test(html) ? String(html).replace(/>([^<]+)</g, (m, t) => '>' + modernHangul(t) + '<').replace(/^([^<]+)/, t => modernHangul(t)) : html;
+}
+function modernDoc(doc) {   // 이미 서재에 있는 책도 펼칠 때 바꿔 보여 줌
+  if (!doc || !doc.body || !OH_ANY.test(doc.body.textContent || '')) return;
+  const w = doc.createTreeWalker(doc.body, 4); let n; while ((n = w.nextNode())) { if (OH_ANY.test(n.nodeValue)) n.nodeValue = modernHangul(n.nodeValue); }
+}
 const OLD_HANGUL = /[\u1100-\u11FF\uA960-\uA97F\uD7B0-\uD7FF\u3164-\u318E]/g;
 function archaicRatio(html) { const t = String(html || '').replace(/<[^>]+>/g, ''); const o = (t.match(OLD_HANGUL) || []).length, h = (t.match(/[\uAC00-\uD7A3]/g) || []).length; return o / ((h + o) || 1); }
 async function buildFromWS(it, setP, depth = 0) {
@@ -1744,7 +1775,8 @@ async function buildFromWS(it, setP, depth = 0) {
     part.filter(c => c && c.len > 20).forEach(c => chapters.push({ title: c.title, html: c.html }));
   }
   if (!chapters.length || chapters.every(c => !c.html)) throw new Error('empty');
-  if (archaicRatio(chapters.map(c => c.html).join('')) > 0.01) throw new Error('archaic');   // 옛한글 원문은 받지 않음
+  chapters.forEach(c => { c.html = modernHtml(c.html); });   // 옛한글은 요즘 글자로 바꿔 담음
+  if (archaicRatio(chapters.map(c => c.html).join('')) > 0.01) throw new Error('archaic');
   setP('책으로 만드는 중…');
   if (chapters.reduce((n, c) => n + (c.html || '').length, 0) < 300) throw new Error('empty');
   return { buf: await makeEpub({ title, author, lang: 'ko', id: 'ws-' + title, source: '위키문헌' }, chapters), author, title };
@@ -2298,6 +2330,7 @@ function onFrame(contents) {
   const doc = contents.document, win = contents.window || doc.defaultView;
   const st = doc.createElement('style'); st.textContent = FRAME_CSS; (doc.head || doc.documentElement).appendChild(st);
   applyFrameVars(doc);
+  try { modernDoc(doc); } catch {}
   const scl = () => { const fr = win.frameElement; if (!fr) return 1; const r = fr.getBoundingClientRect(); return (fr.offsetWidth && r.width) ? r.width / fr.offsetWidth : 1; };
   const fx = x => { const fr = win.frameElement; return (fr ? fr.getBoundingClientRect().left : 0) + x * scl(); };
   const fy = y => { const fr = win.frameElement; return (fr ? fr.getBoundingClientRect().top : 0) + y * scl(); };
@@ -2413,7 +2446,13 @@ const NEWS_FEEDS = [
   { id: 'wkorea', kind: 'mag', name: 'W 코리아', cat: '패션·라이프', url: 'https://www.wkorea.com/feed/' },
   { id: 'allure', kind: 'mag', name: '얼루어 코리아', cat: '패션·라이프', url: 'https://www.allurekorea.com/feed/' },
   { id: 'marie', kind: 'mag', name: '마리끌레르', cat: '패션·라이프', url: 'https://www.marieclairekorea.com/feed/' },
-  { id: 'maison', kind: 'mag', name: '메종 코리아', cat: '리빙', url: 'https://www.maisonkorea.com/feed/' },
+  { id: 'dazed', kind: 'mag', name: '데이즈드 코리아', cat: '패션·라이프', url: 'https://www.dazedkorea.com/rss' },
+  { id: 'noblesse', kind: 'mag', name: '노블레스', cat: '패션·라이프', url: 'https://www.noblesse.com/feed/' },
+  { id: 'maison', kind: 'mag', name: '메종 코리아', cat: '리빙·디자인', url: 'https://www.maisonkorea.com/feed/' },
+  { id: 'design', kind: 'mag', name: '월간 디자인', cat: '리빙·디자인', url: 'https://design.co.kr/feed/' },
+  { id: 'h21', kind: 'mag', name: '한겨레21', cat: '시사·여행', url: 'https://h21.hani.co.kr/rss/' },
+  { id: 'sisain', kind: 'mag', name: '시사IN', cat: '시사·여행', url: 'https://www.sisain.co.kr/rss/allArticle.xml' },
+  { id: 'travie', kind: 'mag', name: '트래비', cat: '시사·여행', url: 'https://www.travie.com/rss/allArticle.xml' },
   { id: 'yozm', kind: 'col', name: '요즘IT', cat: 'IT', url: 'https://yozm.wishket.com/magazine/feed/' },
   { id: 'itworld', kind: 'col', name: 'ITWorld 코리아', cat: 'IT', url: 'https://www.itworld.co.kr/feed/' },
   { id: 'bloter', kind: 'col', name: '블로터', cat: 'IT', url: 'https://www.bloter.net/rss/allArticle.xml' },
@@ -3441,7 +3480,12 @@ const STAND_CARDS = [
   { type: 'mag', kind: 'mag', sel: 'wkorea', name: 'W', ids: ['wkorea'] },
   { type: 'mag', kind: 'mag', sel: 'allure', name: '얼루어', ids: ['allure'] },
   { type: 'mag', kind: 'mag', sel: 'marie', name: '마리끌레르', ids: ['marie'] },
+  { type: 'mag', kind: 'mag', sel: 'dazed', name: '데이즈드', ids: ['dazed'] },
+  { type: 'mag', kind: 'mag', sel: 'noblesse', name: '노블레스', ids: ['noblesse'] },
   { type: 'mag', kind: 'mag', sel: 'maison', name: '메종', ids: ['maison'] },
+  { type: 'mag', kind: 'mag', sel: 'design', name: '월간 디자인', ids: ['design'] },
+  { type: 'mag', kind: 'mag', sel: 'h21', name: '한겨레21', ids: ['h21'] },
+  { type: 'mag', kind: 'mag', sel: 'travie', name: '트래비', ids: ['travie'] },
   { type: 'mag', kind: 'col', sel: 'yozm', name: '요즘IT', ids: ['yozm'] },
   { type: 'mag', kind: 'col', sel: 'cat:IT', name: 'IT 칼럼', ids: ['itworld', 'bloter', 'geeknews'] },
   { type: 'wz', kind: 'wz', name: '링크클린 웹진', sub: '플립북' }
