@@ -259,6 +259,12 @@
     .res img, .res .noimg { width:58px; height:86px; }
   }
   @media (max-width:359px) { .big-pct { font-size:42px; } .go-btn { padding:10px 14px; font-size:14px; } }
+  .to-top { position:fixed; z-index:36; right:14px; bottom:calc(var(--tbh, 64px) + 14px); display:flex; align-items:center; gap:4px; height:42px; padding:0 14px 0 11px; border-radius:999px; background:rgba(20,38,42,.88); color:#fff; font-size:13.5px; font-weight:700; -webkit-backdrop-filter:blur(10px); backdrop-filter:blur(10px); box-shadow:0 8px 22px -10px rgba(0,0,0,.5); opacity:0; transform:translateY(12px); pointer-events:none; transition:opacity .2s, transform .2s; }
+  .to-top svg { width:18px; height:18px; }
+  .to-top.on { opacity:1; transform:none; pointer-events:auto; }
+  @media (min-width:640px) { #toTop { bottom:calc(96px + var(--sb)); right:18px; } }
+  #npTop { bottom:calc(18px + var(--sb)); z-index:7; }
+  body.news-open #toTop, body.reading #toTop, body.comic-open #toTop { display:none; }
   #fab { position:fixed; right:18px; bottom:calc(20px + var(--sb)); z-index:35; width:60px; height:60px; border-radius:20px; background:var(--deep); color:#fff; display:grid; place-items:center; box-shadow:0 14px 30px -10px rgba(14,59,64,.75); }
   #fab svg { width:28px; height:28px; }
   #fab:active { transform:scale(.95); }
@@ -451,6 +457,7 @@
     <button data-nav="free"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M3.5 5.5c2.9-1.2 5.7-.9 8.5 1v13c-2.8-1.9-5.6-2.2-8.5-1z"/><path d="M20.5 5.5c-2.9-1.2-5.7-.9-8.5 1v13c2.8-1.9 5.6-2.2 8.5-1z"/></svg>발굴소</button>
     <button data-nav="set"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"><path d="M4 7h10M18 7h2M4 17h4M12 17h8"/><circle cx="16" cy="7" r="2.2"/><circle cx="10" cy="17" r="2.2"/></svg>설정</button>
   </nav>
+  <button id="toTop" class="to-top" aria-label="맨 위로"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M12 19V5M5.5 11.5 12 5l6.5 6.5"/></svg><span>위로</span></button>
   <button id="fab" aria-label="책 추가"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg><i></i></button>
 </div>
 
@@ -531,6 +538,7 @@
 
 <!-- =========================== 오늘의 신문 =========================== -->
 <div id="news" aria-label="가판대">
+  <button id="npTop" class="to-top" aria-label="맨 위로"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M12 19V5M5.5 11.5 12 5l6.5 6.5"/></svg><span>위로</span></button>
   <div class="np-top">
     <div class="max-w-5xl mx-auto px-4 sm:px-6">
       <div class="flex items-center gap-1 h-[52px] -ml-2">
@@ -735,7 +743,7 @@
 
 <script>
 'use strict';
-const APP_VER = 'v31';
+const APP_VER = 'v32';
 const $ = s => document.querySelector(s);
 const $$ = s => [...document.querySelectorAll(s)];
 const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
@@ -3743,6 +3751,16 @@ $('#npList').addEventListener('click', e => {
 });
 $('#npList').addEventListener('input', e => { if (e.target.id === 'ytText') HUB.yt.text = e.target.value; });
 
+
+/* 아래로 많이 내려가면 ‘위로’ 단추 */
+(function bindToTop() {
+  const t1 = $('#toTop'), t2 = $('#npTop'), news = $('#news');
+  let r1 = 0, r2 = 0;
+  addEventListener('scroll', () => { if (r1) return; r1 = requestAnimationFrame(() => { r1 = 0; t1.classList.toggle('on', scrollY > innerHeight * 1.2); }); }, { passive: true });
+  news.addEventListener('scroll', () => { if (r2) return; r2 = requestAnimationFrame(() => { r2 = 0; t2.classList.toggle('on', news.scrollTop > innerHeight * 1.2); }); }, { passive: true });
+  t1.onclick = () => scrollTo({ top: 0, behavior: 'smooth' });
+  t2.onclick = () => news.scrollTo({ top: 0, behavior: 'smooth' });
+})();
 /* 서재 첫 화면 숫자 카드 (날씨돌처럼 한눈에) */
 function renderStats(cnt) {
   const box = $('#statBox'); if (!box) return;
