@@ -393,7 +393,7 @@
       </button>
       <button class="opt" id="optFree">
         <div class="ic" style="background:#E8F0FB;color:#3E6AA8"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 4v11M7.5 10.5 12 15l4.5-4.5"/><path d="M5 19h14"/></svg></div>
-        <div class="min-w-0"><div class="font-bold text-[15.5px]">무료 고전 이북 받기</div><div class="text-[12.5px] text-mute mt-0.5">셜록 홈스·앨리스·오디세이… 7만여 권을 바로 내려받아 읽어요</div></div>
+        <div class="min-w-0"><div class="font-bold text-[15.5px]">무료 한국 고전</div><div class="text-[12.5px] text-mute mt-0.5">저작권이 끝난 한국 소설·시·고전을 무료로 받아요</div></div>
       </button>
       <button class="opt" id="optManual">
         <div class="ic" style="background:#EAF5E3;color:#4E9A30"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20h4L19 9l-4-4L4 16z"/><path d="M13.5 6.5l4 4"/></svg></div>
@@ -413,7 +413,7 @@
       <h3 class="serif font-bold text-[19px] flex-1 text-center pr-[60px] truncate" id="searchTitle">인터넷 도서 검색</h3>
       <button class="icon-btn !w-9 !h-9 hidden" id="searchClose" aria-label="닫기"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M6 6l12 12M18 6 6 18"/></svg></button>
     </div>
-    <div class="tabs mb-3" id="searchTabs"><button data-tab="kr" class="on">국내 도서</button><button data-tab="free">무료 고전 이북<i>FREE</i></button></div>
+    <div class="tabs mb-3" id="searchTabs"><button data-tab="kr" class="on">국내 도서</button><button data-tab="free">무료 한국 고전<i>FREE</i></button></div>
     <form id="searchForm" class="flex gap-2">
       <input id="searchQ" class="inp flex-1" type="search" placeholder="제목, 저자 또는 ISBN" autocomplete="off" enterkeyhint="search">
       <button class="btn btn-pri !px-5" type="submit">검색</button>
@@ -448,11 +448,6 @@
       <div id="storeInfo" class="text-[13px] text-mute mt-1">계산 중…</div>
       <div class="bar-track mt-3"><div id="storeBar" class="bar-fill" style="width:0"></div></div>
       <p class="text-[12px] text-mute mt-3 leading-relaxed">책 파일은 이 기기의 브라우저 안에만 저장돼요. 인터넷이 없어도 읽을 수 있지만, 브라우저 데이터를 지우면 함께 지워져요. 아이폰은 꼭 <b>공유 → 홈 화면에 추가</b>로 설치해서 쓰세요.</p>
-    </div>
-    <div class="bg-white rounded-[18px] p-4 mb-3">
-      <div class="font-bold text-[15px]">무료 고전 다운로드 중계 주소 <span class="text-mute font-semibold text-[12px]">(선택)</span></div>
-      <p class="text-[12.5px] text-mute mt-1 mb-3 leading-relaxed">구텐베르크는 브라우저에서 바로 받는 걸 막아 둬서 공개 중계 서버를 거쳐 받아요. 다운로드가 자주 실패하면 Cloudflare Workers에 <b>cors-worker.js</b>를 올리고 그 주소(…workers.dev)를 넣어 주세요. 가장 빠르고 안정적이에요.</p>
-      <input id="proxyUrl" class="inp" placeholder="https://이름.계정.workers.dev" autocomplete="off" spellcheck="false" inputmode="url">
     </div>
     <div class="bg-white rounded-[18px] p-4 mb-3">
       <div class="font-bold text-[15px]">알라딘 TTB 키 <span class="text-mute font-semibold text-[12px]">(추천)</span></div>
@@ -495,7 +490,7 @@
 
 <script>
 'use strict';
-const APP_VER = 'v12';
+const APP_VER = 'v13';
 const $ = s => document.querySelector(s);
 const $$ = s => [...document.querySelectorAll(s)];
 const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
@@ -586,11 +581,11 @@ const VIEW_ICONS = {
   grid: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 6h16M4 12h16M4 18h16"/></svg>',
   list: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="4" y="4" width="6.5" height="6.5" rx="1.6"/><rect x="13.5" y="4" width="6.5" height="6.5" rx="1.6"/><rect x="4" y="13.5" width="6.5" height="6.5" rx="1.6"/><rect x="13.5" y="13.5" width="6.5" height="6.5" rx="1.6"/></svg>'
 };
-const FILTERS = [['all', '전체'], ['reading', '읽는 중'], ['unread', '안 읽음'], ['done', '완독'], ['paper', '기록용']];
+const FILTERS = [['all', '전체'], ['reading', '읽는 중'], ['unread', '안 읽음'], ['done', '완독'], ['free', '무료 고전'], ['paper', '기록용']];
 
 function renderLibrary() {
-  const n = books.length, cnt = { all: n, reading: 0, unread: 0, done: 0, paper: 0 };
-  books.forEach(b => { cnt[statusOf(b)]++; if (!b.hasFile) cnt.paper++; });
+  const n = books.length, cnt = { all: n, reading: 0, unread: 0, done: 0, paper: 0, free: 0 };
+  books.forEach(b => { cnt[statusOf(b)]++; if (!b.hasFile) cnt.paper++; if (b.source === 'wikisource' || b.source === 'gutenberg') cnt.free++; });
   $('#libCount').textContent = n ? `${n}권 · 읽는 중 ${cnt.reading} · 완독 ${cnt.done}` : '책을 넣어 주세요';
   $('#btnView').innerHTML = VIEW_ICONS[S.view];
   $('#sortSel').value = S.sort;
@@ -659,11 +654,11 @@ function renderLibrary() {
     </div>` : '';
 
   // 필터 칩
-  $('#chips').innerHTML = FILTERS.filter(([k]) => k !== 'paper' || cnt.paper).map(([k, l]) => `<button class="chip ${S.filter === k ? 'on' : ''}" data-filter="${k}">${l}<b>${cnt[k]}</b></button>`).join('');
+  $('#chips').innerHTML = FILTERS.filter(([k]) => (k !== 'paper' || cnt.paper) && (k !== 'free' || cnt.free)).map(([k, l]) => `<button class="chip ${S.filter === k ? 'on' : ''}" data-filter="${k}">${l}<b>${cnt[k]}</b></button>`).join('');
   $('#shelfHead').classList.toggle('hidden', !n);
 
   // 책장
-  let list = books.filter(b => S.filter === 'all' ? true : S.filter === 'paper' ? !b.hasFile : statusOf(b) === S.filter);
+  let list = books.filter(b => S.filter === 'all' ? true : S.filter === 'paper' ? !b.hasFile : S.filter === 'free' ? (b.source === 'wikisource' || b.source === 'gutenberg') : statusOf(b) === S.filter);
   if (findQ) { const q = findQ.toLowerCase().replace(/\s+/g, ''); list = list.filter(b => ((b.title || '') + (b.author || '') + (b.publisher || '')).toLowerCase().replace(/\s+/g, '').includes(q)); }
   const cmp = { recent: (a, b) => (b.lastRead || 0) - (a.lastRead || 0) || b.added - a.added, added: (a, b) => b.added - a.added,
     title: (a, b) => (a.title || '').localeCompare(b.title || '', 'ko'), author: (a, b) => (a.author || '').localeCompare(b.author || '', 'ko') || (a.title || '').localeCompare(b.title || '', 'ko'),
@@ -1046,6 +1041,7 @@ $('#searchRes').onclick = e => {
   if (e.target.closest('[data-retry]')) { FR.q ? doFreeSearch() : doFreeSearch(false, true); return; }
   const rb = e.target.closest('[data-read]'); if (rb) { openReader(rb.dataset.read); return; }
   const db = e.target.closest('[data-dl]'); if (db) { downloadFree(FR.items[+db.dataset.dl]); return; }
+  if (e.target.closest('[data-pack]')) { installKoPack(false); return; }
   const fs = e.target.closest('[data-fsrc]'); if (fs) { if (fs.dataset.fsrc !== FR.src) { S.freeSrc = fs.dataset.fsrc; saveS(); $('#searchQ').value = ''; doFreeSearch(false, true); } return; }
   if (e.target.closest('[data-fi]')) return;
   const ab = e.target.closest('[data-add]');
@@ -1127,7 +1123,7 @@ async function searchKakao(q, isb, page) {
 /* ======================================================================
    무료 고전 이북 (Project Gutenberg · Gutendex API)
    ====================================================================== */
-const newFR = () => ({ q: '', items: [], next: null, count: 0, loading: false, err: null, popular: false, src: S.freeSrc || 'ko' });
+const newFR = () => ({ q: '', items: [], next: null, count: 0, loading: false, err: null, popular: false, src: 'ko' });
 let FR = newFR();
 const DL = new Map();   // gid → 진행 문구
 const QUICK = ['Sherlock Holmes', 'Alice', 'Homer', 'Jane Austen', 'Shakespeare', 'Grimm', 'Andersen', 'Peter Pan', 'Little Women', 'Dracula', 'Tolstoy', 'Dostoevsky'];
@@ -1254,6 +1250,103 @@ async function backfillCovers() {
   }
 }
 
+
+/* ---------- 무료 한국 고전 묶음: 처음 열 때 알아서 서재에 넣어 둠 ----------
+   위키문헌에서 실제로 받아지는지 확인한 저작권 만료 작품만 (2026-11 확인) */
+const KO_PACK_VER = 1;
+const KO_PACK = [
+  ['운수 좋은 날', '현진건', '근대소설'],
+  ['빈처', '현진건', '근대소설'],
+  ['B사감과 러브레터', '현진건', '근대소설'],
+  ['술 권하는 사회', '현진건', '근대소설'],
+  ['고향 (현진건)', '현진건', '근대소설'],
+  ['할머니의 죽음', '현진건', '근대소설'],
+  ['동백꽃', '김유정', '근대소설'],
+  ['봄봄', '김유정', '근대소설'],
+  ['소낙비', '김유정', '근대소설'],
+  ['만무방', '김유정', '근대소설'],
+  ['금 따는 콩밭', '김유정', '근대소설'],
+  ['노다지', '김유정', '근대소설'],
+  ['땡볕', '김유정', '근대소설'],
+  ['산골 나그네', '김유정', '근대소설'],
+  ['따라지', '김유정', '근대소설'],
+  ['두꺼비', '김유정', '근대소설'],
+  ['메밀꽃 필 무렵', '이효석', '근대소설'],
+  ['산 (이효석)', '이효석', '근대소설'],
+  ['분녀', '이효석', '근대소설'],
+  ['날개', '이상', '근대소설'],
+  ['봉별기', '이상', '근대소설'],
+  ['종생기', '이상', '근대소설'],
+  ['지주회시', '이상', '근대소설'],
+  ['벙어리 삼룡이', '나도향', '근대소설'],
+  ['물레방아', '나도향', '근대소설'],
+  ['뽕', '나도향', '근대소설'],
+  ['감자', '김동인', '근대소설'],
+  ['배따라기', '김동인', '근대소설'],
+  ['광염 소나타', '김동인', '근대소설'],
+  ['광화사', '김동인', '근대소설'],
+  ['발가락이 닮았다', '김동인', '근대소설'],
+  ['붉은 산', '김동인', '근대소설'],
+  ['약한 자의 슬픔', '김동인', '근대소설'],
+  ['태평천하', '채만식', '근대소설'],
+  ['탁류', '채만식', '근대소설'],
+  ['레디메이드 인생', '채만식', '근대소설'],
+  ['치숙', '채만식', '근대소설'],
+  ['무정', '이광수', '근대소설'],
+  ['흙', '이광수', '근대소설'],
+  ['소년의 비애', '이광수', '근대소설'],
+  ['탈출기', '최서해', '근대소설'],
+  ['홍염', '최서해', '근대소설'],
+  ['낙엽을 태우면서', '이효석', '수필'],
+  ['권태', '이상', '수필'],
+  ['진달래꽃', '김소월', '시'],
+  ['님의 침묵', '한용운', '시'],
+  ['하늘과 바람과 별과 시', '윤동주', '시'],
+  ['향수', '정지용', '시'],
+  ['오감도', '이상', '시'],
+  ['청포도', '이육사', '시'],
+  ['광야 (이육사)', '이육사', '시'],
+  ['빼앗긴 들에도 봄은 오는가', '이상화', '시'],
+  ['홍길동전', '허균', '고전소설'],
+  ['심청전', '작자 미상', '고전소설'],
+  ['흥부전', '작자 미상', '고전소설'],
+  ['구운몽', '김만중', '고전소설'],
+  ['박씨전', '작자 미상', '고전소설'],
+  ['운영전', '작자 미상', '고전소설'],
+  ['금오신화', '김시습', '고전소설'],
+  ['허생전', '이광수', '고전소설'],
+  ['임경업전', '작자 미상', '고전소설'],
+  ['유충렬전', '작자 미상', '고전소설'],
+  ['조웅전', '작자 미상', '고전소설'],
+  ['숙향전', '작자 미상', '고전소설']
+];
+async function installKoPack(auto) {
+  if (installKoPack.running) return; installKoPack.running = true;
+  const todo = KO_PACK.filter(p => !books.some(b => b.gid === 'ko:' + p[0]));
+  if (!todo.length) { installKoPack.running = false; S.koPack = KO_PACK_VER; saveS(); if (!auto) toast('모두 서재에 들어 있어요'); return; }
+  try { navigator.storage && navigator.storage.persist && navigator.storage.persist(); } catch {}
+  const panel = $('#imp'), list = $('#impList'); list.innerHTML = ''; panel.classList.add('open');
+  if (!auto) closeSheets('replace');
+  $('#impBar').style.width = '0';
+  let ok = 0, i = 0;
+  for (const [ws, author, cat] of todo) {
+    $('#impTitle').textContent = `무료 한국 고전 넣는 중 · ${i + 1}/${todo.length}`;
+    const name = ws.replace(/\s*\([^)]*\)$/, '');
+    const r = document.createElement('div'); r.className = 'ir work';
+    r.innerHTML = '<span class="dot"></span><span class="flex-1 min-w-0 truncate"></span><span class="text-[12px] text-mute flex-none"></span>';
+    r.children[1].textContent = name; r.children[2].textContent = author; list.prepend(r);
+    const it = { gid: 'ko:' + ws, ws, title: name, author, lang: ['ko'], subjects: [cat], summary: `${cat} · ${author} · 저작권이 끝나 누구나 읽을 수 있는 작품`, cover: '', downloads: 0 };
+    const done = await downloadFree(it, true).catch(() => false);
+    r.className = 'ir ' + (done ? 'ok' : 'fail'); if (done) ok++;
+    i++; $('#impBar').style.width = (i / todo.length * 100) + '%';
+  }
+  $('#impTitle').textContent = ok ? `무료 한국 고전 ${ok}권을 서재에 넣었어요` : '지금은 받지 못했어요 · 다음에 다시 시도해요';
+  if (ok === todo.length) { S.koPack = KO_PACK_VER; saveS(); }
+  installKoPack.running = false;
+  setTimeout(() => panel.classList.remove('open'), 5000);
+  if (searchTab === 'free' && curSheet() === 'shSearch') renderFree();
+}
+
 /* ---------- 받은 글로 EPUB 만들기 (중계 서버 없이 앱 안에서) ---------- */
 const XE = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&apos;' }[c]));
 async function makeEpub(meta, chapters) {
@@ -1324,9 +1417,20 @@ async function buildFromIA(it, setP) {
 
 /* ---------- 한국어: 위키문헌 글을 직접 모아 EPUB으로 ---------- */
 const WS_API = 'https://ko.wikisource.org/w/api.php?format=json&formatversion=2&origin=*&';
+/* 위키문헌은 너무 빨리 많이 물으면 잠시 막으므로 천천히, 막히면 쉬었다가 다시 */
+let wsLast = 0;
+async function wsGet(params) {
+  for (let i = 0; i < 5; i++) {
+    const wait = wsLast + 350 - Date.now(); if (wait > 0) await new Promise(r => setTimeout(r, wait));
+    wsLast = Date.now();
+    const txt = await withTimeout(fetch(WS_API + params).then(r => r.text()), 20000);
+    try { return JSON.parse(txt); } catch { await new Promise(r => setTimeout(r, 2500 * (i + 1))); }   // "You are making too many requests"
+  }
+  throw new Error('busy');
+}
 async function wsParse(title) {
-  const j = await withTimeout(fetch(WS_API + 'action=parse&prop=text|links&redirects=1&disableeditsection=1&page=' + encodeURIComponent(title)).then(r => r.json()), 20000);
-  if (j.error) throw new Error(j.error.info || 'parse'); return j.parse;
+  const j = await wsGet('action=parse&prop=text|links&redirects=1&disableeditsection=1&page=' + encodeURIComponent(title));
+  if (j.error) throw new Error(j.error.code === 'missingtitle' ? 'empty' : (j.error.info || 'parse')); return j.parse;
 }
 function wsClean(html) {
   const d = new DOMParser().parseFromString(`<div id="dkroot">${html}</div>`, 'text/html'), r = d.getElementById('dkroot');
@@ -1343,9 +1447,11 @@ async function buildFromWS(it, setP, depth = 0) {
   setP('본문 찾는 중…');
   const root = await wsParse(it.ws);
   const title = root.title || it.ws;
-  // 판본 목록 문서(예: 홍길동전 → 경판본·완판본·김유정)면 읽기 쉬운 판본으로 들어감
-  if (depth === 0) {
-    const vers = (root.links || []).filter(l => l.ns === 0 && l.exists !== false && l.title !== title && l.title.startsWith(title.replace(/\s*\(.*\)$/, ''))).map(l => l.title);
+  const ap = await wsGet('action=query&list=allpages&apnamespace=0&aplimit=300&apprefix=' + encodeURIComponent(title + '/')).catch(() => ({}));
+  const allSubs = ((ap.query && ap.query.allpages) || []).map(p => p.title);
+  // 판본 목록 문서(예: 홍길동전 → 경판본·완판본·김유정)면 읽기 쉬운 판본으로 들어감 — 장(하위 문서)이 있는 장편은 그대로
+  if (depth === 0 && !allSubs.length) {
+    const vers = (root.links || []).filter(l => l.ns === 0 && l.exists !== false && l.title !== title && !l.title.startsWith(title + '/') && l.title.startsWith(title.replace(/\s*\(.*\)$/, ''))).map(l => l.title);
     const probe = wsClean(root.text || '');
     if (vers.length && (probe.len < 600 || /판본|다음이 있습니다|동음이의/.test(probe.html.slice(0, 400)))) {
       const pick = vers.find(v => !/(경판|완판|판본|장본|영인|원문|한문)/.test(v)) || vers[0];
@@ -1355,16 +1461,15 @@ async function buildFromWS(it, setP, depth = 0) {
   }
   const authorLink = (root.links || []).find(l => /^저자:/.test(l.title || ''));
   const author = authorLink ? authorLink.title.replace(/^저자:/, '') : '';
-  const ap = await withTimeout(fetch(WS_API + 'action=query&list=allpages&apnamespace=0&aplimit=300&apprefix=' + encodeURIComponent(title + '/')).then(r => r.json()), 20000).catch(() => ({}));
-  let subs = ((ap.query && ap.query.allpages) || []).map(p => p.title).filter(t => !/\/(해설|주석|토론)$/.test(t));
+  let subs = allSubs.filter(t => !/\/(해설|주석|토론)$/.test(t));
   const order = (root.links || []).map(l => l.title);
   subs.sort((a, b) => { const ia = order.indexOf(a), ib = order.indexOf(b); if (ia >= 0 && ib >= 0) return ia - ib; if (ia >= 0) return -1; if (ib >= 0) return 1; return a.localeCompare(b, 'ko', { numeric: true }); });
   subs = subs.slice(0, 150);
   const chapters = [], main = wsClean(root.text || '');
   if (main.len > 150 || !subs.length) chapters.push({ title: subs.length ? '들어가며' : '', html: main.html });
-  for (let i = 0; i < subs.length; i += 4) {
-    setP(`${Math.min(i + 4, subs.length)}/${subs.length}장 받는 중`);
-    const part = await Promise.all(subs.slice(i, i + 4).map(t => wsParse(t).then(pp => ({ title: t.slice(title.length + 1), ...wsClean(pp.text || '') })).catch(() => null)));
+  for (let i = 0; i < subs.length; i += 2) {
+    setP(`${Math.min(i + 2, subs.length)}/${subs.length}장 받는 중`);
+    const part = await Promise.all(subs.slice(i, i + 2).map(t => wsParse(t).then(pp => ({ title: t.slice(title.length + 1), ...wsClean(pp.text || '') })).catch(() => null)));
     part.filter(c => c && c.len > 20).forEach(c => chapters.push({ title: c.title, html: c.html }));
   }
   if (!chapters.length || chapters.every(c => !c.html)) throw new Error('empty');
@@ -1385,11 +1490,14 @@ function mapGut(g) {
 }
 const QUICK_KO = ['운수 좋은 날', '메밀꽃 필 무렵', '동백꽃', '봄봄', '날개', '진달래꽃', '님의 침묵', '홍길동전', '춘향전', '심청전', '흥부전', '구운몽', '무정', '감자', '탁류'];
 const FREE_HINT_KO = `<div class="text-center pt-5 pb-3 px-4"><div class="serif font-bold text-[17px]">한국 고전·근대문학 무료 이북</div><p class="text-[13px] text-mute mt-2 leading-relaxed">저작권이 끝난 한국어 작품을 위키문헌에서 찾아<br>EPUB으로 받아 서재에 저장해요.</p></div>`;
-const srcSeg = () => `<div class="seg mb-3" style="background:#EAE5DC" id="freeSrc"><button data-fsrc="ko" class="${FR.src === 'ko' ? 'on' : ''}" style="${FR.src === 'ko' ? 'background:#fff;color:var(--deep)' : ''}">한국어 · 위키문헌</button><button data-fsrc="en" class="${FR.src === 'en' ? 'on' : ''}" style="${FR.src === 'en' ? 'background:#fff;color:var(--deep)' : ''}">외국어 · 구텐베르크</button></div>`;
-const freePlaceholder = () => (S.freeSrc || 'ko') === 'ko' ? '작품·작가 (예: 운수 좋은 날)' : '영어로 (예: Sherlock, Alice)';
+const srcSeg = () => {
+  const left = KO_PACK.filter(p => !books.some(b => b.gid === 'ko:' + p[0])).length;
+  return `<div class="bg-white rounded-[18px] p-4 mb-3 flex items-center gap-3"><div class="flex-1 min-w-0"><div class="font-bold text-[15px]">한국 고전·근대문학 대표작 ${KO_PACK.length}권</div><div class="text-[12.5px] text-mute mt-0.5">${left ? `${KO_PACK.length - left}권 서재에 있음 · ${left}권 더 넣을 수 있어요` : '모두 서재에 들어 있어요'}</div></div>${left ? `<button class="add-btn" data-pack>전부 넣기</button>` : ''}</div>`;
+};
+const freePlaceholder = () => '작품·작가 (예: 운수 좋은 날)';
 async function doFreeSearch(more, popular) {
   if (FR.loading) return;
-  const src = S.freeSrc || 'ko';
+  const src = 'ko';   // 영문(구텐베르크)은 뺌
   let url;
   if (!more) {
     const q = popular ? '' : $('#searchQ').value.trim();
@@ -1483,14 +1591,14 @@ function paintFreeBtn(gid) {
   const old = card.querySelector('.add-btn'); if (!old) return;
   const tmp = document.createElement('div'); tmp.innerHTML = freeBtn(FR.items[i], i); old.replaceWith(tmp.firstElementChild);
 }
-async function downloadFree(it) {
-  if (!it || DL.has(it.gid)) return;
-  const have = books.find(b => b.gid === it.gid); if (have) { openReader(have.id); return; }
+async function downloadFree(it, quiet) {
+  if (!it || DL.has(it.gid)) return false;
+  const have = books.find(b => b.gid === it.gid); if (have) { if (!quiet) openReader(have.id); return true; }
   const setP = txt => { DL.set(it.gid, txt); paintFreeBtn(it.gid); };
   setP('연결 중…');
   try {
     let buf = null, lastErr;
-    if (it.ws) { const r = await buildFromWS(it, setP); buf = r.buf; if (!it.author) it.author = r.author; if (r.title && r.title !== it.title) it.title = r.title; }
+    if (it.ws) { const r = await buildFromWS(it, setP); buf = r.buf; if (r.author) it.author = r.author; if (r.title && r.title !== it.title) it.title = r.title; }
     else if (it.ia) buf = await buildFromIA(it, setP);
     else {
       const base = `https://www.gutenberg.org/cache/epub/${it.gid}/pg${it.gid}`;
@@ -1512,13 +1620,16 @@ async function downloadFree(it) {
       link: it.ws ? `https://ko.wikisource.org/wiki/${encodeURIComponent(it.ws.replace(/ /g, '_'))}` : it.ia ? `https://archive.org/details/${it.ia}` : `https://www.gutenberg.org/ebooks/${it.gid}`, source: it.ws ? 'wikisource' : 'gutenberg', gid: it.gid,
       hasFile: true, fileName: fname, size: buf.byteLength, added: Date.now(), lastRead: 0, progress: 0, cfi: null, bookmarks: [] };
     if (coverUrl) b.coverUrl = coverUrl;
+    b.title = String(b.title).replace(/^번역:/, '').replace(/\s*\(([^)]*)\)$/, (m, x) => (x === b.author || /^\d{4}년?$/.test(x)) ? '' : m);
     await DB.put('files', { id: b.id, data: buf });
     await DB.put('books', b);
     books.push(b); setCover(b);
     DL.delete(it.gid); paintFreeBtn(it.gid); renderLibrary();
-    toast(`‘${b.title.length > 16 ? b.title.slice(0, 16) + '…' : b.title}’ 받았어요 · 바로 읽기를 누르세요`, 3000);
+    if (!quiet) toast(`‘${b.title.length > 16 ? b.title.slice(0, 16) + '…' : b.title}’ 받았어요 · 바로 읽기를 누르세요`, 3000);
+    return true;
   } catch (e) {
     console.warn(e); DL.delete(it.gid); paintFreeBtn(it.gid);
+    if (quiet) return false;
     toast(e && e.name === 'QuotaExceededError' ? '저장 공간이 부족해요' : e && e.message === 'empty' ? '이 항목은 본문이 없어요 (목록·안내 문서예요)' : '받지 못했어요. 인터넷 연결을 확인하고 다시 눌러 주세요', 3400);
   }
 }
@@ -1653,7 +1764,7 @@ $('#fileAttach').onchange = async e => {
 
 /* ---------------- 설정 ---------------- */
 $('#btnSet').onclick = async () => {
-  $('#kakaoKey').value = S.kakao || ''; $('#proxyUrl').value = S.proxy || ''; $('#aladinKey').value = S.aladin || '';
+  $('#kakaoKey').value = S.kakao || ''; $('#aladinKey').value = S.aladin || '';
   openSheet('shSet');
   try {
     const est = await navigator.storage.estimate();
@@ -1662,7 +1773,6 @@ $('#btnSet').onclick = async () => {
     $('#storeBar').style.width = q ? Math.max(1, used / q * 100) + '%' : '0';
   } catch { $('#storeInfo').textContent = `책 ${books.length}권`; }
 };
-$('#proxyUrl').onchange = e => { let v = e.target.value.trim().replace(/\/+$/, ''); if (v && !/^https?:\/\//.test(v)) v = 'https://' + v; S.proxy = v; S.via = ''; saveS(); e.target.value = v; toast(v ? '내 중계 주소를 먼저 쓸게요' : '공개 중계 서버를 써요'); };
 $('#aladinKey').onchange = e => { S.aladin = e.target.value.trim(); saveS(); toast(S.aladin ? '알라딘 검색을 켰어요' : '알라딘 검색을 껐어요'); };
 $('#kakaoKey').onchange = e => { S.kakao = e.target.value.trim(); saveS(); toast(S.kakao ? '카카오 검색을 켰어요' : '카카오 검색을 껐어요'); };
 $('#btnExport').onclick = () => {
@@ -1990,7 +2100,8 @@ let loadedResolve; const loaded = new Promise(r => loadedResolve = r);
 (async function init() {
   try { books = await DB.all('books'); } catch (e) { console.warn(e); books = []; toast('이 브라우저는 저장 공간을 쓸 수 없어요'); }
   books.forEach(setCover);
-  setTimeout(() => backfillCovers().catch(() => {}), 2500);
+  if ((S.koPack | 0) < KO_PACK_VER && navigator.onLine !== false) setTimeout(() => installKoPack(true).catch(() => {}), 2500);
+  else setTimeout(() => backfillCovers().catch(() => {}), 2500);
   renderLibrary();
   loadedResolve();
   // 버전 꼬리표
