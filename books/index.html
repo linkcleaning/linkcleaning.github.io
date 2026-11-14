@@ -229,6 +229,12 @@
   #rMenu svg { width:16px; height:16px; }
   #rMenu:active { opacity:1; }
   #reader.bars #rMenu { opacity:0; pointer-events:none; }
+  /* 양옆 희미한 넘김 화살표 */
+  .r-edge { position:absolute; z-index:4; top:50%; transform:translateY(-50%); width:30px; height:84px; display:grid; place-items:center; color:var(--r-fg); opacity:.22; border-radius:12px; transition:opacity .15s, background .15s; }
+  .r-edge svg { width:22px; height:22px; }
+  .r-edge:active { opacity:.7; background:var(--r-hover); }
+  #rEdgePrev { left:0; } #rEdgeNext { right:0; }
+  @media (hover:hover) { .r-edge:hover { opacity:.6; } }
   input[type=range].rng { -webkit-appearance:none; appearance:none; width:100%; height:30px; background:transparent; }
   input[type=range].rng::-webkit-slider-runnable-track { height:4px; border-radius:4px; background:linear-gradient(to right, var(--orange) var(--p,0%), var(--r-track) var(--p,0%)); }
   input[type=range].rng::-webkit-slider-thumb { -webkit-appearance:none; width:20px; height:20px; margin-top:-8px; border-radius:50%; background:#fff; border:2px solid var(--orange); box-shadow:0 2px 6px rgba(0,0,0,.25); }
@@ -318,6 +324,8 @@
   <div id="viewerWrap"><div id="viewer"></div></div>
   <div id="rLoading">책을 펼치는 중…</div>
   <div id="rMini"></div>
+  <button class="r-edge" id="rEdgePrev" aria-label="앞 쪽"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M15 5l-7 7 7 7"/></svg></button>
+  <button class="r-edge" id="rEdgeNext" aria-label="다음 쪽"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M9 5l7 7-7 7"/></svg></button>
   <button id="rMenu" aria-label="메뉴 열기"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M4 7h16M4 12h16M4 17h16"/></svg>메뉴</button>
   <div id="rCalc" class="hidden">쪽수 계산 중…</div>
 
@@ -497,7 +505,7 @@
 
 <script>
 'use strict';
-const APP_VER = 'v15';
+const APP_VER = 'v16';
 const $ = s => document.querySelector(s);
 const $$ = s => [...document.querySelectorAll(s)];
 const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
@@ -1951,6 +1959,7 @@ let sliding = false;
 function setSlider(p) { if (sliding) return; const s = $('#rSlider'); s.value = Math.round(p * 1000); s.style.setProperty('--p', (p * 100) + '%'); }
 function onRelocated(rd, loc) {
   if (RD !== rd) return;
+  rd.moved = true;
   rd.loc = loc;
   const p = rd.pct = pctOf(rd, loc), ch = curChapter(rd, loc), d = (loc.start && loc.start.displayed) || {};
   $('#rPct').textContent = (p >= 1 ? 100 : (p * 100).toFixed(p < 0.1 ? 1 : 0)) + '%';
@@ -1984,16 +1993,17 @@ const next = () => {
   if (!RD) return; showBars(false);
   const rd = RD, before = rd.loc && rd.loc.start && rd.loc.start.cfi;
   if (R.flow === 'scroll') { jumpSection(rd, 1); return; }
+  rd.moved = false; const tag = rd.navTag = (rd.navTag || 0) + 1;
   rd.rendition.next();
-  // 눌렀는데 쪽이 그대로면(일부 아이폰) 다음 장으로 직접 건너뜀
+  // 눌렀는데 쪽이 전혀 안 움직였으면(일부 아이폰) 다음 장으로 직접 건너뜀
   setTimeout(() => {
-    if (RD !== rd || !rd.loc || rd.loc.atEnd || rd.loc.start.cfi !== before) { stuck = 0; return; }
+    if (RD !== rd || rd.navTag !== tag || rd.moved || !rd.loc || rd.loc.atEnd || rd.loc.start.cfi !== before) { stuck = 0; return; }
     const nx = rd.book.spine.get(rd.loc.start.index + 1);
     if (nx) rd.rendition.display(nx.href);
     if (++stuck >= 2 || !nx) toast('쪽이 안 넘어가면 Aa → 넘김 방식 → ‘위아래 스크롤’로 바꿔 보세요', 3800);
   }, 800);
 };
-const prev = () => { if (!RD) return; showBars(false); if (R.flow === 'scroll') { jumpSection(RD, -1); return; } RD.rendition.prev(); };
+const prev = () => { if (!RD) return; showBars(false); RD.navTag = (RD.navTag || 0) + 1; if (R.flow === 'scroll') { jumpSection(RD, -1); return; } RD.rendition.prev(); };
 function jumpSection(rd, d) {   // 스크롤 방식: › ‹ 버튼은 다음·이전 장으로
   const idx = rd.loc && rd.loc.start ? rd.loc.start.index : 0, sec = rd.book.spine.get(idx + d);
   if (sec) rd.rendition.display(sec.href); else toast(d > 0 ? '마지막 장이에요' : '첫 장이에요');
@@ -2007,6 +2017,8 @@ function tapAt(x, y) {
   if (x < W * 0.28) prev(); else if (x > W * 0.72) next(); else toggleBars();
 }
 $('#rMenu').onclick = e => { e.stopPropagation(); showBars(true); };
+$('#rEdgePrev').onclick = e => { e.stopPropagation(); prev(); };
+$('#rEdgeNext').onclick = e => { e.stopPropagation(); next(); };
 const hasSel = w => { try { const s = w.getSelection(); return s && String(s).trim().length > 0; } catch { return false; } };
 function onFrame(contents) {
   const doc = contents.document, win = contents.window || doc.defaultView;
