@@ -100,6 +100,14 @@
   .ring { --p:0; width:46px; height:46px; border-radius:50%; background:conic-gradient(var(--orange) calc(var(--p)*1%), #ECE7DE 0); display:grid; place-items:center; }
   .ring span { width:36px; height:36px; border-radius:50%; background:#fff; display:grid; place-items:center; font-size:11px; font-weight:800; color:var(--deep); }
 
+  .back-pill { display:inline-flex; align-items:center; gap:1px; height:40px; padding:0 12px 0 6px; border-radius:12px; color:var(--deep); font-weight:700; font-size:15px; flex:none; }
+  .back-pill svg { width:24px; height:24px; }
+  .back-pill:active { background:rgba(14,59,64,.08); }
+  @media (max-width:639px) {
+    body.searching #tabbar { z-index:63; }
+    body.searching #shSearch { bottom:var(--tbh, 60px); height:calc(100dvh - var(--tbh, 60px) - 8px - var(--st)); max-height:none; border-radius:24px 24px 0 0; padding-bottom:0; box-shadow:none; }
+    body.searching #shSearch .grab { visibility:hidden; height:0; margin:8px; }
+  }
   /* 아래쪽 탭 메뉴 — 스마트폰 전용 */
   #tabbar { position:fixed; left:0; right:0; bottom:0; z-index:40; display:flex; align-items:flex-end; padding:5px 4px calc(4px + var(--sb)); background:rgba(255,255,255,.92); -webkit-backdrop-filter:blur(18px) saturate(1.4); backdrop-filter:blur(18px) saturate(1.4); box-shadow:0 -1px 0 var(--line); }
   #tabbar button { flex:1; display:flex; flex-direction:column; align-items:center; gap:2px; font-size:10.5px; font-weight:700; color:#959A97; padding:3px 0 2px; letter-spacing:-.02em; }
@@ -398,9 +406,10 @@
 <div class="sheet" id="shSearch" role="dialog" aria-label="도서 검색">
   <div class="grab"></div>
   <div class="px-[18px] pt-1 pb-3">
-    <div class="flex items-center justify-between mb-3">
-      <h3 class="serif font-bold text-[20px]" id="searchTitle">인터넷 도서 검색</h3>
-      <button class="icon-btn !w-9 !h-9" id="searchClose" aria-label="닫기"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M6 6l12 12M18 6 6 18"/></svg></button>
+    <div class="flex items-center gap-1 mb-3 -ml-2">
+      <button class="back-pill" id="searchBack" aria-label="뒤로"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M15 5l-7 7 7 7"/></svg><span id="searchBackLbl">서재</span></button>
+      <h3 class="serif font-bold text-[19px] flex-1 text-center pr-[60px] truncate" id="searchTitle">인터넷 도서 검색</h3>
+      <button class="icon-btn !w-9 !h-9 hidden" id="searchClose" aria-label="닫기"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M6 6l12 12M18 6 6 18"/></svg></button>
     </div>
     <div class="tabs mb-3" id="searchTabs"><button data-tab="kr" class="on">국내 도서</button><button data-tab="free">무료 고전 이북<i>FREE</i></button></div>
     <form id="searchForm" class="flex gap-2">
@@ -484,7 +493,7 @@
 
 <script>
 'use strict';
-const APP_VER = 'v4';
+const APP_VER = 'v5';
 const $ = s => document.querySelector(s);
 const $$ = s => [...document.querySelectorAll(s)];
 const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
@@ -782,7 +791,7 @@ async function runImport() {
   importing = true;
   try { navigator.storage && navigator.storage.persist && navigator.storage.persist(); } catch {}
   const panel = $('#imp'), list = $('#impList');
-  list.innerHTML = ''; panel.classList.add('open'); closeSheets();
+  list.innerHTML = ''; panel.classList.add('open'); closeSheets('replace');
   let done = 0, ok = 0, total = 0;
   const pending = [];
   const pull = () => { while (importQueue.length) { const f = importQueue.shift(); const r = document.createElement('div'); r.className = 'ir'; r.innerHTML = `<span class="dot"></span><span class="flex-1 min-w-0 truncate"></span><span class="text-[12px] text-mute flex-none"></span>`; r.children[1].textContent = f.name; list.appendChild(r); pending.push({ f, r }); total++; } };
@@ -851,27 +860,62 @@ if ('launchQueue' in window) launchQueue.setConsumer(async p => { if (!p.files |
 
 /* ---------------- 시트 열고 닫기 ---------------- */
 function navMark(k) { $$('#tabbar [data-nav]').forEach(b => b.classList.toggle('on', b.dataset.nav === k)); }
-function openSheet(id) { $$('.sheet.open').forEach(s => s.id !== id && s.classList.remove('open')); $('#' + id).classList.add('open'); $('#scrim').classList.add('open');
-  navMark(id === 'shSearch' ? (searchMode.mode === 'fill' ? 'lib' : searchTab) : id === 'shSet' ? 'set' : id === 'shAdd' ? 'add' : 'lib'); }
-function closeSheets() { $$('.sheet.open').forEach(s => s.classList.remove('open')); $('#scrim').classList.remove('open'); navMark('lib'); }
+/* 시트는 겹겹이 쌓이고(검색 → 책 정보), '뒤로'는 한 겹씩 돌아감. 휴대폰의 뒤로 동작과도 연결 */
+let sheetStack = [], skipPop = 0;
+const curSheet = () => { const o = $('.sheet.open'); return o ? o.id : null; };
+const SHEET_NAMES = { shSearch: '검색', shDetail: '책 정보', shAdd: '추가', shSet: '설정' };
+function showSheet(id) {
+  $$('.sheet.open').forEach(s => s.id !== id && s.classList.remove('open'));
+  $('#' + id).classList.add('open'); $('#scrim').classList.add('open');
+  document.body.classList.toggle('searching', id === 'shSearch');
+  $('#searchBackLbl').textContent = sheetStack.length ? (SHEET_NAMES[sheetStack[sheetStack.length - 1]] || '뒤로') : '서재';
+  navMark(id === 'shSearch' ? (searchMode.mode === 'fill' ? 'lib' : searchTab) : id === 'shSet' ? 'set' : id === 'shAdd' ? 'add' : sheetStack.includes('shSearch') ? searchTab : 'lib');
+}
+function openSheet(id) {
+  const cur = curSheet();
+  if (cur === id) { showSheet(id); return; }
+  if (cur && cur !== 'shAdd') sheetStack.push(cur); else if (!cur) sheetStack = [];
+  if (cur === 'shAdd' && history.state && history.state.sheet) history.replaceState({ sheet: id }, '');
+  else history.pushState({ sheet: id }, '');
+  showSheet(id);
+}
+function hideSheets() {
+  $$('.sheet.open').forEach(s => s.classList.remove('open')); $('#scrim').classList.remove('open');
+  document.body.classList.remove('searching'); navMark('lib'); sheetStack = [];
+}
+function closeSheets(mode) {           // 전부 닫기 (mode: 'pop' = 이미 뒤로 감, 'replace' = 기록만 정리)
+  if (!curSheet()) return;
+  const depth = sheetStack.length + 1;
+  hideSheets();
+  if (mode === 'pop' || !(history.state && history.state.sheet)) return;
+  if (mode === 'replace') { history.replaceState(null, ''); return; }
+  skipPop++; history.go(-depth);
+}
+function sheetBack() { if (history.state && history.state.sheet) history.back(); else if (sheetStack.length) showSheet(sheetStack.pop()); else hideSheets(); }
+function onSheetPop() {
+  if (!curSheet()) return false;
+  if (sheetStack.length) showSheet(sheetStack.pop()); else hideSheets();
+  return true;
+}
+new ResizeObserver(() => document.documentElement.style.setProperty('--tbh', $('#tabbar').offsetHeight + 'px')).observe($('#tabbar'));
 $('#tabbar').onclick = e => {
   const b = e.target.closest('[data-nav]'); if (!b) return;
   const k = b.dataset.nav;
-  if (k === 'lib') { closeSheets(); scrollTo({ top: 0, behavior: 'smooth' }); }
+  if (k === 'lib') { closeSheets(); if (RD) closeReader(); scrollTo({ top: 0, behavior: 'smooth' }); }
   else if (k === 'kr' || k === 'free') openSearch('new', null, '', k);
   else if (k === 'add') openSheet('shAdd');
   else if (k === 'set') $('#btnSet').click();
 };
-$('#scrim').onclick = closeSheets;
+$('#scrim').onclick = sheetBack;
 $$('.sheet').forEach(sh => {   // 손잡이를 아래로 끌면 닫힘
   let y0 = null;
   sh.addEventListener('touchstart', e => { const body = sh.querySelector('.body'); if (body && body.scrollTop > 0 && e.target.closest('.body')) { y0 = null; return; } y0 = e.touches[0].clientY; }, { passive: true });
   sh.addEventListener('touchmove', e => { if (y0 == null) return; const dy = e.touches[0].clientY - y0; if (dy > 0 && innerWidth < 720) sh.style.transform = `translateY(${dy}px)`; }, { passive: true });
-  sh.addEventListener('touchend', e => { if (y0 == null) return; const dy = e.changedTouches[0].clientY - y0; sh.style.transform = ''; if (dy > 110 && innerWidth < 720) closeSheets(); y0 = null; });
+  sh.addEventListener('touchend', e => { if (y0 == null) return; const dy = e.changedTouches[0].clientY - y0; sh.style.transform = ''; if (dy > 110 && innerWidth < 720) sheetBack(); y0 = null; });
 });
 
 $('#fab').onclick = $('#btnAddTop').onclick = () => openSheet('shAdd');
-$('#optFiles').onclick = () => { closeSheets(); $('#fileEpub').click(); };
+$('#optFiles').onclick = () => { closeSheets('replace'); $('#fileEpub').click(); };
 $('#optSearch').onclick = () => openSearch('new');
 $('#btnWeb').onclick = () => openSearch('new');
 $('#optFree').onclick = () => openSearch('new', null, '', 'free');
@@ -920,7 +964,7 @@ function setTab(tab, keepQuiet) {
   else $('#searchRes').innerHTML = SEARCH_HINT;
 }
 $('#searchTabs').onclick = e => { const b = e.target.closest('[data-tab]'); if (b && b.dataset.tab !== searchTab) setTab(b.dataset.tab); };
-$('#searchClose').onclick = closeSheets;
+$('#searchClose').onclick = () => closeSheets(); $('#searchBack').onclick = sheetBack;
 $('#aladinKeySave').onclick = () => {
   const k = $('#aladinKeyQuick').value.trim(); if (!k) { $('#aladinKeyQuick').focus(); return; }
   S.aladin = k; saveS(); $('#keyBanner').classList.add('hidden'); toast('알라딘 검색을 켰어요');
@@ -1337,11 +1381,11 @@ function renderDetail() {
   $('#dTitle').oninput = e => { $('#dHeadTitle').textContent = e.target.value || '제목을 적어 주세요'; if (!detail.coverBlob && !detail.coverUrl && !(b && (coverURL.get(b.id) || b.coverUrl))) paintDetailCover(); };
   $('#dCover').onclick = $('#dCoverBtn').onclick = () => $('#fileCover').click();
   $('#dFind').onclick = () => { syncDraft(); openSearch(detail.isNew ? 'new' : 'fill', detail.id, $('#dIsbn').value.trim() || $('#dTitle').value.trim()); };
-  if ($('#dRead')) $('#dRead').onclick = async () => { await saveDetail(true); closeSheets(); openReader(b.id); };
+  if ($('#dRead')) $('#dRead').onclick = async () => { await saveDetail(true); openReader(b.id); };
   if ($('#dAttach')) $('#dAttach').onclick = () => $('#fileAttach').click();
   if ($('#dDel')) $('#dDel').onclick = () => deleteBook(b.id);
   if ($('#dMan')) $('#dMan').oninput = e => { $('#dManPct').textContent = e.target.value + '%'; e.target.style.setProperty('--p', e.target.value + '%'); };
-  $('#dSave').onclick = async () => { if (await saveDetail()) closeSheets(); };
+  $('#dSave').onclick = async () => { if (await saveDetail()) sheetBack(); };
 }
 function syncDraft() { if (!$('#dTitle')) return; detail.draft = { title: $('#dTitle').value.trim(), author: $('#dAuthor').value.trim(), publisher: $('#dPub').value.trim(), isbn: $('#dIsbn').value.replace(/[^\dXx]/g, ''), description: $('#dDesc').value.trim() }; }
 const fmtSize = n => !n ? '' : n > 1048576 ? (n / 1048576).toFixed(1) + 'MB' : Math.max(1, Math.round(n / 1024)) + 'KB';
@@ -1504,7 +1548,7 @@ async function openReader(id) {
   const rec = await DB.get('files', id).catch(() => null);
   if (!rec || !rec.data) { toast('책 파일을 찾을 수 없어요'); openDetail(id); return; }
   if (RD) closeReader(true);
-  closeSheets();
+  closeSheets('replace');
   document.body.classList.add('reading');
   const rdr = $('#reader'); rdr.classList.add('bars');
   $('#rTitle').textContent = meta.title; $('#rChap').textContent = meta.author || ''; $('#rHead').textContent = meta.title;
@@ -1592,7 +1636,7 @@ function closeReader(silent) {
   renderLibrary();
   if (history.state && history.state.reader) history.back();
 }
-addEventListener('popstate', () => { if (RD) { closeReader(true); document.body.classList.remove('reading'); setThemeColor('#F5F2EC'); renderLibrary(); } });
+addEventListener('popstate', () => { if (skipPop) { skipPop--; return; } if (!RD && onSheetPop()) return; if (RD) { closeReader(true); document.body.classList.remove('reading'); setThemeColor('#F5F2EC'); renderLibrary(); } });
 
 /* 넘기기 · 손가락 · 키보드 */
 const next = () => { if (!RD) return; showBars(false); RD.rendition.next(); };
@@ -1630,7 +1674,7 @@ function onKey(e) {
   else if (['ArrowLeft', 'PageUp'].includes(e.key)) { prev(); }
   else if (e.key === 'Escape') { if ($('#toc').classList.contains('open')) closeToc(); else if (!$('#aa').classList.contains('hidden')) showBars(false); else closeReader(); }
 }
-document.addEventListener('keydown', e => { if (RD) onKey(e); else if (e.key === 'Escape') closeSheets(); });
+document.addEventListener('keydown', e => { if (RD) onKey(e); else if (e.key === 'Escape') sheetBack(); });
 
 $('#rBack').onclick = () => closeReader();
 $('#rPrev').onclick = () => { RD && RD.rendition.prev(); };
