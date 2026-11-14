@@ -431,6 +431,7 @@
     <section id="readingBox"></section>
     <section id="standBox"></section>
     <section id="seriesBox"></section>
+    <section id="exploreBox"></section>
 
     <div class="dcard" id="shelfCard">
     <section id="shelfHead">
@@ -743,7 +744,7 @@
 
 <script>
 'use strict';
-const APP_VER = 'v32';
+const APP_VER = 'v33';
 const $ = s => document.querySelector(s);
 const $$ = s => [...document.querySelectorAll(s)];
 const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
@@ -908,6 +909,7 @@ function renderLibrary() {
   }).join('');
 
   try { renderStand(); } catch (e) {}
+  try { renderExplore(); } catch (e) {}
 
   // 읽는 중 가로 줄
   const others = reading.slice(1, 12);
@@ -3761,6 +3763,35 @@ $('#npList').addEventListener('input', e => { if (e.target.id === 'ytText') HUB.
   t1.onclick = () => scrollTo({ top: 0, behavior: 'smooth' });
   t2.onclick = () => news.scrollTo({ top: 0, behavior: 'smooth' });
 })();
+
+/* 서재 첫 화면에서 바로 꺼내 보는 줄들 — 발굴소·만화방 안에 들어가지 않아도 눌러서 바로 펼침 */
+const WIKI_SHELF = [['제주도', '#0E5A60'], ['커피', '#6B4226'], ['인공지능', '#2E3A45'], ['한라산', '#3F6B3A'], ['태양계', '#1F2A55'], ['김치', '#8A3B3B'], ['한글', '#4B5D7A'], ['곰팡이', '#55603A']];
+function renderExplore() {
+  const box = $('#exploreBox'); if (!box) return;
+  const card = (attrs, cover, name, sub) => `<button class="w-[104px] flex-none text-left" ${attrs}>${cover}<div class="text-[12.5px] font-bold mt-2 leading-tight truncate">${esc(name)}</div><div class="text-[11px] text-mute mt-0.5 truncate">${esc(sub)}</div></button>`;
+  const row = (title, all, cards) => `<div class="dcard"><div class="flex items-end justify-between mb-3"><h2 class="font-bold">${title}</h2><button class="text-[12.5px] font-bold text-mute" data-ex-all="${all}">전체 보기 ›</button></div><div class="flex gap-3.5 overflow-x-auto no-scrollbar -mx-4 px-4 pb-2">${cards}</div></div>`;
+  const koHave = t => books.find(b => b.gid === 'ko:' + t || (b.source === 'wikisource' && b.title === t));
+  const ko = FD_KO.map(([t, by, kind]) => { const h = koHave(t); return card(`data-ex-ko="${esc(t)}" data-by="${esc(by)}"`, h ? coverHTML(h, { badge: false }) : `<div class="cover cover-c">${genCoverHTML({ title: t, author: by })}</div>`, t, h && h.progress ? `${by} · ${pctText(h.progress)}` : `${by} · ${kind}`); }).join('');
+  const hist = HIST.map((h, i) => card(`data-ex-hist="${i}"`, `<div class="cover cover-c"><div class="gen hist-cover"><div class="t">${esc(h.t)}</div><div class="rule"></div><div class="a">${esc(h.by)}</div></div></div>`, h.t, h.by)).join('');
+  const mine = books.filter(b => b.kind === 'comic').sort((a, b) => (b.lastRead || 0) - (a.lastRead || 0));
+  const comics = mine.map(b => card(`data-ex-book="${b.id}"`, coverHTML(b, { badge: false }), b.title, b.pages ? `${Math.min(b.pages, (b.page || 0) + 1)} / ${b.pages}쪽` : '만화')).join('')
+    + IA_COMICS.filter(c => !mine.some(b => b.iaId === c.id)).map(c => card(`data-ex-ia="${esc(c.id)}"`, `<div class="st-cover" style="background:#E9E1D2"><img src="https://archive.org/services/img/${esc(c.id)}" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.remove()"></div>`, c.t, `${c.by} · ${c.y}`)).join('')
+    + comicFeeds().map(f => card(`data-ex-cf="${esc(f.id)}"`, `<div class="st-cover" style="background:#fff">${CF_THUMB[f.id] ? `<img src="${esc(CF_THUMB[f.id])}" alt="" loading="lazy" referrerpolicy="no-referrer" style="object-fit:contain" onerror="this.remove()">` : ''}<div class="st-shade" style="background:linear-gradient(180deg,rgba(0,0,0,0) 55%,rgba(0,0,0,.6))"></div><div class="st-head">${esc(f.name)}</div></div>`, f.name, '오늘의 웹코믹')).join('')
+    + card('data-ex-addcomic', `<div class="st-cover mg-add !grid"><span class="text-[28px] font-light">＋</span><b class="text-[11.5px]">만화 파일<br>넣기</b></div>`, '내 만화 넣기', '.zip · .cbz');
+  const wiki = WIKI_SHELF.map(([t, c]) => card(`data-ex-wiki="${esc(t)}"`, `<div class="st-cover" style="background:linear-gradient(160deg,${c},${shade(c, -30)})"><div class="st-mast" style="font-size:19px;top:auto;bottom:34px">${esc(t)}</div><div class="st-head" style="opacity:.75">위키북</div></div>`, t, '한 권으로 읽기')).join('');
+  box.innerHTML = row('한국 근현대 명작', 'ko', ko) + row('역사·고전 이야기', 'hist', hist) + row('만화', 'comic', comics) + row('지식 한 권 · 위키북', 'wiki', wiki);
+}
+$('#exploreBox').onclick = e => {
+  const g = s => e.target.closest(s); let x;
+  if ((x = g('[data-ex-all]'))) { const k = x.dataset.exAll; if (k === 'comic') openNews('comic'); else { FD.grp = k === 'hist' ? 'hub' : 'book'; if (k === 'hist') FD.hsec = 'hist'; else FD.sec = k; saveFD(); openFind(); } return; }
+  if ((x = g('[data-ex-ko]'))) { const h = books.find(b => b.gid === 'ko:' + x.dataset.exKo); if (!h) toast(`‘${x.dataset.exKo}’ 펼치는 중…`, 2500); openKoWork(x.dataset.exKo, x.dataset.by); return; }
+  if ((x = g('[data-ex-hist]'))) { const h = HIST[+x.dataset.exHist]; toast(`‘${h.t}’ 펼치는 중…`, 2500); openHistory(h); return; }
+  if ((x = g('[data-ex-book]'))) { openReader(x.dataset.exBook); return; }
+  if ((x = g('[data-ex-ia]'))) { const c = IA_COMICS.find(v => v.id === x.dataset.exIa); if (c) openIaComic(c); return; }
+  if ((x = g('[data-ex-cf]'))) { const f = comicFeeds().find(v => v.id === x.dataset.exCf); if (f) openComicFeed(f); return; }
+  if (g('[data-ex-addcomic]')) { $('#fileComic').click(); return; }
+  if ((x = g('[data-ex-wiki]'))) { openWikiBook(x.dataset.exWiki); return; }
+};
 /* 서재 첫 화면 숫자 카드 (날씨돌처럼 한눈에) */
 function renderStats(cnt) {
   const box = $('#statBox'); if (!box) return;
