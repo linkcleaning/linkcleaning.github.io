@@ -4378,7 +4378,7 @@ export default function App() {
               rel="noreferrer"
               className="flex items-center justify-center rounded-full bg-[#ffffff1f] px-4 py-3.5 text-sm font-bold text-white active:scale-[0.98]"
             >
-              지휘실 ›
+              비서실장 ›
             </a>
           </div>
         </div>

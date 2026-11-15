@@ -84,6 +84,35 @@
   .result.ok { color: var(--leaf); font-weight: 600; } .result.bad { color: var(--danger); }
   .foot { text-align: center; font-size: 13px; color: var(--muted); line-height: 1.7; padding-top: 10px; }
   .foot a { color: var(--brand); font-weight: 600; }
+  /* 비서실장 대화창 */
+  .chat { background: var(--card); border-radius: 14px; padding: 14px; display: grid; gap: 10px; }
+  .chat-head { display: flex; justify-content: space-between; align-items: center; gap: 8px; }
+  .chat-head b { font-family: var(--num); font-weight: 400; font-size: 20px; }
+  .chat-head button { appearance: none; border: 0; background: none; color: var(--muted); font: 600 12px var(--sans); cursor: pointer; padding: 4px; }
+  .log { display: grid; gap: 8px; max-height: 58vh; overflow-y: auto; overscroll-behavior: contain; }
+  .msg { max-width: 88%; padding: 10px 12px; border-radius: 14px; font-size: 15px; line-height: 1.6; white-space: pre-wrap; word-break: break-word; }
+  .msg.me { justify-self: end; background: var(--brand); color: #fff; border-bottom-right-radius: 4px; }
+  .msg.ai { justify-self: start; background: var(--paper); color: var(--ink); border-bottom-left-radius: 4px; }
+  .msg.ai .who { display: block; margin-bottom: 2px; }
+  .msg.wait { color: var(--muted); }
+  .msg.err { background: #FBE9E6; color: var(--danger); }
+  .order { justify-self: stretch; border: 2px solid var(--accent-soft); background: #FFF7F0; border-radius: 14px; padding: 12px; display: grid; gap: 8px; }
+  .order .who { color: #8a4310; }
+  .order h4 { margin: 0; font-size: 15px; }
+  .order textarea { min-height: 84px; background: #fff; font-size: 14px; }
+  .order .row { display: flex; gap: 8px; }
+  .order .row .go { flex: 1; padding: 12px; font-size: 15px; }
+  .order .cancel { appearance: none; border: 0; border-radius: 999px; padding: 12px 16px; background: var(--paper); color: var(--ink); font: 600 14px var(--sans); cursor: pointer; }
+  .order.sent { border-color: var(--leaf); background: #F1F8EE; }
+  .order.dropped { opacity: .55; }
+  .ask { display: grid; grid-template-columns: 1fr auto; gap: 8px; align-items: end; }
+  .ask textarea { min-height: 48px; max-height: 160px; }
+  .ask .go { padding: 13px 16px; }
+  .chips { display: flex; gap: 6px; overflow-x: auto; padding-bottom: 2px; }
+  .chips button { flex: none; appearance: none; border: 0; border-radius: 999px; padding: 7px 12px; background: var(--brand-tint); color: var(--ink); font: 600 13px var(--sans); cursor: pointer; }
+  details.extra-box { background: var(--card); border-radius: 14px; padding: 12px 16px; }
+  details.extra-box summary { cursor: pointer; font-size: 13px; font-weight: 600; color: var(--muted); }
+  details.extra-box textarea { margin-top: 8px; }
   @media (max-width: 360px) { .suseok { grid-template-columns: repeat(2, 1fr); } }
   @media (prefers-reduced-motion: reduce) { .go { transition: none; } }
 </style>
@@ -92,7 +121,7 @@
 <header class="top"><div class="in">
   <div class="eyebrow">AI 비서실 · 지휘실</div>
   <h1>링크클린 비서실</h1>
-  <p class="lead">담당 수석실을 누르면 그 부서로 갑니다. 지시 버튼은 두 번 눌러야 실행되고, 결과는 휴대폰 알림으로 와요.</p>
+  <p class="lead">비서실장에게 무엇이든 물어보거나 맡기세요. 실제 일은 담당 부서에 지시서를 올려 대표님 확인 후 실행합니다. 결과는 휴대폰 알림으로 와요.</p>
   <nav class="org" aria-label="비서실 조직도">
     <div class="node ceo">대표<small>한승우</small></div>
     <div class="stem"></div>
@@ -105,13 +134,25 @@
 
 <main class="wrap">
   <div class="status" id="status"><span class="dot" id="dot"></span><span id="statusText">연결 확인 중…</span></div>
-  <label class="note" for="extra">비서실장에게 덧붙일 말 (선택, 다음에 누르는 지시에 함께 전달)
+  <section class="chat" id="chat" aria-label="비서실장에게 말하기">
+    <div class="chat-head"><b>비서실장에게 말하기</b><button type="button" id="clearChat">대화 지우기</button></div>
+    <div class="log" id="log" aria-live="polite"></div>
+    <div class="chips" id="chips"></div>
+    <form class="ask" id="askForm">
+      <label for="q" style="position:absolute;left:-9999px">질문이나 지시</label>
+      <textarea id="q" placeholder="무엇이든 물어보거나 맡기세요. 예: 이번 주 블로그 주제 3개 추천해 줘"></textarea>
+      <button class="go" type="submit" id="send">보내기</button>
+    </form>
+  </section>
+  <details class="extra-box">
+    <summary>아래 지시 버튼에 덧붙일 말 (선택)</summary>
+    <label for="extra" style="position:absolute;left:-9999px">덧붙일 말</label>
     <textarea id="extra" placeholder="예: 오늘은 결로 주제로 써 줘 / 이 글로 올려 줘: …"></textarea>
-  </label>
+  </details>
   <div id="depts" style="display:grid;gap:8px"></div>
   <p class="foot">
     오늘 준비된 글 보기 → <a href="https://linkcleaning.github.io/ai-secretary/">AI 비서실 앱</a><br>
-    채팅으로 "홍보수석, 지금 올려"처럼 말씀하셔도 됩니다.
+    Claude 앱 채팅으로 말씀하셔도 됩니다.
   </p>
 </main>
 
@@ -271,6 +312,157 @@
 
   renderOrg(); render();
   var claude = window.claude;
+
+  /* ================= 비서실장 대화 ================= */
+  var DIRECT_ID = 'trig_017xGW6n7VnbxeJx29y5LJmC';
+  var sample = null, turns = [], busy = false, ctl = null;
+  var logEl = document.getElementById('log');
+  var STORE = 'chief-chat-v1';
+  try { turns = JSON.parse(localStorage.getItem(STORE) || '[]') || []; } catch (e) { turns = []; }
+  function save() { try { localStorage.setItem(STORE, JSON.stringify(turns.slice(-16))); } catch (e) {} }
+
+  function allTasks() { var out = []; DEPTS.forEach(function (d) { (d.tasks || []).forEach(function (t) { out.push({ dept: d, task: t }); }); }); return out; }
+  function findTask(id) { var f = null; allTasks().forEach(function (x) { if (x.task.id === id) f = x; }); return f; }
+
+  function today() { var d = new Date(); return d.getFullYear() + '-' + (d.getMonth() + 1) + '-' + d.getDate() + ' (' + '일월화수목금토'[d.getDay()] + ')'; }
+  function rules() {
+    var deptLines = DEPTS.map(function (d) {
+      var ts = (d.tasks || []).map(function (t) { return '  - [' + t.id + '] ' + t.who + ': ' + t.title + ' — ' + t.desc + ' (정기: ' + t.when + (t.pc ? ', PC 필요' : '') + ')'; }).join('\n');
+      return '- ' + d.name + ' (' + d.duty + ')' + (ts ? '\n' + ts : '\n  - 앱에서 직접: ' + (d.app ? d.app.desc : ''));
+    }).join('\n');
+    return [
+      '너는 제주 청소업체 링크클린 대표 한승우(대표님)의 AI 비서실장이다. 오늘은 ' + today() + '.',
+      '말투: 존댓말, 짧고 명확하게. 휴대폰 화면이니 마크다운 제목·표·굵게(**)는 쓰지 말고, 필요하면 줄바꿈과 • 로만 정리한다.',
+      '',
+      '회사: 링크클린, 2016년 설립, 대표 청소 경력 12년, 제주 전 지역. 대표번호 064-763-4545(홍보용), 앱·스토어용 050-6520-0440. 홈페이지 www.linkclean.co.kr. 서비스: 입주·이사청소, 거주, 상가·사무실, 준공, 쓰레기집·특수청소, 유품정리, 폐기물 수거, 유리창, 오존 살균 탈취. 가격은 공개하지 않고 방문견적. 자매업체 이케이클린(서귀포 여성기업)은 브랜드 분리. 홍보 글에 스카이차량·벌집클린 단어 금지, 지어낸 현장 일화·통계 금지. 스레드 글은 해시태그·전화번호·URL 없이, 첫 문장에 제주+주제.',
+      '',
+      '비서실 조직과 맡은 일 ([ ] 안이 지시용 id):',
+      deptLines,
+      '- 비서실장 직접 처리 [' + DIRECT_ID + ']: 위 부서 업무가 아닌 모든 실제 작업(앱 고치기·새로 만들기, 자료 조사, 문서·이미지·파일 제작, PC 크롬 작업 등).',
+      '',
+      '일하는 방법:',
+      '1) 질문·상담·아이디어·문구 작성(견적 문자, 답장, 블로그·스레드 글 초안, 공지문 등)은 이 대화에서 바로 답하고 써 준다.',
+      '2) 실제로 실행해야 하는 일(게시, 앱 수정, 파일·이미지 제작, 최신 정보 조사, 예약 작업 실행)은 dispatch 도구로 지시서 카드를 띄운다. 정기 업무와 같으면 그 부서 id, 아니면 직접 처리 id. instruction은 이 대화를 못 본 사람도 바로 실행할 수 있게 구체적으로(무엇을, 어디에, 어떤 기준으로, 결과를 어떻게 보고할지) 쓴다.',
+      '3) 너는 지금 인터넷을 볼 수 없다. 날씨·뉴스·가격·순위·사이트 상태 같은 최신 정보는 추측하지 말고, 모른다고 말한 뒤 직접 처리 지시서로 조사를 제안한다.',
+      '4) 카드를 띄운 것은 아직 실행이 아니다. "지시서를 올렸습니다. [지시하기]를 누르시면 시작합니다"처럼 말하고, 했다고 말하지 않는다.',
+      '5) 결제·송금·구매·삭제·계정 설정·고객에게 문자 보내기는 지시서에도 "준비만 하고 대표님 확인 받기"로 적는다.',
+      '6) 각 업무의 최근 실행 결과가 궁금하면 status 도구를 쓴다.'
+    ].join('\n');
+  }
+
+  function bubble(cls, text, who) {
+    var b = el('div', 'msg ' + cls);
+    if (who) b.appendChild(el('span', 'who', who));
+    var body = el('span', 'body', text || ''); b.appendChild(body);
+    logEl.appendChild(b); logEl.scrollTop = logEl.scrollHeight;
+    return body;
+  }
+
+  function orderCard(args) {
+    var id = String(args.task || DIRECT_ID);
+    var found = findTask(id);
+    var who = found ? found.task.who : '비서실장 (직접 처리)';
+    var card = el('div', 'order');
+    card.appendChild(el('span', 'who', '지시서 · ' + who));
+    card.appendChild(el('h4', null, String(args.title || '대표님 지시')));
+    var ta = el('textarea'); ta.value = String(args.instruction || ''); ta.setAttribute('aria-label', '지시 내용'); card.appendChild(ta);
+    var row = el('div', 'row');
+    var go = el('button', 'go', '지시하기'); go.type = 'button';
+    var no = el('button', 'cancel', '취소'); no.type = 'button';
+    var res = el('div', 'result');
+    row.appendChild(go); row.appendChild(no); card.appendChild(row); card.appendChild(res);
+    no.addEventListener('click', function () { card.classList.add('dropped'); go.disabled = true; no.disabled = true; res.textContent = '취소했습니다.'; });
+    go.addEventListener('click', function () {
+      if (!mcp) { res.className = 'result bad'; res.textContent = 'Claude 앱에서 열어야 지시할 수 있어요.'; return; }
+      go.disabled = true; no.disabled = true; go.textContent = '전달 중…';
+      var text = [found && found.task.extra, ta.value.trim() ? '대표님 지시: ' + ta.value.trim() : ''].filter(Boolean).join('\n');
+      var input = { trigger_id: id }; if (text) input.text = text;
+      mcp.callTool(SERVER, 'fire_trigger', input, { cache: false }).then(function () {
+        card.classList.add('sent'); go.textContent = '지시 완료';
+        res.className = 'result ok'; res.textContent = who + '이(가) 일을 시작했습니다. 끝나면 알림으로 보고드려요.';
+        turns.push({ role: 'user', content: '(대표님이 "' + (args.title || '') + '" 지시서를 승인해 ' + who + '에게 보냈음)' }); save();
+        if (mcp.invalidate) mcp.invalidate(SERVER, 'list_triggers').catch(function () {});
+      }).catch(function (e) { go.disabled = false; no.disabled = false; go.textContent = '지시하기'; res.className = 'result bad'; res.textContent = explain(e); });
+    });
+    logEl.appendChild(card); logEl.scrollTop = logEl.scrollHeight;
+    return who;
+  }
+
+  function statusSummary() {
+    var lines = []; allTasks().forEach(function (x) {
+      var r = lastRuns[x.task.id], last = r && r.last_run;
+      lines.push(x.task.who + ' · ' + x.task.title + ' · 정기 ' + x.task.when + ' · 최근 ' + (last && last.fired_at ? fmt(last.fired_at) + ' ' + (/SUCCEEDED/.test(last.status) ? '완료' : /FAILED/.test(last.status) ? '실패' : '진행 중') : '기록 없음'));
+    });
+    return lines.join('\n');
+  }
+
+  var TOOLS = [
+    { name: 'dispatch',
+      description: '실제로 실행해야 하는 일을 담당 부서(또는 비서실장 직접 처리)에 맡기는 지시서 카드를 대표님 화면에 띄운다. 대표님이 [지시하기]를 눌러야 실행된다. 반환: 카드를 띄웠다는 확인.',
+      inputSchema: { type: 'object', properties: {
+        task: { type: 'string', description: '지시용 id (부서 업무 id 또는 직접 처리 id)' },
+        title: { type: 'string', description: '지시서 제목, 20자 이내' },
+        instruction: { type: 'string', description: '실행자가 이 대화 없이도 바로 할 수 있는 구체적인 지시' } },
+        required: ['task', 'title', 'instruction'] },
+      execute: function (input) { var who = orderCard(input); return '지시서 카드를 띄웠음(' + who + '). 대표님이 [지시하기]를 눌러야 실행됨.'; } },
+    { name: 'status', description: '각 부서 업무의 정기 일정과 최근 실행 결과(완료/실패/기록 없음)를 돌려준다.', execute: function () { return statusSummary(); } }
+  ];
+
+  function renderHistory() {
+    logEl.textContent = '';
+    if (!turns.length) bubble('ai', '대표님, 무엇이든 말씀하세요.\n질문엔 바로 답하고, 실제 일은 담당 부서 지시서를 올려 드립니다.', '비서실장');
+    turns.forEach(function (t) { if (t.content.charAt(0) === '(') return; bubble(t.role === 'user' ? 'me' : 'ai', t.content, t.role === 'user' ? null : '비서실장'); });
+  }
+
+  function sampleError(e) {
+    var c = e && e.code;
+    if (c === 'not_granted' || c === 'sampling_disabled' || c === 'not_declared' || c === 'capability_disabled') return '이 페이지가 Claude에게 묻는 것이 허용되지 않았어요. 다시 보내면 나오는 확인 창에서 [허용]을 눌러 주세요.';
+    if (c === 'rate_limited') return '지금 질문이 많아 잠시 쉬어야 해요. 조금 뒤에 다시 보내 주세요.';
+    if (c === 'session_expired') return 'Claude에 다시 로그인해 주세요.';
+    if (c === 'refused') return '이 질문에는 답하기 어려워요. 다르게 물어봐 주세요.';
+    if (c === 'prompt_too_large') return '대화가 너무 길어졌어요. [대화 지우기] 후 다시 물어봐 주세요.';
+    return '답을 받지 못했어요. 다시 보내 주세요.';
+  }
+
+  function send(text) {
+    text = (text || '').trim(); if (!text || busy) return;
+    if (!sample) { bubble('ai err', 'Claude 앱이나 claude.ai에서 열어야 비서실장과 대화할 수 있어요.'); return; }
+    busy = true; var sendBtn = document.getElementById('send'); sendBtn.textContent = '그만'; 
+    bubble('me', text); turns.push({ role: 'user', content: text }); save();
+    document.getElementById('q').value = '';
+    var out = bubble('ai wait', '생각 중…', '비서실장'); var box = out.parentNode;
+    ctl = new AbortController();
+    var hist = turns.slice(-14);
+    while (hist.length && hist[0].role !== 'user') hist.shift();
+    var input = [{ role: 'user', content: rules() }].concat(hist);
+    var opts = { cache: false, signal: ctl.signal, onText: function (u) { box.classList.remove('wait'); out.textContent = u.text; logEl.scrollTop = logEl.scrollHeight; } };
+    sample.limits().catch(function () { return {}; }).then(function (lim) {
+      if (lim && lim.tools) opts.tools = TOOLS;
+      return sample(input, opts);
+    }).then(function (r) {
+      out.textContent = r.text; box.classList.remove('wait');
+      turns.push({ role: 'assistant', content: r.text }); save();
+    }).catch(function (e) {
+      if (e && e.code === 'cancelled') { box.classList.remove('wait'); out.textContent = (e.text || '') + (e.text ? '\n(중단됨)' : '중단했습니다.'); if (e.text) { turns.push({ role: 'assistant', content: e.text }); save(); } return; }
+      box.classList.remove('wait'); box.classList.add('err'); out.textContent = (e && e.text ? e.text + '\n\n' : '') + sampleError(e);
+    }).then(function () { busy = false; ctl = null; sendBtn.textContent = '보내기'; });
+  }
+
+  document.getElementById('askForm').addEventListener('submit', function (ev) {
+    ev.preventDefault();
+    if (busy && ctl) { ctl.abort(); return; }
+    send(document.getElementById('q').value);
+  });
+  document.getElementById('q').addEventListener('keydown', function (ev) { if (ev.key === 'Enter' && (ev.metaKey || ev.ctrlKey)) { ev.preventDefault(); send(this.value); } });
+  document.getElementById('clearChat').addEventListener('click', function () { if (busy) return; turns = []; save(); renderHistory(); });
+  var CHIPS = ['이번 주 블로그 주제 3개 추천', '견적 후 답 없는 고객에게 보낼 문자', '각 부서 최근 업무 상황', '도쿄 박람회 다녀와서 올릴 글 계획'];
+  var chipsEl = document.getElementById('chips');
+  CHIPS.forEach(function (c) { var b = el('button', null, c); b.type = 'button'; b.addEventListener('click', function () { send(c); }); chipsEl.appendChild(b); });
+  renderHistory();
+  if (claude && claude.use) {
+    claude.use('sample').then(function (s2) { sample = s2; if (!sample) document.getElementById('send').disabled = true; }).catch(function () {});
+  } else { document.getElementById('send').disabled = true; }
+
   if (claude && claude.use) {
     claude.use('mcp').then(function (m) {
       mcp = m;
