@@ -7,8 +7,8 @@ pre{background:#fff;border-radius:16px;padding:12px;font-size:10px;white-space:p
 p{font-size:14px;line-height:1.6}.ok{font-weight:800;text-align:center}.v{font-size:9px;opacity:.4;text-align:right}</style></head>
 <body><div class="w"><h1>미래전략실 위젯 코드</h1>
 <button id="c">코드 복사하기</button><p class="ok" id="m"></p>
-<p>Scriptable 앱 → 오른쪽 위 <b>+</b> → 빈 화면에 붙여넣기 → 이름을 <b>미래전략실</b>로 → 완료</p>
-<pre id="code">불러오는 중…</pre><div class="v">v1</div></div>
+<p>Scriptable 앱 → 미래전략실 스크립트 열기 → 화면을 길게 눌러 <b>전체 선택 → 삭제</b> → 붙여넣기 → 이름을 <b>미래전략실</b>로 → 완료</p>
+<pre id="code">불러오는 중…</pre><div class="v">v2</div></div>
 <script>
 fetch('script.txt?t='+Date.now()).then(r=>r.text()).then(t=>{document.getElementById('code').textContent=t;
 document.getElementById('c').onclick=async()=>{try{await navigator.clipboard.writeText(t);document.getElementById('m').textContent='복사했어요! Scriptable에 붙여넣으세요.'}catch(e){document.getElementById('m').textContent='아래 코드를 길게 눌러 전체 선택 후 복사해 주세요.'}}});
