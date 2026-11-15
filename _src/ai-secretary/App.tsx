@@ -1220,9 +1220,9 @@ function usePwaSetup(iconStyle: IconStyle) {
     setMeta('apple-mobile-web-app-capable', 'yes');
     setMeta('mobile-web-app-capable', 'yes');
     setMeta('apple-mobile-web-app-status-bar-style', 'black-translucent');
-    setMeta('apple-mobile-web-app-title', 'AI 비서실');
-    setMeta('application-name', 'AI 비서실');
-    if (!document.title || document.title === 'Vite + React + TS') document.title = 'AI 비서실 데일리 대시보드';
+    setMeta('apple-mobile-web-app-title', '링크 미래전략실');
+    setMeta('application-name', '링크 미래전략실');
+    if (!document.title || document.title === 'Vite + React + TS') document.title = '링크 미래전략실';
   }, []);
 
   // 아이콘·매니페스트 (디자인이 바뀔 때마다 교체)
@@ -1249,8 +1249,8 @@ function usePwaSetup(iconStyle: IconStyle) {
 
     const base = location.origin + location.pathname;
     const manifest = {
-      name: 'AI 비서실 데일리 대시보드',
-      short_name: 'AI 비서실',
+      name: '링크 미래전략실',
+      short_name: '링크 미래전략실',
       start_url: base,
       scope: base,
       display: 'standalone',

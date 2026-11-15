@@ -1,6 +1,6 @@
 {
-  "name": "AI 비서실 데일리 대시보드",
-  "short_name": "AI 비서실",
+  "name": "링크 미래전략실",
+  "short_name": "링크 미래전략실",
   "start_url": "./",
   "scope": "./",
   "display": "standalone",
