@@ -1932,7 +1932,7 @@ function KeywordTab(props: {
                 }`}
               >
                 {golden.source === 'agent'
-                  ? '🤵 비서 리서치'
+                  ? '전략수석실 리서치'
                   : golden.source === 'data'
                     ? '📊 실제 검색량'
                     : golden.source === 'ai'
@@ -2892,9 +2892,9 @@ function AgentCard({
   if (!valid) {
     return (
       <section className={`${card} border-dashed border-amber-300/30`}>
-        <SectionTitle icon={Sparkles} title="🤵 비서가 준비한 일" />
+        <SectionTitle icon={Sparkles} title="비서실장 아침 보고" />
         <p className="text-sm leading-relaxed text-slate-400">
-          비서가 매일 <b className="text-amber-200">아침 8시 전</b>에 오늘 올릴 블로그 글 초안, 스레드 글, 황금키워드, 현장 메모를 직접 써서 여기에 올려둡니다.
+          비서실장이 매일 <b className="text-amber-200">아침 8시 전</b>에 오늘 올릴 블로그 글 초안, 스레드 글, 황금키워드, 현장 메모를 직접 써서 여기에 올려둡니다.
           대표님은 확인하고 복사만 하시면 됩니다.
         </p>
       </section>
@@ -2909,8 +2909,8 @@ function AgentCard({
   const threadOf = (th?: { text: string; tags?: string[] }) => th?.text ?? '';
   const threadBlocks = (
     [
-      ['threads', '🧵 아침 스레드 글', a.threads],
-      ['threadsEvening', '🌙 저녁 스레드 글', a.threadsEvening],
+      ['threads', '소통수석실 · 아침 스레드 글', a.threads],
+      ['threadsEvening', '소통수석실 · 저녁 스레드 글', a.threadsEvening],
     ] as const
   ).filter(([, , th]) => !!th);
 
@@ -2918,7 +2918,7 @@ function AgentCard({
     <section className={`${card} border-amber-300/40 bg-white`}>
       <SectionTitle
         icon={Sparkles}
-        title={isTomorrow ? '🤵 내일 업무 준비 완료' : '🤵 오늘 준비된 업무'}
+        title={isTomorrow ? '비서실장 내일 보고 (미리)' : '비서실장 아침 보고'}
         right={
           at && (
             <span className="text-[11px] text-slate-400">
@@ -2931,7 +2931,7 @@ function AgentCard({
 
       {a.todo && a.todo.length > 0 && (
         <div className="mb-4">
-          <p className="mb-2 text-xs font-bold text-slate-300">오늘 이것만 하시면 됩니다</p>
+          <p className="mb-2 text-xs font-bold text-slate-300"><span className="text-amber-200">비서실장</span> · 오늘 이것만 하시면 됩니다</p>
           <ul className="space-y-1.5">
             {a.todo.map((t, i) => {
               const done = doneTodos.includes(i);
@@ -2950,7 +2950,7 @@ function AgentCard({
 
       {a.blog && (
         <div className="mb-3 rounded-2xl border border-[#E2DBCD] bg-[#F4F1EA] p-4">
-          <p className="text-[11px] font-bold text-sky-300">✍️ 오늘의 블로그 초안{a.blog.keyword ? ` · #${a.blog.keyword}` : ''}</p>
+          <p className="text-[11px] font-bold text-sky-300">홍보수석실 · 오늘의 블로그 초안{a.blog.keyword ? ` · #${a.blog.keyword}` : ''}</p>
           <p className="mt-1 font-bold leading-snug text-slate-50">{a.blog.title}</p>
           <p className={`mt-2 whitespace-pre-line text-sm leading-relaxed text-slate-300 ${open === 'blog' ? '' : 'line-clamp-3'}`}>{a.blog.body}</p>
           <div className="mt-3 flex gap-2">
@@ -2992,7 +2992,7 @@ function AgentCard({
 
       {a.fieldMemo && a.fieldMemo.length > 0 && (
         <div className="mb-3 rounded-2xl bg-emerald-400/10 p-3">
-          <p className="mb-1 text-[11px] font-bold text-emerald-300">🧹 오늘 현장 메모</p>
+          <p className="mb-1 text-[11px] font-bold text-emerald-300">부속실 · 오늘 현장 메모</p>
           <ul className="space-y-1 text-sm leading-relaxed text-emerald-50">
             {a.fieldMemo.map((m, i) => (
               <li key={i}>• {m}</li>
@@ -3003,7 +3003,7 @@ function AgentCard({
 
       {a.issues && a.issues.length > 0 && (
         <div className="rounded-2xl bg-[#F4F1EA] p-3">
-          <p className="mb-1.5 text-[11px] font-bold text-slate-300">📰 비서가 찾아본 오늘의 소식</p>
+          <p className="mb-1.5 text-[11px] font-bold text-slate-300">전략수석실 · 오늘의 소식</p>
           <ul className="space-y-2">
             {a.issues.map((it, i) => (
               <li key={i} className="text-sm">
@@ -3095,7 +3095,7 @@ function ExecBrief({
   const todo = stats.followUps.length + stats.reviewAsks.length;
   return (
     <section className={`${card} border-emerald-400/25`}>
-      <SectionTitle icon={Flame} title="오늘의 경영 브리핑" />
+      <SectionTitle icon={Flame} title="영업수석실 · 경영 현황" />
       <button onClick={() => goTab('sales')} className="w-full text-left">
         <div className="flex items-end justify-between">
           <div>
@@ -4378,7 +4378,7 @@ export default function App() {
               rel="noreferrer"
               className="flex items-center justify-center rounded-full bg-[#ffffff1f] px-4 py-3.5 text-sm font-bold text-white active:scale-[0.98]"
             >
-              지금 시키기 ›
+              지휘실 ›
             </a>
           </div>
         </div>

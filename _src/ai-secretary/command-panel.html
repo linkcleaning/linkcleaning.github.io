@@ -7,7 +7,8 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Black+Han+Sans&family=IBM+Plex+Sans+KR:wght@400;500;600;700&display=swap">
 <style>
-  /* 링크 앱 스타일 가이드: 종이색 바탕 + 흰 카드(그림자·테두리 없음), 위쪽 진한 청록 블록 한 장, 버튼은 둥근 알약 */
+  /* 링크 앱 스타일 가이드: 종이색 바탕 + 흰 카드, 위쪽 진한 청록 블록 한 장.
+     레이아웃: 위에 조직도(대표 → 비서실장 → 수석실), 아래로 수석실별 지시 카드 */
   :root {
     --paper: #F4F1EA;
     --card: #FFFFFF;
@@ -29,20 +30,43 @@
   html, body { margin: 0; background: var(--paper); color: var(--ink); font-family: var(--sans); -webkit-tap-highlight-color: transparent; }
   body { padding: 0 0 calc(env(safe-area-inset-bottom, 0px) + 24px); }
   .top { background: var(--brand-deep); color: #fff; border-radius: 0 0 22px 22px; padding: calc(env(safe-area-inset-top, 0px) + 16px) max(12px, env(safe-area-inset-right, 0px)) 18px max(12px, env(safe-area-inset-left, 0px)); }
-  .top-in { max-width: 480px; margin: 0 auto; display: grid; gap: 6px; }
+  .in { max-width: 520px; margin: 0 auto; }
   .eyebrow { font-size: 11px; letter-spacing: .2em; color: #9fd3cf; font-weight: 600; }
-  h1 { font-family: var(--num); font-weight: 400; font-size: 32px; line-height: 38px; margin: 0; }
+  h1 { font-family: var(--num); font-weight: 400; font-size: 32px; line-height: 38px; margin: 4px 0 6px; }
   .lead { color: #cfe3e1; font-size: 14px; line-height: 1.6; margin: 0; }
-  .wrap { max-width: 480px; margin: 0 auto; display: grid; gap: 8px; padding: 10px max(12px, env(safe-area-inset-right, 0px)) 0 max(12px, env(safe-area-inset-left, 0px)); }
+
+  /* 조직도 */
+  .org { margin-top: 16px; display: grid; justify-items: center; gap: 0; }
+  .node { border-radius: 999px; padding: 7px 16px; font-weight: 700; font-size: 14px; white-space: nowrap; }
+  .node small { font-weight: 500; opacity: .8; margin-left: 6px; font-size: 12px; }
+  .node.ceo { background: #fff; color: var(--brand-deep); }
+  .node.chief { background: var(--accent-soft); color: var(--ink); }
+  .stem { width: 2px; height: 14px; background: #ffffff55; }
+  .bar { width: 100%; height: 2px; background: #ffffff55; margin-top: 0; }
+  .suseok { width: 100%; display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-top: 10px; }
+  .su { display: grid; gap: 2px; text-align: center; text-decoration: none; color: #fff; background: #ffffff14; border-radius: 14px; padding: 10px 6px; position: relative; }
+  .su::before { content: ""; position: absolute; top: -10px; left: 50%; width: 2px; height: 10px; background: #ffffff55; }
+  .su b { font-size: 14px; }
+  .su span { font-size: 11px; color: #cfe3e1; line-height: 1.35; }
+  .su:active { background: #ffffff26; }
+
+  .wrap { max-width: 520px; margin: 0 auto; display: grid; gap: 8px; padding: 10px max(12px, env(safe-area-inset-right, 0px)) 0 max(12px, env(safe-area-inset-left, 0px)); }
   .status { background: var(--card); border-radius: 14px; padding: 12px 16px; font-size: 13px; color: var(--muted); display: flex; gap: 8px; align-items: center; }
   .dot { width: 8px; height: 8px; border-radius: 999px; background: var(--muted); flex: none; }
   .dot.ok { background: var(--leaf); } .dot.warn { background: var(--accent); } .dot.bad { background: var(--danger); }
   label.note { background: var(--card); border-radius: 14px; padding: 14px 16px; display: grid; gap: 8px; font-size: 12px; font-weight: 600; color: var(--muted); }
-  textarea { width: 100%; min-height: 60px; resize: vertical; border-radius: 12px; border: 1px solid var(--line); background: var(--paper); color: var(--ink); font: 15px/1.5 var(--sans); padding: 10px 12px; }
+  textarea { width: 100%; min-height: 56px; resize: vertical; border-radius: 12px; border: 1px solid var(--line); background: var(--paper); color: var(--ink); font: 15px/1.5 var(--sans); padding: 10px 12px; }
   textarea:focus, button:focus-visible, a:focus-visible { outline: 2px solid var(--brand); outline-offset: 2px; }
+
+  /* 수석실 구역 */
+  .dept { display: grid; gap: 8px; scroll-margin-top: 12px; }
+  .dept-head { display: flex; align-items: baseline; gap: 8px; padding: 14px 4px 2px; }
+  .dept-head h2 { margin: 0; font-family: var(--num); font-weight: 400; font-size: 22px; }
+  .dept-head span { font-size: 13px; color: var(--muted); }
   .task { background: var(--card); border-radius: 14px; padding: 16px; display: grid; gap: 10px; }
   .task-head { display: flex; justify-content: space-between; gap: 10px; align-items: flex-start; }
-  .task h2 { margin: 0; font-size: 17px; line-height: 1.35; font-weight: 700; }
+  .who { font-size: 11px; font-weight: 700; color: var(--brand); letter-spacing: .02em; }
+  .task h3 { margin: 2px 0 0; font-size: 17px; line-height: 1.35; font-weight: 700; }
   .task p { margin: 0; color: var(--muted); font-size: 13.5px; line-height: 1.55; }
   .chip { flex: none; font-size: 11px; font-weight: 600; border-radius: 6px; padding: 4px 8px; background: var(--brand-tint); color: var(--ink); white-space: nowrap; }
   .chip.pc { background: #FBE7D6; color: #8a4310; }
@@ -55,180 +79,205 @@
   .go.busy { background: var(--line); color: var(--ink); cursor: progress; }
   .go.done { background: var(--leaf); color: #fff; }
   .go:disabled { opacity: .45; cursor: not-allowed; }
+  .applink { display: block; text-align: center; border-radius: 999px; padding: 13px; font-weight: 700; font-size: 15px; color: var(--brand); background: var(--brand-tint); text-decoration: none; }
   .result { font-size: 13px; line-height: 1.5; }
   .result.ok { color: var(--leaf); font-weight: 600; } .result.bad { color: var(--danger); }
-  .foot { text-align: center; font-size: 13px; color: var(--muted); line-height: 1.7; padding-top: 6px; }
+  .foot { text-align: center; font-size: 13px; color: var(--muted); line-height: 1.7; padding-top: 10px; }
   .foot a { color: var(--brand); font-weight: 600; }
+  @media (max-width: 360px) { .suseok { grid-template-columns: repeat(2, 1fr); } }
   @media (prefers-reduced-motion: reduce) { .go { transition: none; } }
 </style>
 </head>
 <body>
-<header class="top"><div class="top-in">
+<header class="top"><div class="in">
   <div class="eyebrow">AI 비서실 · 지휘실</div>
-  <h1>비서 지휘실</h1>
-  <p class="lead">버튼을 두 번 누르면 예약 시간을 기다리지 않고 비서가 지금 바로 일을 시작합니다. 결과는 휴대폰 알림으로 와요.</p>
+  <h1>링크클린 비서실</h1>
+  <p class="lead">담당 수석실을 누르면 그 부서로 갑니다. 지시 버튼은 두 번 눌러야 실행되고, 결과는 휴대폰 알림으로 와요.</p>
+  <nav class="org" aria-label="비서실 조직도">
+    <div class="node ceo">대표<small>한승우</small></div>
+    <div class="stem"></div>
+    <div class="node chief">비서실장<small>Claude</small></div>
+    <div class="stem"></div>
+    <div class="bar"></div>
+    <div class="suseok" id="orgChips"></div>
+  </nav>
 </div></header>
+
 <main class="wrap">
   <div class="status" id="status"><span class="dot" id="dot"></span><span id="statusText">연결 확인 중…</span></div>
-
-  <label class="note" for="extra">비서에게 덧붙일 말 (선택)
+  <label class="note" for="extra">비서실장에게 덧붙일 말 (선택, 다음에 누르는 지시에 함께 전달)
     <textarea id="extra" placeholder="예: 오늘은 결로 주제로 써 줘 / 이 글로 올려 줘: …"></textarea>
   </label>
-
-  <section id="tasks" style="display:grid;gap:8px"></section>
-
+  <div id="depts" style="display:grid;gap:8px"></div>
   <p class="foot">
     오늘 준비된 글 보기 → <a href="https://linkcleaning.github.io/ai-secretary/">AI 비서실 앱</a><br>
-    채팅으로 "스레드 올려"처럼 말씀하셔도 됩니다.
+    채팅으로 "홍보수석, 지금 올려"처럼 말씀하셔도 됩니다.
   </p>
 </main>
 
 <script>
 (function () {
   var SERVER = 'Claude Code Remote';
-  var TASKS = [
-    { id: 'trig_01YVSejMCeuJTD6iRW1xNzwH', title: '오늘 업무 다시 써 줘', desc: '블로그 초안(월·목)·아침 스레드 글·황금키워드·현장 메모·제주 소식을 새로 써서 앱에 올립니다. 평소엔 매일 아침 7시 17분에 자동.', time: '약 5분' },
-    { id: 'trig_018fBTXudMg5QidizdmQs5gH', title: '아침 스레드 지금 올려', desc: '앱에 준비된 오늘 아침 스레드 글을 @linkcleaning 계정에 바로 올리고, 30분 뒤 댓글에 답글까지 답니다.', time: '약 3분', pc: true },
-    { id: 'trig_016jPWUjqTzeqPu8iZXrVMEe', title: '6곳 홍보 지금 올려', desc: '현장홍보 앱에 맡겨 둔 현장 글을 인스타·스레드·구글·당근·카카오에 지금 올리고, 플레이스용 글과 리뷰 답글 초안을 보내 드립니다. 평소엔 저녁 8시 47분.', time: '약 10분', pc: true },
-    { id: 'trig_016THjQ2oRs8P7hvAetYtXz8', title: '청소팁 카드 만들어', desc: '계절 청소팁 카드 3장과 6곳 글을 만들어 대기열에 넣고, 홈페이지 Q&A 칼럼도 1개 추가합니다. 게시는 그날 저녁 8시 47분.', time: '약 8분', pc: true,
-      extra: '대표님이 지휘실 버튼으로 직접 요청했다. 0단계의 "최근 3일 안에 끝난 작업이 있으면 종료" 조건은 이번엔 무시하고 진행한다(대기 작업이 이미 있으면 그 사실만 알리고 종료).' },
-    { id: 'trig_01Lg8r73Cc4NYs9sVYnDKyXC', title: '쿠팡 스레드 글 준비', desc: '쿠팡파트너스 계정용 살림 팁 글과 오늘의 쿠팡 상품 글을 준비해 보내 드립니다. 평소엔 저녁 6시 43분.', time: '약 2분' }
+  var APP = 'https://linkcleaning.github.io/ai-secretary/';
+  // 수석실 → 소속 비서관 → 맡은 일
+  var DEPTS = [
+    { key: 'chief', name: '비서실장실', short: '실장실', duty: '아침 보고 총괄',
+      tasks: [
+        { who: '비서실장', id: 'trig_01YVSejMCeuJTD6iRW1xNzwH', title: '오늘 업무 보고서 다시 써 줘', desc: '오늘 할 일 3개, 블로그 초안(월·목), 아침 스레드 글, 황금키워드, 현장 메모, 제주 소식을 새로 정리해 앱에 올립니다.', when: '매일 07:17', time: '약 5분' }
+      ] },
+    { key: 'pr', name: '홍보수석실', short: '홍보수석', duty: '6곳 게시·청소팁',
+      tasks: [
+        { who: '홍보수석', id: 'trig_016jPWUjqTzeqPu8iZXrVMEe', title: '6곳 홍보 지금 올려', desc: '현장홍보 앱에 맡긴 현장 글을 인스타·스레드·구글·당근·카카오에 올리고, 플레이스용 글과 구글 리뷰 답글 초안을 보냅니다.', when: '매일 20:47', time: '약 10분', pc: true },
+        { who: '콘텐츠비서관', id: 'trig_016THjQ2oRs8P7hvAetYtXz8', title: '청소팁 카드 만들어', desc: '계절 청소팁 카드 3장과 6곳 글을 만들어 대기열에 넣고, 홈페이지 Q&A 칼럼을 1개 추가합니다. 게시는 그날 저녁.', when: '화·금 10:37', time: '약 8분', pc: true,
+          extra: '대표님이 지휘실 버튼으로 직접 요청했다. 0단계의 "최근 3일 안에 끝난 작업이 있으면 종료" 조건은 이번엔 무시하고 진행한다(대기 작업이 이미 있으면 그 사실만 알리고 종료).' }
+      ] },
+    { key: 'sns', name: '소통수석실', short: '소통수석', duty: '스레드·댓글',
+      tasks: [
+        { who: '소통수석', id: 'trig_018fBTXudMg5QidizdmQs5gH', title: '아침 스레드 지금 올려', desc: '보고서에 준비된 아침 스레드 글을 @linkcleaning에 올리고, 30분 뒤 댓글에 답글을 답니다. (저녁 댓글·맞팔은 홍보수석 저녁 업무에 포함)', when: '버튼으로만', time: '약 3분', pc: true }
+      ] },
+    { key: 'sales', name: '영업수석실', short: '영업수석', duty: '팔로업·후기',
+      app: { title: '고객 팔로업·후기 요청', desc: '견적 후 연락 없는 고객, 작업 끝난 고객의 후기 요청 문자는 앱 \'영업\' 탭에서 바로 보냅니다. 비서실장 아침 보고에도 건수가 올라옵니다.' } },
+    { key: 'strategy', name: '전략수석실', short: '전략수석', duty: '키워드·노출 점검',
+      tasks: [
+        { who: '전략수석', id: 'trig_015PL4T2GXK3r5JGdzAkgvop', title: 'AI·검색 노출 점검해 줘', desc: '"제주 입주청소" 등 6개 검색어에서 링크클린이 나오는지, 경쟁 업체는 누구인지 표로 정리해 보냅니다.', when: '매월 1일 08:47', time: '약 3분' }
+      ] },
+    { key: 'office', name: '부속실', short: '부속실', duty: '루틴·건강·메모',
+      app: { title: '대표님 일정·건강 챙기기', desc: '출근 거울샷, 약 복용(아침·점심·저녁), 3초 메모는 앱 \'루틴\'·\'메모\' 탭에서 챙깁니다. 시리로 "약 먹었어", "비서 메모"라고 해도 됩니다.', link: '앱 루틴 탭 열기 ›' } },
+    { key: 'biz', name: '제휴수석실', short: '제휴수석', duty: '쿠팡파트너스',
+      tasks: [
+        { who: '제휴수석', id: 'trig_01Lg8r73Cc4NYs9sVYnDKyXC', title: '쿠팡 스레드 글 준비', desc: '살림 팁 계정(@linkdole2026)용 일반 글과 오늘의 쿠팡 상품 글을 준비해 보냅니다. 링크클린과 분리된 계정이에요.', when: '매일 18:43', time: '약 2분' }
+      ] },
   ];
 
-  var mcp = null;
-  var lastRuns = {};
-  var tasksEl = document.getElementById('tasks');
-  var dot = document.getElementById('dot');
-  var statusText = document.getElementById('statusText');
-
+  var mcp = null, lastRuns = {};
+  var dot = document.getElementById('dot'), statusText = document.getElementById('statusText');
   function setStatus(kind, text) { dot.className = 'dot ' + (kind || ''); statusText.textContent = text; }
   function fmt(iso) {
-    if (!iso) return '';
-    var d = new Date(iso); if (isNaN(d)) return '';
+    if (!iso) return ''; var d = new Date(iso); if (isNaN(d)) return '';
     var p = function (n) { return String(n).padStart(2, '0'); };
     return (d.getMonth() + 1) + '/' + d.getDate() + ' ' + p(d.getHours()) + ':' + p(d.getMinutes());
   }
+  function el(tag, cls, text) { var e = document.createElement(tag); if (cls) e.className = cls; if (text != null) e.textContent = text; return e; }
+
+  function renderOrg() {
+    var box = document.getElementById('orgChips'); box.textContent = '';
+    DEPTS.filter(function (d) { return d.key !== 'chief'; }).forEach(function (d) {
+      var a = el('a', 'su'); a.href = '#' + d.key;
+      a.appendChild(el('b', null, d.short)); a.appendChild(el('span', null, d.duty));
+      a.addEventListener('click', function (ev) { ev.preventDefault(); var t = document.getElementById(d.key); if (t) t.scrollIntoView({ behavior: 'smooth', block: 'start' }); });
+      box.appendChild(a);
+    });
+  }
 
   function render() {
-    tasksEl.textContent = '';
-    TASKS.forEach(function (t) {
-      var card = document.createElement('article'); card.className = 'task';
-      var head = document.createElement('div'); head.className = 'task-head';
-      var h = document.createElement('h2'); h.textContent = t.title; head.appendChild(h);
-      var chip = document.createElement('span'); chip.className = 'chip' + (t.pc ? ' pc' : '');
-      chip.textContent = t.pc ? 'PC 켜져 있어야 함' : t.time; head.appendChild(chip);
-      card.appendChild(head);
-      var p = document.createElement('p'); p.textContent = t.desc; card.appendChild(p);
-      var meta = document.createElement('div'); meta.className = 'meta'; meta.id = 'meta-' + t.id;
-      card.appendChild(meta);
-      var btn = document.createElement('button'); btn.className = 'go'; btn.type = 'button'; btn.id = 'go-' + t.id;
-      btn.textContent = '지금 시키기'; btn.disabled = !mcp;
-      var res = document.createElement('div'); res.className = 'result'; res.id = 'res-' + t.id; res.setAttribute('aria-live', 'polite');
-      btn.addEventListener('click', function () { onTap(t, btn, res); });
-      card.appendChild(btn); card.appendChild(res);
-      tasksEl.appendChild(card);
+    var root = document.getElementById('depts'); root.textContent = '';
+    DEPTS.forEach(function (d) {
+      var sec = el('section', 'dept'); sec.id = d.key;
+      var head = el('div', 'dept-head'); head.appendChild(el('h2', null, d.name)); head.appendChild(el('span', null, d.duty)); sec.appendChild(head);
+      (d.tasks || []).forEach(function (t) {
+        var card = el('article', 'task');
+        var th = el('div', 'task-head');
+        var left = el('div'); left.appendChild(el('div', 'who', t.who)); left.appendChild(el('h3', null, t.title)); th.appendChild(left);
+        th.appendChild(el('span', 'chip' + (t.pc ? ' pc' : ''), t.pc ? 'PC 켜져 있어야 함' : t.time));
+        card.appendChild(th);
+        card.appendChild(el('p', null, t.desc));
+        var meta = el('div', 'meta'); meta.id = 'meta-' + t.id; card.appendChild(meta);
+        var btn = el('button', 'go', '지금 지시하기'); btn.type = 'button'; btn.disabled = !mcp;
+        var res = el('div', 'result'); res.setAttribute('aria-live', 'polite');
+        btn.addEventListener('click', function () { onTap(t, btn, res); });
+        card.appendChild(btn); card.appendChild(res);
+        sec.appendChild(card);
+      });
+      if (d.app) {
+        var c = el('article', 'task');
+        var left = el('div'); left.appendChild(el('div', 'who', d.short)); left.appendChild(el('h3', null, d.app.title)); c.appendChild(left);
+        c.appendChild(el('p', null, d.app.desc));
+        var a = el('a', 'applink', d.app.link || '앱 영업 탭 열기 ›'); a.href = APP; c.appendChild(a);
+        sec.appendChild(c);
+      }
+      root.appendChild(sec);
     });
     renderMeta();
   }
 
   function renderMeta() {
-    TASKS.forEach(function (t) {
-      var el = document.getElementById('meta-' + t.id); if (!el) return;
-      var r = lastRuns[t.id]; el.textContent = '';
-      if (!r) return;
+    DEPTS.forEach(function (d) { (d.tasks || []).forEach(function (t) {
+      var m = document.getElementById('meta-' + t.id); if (!m) return; m.textContent = '';
+      var sched = el('span'); sched.append('정기 '); sched.appendChild(el('b', null, t.when)); m.appendChild(sched);
+      var r = lastRuns[t.id]; if (!r) return;
       var last = r.last_run;
       if (last && last.fired_at) {
-        var s = document.createElement('span');
-        var st = last.status || '';
-        var good = /SUCCEEDED/.test(st), bad = /FAILED/.test(st);
-        s.innerHTML = '';
-        s.append('마지막 실행 ');
-        var b = document.createElement('b'); b.textContent = fmt(last.fired_at); s.appendChild(b);
-        var tag = document.createElement('span'); tag.className = good ? 'ok' : bad ? 'bad' : '';
-        tag.textContent = good ? ' · 완료' : bad ? ' · 실패' : ' · 진행 중'; s.appendChild(tag);
-        el.appendChild(s);
+        var st = last.status || '', good = /SUCCEEDED/.test(st), bad = /FAILED/.test(st);
+        var s = el('span'); s.append('최근 '); s.appendChild(el('b', null, fmt(last.fired_at)));
+        s.appendChild(el('span', good ? 'ok' : bad ? 'bad' : '', good ? ' 완료' : bad ? ' 실패' : ' 진행 중'));
+        m.appendChild(s);
       }
-      if (r.next_run_at) {
-        var n = document.createElement('span'); n.append('다음 예정 ');
-        var b2 = document.createElement('b'); b2.textContent = fmt(r.next_run_at); n.appendChild(b2); el.appendChild(n);
-      }
-    });
+    }); });
   }
 
   var armTimers = {};
   function onTap(t, btn, res) {
     if (!mcp || btn.classList.contains('busy')) return;
     if (!btn.classList.contains('armed')) {
-      btn.classList.add('armed'); btn.textContent = '한 번 더 누르면 실행';
+      btn.classList.add('armed'); btn.textContent = '한 번 더 누르면 ' + t.who + '에게 지시';
       clearTimeout(armTimers[t.id]);
-      armTimers[t.id] = setTimeout(function () { btn.classList.remove('armed'); btn.textContent = '지금 시키기'; }, 4000);
+      armTimers[t.id] = setTimeout(function () { btn.classList.remove('armed'); btn.textContent = '지금 지시하기'; }, 4000);
       return;
     }
     clearTimeout(armTimers[t.id]);
-    btn.classList.remove('armed'); btn.classList.add('busy'); btn.textContent = '비서에게 전달 중…';
+    btn.classList.remove('armed'); btn.classList.add('busy'); btn.textContent = t.who + '에게 전달 중…';
     res.className = 'result'; res.textContent = '';
     var note = (document.getElementById('extra').value || '').trim();
     var text = [t.extra, note ? '대표님 덧붙임: ' + note : ''].filter(Boolean).join('\n');
-    var input = { trigger_id: t.id };
-    if (text) input.text = text;
+    var input = { trigger_id: t.id }; if (text) input.text = text;
     mcp.callTool(SERVER, 'fire_trigger', input, { cache: false }).then(function () {
-      btn.classList.remove('busy'); btn.classList.add('done'); btn.textContent = '시작했어요';
-      res.className = 'result ok'; res.textContent = '비서가 일을 시작했습니다 (' + t.time + '). 끝나면 알림이 와요.';
-      setTimeout(function () { btn.classList.remove('done'); btn.textContent = '지금 시키기'; }, 8000);
-      refresh();
+      btn.classList.remove('busy'); btn.classList.add('done'); btn.textContent = t.who + ' 업무 시작';
+      res.className = 'result ok'; res.textContent = t.who + '이(가) 일을 시작했습니다 (' + t.time + '). 끝나면 알림이 와요.';
+      setTimeout(function () { btn.classList.remove('done'); btn.textContent = '지금 지시하기'; }, 8000);
+      if (mcp.invalidate) mcp.invalidate(SERVER, 'list_triggers').catch(function () {});
     }).catch(function (e) {
-      btn.classList.remove('busy'); btn.textContent = '지금 시키기';
-      res.className = 'result bad'; res.textContent = explain(e, true);
+      btn.classList.remove('busy'); btn.textContent = '지금 지시하기';
+      res.className = 'result bad'; res.textContent = explain(e);
     });
   }
 
-  function explain(e, isWrite) {
+  function explain(e) {
     var c = e && e.code;
-    if (c === 'approval_required' || c === 'not_in_manifest' || c === 'consent_required') return '이 페이지가 비서에게 일을 시키려면 허락이 필요해요. 다시 눌러서 나오는 확인 창에서 [허용]을 눌러 주세요.';
+    if (c === 'approval_required' || c === 'not_in_manifest' || c === 'consent_required') return '이 페이지가 비서실에 지시하려면 허락이 필요해요. 다시 눌러서 나오는 확인 창에서 [허용]을 눌러 주세요.';
     if (c === 'needs_reauth') return 'Claude Code 연결이 만료됐어요. claude.ai 설정 › 커넥터에서 다시 연결해 주세요.';
     if (c === 'server_not_connected' || c === 'selection_required') return 'Claude Code 연결을 찾지 못했어요. claude.ai 설정 › 커넥터를 확인해 주세요.';
     if (c === 'blocked_by_policy') return '조직 정책으로 막혀 있어요.';
-    if (c === 'server_unavailable' || c === 'upstream_error') return isWrite ? '응답이 늦어 시작됐는지 확실하지 않아요. 잠시 뒤 위의 "마지막 실행" 시각을 보고, 바뀌지 않았으면 다시 눌러 주세요.' : '잠시 연결이 불안정해요.';
-    if (c === 'tool_error') return '비서가 이 작업을 시작하지 못했어요: ' + (e.message || '').slice(0, 120);
-    return '실행하지 못했어요 (' + (c || '알 수 없는 오류') + ').';
+    if (c === 'server_unavailable' || c === 'upstream_error') return '응답이 늦어 시작됐는지 확실하지 않아요. 잠시 뒤 "최근" 시각이 바뀌었는지 보고, 그대로면 다시 눌러 주세요.';
+    if (c === 'tool_error') return '이 업무를 시작하지 못했어요: ' + (e.message || '').slice(0, 120);
+    return '지시하지 못했어요 (' + (c || '알 수 없는 오류') + ').';
   }
 
-  var unwatch = null;
-  function refresh() { if (mcp && mcp.invalidate) mcp.invalidate(SERVER, 'list_triggers').catch(function () {}); }
   function startWatch() {
     try {
-      unwatch = mcp.watchTool(SERVER, 'list_triggers', { limit: 50 }, function (ev) {
+      mcp.watchTool(SERVER, 'list_triggers', { limit: 50 }, function (ev) {
         if (ev.type === 'data') {
-          var p = ev.result && ev.result.payload;
-          var list = (p && (p.data || p.triggers)) || [];
-          lastRuns = {};
-          list.forEach(function (x) { if (x && x.id) lastRuns[x.id] = x; });
-          renderMeta();
-          setStatus('ok', '연결됨 · 비서 대기 중');
+          var p = ev.result && ev.result.payload, list = (p && (p.data || p.triggers)) || [];
+          lastRuns = {}; list.forEach(function (x) { if (x && x.id) lastRuns[x.id] = x; });
+          renderMeta(); setStatus('ok', '비서실 연결됨 · 지시 대기 중');
         } else if (ev.type === 'error') {
           var c = ev.error && ev.error.code;
-          if (c === 'approval_required' || c === 'not_in_manifest' || c === 'consent_required') setStatus('warn', '처음 한 번 허락이 필요해요 — 아무 버튼이나 두 번 눌러 허용해 주세요');
+          if (c === 'approval_required' || c === 'not_in_manifest' || c === 'consent_required') setStatus('warn', '처음 한 번 허락이 필요해요 — 아무 지시 버튼이나 두 번 눌러 허용해 주세요');
           else if (c === 'needs_reauth' || c === 'server_not_connected') { lastRuns = {}; renderMeta(); setStatus('bad', explain(ev.error)); }
-          else setStatus('warn', '실행 기록을 잠시 못 불러왔어요 (버튼은 작동해요)');
+          else setStatus('warn', '업무 기록을 잠시 못 불러왔어요 (지시 버튼은 작동해요)');
         }
       }, { refetchInterval: 60000 });
-    } catch (e) { setStatus('warn', '실행 기록을 못 불러왔어요 (버튼은 작동해요)'); }
+    } catch (e) { setStatus('warn', '업무 기록을 못 불러왔어요 (지시 버튼은 작동해요)'); }
   }
 
-  render();
-  setStatus('', '연결 확인 중…');
+  renderOrg(); render();
   var claude = window.claude;
   if (claude && claude.use) {
     claude.use('mcp').then(function (m) {
       mcp = m;
-      if (!mcp) { setStatus('bad', '이 화면에서는 버튼이 작동하지 않아요. Claude 앱이나 claude.ai에서 열어 주세요.'); return; }
-      render();
-      setStatus('ok', '연결됨 · 비서 대기 중');
-      startWatch();
+      if (!mcp) { setStatus('bad', '이 화면에서는 지시 버튼이 작동하지 않아요. Claude 앱이나 claude.ai에서 열어 주세요.'); return; }
+      render(); setStatus('ok', '비서실 연결됨 · 지시 대기 중'); startWatch();
     }).catch(function () { setStatus('bad', 'Claude 앱이나 claude.ai에서 열어 주세요.'); });
-  } else {
-    setStatus('bad', 'Claude 앱이나 claude.ai에서 열어 주세요.');
-  }
+  } else { setStatus('bad', 'Claude 앱이나 claude.ai에서 열어 주세요.'); }
 })();
 </script>
 </body>
