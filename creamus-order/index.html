@@ -27,7 +27,7 @@
   .step { display: flex; align-items: center; gap: 8px; font-weight: 700; font-size: 17px; margin-bottom: 4px; }
   .step b { width: 24px; height: 24px; border-radius: 99px; background: var(--deep); color: #fff; font-size: 13px; display: inline-flex; align-items: center; justify-content: center; flex: none; }
   .hint { font-size: 13px; color: var(--muted); margin: 2px 0 12px; line-height: 1.5; }
-  .tabs { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; }
+  .tabs { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; }
   .tab { min-height: 54px; border-radius: 12px; border: 0; background: var(--soft); font-weight: 700; font-size: 14px; padding: 6px; line-height: 1.25; }
   .tab.on { background: var(--ink); color: #FFF8F2; }
   .list { display: grid; gap: 6px; margin-top: 10px; }
@@ -231,12 +231,12 @@
   </div>
 </div>
 <div class="toast" id="toast"></div>
-<span class="ver">v3</span>
+<span class="ver">v4</span>
 
 <script>
 'use strict';
 /* 크림어스 카카오톡 채널 채팅 주소 (예: http://pf.kakao.com/_abcde/chat) — 넣으면 '채팅방 열기' 버튼이 생겨요 */
-const KAKAO_CHAT_URL = '';
+const KAKAO_CHAT_URL = 'http://pf.kakao.com/_dwzxhX/chat';
 const PICKUP_START = '11:00', PICKUP_END = '20:00', PICKUP_STEP = 30;
 
 const MENU = [
@@ -253,7 +253,13 @@ const MENU = [
     note: '지름 55mm 컵케이크에 생화가 올라가요. 꽃·글씨는 컬러감만 지정할 수 있고 꽃 종류 지정은 어려워요. 투명상자 기본 포장(추가금 없음).' },
   { id: 'five', name: '다섯입케이크', prefix: '', flavor: false, design: false, letter: true, box: 'five', items: [
     ['다섯입케이크', '지름 약 10cm 초미니 · 종이박스 기본 포장', 27000, { cm: 10 }]],
-    note: '단일 맛(플레인시트 + 100% 동물성 생크림 샌딩 + 크림치즈 아이싱)이라 맛 변경은 어려워요. 꽃 종류 지정 불가, 컬러감만 선택할 수 있어요.' }
+    note: '단일 맛(플레인시트 + 100% 동물성 생크림 샌딩 + 크림치즈 아이싱)이라 맛 변경은 어려워요. 꽃 종류 지정 불가, 컬러감만 선택할 수 있어요.' },
+  { id: 'heart', name: '하트스탠딩', prefix: '', flavor: true, design: false, letter: true, box: 'clear', items: [
+    ['하트스탠딩 1호', '지름 약 13cm 미니하트 · 투명박스 포장', 59000, { cm: 13 }]],
+    note: '꽃 색감·리본·글씨·전체 컬러감만 지정할 수 있어요(꽃 종류 지정 불가). 추가 옵션: 리본 +1,000 · 진주 +1,000 · 진한 컬러 +2,000 · 하판 핑크/블루 +1,000 — 원하시면 디자인 칸에 적어 주세요.' },
+  { id: 'wine', name: '와인잔케이크', prefix: '와인잔케이크 ', flavor: false, design: false, letter: true, box: 'clear', items: [
+    ['1구', '투명상자 포함', 25000], ['2구', '투명상자 포함', 50000], ['2구 케이크판', '케이크판 변경 + 투명상자', 55000], ['3구', '케이크판 + 투명상자', 80000], ['4구', '케이크판 + 투명상자', 100000]],
+    note: '재사용할 수 있는 와인잔에 생화 장식을 더한 케이크예요. 맛은 플레인 기본이고, 쿠앤크를 원하시면 요청사항에 적어 주세요. 케이크 하판에도 레터링할 수 있어요.' }
 ];
 const FLAVORS = [['플레인', 0, '바닐라시트 + 100% 동물성 생크림 샌딩 + 크림치즈크림 아이싱'], ['쿠앤크', 2000, '쿠앤크크림 샌딩 + 쿠앤크분태'], ['고구마', 3000, '고구마크림 샌딩'], ['초코크림', 4000, '초코크림 샌딩 + 초코크런치']];
 const FLAVOR_INFO = {
