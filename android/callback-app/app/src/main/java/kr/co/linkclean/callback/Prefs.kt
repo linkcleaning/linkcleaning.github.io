@@ -410,11 +410,13 @@ https://www.instagram.com/linkcleaning
         val list = history(c).toMutableList()
         list.add(0, r)
         saveHistory(c, list.take(300))
+        HubSync.push(c)
     }
 
     @Synchronized
     fun updateStatus(c: Context, id: Long, status: String) {
         saveHistory(c, history(c).map { if (it.id == id) it.copy(status = status) else it })
+        HubSync.push(c)
     }
 
     @Synchronized

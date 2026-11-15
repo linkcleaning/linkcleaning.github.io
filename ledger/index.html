@@ -82,7 +82,7 @@
   details > summary { list-style: none; }
   details > summary::-webkit-details-marker { display: none; }
 </style>
-<script src="/v.js" data-v="v1" defer></script>
+<script src="/v.js" data-v="v2" defer></script>
 </head>
 <body class="bg-slate-50 text-slate-800">
 
@@ -489,6 +489,34 @@ function loadTx() {
 function persist() {
   try { localStorage.setItem(STORE_KEY, JSON.stringify(txs)); }
   catch (e) { toast('⚠️ 저장 실패 — 저장공간을 확인하세요'); }
+  hubPush();
+}
+
+// ---------- 🔗 링크 허브: 월별 합계만 AI 비서실로 보냄 (거래 메모·이름은 보내지 않음) ----------
+var HUB_URL = 'https://linkclean-promo.han0829.workers.dev/api/hub/ledger';
+var hubTimer = null;
+function hubSummary() {
+  var out = { bizList: (meta.bizList || []).map(function (b) { return { id: b.id, name: b.name }; }), months: {} };
+  txs.forEach(function (t) {
+    if (!t || !t.date) return;
+    var ym = t.date.slice(0, 7), bz = t.biz || 'main';
+    var M = out.months[ym] || (out.months[ym] = {});
+    var B = M[bz] || (M[bz] = { sales: 0, salesVat: 0, salesCount: 0, purchase: 0, purchaseVat: 0, labor: 0, cats: {} });
+    if (t.type === 'sale') { B.sales += t.total || 0; B.salesVat += t.vat || 0; B.salesCount++; B.cats[t.category || '기타'] = (B.cats[t.category || '기타'] || 0) + (t.total || 0); }
+    else if (t.type === 'purchase') { B.purchase += t.total || 0; B.purchaseVat += t.vat || 0; }
+    else if (t.type === 'labor') { B.labor += t.total || 0; }
+  });
+  var keys = Object.keys(out.months).sort();
+  keys.slice(0, Math.max(0, keys.length - 14)).forEach(function (k) { delete out.months[k]; });
+  return out;
+}
+function hubPush() {
+  clearTimeout(hubTimer);
+  hubTimer = setTimeout(function () {
+    try {
+      fetch(HUB_URL, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ data: hubSummary() }), keepalive: true }).catch(function () {});
+    } catch (e) {}
+  }, 1500);
 }
 function loadMeta() { try { return JSON.parse(localStorage.getItem(META_KEY) || '{}') || {}; } catch (e) { return {}; } }
 function saveMeta() { try { localStorage.setItem(META_KEY, JSON.stringify(meta)); } catch (e) {} }
@@ -517,6 +545,7 @@ function normalizeMeta() {
 }
 normalizeMeta();
 txs.forEach(function (t) { if (!t.biz) t.biz = meta.bizList[0].id; });
+setTimeout(hubPush, 3000);
 function S_() { return meta.settings[meta.curBiz]; }
 function bizName(id) { var b = meta.bizList.filter(function (x) { return x.id === (id || meta.curBiz); })[0]; return b ? b.name : ''; }
 function myTx() { return txs.filter(function (t) { return t.biz === meta.curBiz; }); }

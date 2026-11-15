@@ -165,7 +165,7 @@ main{padding:14px 14px 0}
 .toast.on{opacity:1;transform:translateX(-50%)}
 .empty{text-align:center;color:var(--mut);font-weight:700;font-size:14px;padding:26px 10px}
 </style>
-<script src="/v.js" data-v="v2" defer></script>
+<script src="/v.js" data-v="v3" defer></script>
 </head>
 <body>
 <div class="app">
@@ -328,7 +328,20 @@ function fresh(){
 let S;
 try { S = JSON.parse(localStorage.getItem(KEY)) || fresh(); } catch(e) { S = fresh(); }
 S.ranks ||= {}; S.checks ||= {}; S.routine ||= {}; S.places ||= ['제주시점','서귀포점']; S.keywords ||= [];
-function save(){ try { localStorage.setItem(KEY, JSON.stringify(S)); } catch(e) { toast('저장 공간 오류 — 백업을 받아주세요'); } }
+function save(){ try { localStorage.setItem(KEY, JSON.stringify(S)); } catch(e) { toast('저장 공간 오류 — 백업을 받아주세요'); } hubPush(); }
+// 🔗 링크 허브: 순위 기록을 AI 비서실로 보냄 (최근 120일)
+let hubTimer = null;
+function hubPush(){
+  clearTimeout(hubTimer);
+  hubTimer = setTimeout(() => {
+    try {
+      const since = addDays(today(), -120), ranks = {};
+      Object.keys(S.ranks || {}).forEach(d => { if (d >= since) ranks[d] = S.ranks[d]; });
+      fetch('https://linkclean-promo.han0829.workers.dev/api/hub/rank', { method:'POST', headers:{'Content-Type':'application/json'}, keepalive:true,
+        body: JSON.stringify({ data: { keywords: S.keywords, places: S.places, ranks } }) }).catch(() => {});
+    } catch(e) {}
+  }, 1500);
+}
 save();
 
 let cur = today();
