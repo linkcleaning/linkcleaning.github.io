@@ -2905,8 +2905,8 @@ function AgentCard({
   const isTomorrow = a.date === tomorrow;
   const at = a.generatedAt ? new Date(a.generatedAt) : null;
   const copy = async (t: string, msg: string) => toast((await copyText(t)) ? msg : '복사에 실패했습니다.');
-  const tagLine = (tags?: string[]) => (tags ?? []).map((t) => (t.startsWith('#') ? t : '#' + t)).join(' ');
-  const threadOf = (th?: { text: string; tags?: string[] }) => (th ? `${th.text}${th.tags?.length ? '\n\n' + tagLine(th.tags) : ''}` : '');
+  // 스레드는 본문에 해시태그를 넣지 않고, 주제 태그는 게시할 때 따로 고름
+  const threadOf = (th?: { text: string; tags?: string[] }) => th?.text ?? '';
   const threadBlocks = (
     [
       ['threads', '🧵 아침 스레드 글', a.threads],
@@ -2971,7 +2971,11 @@ function AgentCard({
         <div key={key} className="mb-3 rounded-2xl border border-white/10 bg-white/5 p-4">
           <p className="text-[11px] font-bold text-violet-300">{label}</p>
           <p className={`mt-1 whitespace-pre-line text-sm leading-relaxed text-slate-200 ${open === key ? '' : 'line-clamp-4'}`}>{th!.text}</p>
-          {th!.tags && th!.tags.length > 0 && <p className="mt-1.5 text-xs text-sky-300">{tagLine(th!.tags)}</p>}
+          {th!.tags && th!.tags.length > 0 && (
+            <p className="mt-1.5 text-xs text-sky-300">
+              주제 태그: {th!.tags.map((t) => t.replace(/^#/, '')).join(', ')} <span className="text-slate-500">(게시할 때 따로 선택)</span>
+            </p>
+          )}
           <div className="mt-3 flex gap-2">
             <button onClick={() => setOpen(open === key ? null : key)} className={`${btnGhost} text-xs`}>
               {open === key ? '접기' : '전체 보기'}
