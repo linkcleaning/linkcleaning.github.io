@@ -1215,7 +1215,7 @@ function usePwaSetup(iconStyle: IconStyle) {
       el.content = content;
     };
     setMeta('viewport', 'width=device-width, initial-scale=1, viewport-fit=cover');
-    setMeta('theme-color', '#070d1c');
+    setMeta('theme-color', '#0B3B40');
     setMeta('apple-mobile-web-app-capable', 'yes');
     setMeta('mobile-web-app-capable', 'yes');
     setMeta('apple-mobile-web-app-status-bar-style', 'black-translucent');
@@ -1253,8 +1253,8 @@ function usePwaSetup(iconStyle: IconStyle) {
       start_url: base,
       scope: base,
       display: 'standalone',
-      background_color: '#070d1c',
-      theme_color: '#070d1c',
+      background_color: '#F4F1EA',
+      theme_color: '#0B3B40',
       lang: 'ko',
       icons: [
         { src: icon192, sizes: '192x192', type: 'image/png' },
@@ -1278,10 +1278,10 @@ function usePwaSetup(iconStyle: IconStyle) {
 /* =========================================================
  *  공통 UI
  * ========================================================= */
-const card = 'rounded-3xl border border-white/10 bg-[#0f1a33] p-5 shadow-lg shadow-black/30';
-const btnGhost = 'rounded-xl border border-white/10 bg-white/5 px-3 py-2 text-sm text-slate-200 active:scale-95 transition';
+const card = 'rounded-[14px] bg-white p-4';
+const btnGhost = 'rounded-xl bg-[#F4F1EA] px-3 py-2 text-sm font-semibold text-[#14262A] active:scale-95 transition';
 const input =
-  'w-full rounded-xl border border-white/10 bg-[#0a1226] px-3 py-3 text-base text-slate-100 placeholder:text-slate-500 outline-none focus:border-amber-300/60';
+  'w-full rounded-xl border border-[#E2DBCD] bg-[#F4F1EA] px-3 py-3 text-base text-[#14262A] placeholder:text-[#9aa5a6] outline-none focus:border-[#0E5A60]';
 
 function SectionTitle({ icon: Icon, title, right }: { icon: LucideIcon; title: string; right?: React.ReactNode }) {
   return (
@@ -1297,7 +1297,7 @@ function SectionTitle({ icon: Icon, title, right }: { icon: LucideIcon; title: s
 
 function ProgressBar({ pct }: { pct: number }) {
   return (
-    <div className="h-4 w-full overflow-hidden rounded-full bg-white/10">
+    <div className="h-4 w-full overflow-hidden rounded-full bg-[#F4F1EA]">
       <div
         className={`h-full rounded-full transition-all duration-700 ${
           pct >= 100 ? 'bg-gradient-to-r from-emerald-400 to-amber-300' : 'bg-gradient-to-r from-amber-400 to-yellow-300'
@@ -1338,7 +1338,7 @@ function Confetti() {
       ))}
       <div className="absolute inset-x-0 top-1/3 flex justify-center px-6">
         <div
-          className="rounded-3xl border border-amber-300/50 bg-[#0b1430]/95 px-6 py-5 text-center shadow-2xl"
+          className="rounded-[14px] border border-amber-300/50 bg-white px-6 py-5 text-center"
           style={{ animation: 'aisec-pop 0.6s ease-out' }}
         >
           <p className="text-4xl">🏆</p>
@@ -1390,12 +1390,12 @@ function BriefingTab(props: {
             </button>
           }
         />
-        <div className="mb-4 grid grid-cols-3 gap-1 rounded-2xl bg-black/20 p-1">
+        <div className="mb-4 grid grid-cols-3 gap-1 rounded-2xl bg-[#F4F1EA] p-1">
           {(['here', ...Object.keys(CITIES)] as PlaceKey[]).map((c) => (
             <button
               key={c}
               onClick={() => setCity(c)}
-              className={`rounded-xl py-3 text-sm font-bold transition ${city === c ? 'bg-amber-300 text-[#0a1226]' : 'text-slate-300'}`}
+              className={`rounded-xl py-3 text-sm font-bold transition ${city === c ? 'bg-amber-300 text-white' : 'text-slate-300'}`}
             >
               {c === 'here' ? (locating ? '📍 찾는 중…' : '📍 내 위치') : CITIES[c].name}
             </button>
@@ -1407,7 +1407,7 @@ function BriefingTab(props: {
           </p>
         )}
 
-        {!w && loading && <div className="h-40 animate-pulse rounded-2xl bg-white/5" />}
+        {!w && loading && <div className="h-40 animate-pulse rounded-2xl bg-[#F4F1EA]" />}
         {!w && !loading && error && (
           <div className="flex items-center gap-2 rounded-2xl bg-rose-500/10 p-4 text-sm text-rose-200">
             <TriangleAlert className="h-5 w-5 shrink-0" />
@@ -1420,7 +1420,7 @@ function BriefingTab(props: {
             <div className="flex items-center gap-4">
               <info.Icon className="h-16 w-16 text-amber-300" strokeWidth={1.5} />
               <div>
-                <p className="text-5xl font-extrabold tracking-tight">
+                <p className="text-5xl font-num font-normal tracking-tight">
                   {w.temp}
                   <span className="text-2xl text-slate-400">℃</span>
                 </p>
@@ -1431,17 +1431,17 @@ function BriefingTab(props: {
             </div>
 
             <div className="mt-4 grid grid-cols-3 gap-2 text-center">
-              <div className="rounded-2xl bg-white/5 p-3">
+              <div className="rounded-2xl bg-[#F4F1EA] p-3">
                 <Droplets className="mx-auto h-5 w-5 text-sky-300" />
                 <p className="mt-1 text-xl font-bold">{w.humidity}%</p>
                 <p className="text-[11px] text-slate-400">습도</p>
               </div>
-              <div className="rounded-2xl bg-white/5 p-3">
+              <div className="rounded-2xl bg-[#F4F1EA] p-3">
                 <Umbrella className="mx-auto h-5 w-5 text-indigo-300" />
                 <p className="mt-1 text-xl font-bold">{w.popNow}%</p>
                 <p className="text-[11px] text-slate-400">강수확률 (오늘 최고 {w.popMax}%)</p>
               </div>
-              <div className="rounded-2xl bg-white/5 p-3">
+              <div className="rounded-2xl bg-[#F4F1EA] p-3">
                 <Wind className="mx-auto h-5 w-5 text-teal-300" />
                 <p className="mt-1 text-xl font-bold">{w.wind}</p>
                 <p className="text-[11px] text-slate-400">바람 m/s</p>
@@ -1467,7 +1467,7 @@ function BriefingTab(props: {
         <SectionTitle icon={Newspaper} title="오늘의 제주·시즌 이슈" />
         <ul className="space-y-3">
           {issues.map((it, i) => (
-            <li key={i} className={`rounded-2xl p-4 ${it.warn ? 'bg-rose-500/10' : 'bg-white/5'}`}>
+            <li key={i} className={`rounded-2xl p-4 ${it.warn ? 'bg-rose-500/10' : 'bg-[#F4F1EA]'}`}>
               <span className="rounded-full border border-amber-300/30 px-2 py-0.5 text-[11px] text-amber-200">{it.tag}</span>
               <p className="mt-2 font-bold text-slate-50">{it.title}</p>
               <p className="mt-1 text-sm leading-relaxed text-slate-300">{it.desc}</p>
@@ -1539,7 +1539,7 @@ function RoutineForm({
   };
 
   return (
-    <div className="space-y-2 rounded-2xl border border-amber-300/30 bg-black/20 p-4">
+    <div className="space-y-2 rounded-2xl border border-amber-300/30 bg-[#F4F1EA] p-4">
       <div className="flex gap-2">
         <input className={`${input} w-20 text-center`} value={emoji} onChange={(e) => setEmoji(e.target.value)} placeholder="😀" />
         <input className={input} value={category} onChange={(e) => setCategory(e.target.value)} placeholder="분류 (예: 건강 관리)" />
@@ -1553,10 +1553,10 @@ function RoutineForm({
       />
       <p className="text-[11px] text-slate-500">개별 체크 항목을 비워두면 한 번 터치로 완료되는 루틴이 됩니다.</p>
       <div className="flex gap-2 pt-1">
-        <button onClick={save} className="flex-1 rounded-xl bg-amber-300 py-3 font-bold text-[#0a1226] active:scale-95">
+        <button onClick={save} className="flex-1 rounded-xl bg-amber-300 py-3 font-bold text-white active:scale-95">
           저장
         </button>
-        <button onClick={onCancel} className="flex-1 rounded-xl bg-white/10 py-3 font-semibold text-slate-200 active:scale-95">
+        <button onClick={onCancel} className="flex-1 rounded-xl bg-[#F4F1EA] py-3 font-semibold text-slate-200 active:scale-95">
           취소
         </button>
       </div>
@@ -1598,7 +1598,7 @@ function RoutineTab(props: {
         <div className="flex items-end justify-between">
           <div>
             <p className="text-sm text-slate-400">오늘의 루틴 달성률</p>
-            <p className="text-5xl font-extrabold text-amber-300">
+            <p className="text-5xl font-num font-normal text-amber-300">
               {pct}
               <span className="text-2xl">%</span>
             </p>
@@ -1629,7 +1629,7 @@ function RoutineTab(props: {
               <div key={d}>
                 <div
                   className={`mx-auto flex h-8 w-8 items-center justify-center rounded-full text-xs font-bold ${
-                    ok ? 'bg-emerald-400 text-[#06231a]' : partial ? 'bg-amber-300/30 text-amber-100' : 'bg-white/5 text-slate-500'
+                    ok ? 'bg-emerald-400 text-white' : partial ? 'bg-amber-300/30 text-amber-100' : 'bg-[#F4F1EA] text-slate-500'
                   } ${d === today ? 'ring-2 ring-amber-300' : ''}`}
                 >
                   {ok ? <Check className="h-4 w-4" /> : dd}
@@ -1687,7 +1687,7 @@ function RoutineTab(props: {
               <li
                 key={r.id}
                 className={`rounded-2xl border p-4 transition ${
-                  allDone ? 'border-emerald-400/40 bg-emerald-400/10' : 'border-white/10 bg-white/5'
+                  allDone ? 'border-emerald-400/40 bg-emerald-400/10' : 'border-[#E2DBCD] bg-[#F4F1EA]'
                 }`}
               >
                 <div
@@ -1706,20 +1706,20 @@ function RoutineTab(props: {
                   )}
                   {editMode && (
                     <div className="flex shrink-0 items-center gap-1">
-                      <button onClick={() => move(idx, -1)} className="rounded-lg p-2 text-slate-300 active:bg-white/10" aria-label="위로">
+                      <button onClick={() => move(idx, -1)} className="rounded-lg p-2 text-slate-300 active:bg-[#F4F1EA]" aria-label="위로">
                         <ChevronUp className="h-5 w-5" />
                       </button>
-                      <button onClick={() => move(idx, 1)} className="rounded-lg p-2 text-slate-300 active:bg-white/10" aria-label="아래로">
+                      <button onClick={() => move(idx, 1)} className="rounded-lg p-2 text-slate-300 active:bg-[#F4F1EA]" aria-label="아래로">
                         <ChevronDown className="h-5 w-5" />
                       </button>
-                      <button onClick={() => setEditingId(r.id)} className="rounded-lg p-2 text-sky-300 active:bg-white/10" aria-label="수정">
+                      <button onClick={() => setEditingId(r.id)} className="rounded-lg p-2 text-sky-300 active:bg-[#F4F1EA]" aria-label="수정">
                         <Pencil className="h-5 w-5" />
                       </button>
                       <button
                         onClick={() => {
                           if (confirm(`'${r.title}' 루틴을 삭제할까요?`)) setRoutines((list) => list.filter((x) => x.id !== r.id));
                         }}
-                        className="rounded-lg p-2 text-rose-300 active:bg-white/10"
+                        className="rounded-lg p-2 text-rose-300 active:bg-[#F4F1EA]"
                         aria-label="삭제"
                       >
                         <Trash2 className="h-5 w-5" />
@@ -1739,7 +1739,7 @@ function RoutineTab(props: {
                           disabled={editMode}
                           onClick={() => toggle(key)}
                           className={`flex items-center justify-center gap-1 rounded-xl py-3 text-base font-bold transition active:scale-95 ${
-                            on ? 'bg-emerald-400 text-[#06231a]' : 'bg-white/10 text-slate-200'
+                            on ? 'bg-emerald-400 text-white' : 'bg-white text-slate-200'
                           }`}
                         >
                           {on ? <Check className="h-4 w-4" /> : null}
@@ -1794,7 +1794,7 @@ function RankSheet({
   return (
     <div className="fixed inset-0 z-50 flex items-end bg-black/60" onClick={onClose}>
       <div
-        className="w-full rounded-t-3xl border-t border-white/10 bg-[#0d1730] p-5 pb-[calc(env(safe-area-inset-bottom)+20px)]"
+        className="w-full rounded-t-3xl border-t border-[#E2DBCD] bg-white p-5 pb-[calc(env(safe-area-inset-bottom)+20px)]"
         onClick={(e) => e.stopPropagation()}
       >
         <div className="mb-4 flex items-center justify-between">
@@ -1809,7 +1809,7 @@ function RankSheet({
               key={n}
               onClick={() => onPick(n)}
               className={`rounded-xl py-3 text-lg font-bold active:scale-95 ${
-                current === n ? 'bg-amber-300 text-[#0a1226]' : 'bg-white/10 text-slate-100'
+                current === n ? 'bg-amber-300 text-white' : 'bg-[#F4F1EA] text-slate-100'
               }`}
             >
               {n}
@@ -1818,12 +1818,12 @@ function RankSheet({
           <button
             onClick={() => onPick(0)}
             className={`col-span-3 rounded-xl py-3 font-bold active:scale-95 ${
-              current === 0 ? 'bg-rose-400 text-[#2a0710]' : 'bg-rose-500/15 text-rose-200'
+              current === 0 ? 'bg-rose-400 text-white' : 'bg-rose-500/15 text-rose-200'
             }`}
           >
             권외 (순위 밖)
           </button>
-          <button onClick={() => onPick(undefined)} className="col-span-2 rounded-xl bg-white/5 py-3 font-semibold text-slate-300 active:scale-95">
+          <button onClick={() => onPick(undefined)} className="col-span-2 rounded-xl bg-[#F4F1EA] py-3 font-semibold text-slate-300 active:scale-95">
             기록 지우기
           </button>
         </div>
@@ -1916,7 +1916,7 @@ function KeywordTab(props: {
   return (
     <div className="space-y-4">
       {/* 황금키워드 */}
-      <section className={`${card} border-amber-300/30 bg-gradient-to-br from-[#14213f] to-[#0f1a33]`}>
+      <section className={`${card} border-amber-300/30 bg-white`}>
         <SectionTitle
           icon={Sparkles}
           title="오늘의 황금키워드"
@@ -1928,7 +1928,7 @@ function KeywordTab(props: {
                     ? 'bg-sky-400/20 text-sky-200'
                     : golden.source === 'ai'
                       ? 'bg-emerald-400/20 text-emerald-200'
-                      : 'bg-white/10 text-slate-300'
+                      : 'bg-[#F4F1EA] text-slate-300'
                 }`}
               >
                 {golden.source === 'agent'
@@ -1951,7 +1951,7 @@ function KeywordTab(props: {
           <>
             <ul className="space-y-2">
               {golden.keywords.map((k, i) => (
-                <li key={k.kw} className="rounded-2xl bg-black/20 p-3">
+                <li key={k.kw} className="rounded-2xl bg-[#F4F1EA] p-3">
                   <div className="flex items-center justify-between gap-2">
                     <p className="font-extrabold text-amber-200">
                       {i + 1}. {k.kw}
@@ -1968,7 +1968,7 @@ function KeywordTab(props: {
                   {k.total !== undefined && (
                     <div className="mt-1.5 flex flex-wrap gap-1.5 text-[11px] font-bold">
                       <span className="rounded-full bg-sky-400/15 px-2 py-0.5 text-sky-200">월 {k.total.toLocaleString()}회</span>
-                      <span className="rounded-full bg-white/10 px-2 py-0.5 text-slate-300">
+                      <span className="rounded-full bg-[#F4F1EA] px-2 py-0.5 text-slate-300">
                         모바일 {Math.round(((k.mobile ?? 0) / Math.max(1, k.total)) * 100)}%
                       </span>
                       {k.comp && (
@@ -1988,9 +1988,9 @@ function KeywordTab(props: {
             </ul>
 
             {golden.pool && golden.pool.length > 3 && (
-              <details className="mt-3 rounded-2xl bg-black/20 p-3">
+              <details className="mt-3 rounded-2xl bg-[#F4F1EA] p-3">
                 <summary className="cursor-pointer text-sm font-bold text-sky-200">📊 데이터 후보 TOP {golden.pool.length} 보기</summary>
-                <ul className="mt-2 divide-y divide-white/5">
+                <ul className="mt-2 divide-y divide-[#E2DBCD]">
                   {golden.pool.map((k, i) => {
                     const tracked = keywords.some((x) => x.text.replace(/\s+/g, '') === k.kw.replace(/\s+/g, ''));
                     return (
@@ -2011,7 +2011,7 @@ function KeywordTab(props: {
                             setKeywords((l) => [...l, { id: uid(), text: k.kw }]);
                             toast(`'${k.kw}'를 순위 체크 키워드에 추가했습니다.`);
                           }}
-                          className="shrink-0 rounded-lg bg-white/10 px-2 py-1 text-[11px] font-bold text-slate-200 disabled:opacity-40"
+                          className="shrink-0 rounded-lg bg-[#F4F1EA] px-2 py-1 text-[11px] font-bold text-slate-200 disabled:opacity-40"
                         >
                           {tracked ? '추적중' : '+추적'}
                         </button>
@@ -2026,7 +2026,7 @@ function KeywordTab(props: {
             <p className="mb-2 mt-5 text-sm font-bold text-slate-200">✍️ 클릭을 부르는 블로그 제목 & 도입부</p>
             <ul className="space-y-3">
               {golden.titles.map((t, i) => (
-                <li key={i} className="rounded-2xl border border-white/10 bg-white/5 p-4">
+                <li key={i} className="rounded-2xl border border-[#E2DBCD] bg-[#F4F1EA] p-4">
                   <p className="font-bold leading-snug text-slate-50">{t.title}</p>
                   <p className="mt-2 text-sm leading-relaxed text-slate-300">{t.intro}</p>
                   <div className="mt-3 flex gap-2">
@@ -2055,7 +2055,7 @@ function KeywordTab(props: {
           <button
             onClick={() => onGenerate('data')}
             disabled={gLoading}
-            className="mt-4 flex w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-sky-400 to-cyan-300 py-3.5 font-extrabold text-[#04182a] active:scale-[0.98] disabled:opacity-60"
+            className="mt-4 flex w-full items-center justify-center gap-2 rounded-xl bg-[#0E5A60] py-3.5 font-extrabold text-white active:scale-[0.98] disabled:opacity-60"
           >
             <Search className={`h-4 w-4 ${gLoading ? 'animate-pulse' : ''}`} />
             {gLoading ? '분석 중…' : '실제 검색량으로 황금키워드 찾기'}
@@ -2064,7 +2064,7 @@ function KeywordTab(props: {
         <div className={`${dataReady ? 'mt-2' : 'mt-4'} grid grid-cols-2 gap-2`}>
           <button
             onClick={() => onGenerate('local')}
-            className="flex items-center justify-center gap-2 rounded-xl bg-white/10 py-3 font-bold text-slate-100 active:scale-95"
+            className="flex items-center justify-center gap-2 rounded-xl bg-[#F4F1EA] py-3 font-bold text-slate-100 active:scale-95"
           >
             <RefreshCw className="h-4 w-4" /> 다른 추천
           </button>
@@ -2072,7 +2072,7 @@ function KeywordTab(props: {
             onClick={() => (hasKey ? onGenerate('ai') : toast('우측 상단 ⚙️ 설정에서 Gemini API 키를 입력해 주세요.'))}
             disabled={gLoading}
             className={`flex items-center justify-center gap-2 rounded-xl py-3 font-bold active:scale-95 ${
-              hasKey ? 'bg-amber-300 text-[#0a1226]' : 'bg-amber-300/20 text-amber-200'
+              hasKey ? 'bg-amber-300 text-white' : 'bg-amber-300/20 text-amber-200'
             } disabled:opacity-60`}
           >
             <Sparkles className={`h-4 w-4 ${gLoading ? 'animate-pulse' : ''}`} />
@@ -2100,13 +2100,13 @@ function KeywordTab(props: {
             <button
               onClick={runAutoCheck}
               disabled={!!checking}
-              className="mb-3 flex w-full items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-emerald-400 to-emerald-300 py-3.5 text-base font-extrabold text-[#04221a] active:scale-[0.98] disabled:opacity-80"
+              className="mb-3 flex w-full items-center justify-center gap-2 rounded-2xl bg-[#0E5A60] py-3.5 text-base font-extrabold text-white active:scale-[0.98] disabled:opacity-80"
             >
               <RefreshCw className={`h-5 w-5 ${checking ? 'animate-spin' : ''}`} />
               {checking ? `자동 체크 중… ${checking.done}/${checking.total}` : '블로그·홈페이지 순위 자동 체크'}
             </button>
             {checking && (
-              <div className="mb-3 h-2 overflow-hidden rounded-full bg-white/10">
+              <div className="mb-3 h-2 overflow-hidden rounded-full bg-[#F4F1EA]">
                 <div className="h-full rounded-full bg-emerald-400 transition-all" style={{ width: `${(checking.done / Math.max(1, checking.total)) * 100}%` }} />
               </div>
             )}
@@ -2115,7 +2115,7 @@ function KeywordTab(props: {
             </p>
           </>
         ) : (
-          <div className="mb-3 rounded-2xl bg-black/20 p-3 text-xs leading-relaxed text-slate-300">
+          <div className="mb-3 rounded-2xl bg-[#F4F1EA] p-3 text-xs leading-relaxed text-slate-300">
             <b className="text-amber-200">빠른 기록:</b> 아래 <b>블로그 / 홈페이지</b> 버튼을 누르면 네이버 검색이 열립니다. 우리 업체가 몇 번째인지 보고 이 앱으로
             돌아오면 <b>순위 입력창이 자동으로 열립니다.</b> 숫자만 누르면 끝!
           </div>
@@ -2125,7 +2125,7 @@ function KeywordTab(props: {
           {keywords.map((k) => {
             const rec = todayRec[k.id] ?? {};
             return (
-              <li key={k.id} className="rounded-2xl border border-white/10 bg-white/5 p-3">
+              <li key={k.id} className="rounded-2xl border border-[#E2DBCD] bg-[#F4F1EA] p-3">
                 <div className="flex items-center justify-between gap-2">
                   <p className="min-w-0 flex-1 truncate text-base font-bold text-slate-50">{k.text}</p>
                   {editMode ? (
@@ -2158,7 +2158,7 @@ function KeywordTab(props: {
                       target="_blank"
                       rel="noreferrer"
                       onClick={() => (pending.current = { kwId: k.id, field: f })}
-                      className="flex items-center justify-center gap-1 rounded-xl border border-[#03c75a]/40 bg-[#03c75a]/10 py-2 text-xs font-bold text-[#5ee39a] active:scale-95"
+                      className="flex items-center justify-center gap-1 rounded-xl border border-[#03c75a]/40 bg-[#03c75a]/10 py-2 text-xs font-bold text-[#0a8a3e] active:scale-95"
                     >
                       <Search className="h-3.5 w-3.5" /> {label} 검색
                     </a>
@@ -2172,7 +2172,7 @@ function KeywordTab(props: {
                       <button
                         key={f}
                         onClick={() => setSheet({ kwId: k.id, field: f })}
-                        className="flex items-center justify-between gap-1 whitespace-nowrap rounded-xl bg-black/25 px-2.5 py-2.5 active:scale-95"
+                        className="flex items-center justify-between gap-1 whitespace-nowrap rounded-xl bg-white px-2.5 py-2.5 active:scale-95"
                       >
                         <span className="flex flex-col items-start text-xs text-slate-400">
                           {label}
@@ -2201,7 +2201,7 @@ function KeywordTab(props: {
             onKeyDown={(e) => e.key === 'Enter' && addKeyword()}
             placeholder="키워드 추가 (예: 제주에어컨청소)"
           />
-          <button onClick={addKeyword} className="shrink-0 rounded-xl bg-amber-300 px-4 font-bold text-[#0a1226] active:scale-95" aria-label="추가">
+          <button onClick={addKeyword} className="shrink-0 rounded-xl bg-amber-300 px-4 font-bold text-white active:scale-95" aria-label="추가">
             <Plus className="h-5 w-5" />
           </button>
         </div>
@@ -2251,7 +2251,7 @@ const STAGES: { key: DealStage; label: string; cls: string }[] = [
   { key: 'quote', label: '견적', cls: 'bg-amber-300/15 text-amber-200 border-amber-300/30' },
   { key: 'won', label: '계약', cls: 'bg-emerald-400/15 text-emerald-200 border-emerald-400/30' },
   { key: 'done', label: '완료', cls: 'bg-violet-400/15 text-violet-200 border-violet-400/30' },
-  { key: 'lost', label: '보류·실패', cls: 'bg-white/10 text-slate-400 border-white/10' },
+  { key: 'lost', label: '보류·실패', cls: 'bg-[#F4F1EA] text-slate-400 border-[#E2DBCD]' },
 ];
 const stageOf = (k: DealStage) => STAGES.find((s) => s.key === k) ?? STAGES[0];
 const NEXT_STAGE: Partial<Record<DealStage, DealStage>> = { inquiry: 'quote', quote: 'won', won: 'done' };
@@ -2373,7 +2373,7 @@ function DealForm({
 
   const chip = (on: boolean) =>
     `rounded-full border px-3 py-1.5 text-sm font-semibold transition active:scale-95 ${
-      on ? 'border-amber-300 bg-amber-300 text-[#0a1226]' : 'border-white/10 bg-white/5 text-slate-300'
+      on ? 'border-amber-300 bg-amber-300 text-white' : 'border-[#E2DBCD] bg-[#F4F1EA] text-slate-300'
     }`;
 
   const save = () => {
@@ -2398,7 +2398,7 @@ function DealForm({
   };
 
   return (
-    <div className="space-y-3 rounded-2xl border border-amber-300/30 bg-black/25 p-4">
+    <div className="space-y-3 rounded-2xl border border-amber-300/30 bg-[#F4F1EA] p-4">
       <div className="grid grid-cols-2 gap-2">
         <input className={input} value={name} onChange={(e) => setName(e.target.value)} placeholder="고객명 (예: 노형 김사장)" />
         <input className={input} value={phone} onChange={(e) => setPhone(e.target.value)} placeholder="연락처 (선택)" inputMode="tel" />
@@ -2440,15 +2440,15 @@ function DealForm({
         </label>
         <label className="block">
           <span className="mb-1 block text-xs text-slate-400">작업 예정일</span>
-          <input className={`${input} [color-scheme:dark]`} type="date" value={workDate} onChange={(e) => setWorkDate(e.target.value)} />
+          <input className={`${input} `} type="date" value={workDate} onChange={(e) => setWorkDate(e.target.value)} />
         </label>
       </div>
       <input className={input} value={note} onChange={(e) => setNote(e.target.value)} placeholder="메모 (평수, 특이사항 등)" />
       <div className="flex gap-2 pt-1">
-        <button onClick={save} className="flex-1 rounded-xl bg-amber-300 py-3 font-bold text-[#0a1226] active:scale-95">
+        <button onClick={save} className="flex-1 rounded-xl bg-amber-300 py-3 font-bold text-white active:scale-95">
           저장
         </button>
-        <button onClick={onCancel} className="flex-1 rounded-xl bg-white/10 py-3 font-semibold text-slate-200 active:scale-95">
+        <button onClick={onCancel} className="flex-1 rounded-xl bg-[#F4F1EA] py-3 font-semibold text-slate-200 active:scale-95">
           취소
         </button>
       </div>
@@ -2512,7 +2512,7 @@ function SalesTab(props: {
   return (
     <div className="space-y-4">
       {/* 이번 달 성과 */}
-      <section className={`${card} border-emerald-400/25 bg-gradient-to-br from-[#0f2a2a] to-[#0f1a33]`}>
+      <section className={`${card} border-emerald-400/25 bg-white`}>
         <SectionTitle
           icon={Flame}
           title={`${Number(stats.month.slice(5))}월 매출 현황`}
@@ -2523,7 +2523,7 @@ function SalesTab(props: {
           }
         />
         {editTarget && (
-          <div className="mb-4 space-y-2 rounded-2xl bg-black/25 p-3">
+          <div className="mb-4 space-y-2 rounded-2xl bg-[#F4F1EA] p-3">
             <label className="block">
               <span className="mb-1 block text-xs text-slate-400">이번 달 매출 목표 (만원)</span>
               <input className={input} value={targetMan} onChange={(e) => setTargetMan(e.target.value)} inputMode="decimal" placeholder="예: 1500" />
@@ -2539,7 +2539,7 @@ function SalesTab(props: {
                 setEditTarget(false);
                 toast('목표를 저장했습니다.');
               }}
-              className="w-full rounded-xl bg-amber-300 py-3 font-bold text-[#0a1226] active:scale-95"
+              className="w-full rounded-xl bg-amber-300 py-3 font-bold text-white active:scale-95"
             >
               저장
             </button>
@@ -2549,12 +2549,12 @@ function SalesTab(props: {
         <div className="flex items-end justify-between">
           <div>
             <p className="text-xs text-slate-400">계약 기준 매출</p>
-            <p className="text-4xl font-extrabold tabular-nums text-emerald-300">{fmtWon(stats.revenue)}</p>
+            <p className="text-4xl font-num font-normal tabular-nums text-[#0E5A60]">{fmtWon(stats.revenue)}</p>
           </div>
           {stats.target > 0 ? (
             <div className="text-right">
               <p className="text-xs text-slate-400">목표 {fmtWon(stats.target)}</p>
-              <p className="text-2xl font-extrabold text-amber-300">{stats.pct}%</p>
+              <p className="text-2xl font-num font-normal text-amber-300">{stats.pct}%</p>
             </div>
           ) : (
             <button onClick={() => setEditTarget(true)} className="text-right text-xs font-bold text-amber-200 underline underline-offset-2">
@@ -2582,7 +2582,7 @@ function SalesTab(props: {
             { k: '전환율', v: `${stats.conv}%` },
             { k: '객단가', v: stats.avg ? fmtWon(stats.avg).replace('만원', '만') : '-' },
           ].map((x) => (
-            <div key={x.k} className="rounded-2xl bg-black/25 px-1 py-3">
+            <div key={x.k} className="rounded-2xl bg-[#F4F1EA] px-1 py-3">
               <p className="whitespace-nowrap text-lg font-extrabold tabular-nums text-slate-50">{x.v}</p>
               <p className="text-[11px] text-slate-400">{x.k}</p>
             </div>
@@ -2605,7 +2605,7 @@ function SalesTab(props: {
                       📞 전화
                     </a>
                   )}
-                  <button onClick={() => advance(d)} className="rounded-xl bg-emerald-400 px-3 py-2 text-xs font-bold text-[#04221a] active:scale-95">
+                  <button onClick={() => advance(d)} className="rounded-xl bg-emerald-400 px-3 py-2 text-xs font-bold text-white active:scale-95">
                     작업 완료 처리
                   </button>
                 </div>
@@ -2635,7 +2635,7 @@ function SalesTab(props: {
                       update(d.id, { followedAt: today });
                       toast(`연락 완료로 표시했습니다. ${FOLLOW_DAYS}일 뒤 다시 알려드립니다.`);
                     }}
-                    className="rounded-xl bg-amber-300 px-3 py-2 text-xs font-bold text-[#0a1226] active:scale-95"
+                    className="rounded-xl bg-amber-300 px-3 py-2 text-xs font-bold text-white active:scale-95"
                   >
                     연락함
                   </button>
@@ -2659,7 +2659,7 @@ function SalesTab(props: {
                       update(d.id, { reviewAsked: true });
                       toast('후기 요청 완료로 표시했습니다.');
                     }}
-                    className="rounded-xl bg-violet-300 px-3 py-2 text-xs font-bold text-[#1a0b2e] active:scale-95"
+                    className="rounded-xl bg-violet-300 px-3 py-2 text-xs font-bold text-white active:scale-95"
                   >
                     요청함
                   </button>
@@ -2677,7 +2677,7 @@ function SalesTab(props: {
           title="고객 문의 관리"
           right={
             !adding && (
-              <button onClick={() => setAdding(true)} className="flex items-center gap-1 rounded-xl bg-amber-300 px-3 py-2 text-sm font-bold text-[#0a1226] active:scale-95">
+              <button onClick={() => setAdding(true)} className="flex items-center gap-1 rounded-xl bg-amber-300 px-3 py-2 text-sm font-bold text-white active:scale-95">
                 <Plus className="h-4 w-4" /> 새 문의
               </button>
             )
@@ -2697,7 +2697,7 @@ function SalesTab(props: {
           </div>
         )}
 
-        <div className="mb-3 grid grid-cols-3 gap-1 rounded-2xl bg-black/20 p-1 text-sm">
+        <div className="mb-3 grid grid-cols-3 gap-1 rounded-2xl bg-[#F4F1EA] p-1 text-sm">
           {(
             [
               ['open', '진행 중'],
@@ -2705,14 +2705,14 @@ function SalesTab(props: {
               ['all', '전체'],
             ] as const
           ).map(([k, l]) => (
-            <button key={k} onClick={() => setFilter(k)} className={`rounded-xl py-2 font-bold ${filter === k ? 'bg-amber-300 text-[#0a1226]' : 'text-slate-300'}`}>
+            <button key={k} onClick={() => setFilter(k)} className={`rounded-xl py-2 font-bold ${filter === k ? 'bg-amber-300 text-white' : 'text-slate-300'}`}>
               {l}
             </button>
           ))}
         </div>
 
         {list.length === 0 && (
-          <div className="rounded-2xl bg-white/5 p-5 text-center text-sm leading-relaxed text-slate-400">
+          <div className="rounded-2xl bg-[#F4F1EA] p-5 text-center text-sm leading-relaxed text-slate-400">
             아직 등록된 문의가 없습니다.
             <br />
             전화·카톡 문의가 오면 <b className="text-amber-200">[새 문의]</b>로 바로 적어두세요.
@@ -2737,7 +2737,7 @@ function SalesTab(props: {
                 />
               </li>
             ) : (
-              <li key={d.id} className="rounded-2xl border border-white/10 bg-white/5 p-3">
+              <li key={d.id} className="rounded-2xl border border-[#E2DBCD] bg-[#F4F1EA] p-3">
                 <div className="flex items-start justify-between gap-2">
                   <div className="min-w-0">
                     <div className="flex flex-wrap items-center gap-1.5">
@@ -2776,7 +2776,7 @@ function SalesTab(props: {
                     {NEXT_STAGE[d.stage] && (
                       <button
                         onClick={() => advance(d)}
-                        className="flex-1 rounded-xl bg-emerald-400/90 py-2 text-sm font-bold text-[#04221a] active:scale-95"
+                        className="flex-1 rounded-xl bg-emerald-400/90 py-2 text-sm font-bold text-white active:scale-95"
                       >
                         {stageOf(NEXT_STAGE[d.stage]!).label}
                         {d.stage === 'won' ? ' 처리' : '으로 →'}
@@ -2785,7 +2785,7 @@ function SalesTab(props: {
                     {(d.stage === 'inquiry' || d.stage === 'quote') && (
                       <button
                         onClick={() => update(d.id, { stage: 'lost', stageAt: today })}
-                        className="rounded-xl bg-white/10 px-3 py-2 text-sm font-semibold text-slate-300 active:scale-95"
+                        className="rounded-xl bg-[#F4F1EA] px-3 py-2 text-sm font-semibold text-slate-300 active:scale-95"
                       >
                         보류
                       </button>
@@ -2824,8 +2824,8 @@ function SalesTab(props: {
                       문의 {c.inquiries} · 계약 {c.wins} · <b className="text-emerald-300">{fmtWon(c.revenue)}</b>
                     </span>
                   </div>
-                  <div className="h-2.5 overflow-hidden rounded-full bg-white/10">
-                    <div className="h-full rounded-full bg-gradient-to-r from-emerald-400 to-teal-300" style={{ width: `${(c.revenue / maxChanRev) * 100}%` }} />
+                  <div className="h-2.5 overflow-hidden rounded-full bg-[#F4F1EA]">
+                    <div className="h-full rounded-full bg-[#3F8F2E]" style={{ width: `${(c.revenue / maxChanRev) * 100}%` }} />
                   </div>
                 </li>
               ))}
@@ -2915,7 +2915,7 @@ function AgentCard({
   ).filter(([, , th]) => !!th);
 
   return (
-    <section className={`${card} border-amber-300/40 bg-gradient-to-br from-[#1a2650] to-[#0f1a33]`}>
+    <section className={`${card} border-amber-300/40 bg-white`}>
       <SectionTitle
         icon={Sparkles}
         title={isTomorrow ? '🤵 내일 업무 준비 완료' : '🤵 오늘 준비된 업무'}
@@ -2937,7 +2937,7 @@ function AgentCard({
               const done = doneTodos.includes(i);
               return (
                 <li key={i}>
-                  <button onClick={() => onDoneTodo(i)} className="flex w-full items-start gap-2 rounded-xl bg-black/20 p-2.5 text-left active:scale-[0.99]">
+                  <button onClick={() => onDoneTodo(i)} className="flex w-full items-start gap-2 rounded-xl bg-[#F4F1EA] p-2.5 text-left active:scale-[0.99]">
                     {done ? <CircleCheck className="mt-0.5 h-5 w-5 shrink-0 text-emerald-400" /> : <Circle className="mt-0.5 h-5 w-5 shrink-0 text-slate-500" />}
                     <span className={`text-sm leading-snug ${done ? 'text-slate-500 line-through' : 'text-slate-100'}`}>{t}</span>
                   </button>
@@ -2949,7 +2949,7 @@ function AgentCard({
       )}
 
       {a.blog && (
-        <div className="mb-3 rounded-2xl border border-white/10 bg-white/5 p-4">
+        <div className="mb-3 rounded-2xl border border-[#E2DBCD] bg-[#F4F1EA] p-4">
           <p className="text-[11px] font-bold text-sky-300">✍️ 오늘의 블로그 초안{a.blog.keyword ? ` · #${a.blog.keyword}` : ''}</p>
           <p className="mt-1 font-bold leading-snug text-slate-50">{a.blog.title}</p>
           <p className={`mt-2 whitespace-pre-line text-sm leading-relaxed text-slate-300 ${open === 'blog' ? '' : 'line-clamp-3'}`}>{a.blog.body}</p>
@@ -2959,7 +2959,7 @@ function AgentCard({
             </button>
             <button
               onClick={() => copy(`${a.blog!.title}\n\n${a.blog!.body}`, '블로그 초안을 복사했습니다. 네이버 블로그 앱에 붙여넣고 현장 사진만 넣으세요.')}
-              className="flex items-center gap-1 rounded-xl bg-amber-300 px-3 py-2 text-xs font-bold text-[#0a1226] active:scale-95"
+              className="flex items-center gap-1 rounded-xl bg-amber-300 px-3 py-2 text-xs font-bold text-white active:scale-95"
             >
               <Copy className="h-3.5 w-3.5" /> 전체 복사
             </button>
@@ -2968,7 +2968,7 @@ function AgentCard({
       )}
 
       {threadBlocks.map(([key, label, th]) => (
-        <div key={key} className="mb-3 rounded-2xl border border-white/10 bg-white/5 p-4">
+        <div key={key} className="mb-3 rounded-2xl border border-[#E2DBCD] bg-[#F4F1EA] p-4">
           <p className="text-[11px] font-bold text-violet-300">{label}</p>
           <p className={`mt-1 whitespace-pre-line text-sm leading-relaxed text-slate-200 ${open === key ? '' : 'line-clamp-4'}`}>{th!.text}</p>
           {th!.tags && th!.tags.length > 0 && (
@@ -2982,7 +2982,7 @@ function AgentCard({
             </button>
             <button
               onClick={() => copy(threadOf(th), '스레드 글을 복사했습니다.')}
-              className="flex items-center gap-1 rounded-xl bg-violet-300 px-3 py-2 text-xs font-bold text-[#1a0b2e] active:scale-95"
+              className="flex items-center gap-1 rounded-xl bg-violet-300 px-3 py-2 text-xs font-bold text-white active:scale-95"
             >
               <Copy className="h-3.5 w-3.5" /> 복사
             </button>
@@ -3002,7 +3002,7 @@ function AgentCard({
       )}
 
       {a.issues && a.issues.length > 0 && (
-        <div className="rounded-2xl bg-black/20 p-3">
+        <div className="rounded-2xl bg-[#F4F1EA] p-3">
           <p className="mb-1.5 text-[11px] font-bold text-slate-300">📰 비서가 찾아본 오늘의 소식</p>
           <ul className="space-y-2">
             {a.issues.map((it, i) => (
@@ -3100,7 +3100,7 @@ function ExecBrief({
         <div className="flex items-end justify-between">
           <div>
             <p className="text-xs text-slate-400">{Number(stats.month.slice(5))}월 계약 매출</p>
-            <p className="text-3xl font-extrabold tabular-nums text-emerald-300">{fmtWon(stats.revenue)}</p>
+            <p className="text-3xl font-num font-normal tabular-nums text-[#0E5A60]">{fmtWon(stats.revenue)}</p>
           </div>
           <p className="text-right text-xs text-slate-400">
             {stats.target > 0 ? (
@@ -3122,22 +3122,22 @@ function ExecBrief({
       </button>
 
       <div className="mt-4 grid grid-cols-3 gap-2 text-center">
-        <button onClick={() => goTab('sales')} className="rounded-2xl bg-white/5 p-3 active:scale-95">
-          <p className="text-2xl font-extrabold text-slate-50">{stats.todayJobs.length}</p>
+        <button onClick={() => goTab('sales')} className="rounded-2xl bg-[#F4F1EA] p-3 active:scale-95">
+          <p className="text-2xl font-num font-normal text-slate-50">{stats.todayJobs.length}</p>
           <p className="text-[11px] text-slate-400">오늘 작업</p>
         </button>
-        <button onClick={() => goTab('sales')} className="rounded-2xl bg-white/5 p-3 active:scale-95">
-          <p className="text-2xl font-extrabold text-slate-50">{stats.tomorrowJobs.length}</p>
+        <button onClick={() => goTab('sales')} className="rounded-2xl bg-[#F4F1EA] p-3 active:scale-95">
+          <p className="text-2xl font-num font-normal text-slate-50">{stats.tomorrowJobs.length}</p>
           <p className="text-[11px] text-slate-400">내일 작업</p>
         </button>
-        <button onClick={() => goTab('sales')} className={`rounded-2xl p-3 active:scale-95 ${todo ? 'bg-amber-300/15' : 'bg-white/5'}`}>
-          <p className={`text-2xl font-extrabold ${todo ? 'text-amber-300' : 'text-slate-50'}`}>{todo}</p>
+        <button onClick={() => goTab('sales')} className={`rounded-2xl p-3 active:scale-95 ${todo ? 'bg-amber-300/15' : 'bg-[#F4F1EA]'}`}>
+          <p className={`text-2xl font-num font-normal ${todo ? 'text-amber-300' : 'text-slate-50'}`}>{todo}</p>
           <p className="text-[11px] text-slate-400">연락할 고객</p>
         </button>
       </div>
 
       {(ups.length > 0 || downs.length > 0) && (
-        <button onClick={() => goTab('keyword')} className="mt-4 w-full rounded-2xl bg-black/20 p-3 text-left">
+        <button onClick={() => goTab('keyword')} className="mt-4 w-full rounded-2xl bg-[#F4F1EA] p-3 text-left">
           <p className="mb-1.5 text-xs font-bold text-slate-300">네이버 순위 변동</p>
           <ul className="space-y-1 text-sm">
             {ups.map((m) => (
@@ -3225,21 +3225,21 @@ function WeeklyReport({
     <section className={card}>
       <SectionTitle icon={Newspaper} title="이번 주 리포트" />
       <div className="grid grid-cols-2 gap-2 text-center">
-        <div className="rounded-2xl bg-white/5 p-3">
+        <div className="rounded-2xl bg-[#F4F1EA] p-3">
           <p className="text-xl font-extrabold text-emerald-300">{fmtWon(rev)}</p>
           <p className="text-[11px] text-slate-400">계약 {wonList.length}건</p>
         </div>
-        <div className="rounded-2xl bg-white/5 p-3">
+        <div className="rounded-2xl bg-[#F4F1EA] p-3">
           <p className="text-xl font-extrabold text-slate-50">{inq}건</p>
           <p className="text-[11px] text-slate-400">신규 문의</p>
         </div>
-        <div className="rounded-2xl bg-white/5 p-3">
+        <div className="rounded-2xl bg-[#F4F1EA] p-3">
           <p className="text-xl font-extrabold text-amber-300">
             {perfect}/{days.length}일
           </p>
           <p className="text-[11px] text-slate-400">루틴 완벽 달성</p>
         </div>
-        <div className="rounded-2xl bg-white/5 p-3">
+        <div className="rounded-2xl bg-[#F4F1EA] p-3">
           <p className="text-xl font-extrabold text-sky-300">
             ▲{ups.length} <span className="text-rose-300">▼{downs.length}</span>
           </p>
@@ -3248,7 +3248,7 @@ function WeeklyReport({
       </div>
       <button
         onClick={async () => toast((await copyText(lines.join('\n'))) ? '주간 리포트를 복사했습니다. 카톡 ‘나와의 채팅’에 붙여넣어 보관하세요.' : '복사에 실패했습니다.')}
-        className="mt-3 flex w-full items-center justify-center gap-2 rounded-xl bg-white/10 py-3 font-bold active:scale-95"
+        className="mt-3 flex w-full items-center justify-center gap-2 rounded-xl bg-[#F4F1EA] py-3 font-bold active:scale-95"
       >
         <Copy className="h-4 w-4" /> 카톡용 리포트 복사
       </button>
@@ -3328,7 +3328,7 @@ function MemoTab({
     .filter((m) => filter === '전체' || m.tag === filter)
     .sort((a, b) => Number(a.done) - Number(b.done) || b.createdAt - a.createdAt);
   const doneCount = memos.filter((m) => m.done).length;
-  const tagCls = (k: string) => MEMO_TAGS.find((t) => t.key === k)?.cls ?? 'bg-white/10 text-slate-300 border-white/10';
+  const tagCls = (k: string) => MEMO_TAGS.find((t) => t.key === k)?.cls ?? 'bg-[#F4F1EA] text-slate-300 border-[#E2DBCD]';
 
   return (
     <div className="space-y-4">
@@ -3340,7 +3340,7 @@ function MemoTab({
               key={t.key}
               onClick={() => setTag(t.key)}
               className={`rounded-full border px-3 py-1.5 text-sm font-semibold transition ${
-                tag === t.key ? t.cls + ' ring-2 ring-white/30' : 'border-white/10 text-slate-400'
+                tag === t.key ? t.cls + ' ring-2 ring-[#0E5A60]/30' : 'border-[#E2DBCD] text-slate-400'
               }`}
             >
               {t.key}
@@ -3367,7 +3367,7 @@ function MemoTab({
           <button
             onClick={toggleMic}
             className={`flex items-center justify-center gap-2 rounded-xl px-5 py-3.5 text-base font-bold active:scale-95 ${
-              listening ? 'bg-rose-500 text-white' : 'bg-white/10 text-slate-100'
+              listening ? 'bg-rose-500 text-white' : 'bg-[#F4F1EA] text-slate-100'
             }`}
             aria-label="음성으로 메모"
           >
@@ -3376,7 +3376,7 @@ function MemoTab({
           </button>
           <button
             onClick={add}
-            className="flex items-center justify-center gap-2 rounded-xl bg-amber-300 py-3.5 text-base font-bold text-[#0a1226] active:scale-[0.98]"
+            className="flex items-center justify-center gap-2 rounded-xl bg-amber-300 py-3.5 text-base font-bold text-white active:scale-[0.98]"
           >
             <Save className="h-5 w-5" /> 저장
           </button>
@@ -3390,7 +3390,7 @@ function MemoTab({
               key={f}
               onClick={() => setFilter(f)}
               className={`shrink-0 rounded-full px-3 py-1.5 text-sm font-semibold ${
-                filter === f ? 'bg-amber-300 text-[#0a1226]' : 'bg-white/5 text-slate-300'
+                filter === f ? 'bg-amber-300 text-white' : 'bg-[#F4F1EA] text-slate-300'
               }`}
             >
               {f} {f === '전체' ? memos.length : memos.filter((m) => m.tag === f).length}
@@ -3402,7 +3402,7 @@ function MemoTab({
 
         <ul className="space-y-2">
           {visible.map((m) => (
-            <li key={m.id} className={`flex items-start gap-3 rounded-2xl p-3 ${m.done ? 'bg-white/[0.03]' : 'bg-white/5'}`}>
+            <li key={m.id} className={`flex items-start gap-3 rounded-2xl p-3 ${m.done ? 'bg-[#F4F1EA]/60' : 'bg-[#F4F1EA]'}`}>
               <button
                 onClick={() => setMemos((l) => l.map((x) => (x.id === m.id ? { ...x, done: !x.done } : x)))}
                 className="mt-0.5 shrink-0"
@@ -3494,11 +3494,11 @@ function SiriTab({
         <p className="text-sm leading-relaxed text-slate-300">
           아이폰 기본 <b className="text-amber-200">‘단축어’</b> 앱에 아래 링크를 등록하면, “시리야 비서 브리핑”처럼 말로 비서실을 부를 수 있습니다.
         </p>
-        <div className="mt-3 rounded-2xl bg-black/25 p-3">
+        <div className="mt-3 rounded-2xl bg-[#F4F1EA] p-3">
           <p className="text-[11px] text-slate-400">감지된 내 앱 주소</p>
           <p className="mt-1 break-all font-mono text-sm text-emerald-300">{base}</p>
         </div>
-        <button onClick={onSpeakTest} className="mt-3 flex w-full items-center justify-center gap-2 rounded-xl bg-white/10 py-3 font-bold active:scale-95">
+        <button onClick={onSpeakTest} className="mt-3 flex w-full items-center justify-center gap-2 rounded-xl bg-[#F4F1EA] py-3 font-bold active:scale-95">
           <Volume2 className="h-5 w-5" /> 음성 브리핑 미리 듣기
         </button>
       </section>
@@ -3514,10 +3514,10 @@ function SiriTab({
         </ol>
         <ul className="space-y-3">
           {shortcuts.map((s) => (
-            <li key={s.phrase} className="rounded-2xl border border-white/10 bg-white/5 p-3">
+            <li key={s.phrase} className="rounded-2xl border border-[#E2DBCD] bg-[#F4F1EA] p-3">
               <div className="flex items-center justify-between gap-2">
                 <p className="font-extrabold text-amber-200">“시리야, {s.phrase}”</p>
-                <button onClick={() => copy(s.url)} className="flex shrink-0 items-center gap-1 rounded-xl bg-amber-300 px-3 py-2 text-sm font-bold text-[#0a1226] active:scale-95">
+                <button onClick={() => copy(s.url)} className="flex shrink-0 items-center gap-1 rounded-xl bg-amber-300 px-3 py-2 text-sm font-bold text-white active:scale-95">
                   <Copy className="h-4 w-4" /> 복사
                 </button>
               </div>
@@ -3539,7 +3539,7 @@ function SiriTab({
           <li><b className="text-amber-200">④</b> 동작 <b>‘URL 열기’</b> 추가 (입력: 텍스트)</li>
           <li><b className="text-amber-200">⑤</b> 이름을 <b>비서 메모</b>로 저장 → “시리야, 비서 메모” 후 내용을 말하면 메모장에 자동 저장</li>
         </ol>
-        <button onClick={() => copy(`${base}?memo=`)} className="mt-3 flex w-full items-center justify-center gap-2 rounded-xl bg-amber-300 py-3 font-bold text-[#0a1226] active:scale-95">
+        <button onClick={() => copy(`${base}?memo=`)} className="mt-3 flex w-full items-center justify-center gap-2 rounded-xl bg-amber-300 py-3 font-bold text-white active:scale-95">
           <Copy className="h-4 w-4" /> 메모용 주소 복사
         </button>
         <p className="mt-2 break-all font-mono text-[11px] text-slate-500">{base}?memo=</p>
@@ -3560,7 +3560,7 @@ function SiriTab({
 
       <section className={card}>
         <SectionTitle icon={Save} title="데이터 옮기기 (홈 화면 앱 ↔ 사파리)" />
-        <button onClick={exportData} className="flex w-full items-center justify-center gap-2 rounded-xl bg-white/10 py-3 font-bold active:scale-95">
+        <button onClick={exportData} className="flex w-full items-center justify-center gap-2 rounded-xl bg-[#F4F1EA] py-3 font-bold active:scale-95">
           <Copy className="h-4 w-4" /> 이 기기 데이터 복사
         </button>
         <textarea
@@ -3573,7 +3573,7 @@ function SiriTab({
         <button
           onClick={importData}
           disabled={!importText.trim()}
-          className="mt-2 w-full rounded-xl bg-amber-300 py-3 font-bold text-[#0a1226] active:scale-95 disabled:opacity-40"
+          className="mt-2 w-full rounded-xl bg-amber-300 py-3 font-bold text-white active:scale-95 disabled:opacity-40"
         >
           데이터 붙여넣기 (덮어쓰기)
         </button>
@@ -3640,19 +3640,19 @@ function IconStudio({
                 toast(`${s.name} 아이콘을 적용했습니다.`);
               }}
               className={`rounded-2xl p-2 text-center transition active:scale-95 ${
-                on ? 'bg-amber-300/15 ring-2 ring-amber-300' : 'bg-white/5'
+                on ? 'bg-amber-300/15 ring-2 ring-amber-300' : 'bg-[#F4F1EA]'
               }`}
               aria-pressed={on}
             >
-              <img src={previews[s.key]} alt={s.name} className="mx-auto aspect-square w-full rounded-[22%] shadow-lg shadow-black/50" />
+              <img src={previews[s.key]} alt={s.name} className="mx-auto aspect-square w-full rounded-[22%]" />
               <p className={`mt-2 text-[11px] font-bold leading-tight ${on ? 'text-amber-200' : 'text-slate-300'}`}>{s.short}</p>
             </button>
           );
         })}
       </div>
 
-      <div className="mt-5 flex items-center gap-4 rounded-2xl bg-black/25 p-4">
-        <img src={big} alt="선택한 아이콘 512px" className="h-24 w-24 shrink-0 rounded-[22%] shadow-xl shadow-black/60" />
+      <div className="mt-5 flex items-center gap-4 rounded-2xl bg-[#F4F1EA] p-4">
+        <img src={big} alt="선택한 아이콘 512px" className="h-24 w-24 shrink-0 rounded-[22%]" />
         <div className="min-w-0">
           <p className="font-extrabold text-amber-200">{ICON_STYLES.find((s) => s.key === iconStyle)?.name}</p>
           <p className="mt-1 text-xs leading-relaxed text-slate-400">{ICON_STYLES.find((s) => s.key === iconStyle)?.desc}</p>
@@ -3662,7 +3662,7 @@ function IconStudio({
 
       <button
         onClick={download}
-        className="mt-3 flex w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-amber-300 to-yellow-400 py-3.5 text-base font-extrabold text-[#0a1226] active:scale-[0.98]"
+        className="mt-3 flex w-full items-center justify-center gap-2 rounded-xl bg-[#0E5A60] py-3.5 text-base font-extrabold text-white active:scale-[0.98]"
       >
         <Download className="h-5 w-5" /> icon-512.png 다운로드
       </button>
@@ -3696,7 +3696,7 @@ function SettingsModal({
   return (
     <div className="fixed inset-0 z-50 flex items-end bg-black/60 sm:items-center sm:justify-center" onClick={onClose}>
       <div
-        className="max-h-[90vh] w-full overflow-y-auto rounded-t-3xl border-t border-white/10 bg-[#0d1730] p-5 pb-[calc(env(safe-area-inset-bottom)+20px)] sm:max-w-md sm:rounded-3xl"
+        className="max-h-[90vh] w-full overflow-y-auto rounded-t-3xl border-t border-[#E2DBCD] bg-white p-5 pb-[calc(env(safe-area-inset-bottom)+20px)] sm:max-w-md sm:rounded-[14px]"
         onClick={(e) => e.stopPropagation()}
       >
         <div className="mb-4 flex items-center justify-between">
@@ -3740,7 +3740,7 @@ function SettingsModal({
                 <button
                   key={c}
                   onClick={() => set('defaultCity', c)}
-                  className={`rounded-xl py-3 font-bold ${draft.defaultCity === c ? 'bg-amber-300 text-[#0a1226]' : 'bg-white/10 text-slate-200'}`}
+                  className={`rounded-xl py-3 font-bold ${draft.defaultCity === c ? 'bg-amber-300 text-white' : 'bg-[#F4F1EA] text-slate-200'}`}
                 >
                   {CITIES[c].name}
                 </button>
@@ -3748,7 +3748,7 @@ function SettingsModal({
             </div>
           </div>
 
-          <details className="rounded-2xl border border-white/10 bg-black/20 p-4" open={!!draft.rankWorkerUrl}>
+          <details className="rounded-2xl border border-[#E2DBCD] bg-[#F4F1EA] p-4" open={!!draft.rankWorkerUrl}>
             <summary className="cursor-pointer text-sm font-bold text-slate-300">
               고급 · 네이버 자동화 <span className="font-normal text-slate-500">(선택 · 네이버 등록 필요, 없어도 앱은 그대로 작동)</span>
             </summary>
@@ -3812,7 +3812,7 @@ function SettingsModal({
             <p className="mt-2 text-[11px] leading-relaxed text-slate-500">블로그 ID를 비워두면 블로그 이름에 업체명이 들어간 글을 찾습니다.</p>
           </details>
 
-          <div className="rounded-2xl border border-amber-300/20 bg-black/20 p-4">
+          <div className="rounded-2xl border border-amber-300/20 bg-[#F4F1EA] p-4">
             <p className="mb-2 flex items-center gap-2 text-sm font-bold text-amber-200">
               <Sparkles className="h-4 w-4" /> Gemini AI (선택)
             </p>
@@ -3844,7 +3844,7 @@ function SettingsModal({
 
         <button
           onClick={() => onSave(draft)}
-          className="mt-5 w-full rounded-xl bg-amber-300 py-3.5 text-base font-bold text-[#0a1226] active:scale-[0.98]"
+          className="mt-5 w-full rounded-xl bg-amber-300 py-3.5 text-base font-bold text-white active:scale-[0.98]"
         >
           저장
         </button>
@@ -4335,57 +4335,57 @@ export default function App() {
   const remaining = progress.total - progress.done;
 
   return (
-    <div className="min-h-screen bg-[#070d1c] font-sans text-slate-100 antialiased">
+    <div className="min-h-screen bg-[#F4F1EA] font-sans text-[#14262A] antialiased">
       <style>{`
         @keyframes aisec-fall { 0% { transform: translateY(-10vh) rotate(0deg); opacity: 1; } 100% { transform: translateY(110vh) rotate(720deg); opacity: 0.9; } }
         @keyframes aisec-pop { 0% { transform: scale(.6); opacity: 0; } 60% { transform: scale(1.08); opacity: 1; } 100% { transform: scale(1); } }
-        html, body { background: #070d1c; overscroll-behavior-y: none; -webkit-tap-highlight-color: transparent; }
+        html, body { background: #F4F1EA; overscroll-behavior-y: none; -webkit-tap-highlight-color: transparent; }
       `}</style>
 
       {/* 헤더 */}
-      <header className="bg-gradient-to-b from-[#0e1d42] to-transparent px-4 pb-4 pt-[calc(env(safe-area-inset-top)+16px)]">
+      <header className="rounded-b-[22px] bg-[#0B3B40] px-3 pb-4 pt-[calc(env(safe-area-inset-top)+14px)] text-white">
         <div className="mx-auto max-w-md">
           <div className="flex items-start justify-between">
             <div>
-              <p className="text-[11px] font-semibold tracking-[0.2em] text-amber-300/80">CHIEF OF STAFF · DAILY BRIEF</p>
-              <h1 className="mt-1 text-2xl font-extrabold">
-                {mm}월 {dd}일 <span className="text-amber-300">{weekday}요일</span>
+              <p className="text-[11px] font-semibold tracking-[0.2em] text-[#9fd3cf]">AI 비서실 · 오늘 브리핑</p>
+              <h1 className="mt-1 font-num text-[30px] font-normal leading-[36px]">
+                {mm}월 {dd}일 <span className="text-[#F2964F]">{weekday}요일</span>
               </h1>
             </div>
-            <button onClick={() => setShowSettings(true)} className={`${btnGhost} p-2.5`} aria-label="설정">
+            <button onClick={() => setShowSettings(true)} className="rounded-xl bg-[#ffffff1a] p-2.5 text-white active:scale-95" aria-label="설정">
               <Settings className="h-5 w-5" />
             </button>
           </div>
-          <div className="mt-4 rounded-2xl border border-amber-300/30 bg-gradient-to-r from-amber-300/15 to-amber-300/5 p-4">
-            <p className="text-[15px] leading-relaxed text-amber-50">
-              <span className="font-bold text-amber-200">대표님, {greeting}.</span> 오늘의 경영·영업·마케팅 브리핑이 준비되었습니다.
+          <div className="mt-3 rounded-[14px] bg-[#ffffff14] p-4">
+            <p className="text-[15px] leading-relaxed text-white">
+              <span className="font-bold">대표님, {greeting}.</span> 오늘의 경영·영업·마케팅 브리핑이 준비되었습니다.
             </p>
-            <p className="mt-1.5 text-sm text-amber-100/80">{subLine}</p>
+            <p className="mt-1.5 text-sm text-[#cfe3e1]">{subLine}</p>
           </div>
-          <button
-            onClick={toggleSpeak}
-            className={`mt-3 flex w-full items-center justify-center gap-2 rounded-2xl py-4 text-lg font-extrabold shadow-lg active:scale-[0.98] ${
-              speaking
-                ? 'bg-rose-500 text-white shadow-rose-900/40'
-                : 'bg-gradient-to-r from-amber-300 to-yellow-400 text-[#0a1226] shadow-amber-900/30'
-            }`}
-          >
-            {speaking ? <Square className="h-5 w-5" /> : <Volume2 className="h-6 w-6" />}
-            {speaking ? '브리핑 멈추기' : '비서 음성 브리핑 듣기'}
-          </button>
-          <a
-            href="https://claude.ai/artifact/4WTtTbpRQy1YjG4MWyNboC"
-            target="_blank"
-            rel="noreferrer"
-            className="mt-2 flex w-full items-center justify-center gap-2 rounded-2xl border border-amber-300/40 bg-white/5 py-3.5 text-base font-bold text-amber-200 active:scale-[0.98]"
-          >
-            🎛 비서에게 지금 시키기 <span className="text-xs font-normal text-slate-400">(스레드·6곳 홍보·청소팁·쿠팡)</span>
-          </a>
+          <div className="mt-2 grid grid-cols-[1fr_auto] gap-2">
+            <button
+              onClick={toggleSpeak}
+              className={`flex items-center justify-center gap-2 rounded-full py-3.5 text-base font-bold active:scale-[0.98] ${
+                speaking ? 'bg-[#C0392B] text-white' : 'bg-[#F2964F] text-[#14262A]'
+              }`}
+            >
+              {speaking ? <Square className="h-5 w-5" /> : <Volume2 className="h-5 w-5" />}
+              {speaking ? '브리핑 멈추기' : '음성 브리핑 듣기'}
+            </button>
+            <a
+              href="https://claude.ai/artifact/4WTtTbpRQy1YjG4MWyNboC"
+              target="_blank"
+              rel="noreferrer"
+              className="flex items-center justify-center rounded-full bg-[#ffffff1f] px-4 py-3.5 text-sm font-bold text-white active:scale-[0.98]"
+            >
+              지금 시키기 ›
+            </a>
+          </div>
         </div>
       </header>
 
       {/* 본문 */}
-      <main className="mx-auto max-w-md px-4 pb-[calc(env(safe-area-inset-bottom)+96px)]">
+      <main className="mx-auto mt-2 max-w-md px-3 pb-[calc(env(safe-area-inset-bottom)+96px)]">
         {tab === 'brief' && (
           <BriefingTab
             city={city}
@@ -4484,7 +4484,7 @@ export default function App() {
       </main>
 
       {/* 하단 탭바 */}
-      <nav className="fixed inset-x-0 bottom-0 z-40 border-t border-white/10 bg-[#070d1c]/95 pb-[env(safe-area-inset-bottom)] backdrop-blur">
+      <nav className="fixed inset-x-0 bottom-0 z-40 border-t border-[#E2DBCD] bg-[#F4F1EA]/95 pb-[env(safe-area-inset-bottom)] backdrop-blur">
         <div className="mx-auto grid max-w-md grid-cols-5">
           {TABS.map(({ key, label, Icon }) => {
             const active = tab === key;
@@ -4508,7 +4508,7 @@ export default function App() {
                   </span>
                 )}
                 {key === 'sales' && salesTodo > 0 && (
-                  <span className="absolute right-[22%] top-2 min-w-[18px] rounded-full bg-amber-400 px-1 text-[10px] font-bold leading-[18px] text-[#0a1226]">
+                  <span className="absolute right-[22%] top-2 min-w-[18px] rounded-full bg-amber-400 px-1 text-[10px] font-bold leading-[18px] text-white">
                     {salesTodo}
                   </span>
                 )}
@@ -4538,7 +4538,7 @@ export default function App() {
       {briefPrompt && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 px-6" onClick={() => setBriefPrompt(false)}>
           <div
-            className="w-full max-w-sm rounded-3xl border border-amber-300/40 bg-[#0d1730] p-6 text-center"
+            className="w-full max-w-sm rounded-[14px] border border-amber-300/40 bg-white p-6 text-center"
             onClick={(e) => e.stopPropagation()}
             style={{ animation: 'aisec-pop 0.4s ease-out' }}
           >
@@ -4547,7 +4547,7 @@ export default function App() {
             <p className="mt-1 text-sm text-slate-300">아래 버튼을 누르시면 비서실장이 오늘 브리핑을 읽어드립니다.</p>
             <button
               onClick={toggleSpeak}
-              className="mt-5 flex w-full items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-amber-300 to-yellow-400 py-4 text-lg font-extrabold text-[#0a1226] active:scale-95"
+              className="mt-5 flex w-full items-center justify-center gap-2 rounded-2xl bg-[#0E5A60] py-4 text-lg font-extrabold text-white active:scale-95"
             >
               <Play className="h-6 w-6" /> 음성 브리핑 재생
             </button>
@@ -4562,7 +4562,7 @@ export default function App() {
 
       {toastMsg && (
         <div className="fixed inset-x-0 bottom-[calc(env(safe-area-inset-bottom)+84px)] z-[70] flex justify-center px-4">
-          <div className="max-w-md rounded-2xl bg-slate-100 px-4 py-3 text-center text-sm font-semibold text-[#0a1226] shadow-xl">
+          <div className="max-w-md rounded-2xl bg-slate-100 px-4 py-3 text-center text-sm font-semibold text-white shadow-xl">
             {toastMsg}
           </div>
         </div>

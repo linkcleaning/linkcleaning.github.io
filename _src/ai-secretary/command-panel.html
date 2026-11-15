@@ -5,74 +5,77 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>비서 지휘실</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Gowun+Batang:wght@700&family=IBM+Plex+Sans+KR:wght@400;500;700&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Black+Han+Sans&family=IBM+Plex+Sans+KR:wght@400;500;600;700&display=swap">
 <style>
-  /* 레이아웃: 한 손 조작용 세로 한 줄 — 위에 상태 요약, 아래로 큼직한 지시 버튼 카드 */
+  /* 링크 앱 스타일 가이드: 종이색 바탕 + 흰 카드(그림자·테두리 없음), 위쪽 진한 청록 블록 한 장, 버튼은 둥근 알약 */
   :root {
-    --bg: #070d1c;
-    --panel: #0f1a33;
-    --line: rgba(255, 255, 255, 0.09);
-    --ink: #eef2fb;
-    --muted: #93a0bd;
-    --gold: #e9c25a;
-    --gold-ink: #0a1226;
-    --ok: #4fd1a1;
-    --warn: #f2b84b;
-    --bad: #f27a7a;
-    --display: "Gowun Batang", "Apple SD Gothic Neo", serif;
-    --body: "IBM Plex Sans KR", "Apple SD Gothic Neo", "Malgun Gothic", system-ui, sans-serif;
-    color-scheme: dark;
+    --paper: #F4F1EA;
+    --card: #FFFFFF;
+    --brand: #0E5A60;
+    --brand-deep: #0B3B40;
+    --brand-tint: #DCEDEB;
+    --accent: #D9691F;
+    --accent-soft: #F2964F;
+    --leaf: #3F8F2E;
+    --danger: #C0392B;
+    --ink: #14262A;
+    --muted: #56676A;
+    --line: #E2DBCD;
+    --sans: "IBM Plex Sans KR", "Apple SD Gothic Neo", "Malgun Gothic", system-ui, sans-serif;
+    --num: "Black Han Sans", "IBM Plex Sans KR", system-ui, sans-serif;
+    color-scheme: light;
   }
   * { box-sizing: border-box; }
-  html, body { margin: 0; background: var(--bg); color: var(--ink); font-family: var(--body); -webkit-tap-highlight-color: transparent; }
-  body { padding: calc(env(safe-area-inset-top, 0px) + 18px) max(16px, env(safe-area-inset-right, 0px)) calc(env(safe-area-inset-bottom, 0px) + 28px) max(16px, env(safe-area-inset-left, 0px)); }
-  .wrap { max-width: 480px; margin: 0 auto; display: grid; gap: 14px; }
-  .eyebrow { font-size: 11px; letter-spacing: .22em; color: var(--gold); opacity: .85; font-weight: 700; }
-  h1 { font-family: var(--display); font-size: 30px; margin: 4px 0 0; text-wrap: balance; }
-  .lead { color: var(--muted); font-size: 14px; line-height: 1.6; margin: 6px 0 0; }
-  .status { border: 1px solid var(--line); background: var(--panel); border-radius: 18px; padding: 12px 14px; font-size: 13px; color: var(--muted); display: flex; gap: 8px; align-items: center; }
-  .dot { width: 9px; height: 9px; border-radius: 50%; background: var(--muted); flex: none; }
-  .dot.ok { background: var(--ok); } .dot.warn { background: var(--warn); } .dot.bad { background: var(--bad); }
-  label.note { display: grid; gap: 6px; font-size: 13px; color: var(--muted); }
-  textarea { width: 100%; min-height: 64px; resize: vertical; border-radius: 14px; border: 1px solid var(--line); background: #0a1226; color: var(--ink); font: 15px/1.5 var(--body); padding: 10px 12px; }
-  textarea:focus, button:focus-visible, a:focus-visible { outline: 2px solid var(--gold); outline-offset: 2px; }
-  .task { border: 1px solid var(--line); background: var(--panel); border-radius: 22px; padding: 16px; display: grid; gap: 10px; }
+  html, body { margin: 0; background: var(--paper); color: var(--ink); font-family: var(--sans); -webkit-tap-highlight-color: transparent; }
+  body { padding: 0 0 calc(env(safe-area-inset-bottom, 0px) + 24px); }
+  .top { background: var(--brand-deep); color: #fff; border-radius: 0 0 22px 22px; padding: calc(env(safe-area-inset-top, 0px) + 16px) max(12px, env(safe-area-inset-right, 0px)) 18px max(12px, env(safe-area-inset-left, 0px)); }
+  .top-in { max-width: 480px; margin: 0 auto; display: grid; gap: 6px; }
+  .eyebrow { font-size: 11px; letter-spacing: .2em; color: #9fd3cf; font-weight: 600; }
+  h1 { font-family: var(--num); font-weight: 400; font-size: 32px; line-height: 38px; margin: 0; }
+  .lead { color: #cfe3e1; font-size: 14px; line-height: 1.6; margin: 0; }
+  .wrap { max-width: 480px; margin: 0 auto; display: grid; gap: 8px; padding: 10px max(12px, env(safe-area-inset-right, 0px)) 0 max(12px, env(safe-area-inset-left, 0px)); }
+  .status { background: var(--card); border-radius: 14px; padding: 12px 16px; font-size: 13px; color: var(--muted); display: flex; gap: 8px; align-items: center; }
+  .dot { width: 8px; height: 8px; border-radius: 999px; background: var(--muted); flex: none; }
+  .dot.ok { background: var(--leaf); } .dot.warn { background: var(--accent); } .dot.bad { background: var(--danger); }
+  label.note { background: var(--card); border-radius: 14px; padding: 14px 16px; display: grid; gap: 8px; font-size: 12px; font-weight: 600; color: var(--muted); }
+  textarea { width: 100%; min-height: 60px; resize: vertical; border-radius: 12px; border: 1px solid var(--line); background: var(--paper); color: var(--ink); font: 15px/1.5 var(--sans); padding: 10px 12px; }
+  textarea:focus, button:focus-visible, a:focus-visible { outline: 2px solid var(--brand); outline-offset: 2px; }
+  .task { background: var(--card); border-radius: 14px; padding: 16px; display: grid; gap: 10px; }
   .task-head { display: flex; justify-content: space-between; gap: 10px; align-items: flex-start; }
-  .task h2 { margin: 0; font-size: 18px; line-height: 1.35; }
+  .task h2 { margin: 0; font-size: 17px; line-height: 1.35; font-weight: 700; }
   .task p { margin: 0; color: var(--muted); font-size: 13.5px; line-height: 1.55; }
-  .chip { flex: none; font-size: 11px; font-weight: 700; border-radius: 999px; padding: 4px 9px; border: 1px solid var(--line); color: var(--muted); white-space: nowrap; }
-  .chip.pc { color: var(--warn); border-color: rgba(242, 184, 75, .35); }
+  .chip { flex: none; font-size: 11px; font-weight: 600; border-radius: 6px; padding: 4px 8px; background: var(--brand-tint); color: var(--ink); white-space: nowrap; }
+  .chip.pc { background: #FBE7D6; color: #8a4310; }
   .meta { font-size: 12px; color: var(--muted); display: flex; flex-wrap: wrap; gap: 4px 12px; font-variant-numeric: tabular-nums; }
-  .meta b { color: var(--ink); font-weight: 500; }
-  .meta .ok { color: var(--ok); } .meta .bad { color: var(--bad); }
-  .go { appearance: none; border: 0; border-radius: 16px; padding: 15px 14px; font: 700 16px var(--body); background: var(--gold); color: var(--gold-ink); cursor: pointer; transition: transform .12s, background .2s; }
+  .meta b { color: var(--ink); font-weight: 600; }
+  .meta .ok { color: var(--leaf); font-weight: 600; } .meta .bad { color: var(--danger); font-weight: 600; }
+  .go { appearance: none; border: 0; border-radius: 999px; padding: 14px; font: 700 16px var(--sans); background: var(--brand); color: #fff; cursor: pointer; transition: transform .12s, background .2s; }
   .go:active { transform: scale(.98); }
-  .go.armed { background: var(--warn); }
-  .go.busy { background: #3a4561; color: var(--ink); cursor: progress; }
-  .go.done { background: var(--ok); color: #05261a; }
-  .go:disabled { opacity: .5; cursor: not-allowed; }
-  .result { font-size: 13px; line-height: 1.5; min-height: 0; }
-  .result.ok { color: var(--ok); } .result.bad { color: var(--bad); }
-  .foot { text-align: center; font-size: 13px; color: var(--muted); line-height: 1.7; }
-  .foot a { color: var(--gold); }
+  .go.armed { background: var(--accent-soft); color: var(--ink); }
+  .go.busy { background: var(--line); color: var(--ink); cursor: progress; }
+  .go.done { background: var(--leaf); color: #fff; }
+  .go:disabled { opacity: .45; cursor: not-allowed; }
+  .result { font-size: 13px; line-height: 1.5; }
+  .result.ok { color: var(--leaf); font-weight: 600; } .result.bad { color: var(--danger); }
+  .foot { text-align: center; font-size: 13px; color: var(--muted); line-height: 1.7; padding-top: 6px; }
+  .foot a { color: var(--brand); font-weight: 600; }
   @media (prefers-reduced-motion: reduce) { .go { transition: none; } }
 </style>
 </head>
 <body>
+<header class="top"><div class="top-in">
+  <div class="eyebrow">AI 비서실 · 지휘실</div>
+  <h1>비서 지휘실</h1>
+  <p class="lead">버튼을 두 번 누르면 예약 시간을 기다리지 않고 비서가 지금 바로 일을 시작합니다. 결과는 휴대폰 알림으로 와요.</p>
+</div></header>
 <main class="wrap">
-  <header>
-    <div class="eyebrow">CHIEF OF STAFF · COMMAND</div>
-    <h1>비서 지휘실</h1>
-    <p class="lead">버튼을 두 번 누르면 예약 시간을 기다리지 않고 비서가 지금 바로 일을 시작합니다. 결과는 휴대폰 알림으로 옵니다.</p>
-  </header>
-
   <div class="status" id="status"><span class="dot" id="dot"></span><span id="statusText">연결 확인 중…</span></div>
 
   <label class="note" for="extra">비서에게 덧붙일 말 (선택)
     <textarea id="extra" placeholder="예: 오늘은 결로 주제로 써 줘 / 이 글로 올려 줘: …"></textarea>
   </label>
 
-  <section id="tasks" class="wrap" style="gap:12px"></section>
+  <section id="tasks" style="display:grid;gap:8px"></section>
 
   <p class="foot">
     오늘 준비된 글 보기 → <a href="https://linkcleaning.github.io/ai-secretary/">AI 비서실 앱</a><br>
@@ -84,12 +87,12 @@
 (function () {
   var SERVER = 'Claude Code Remote';
   var TASKS = [
-    { id: 'trig_01YVSejMCeuJTD6iRW1xNzwH', title: '☀️ 오늘 업무 다시 써 줘', desc: '블로그 초안(월·목)·아침 스레드 글·황금키워드·현장 메모·제주 소식을 새로 써서 앱에 올립니다. 평소엔 매일 아침 7시 17분에 자동.', time: '약 5분' },
-    { id: 'trig_018fBTXudMg5QidizdmQs5gH', title: '🧵 아침 스레드 지금 올려', desc: '앱에 준비된 오늘 아침 스레드 글을 @linkcleaning 계정에 바로 올리고, 30분 뒤 댓글에 답글까지 답니다.', time: '약 3분', pc: true },
-    { id: 'trig_016jPWUjqTzeqPu8iZXrVMEe', title: '📣 6곳 홍보 지금 올려', desc: '현장홍보 앱에 맡겨 둔 현장 글을 인스타·스레드·구글·당근·카카오에 지금 올리고, 플레이스용 글과 리뷰 답글 초안을 보내 드립니다. 평소엔 저녁 8시 47분.', time: '약 10분', pc: true },
-    { id: 'trig_016THjQ2oRs8P7hvAetYtXz8', title: '🧼 청소팁 카드 만들어', desc: '계절 청소팁 카드 3장과 6곳 글을 만들어 대기열에 넣고, 홈페이지 Q&A 칼럼도 1개 추가합니다. 게시는 그날 저녁 8시 47분.', time: '약 8분', pc: true,
+    { id: 'trig_01YVSejMCeuJTD6iRW1xNzwH', title: '오늘 업무 다시 써 줘', desc: '블로그 초안(월·목)·아침 스레드 글·황금키워드·현장 메모·제주 소식을 새로 써서 앱에 올립니다. 평소엔 매일 아침 7시 17분에 자동.', time: '약 5분' },
+    { id: 'trig_018fBTXudMg5QidizdmQs5gH', title: '아침 스레드 지금 올려', desc: '앱에 준비된 오늘 아침 스레드 글을 @linkcleaning 계정에 바로 올리고, 30분 뒤 댓글에 답글까지 답니다.', time: '약 3분', pc: true },
+    { id: 'trig_016jPWUjqTzeqPu8iZXrVMEe', title: '6곳 홍보 지금 올려', desc: '현장홍보 앱에 맡겨 둔 현장 글을 인스타·스레드·구글·당근·카카오에 지금 올리고, 플레이스용 글과 리뷰 답글 초안을 보내 드립니다. 평소엔 저녁 8시 47분.', time: '약 10분', pc: true },
+    { id: 'trig_016THjQ2oRs8P7hvAetYtXz8', title: '청소팁 카드 만들어', desc: '계절 청소팁 카드 3장과 6곳 글을 만들어 대기열에 넣고, 홈페이지 Q&A 칼럼도 1개 추가합니다. 게시는 그날 저녁 8시 47분.', time: '약 8분', pc: true,
       extra: '대표님이 지휘실 버튼으로 직접 요청했다. 0단계의 "최근 3일 안에 끝난 작업이 있으면 종료" 조건은 이번엔 무시하고 진행한다(대기 작업이 이미 있으면 그 사실만 알리고 종료).' },
-    { id: 'trig_01Lg8r73Cc4NYs9sVYnDKyXC', title: '🛒 쿠팡 스레드 글 준비', desc: '쿠팡파트너스 계정용 살림 팁 글과 오늘의 쿠팡 상품 글을 준비해 보내 드립니다. 평소엔 저녁 6시 43분.', time: '약 2분' }
+    { id: 'trig_01Lg8r73Cc4NYs9sVYnDKyXC', title: '쿠팡 스레드 글 준비', desc: '쿠팡파트너스 계정용 살림 팁 글과 오늘의 쿠팡 상품 글을 준비해 보내 드립니다. 평소엔 저녁 6시 43분.', time: '약 2분' }
   ];
 
   var mcp = null;
@@ -169,7 +172,7 @@
     var input = { trigger_id: t.id };
     if (text) input.text = text;
     mcp.callTool(SERVER, 'fire_trigger', input, { cache: false }).then(function () {
-      btn.classList.remove('busy'); btn.classList.add('done'); btn.textContent = '✅ 시작했어요';
+      btn.classList.remove('busy'); btn.classList.add('done'); btn.textContent = '시작했어요';
       res.className = 'result ok'; res.textContent = '비서가 일을 시작했습니다 (' + t.time + '). 끝나면 알림이 와요.';
       setTimeout(function () { btn.classList.remove('done'); btn.textContent = '지금 시키기'; }, 8000);
       refresh();
