@@ -160,7 +160,6 @@ interface AppSettings {
   siteDomain?: string; // 내 홈페이지 도메인
   monthlyTarget?: number; // 이번 달 매출 목표 (원)
   reviewUrl?: string; // 네이버 리뷰 작성 링크
-  salesX?: number; // 매출 표시 배율 (기본 10배)
   hubPin?: string; // 링크 허브(세무장부·순위노트·자동콜백) 읽기 비밀번호 — 코드에 넣지 않고 이 폰에만 저장
 }
 
@@ -2265,8 +2264,8 @@ const CHANNELS = ['네이버 블로그', '플레이스', '홈페이지', '전화
 
 const FOLLOW_DAYS = 2; // 견적 후 N일 지나면 팔로업 알림
 
-/** 매출 표시 배율 — 화면·브리핑·리포트의 매출 숫자만 이 배율로 보여 줌 (저장된 원래 금액은 그대로) */
-let SALES_X = 10;
+/** 매출 표시 — 실제 금액 그대로 */
+const SALES_X = 1;
 const fmtSales = (n: number) => fmtWon(n * SALES_X);
 const fmtWon = (n: number) => {
   if (!n) return '0원';
@@ -4023,21 +4022,6 @@ function SettingsModal({
             </div>
           </div>
 
-          <div>
-            <span className="mb-1 block text-sm text-slate-300">매출 표시 배율</span>
-            <div className="grid grid-cols-2 gap-2">
-              {[10, 1].map((x) => (
-                <button
-                  key={x}
-                  onClick={() => set('salesX', x)}
-                  className={`rounded-xl py-3 font-bold ${(draft.salesX === 1 ? 1 : 10) === x ? 'bg-cw text-[#191919]' : 'bg-[#F2F3F5] text-slate-200'}`}
-                >
-                  {x === 10 ? '10배로 보기' : '실제 금액'}
-                </button>
-              ))}
-            </div>
-          </div>
-
           <label className="block">
             <span className="mb-1 block text-sm text-slate-300">링크 허브 비밀번호 <span className="text-slate-500">(세무장부·순위노트·자동콜백 연결)</span></span>
             <input className={input} value={draft.hubPin ?? ''} onChange={(e) => set('hubPin', e.target.value.replace(/\D/g, ''))} inputMode="numeric" placeholder="숫자 6자리" />
@@ -4169,7 +4153,6 @@ export default function App() {
 
   const [tab, setTab] = useLocal<Tab>('tab', 'brief');
   const [settings, setSettings] = useLocal<AppSettings>('settings', DEFAULT_SETTINGS);
-  SALES_X = settings.salesX === 1 ? 1 : 10;
   const iconStyle: IconStyle = ICON_STYLES.some((s) => s.key === settings.iconStyle) ? (settings.iconStyle as IconStyle) : 'vip';
   usePwaSetup(iconStyle);
   const [routines, setRoutines] = useLocal<Routine[]>('routines', DEFAULT_ROUTINES);
