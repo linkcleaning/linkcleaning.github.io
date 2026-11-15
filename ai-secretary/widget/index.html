@@ -1,0 +1,15 @@
+<!doctype html><html lang="ko"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>미래전략실 위젯 코드</title>
+<style>body{margin:0;background:#FFD233;font-family:-apple-system,"Apple SD Gothic Neo",sans-serif;color:#191919}
+.w{max-width:520px;margin:0 auto;padding:20px 16px 40px}h1{font-size:22px;margin:4px 0 12px}
+button{width:100%;border:0;border-radius:999px;background:#191919;color:#FFD233;font:800 17px inherit;padding:16px;margin:8px 0}
+pre{background:#fff;border-radius:16px;padding:12px;font-size:10px;white-space:pre-wrap;word-break:break-all;max-height:40vh;overflow:auto}
+p{font-size:14px;line-height:1.6}.ok{font-weight:800;text-align:center}.v{font-size:9px;opacity:.4;text-align:right}</style></head>
+<body><div class="w"><h1>미래전략실 위젯 코드</h1>
+<button id="c">코드 복사하기</button><p class="ok" id="m"></p>
+<p>Scriptable 앱 → 오른쪽 위 <b>+</b> → 빈 화면에 붙여넣기 → 이름을 <b>미래전략실</b>로 → 완료</p>
+<pre id="code">불러오는 중…</pre><div class="v">v1</div></div>
+<script>
+fetch('script.txt?t='+Date.now()).then(r=>r.text()).then(t=>{document.getElementById('code').textContent=t;
+document.getElementById('c').onclick=async()=>{try{await navigator.clipboard.writeText(t);document.getElementById('m').textContent='복사했어요! Scriptable에 붙여넣으세요.'}catch(e){document.getElementById('m').textContent='아래 코드를 길게 눌러 전체 선택 후 복사해 주세요.'}}});
+</script></body></html>

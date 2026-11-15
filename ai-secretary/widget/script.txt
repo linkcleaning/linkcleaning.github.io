@@ -1,0 +1,92 @@
+// 링크 미래전략실 위젯 (Scriptable 앱용) v1
+// 아침 7시 17분에 비서실장이 올려 둔 '오늘 업무'를 홈 화면 위젯으로 보여 줍니다.
+// 위젯을 누르면 미래전략실 앱(사파리)이 열립니다.
+
+const DATA = "https://linkcleaning.github.io/ai-secretary/data/today.json";
+const APP = "https://linkcleaning.github.io/ai-secretary/";
+const YELLOW = new Color("#FFD233");
+const INK = new Color("#191919");
+const MUTED = new Color("#45474D");
+
+function ymd(d) {
+  const p = (n) => String(n).padStart(2, "0");
+  return `${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())}`;
+}
+
+async function load() {
+  try {
+    const r = new Request(DATA + "?t=" + Date.now());
+    r.timeoutInterval = 10;
+    return await r.loadJSON();
+  } catch (e) {
+    return null;
+  }
+}
+
+const data = await load();
+const fam = config.widgetFamily || "medium";
+const w = new ListWidget();
+w.backgroundColor = YELLOW;
+w.url = APP;
+w.setPadding(14, 16, 14, 16);
+w.refreshAfterDate = new Date(Date.now() + 60 * 60 * 1000); // 1시간마다 새로
+
+// 머리줄
+const now = new Date();
+const top = w.addStack();
+top.centerAlignContent();
+const badge = top.addStack();
+badge.backgroundColor = INK;
+badge.cornerRadius = 9;
+badge.setPadding(2, 7, 2, 7);
+const bt = badge.addText("미래전략실");
+bt.font = Font.heavySystemFont(10);
+bt.textColor = YELLOW;
+top.addSpacer(6);
+const dt = top.addText(`${now.getMonth() + 1}.${now.getDate()} (${"일월화수목금토"[now.getDay()]})`);
+dt.font = Font.heavySystemFont(12);
+dt.textColor = INK;
+top.addSpacer();
+w.addSpacer(8);
+
+const today = ymd(now);
+const tomorrow = ymd(new Date(now.getTime() + 86400000));
+
+if (!data || (data.date !== today && data.date !== tomorrow)) {
+  const t = w.addText("오늘 업무는 아침 7시 17분에 준비돼요");
+  t.font = Font.boldSystemFont(14);
+  t.textColor = INK;
+} else {
+  const isTomorrow = data.date === tomorrow;
+  if (fam !== "small" && data.headline) {
+    const h = w.addText(String(data.headline).replace(/^대표님,\s*/, ""));
+    h.font = Font.semiboldSystemFont(fam === "large" ? 14 : 12);
+    h.textColor = MUTED;
+    h.lineLimit = fam === "large" ? 4 : 2;
+    w.addSpacer(8);
+  }
+  const label = w.addText(isTomorrow ? "내일 할 일" : "오늘 할 일");
+  label.font = Font.heavySystemFont(11);
+  label.textColor = MUTED;
+  w.addSpacer(3);
+  const todo = (data.todo || []).slice(0, fam === "small" ? 2 : 3);
+  todo.forEach((x, i) => {
+    const row = w.addText(`${i + 1}. ${String(x).replace(/\s*\(.*?\)\s*$/, "")}`);
+    row.font = Font.boldSystemFont(fam === "small" ? 12 : 13);
+    row.textColor = INK;
+    row.lineLimit = fam === "large" ? 2 : 1;
+    w.addSpacer(2);
+  });
+  if (fam === "large" && data.blog && data.blog.title) {
+    w.addSpacer(8);
+    const b = w.addText("✍️ " + data.blog.title);
+    b.font = Font.semiboldSystemFont(12);
+    b.textColor = MUTED;
+    b.lineLimit = 2;
+  }
+}
+w.addSpacer();
+
+if (config.runsInWidget) Script.setWidget(w);
+else await w.presentMedium();
+Script.complete();
