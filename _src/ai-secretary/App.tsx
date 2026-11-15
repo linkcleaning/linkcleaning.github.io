@@ -4373,6 +4373,14 @@ export default function App() {
             {speaking ? <Square className="h-5 w-5" /> : <Volume2 className="h-6 w-6" />}
             {speaking ? '브리핑 멈추기' : '비서 음성 브리핑 듣기'}
           </button>
+          <a
+            href="https://claude.ai/artifact/4WTtTbpRQy1YjG4MWyNboC"
+            target="_blank"
+            rel="noreferrer"
+            className="mt-2 flex w-full items-center justify-center gap-2 rounded-2xl border border-amber-300/40 bg-white/5 py-3.5 text-base font-bold text-amber-200 active:scale-[0.98]"
+          >
+            🎛 비서에게 지금 시키기 <span className="text-xs font-normal text-slate-400">(스레드·6곳 홍보·청소팁·쿠팡)</span>
+          </a>
         </div>
       </header>
 
