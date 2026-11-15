@@ -221,7 +221,7 @@ async function fetchAutoRank(s: AppSettings, keyword: string): Promise<AutoRankR
 }
 
 const MEMO_TAGS = [
-  { key: '아이디어', cls: 'bg-amber-300/15 text-amber-200 border-amber-300/30' },
+  { key: '아이디어', cls: 'bg-cw/15 text-amber-200 border-cw/30' },
   { key: '고객', cls: 'bg-sky-400/15 text-sky-200 border-sky-400/30' },
   { key: '주문', cls: 'bg-emerald-400/15 text-emerald-200 border-emerald-400/30' },
   { key: '할 일', cls: 'bg-rose-400/15 text-rose-200 border-rose-400/30' },
@@ -1150,7 +1150,7 @@ function drawMono(ctx: Ctx) {
   ctx.textBaseline = 'alphabetic';
   const silverGold = ctx.createLinearGradient(0, 180, 0, 330);
   silverGold.addColorStop(0, '#ffffff');
-  silverGold.addColorStop(0.5, '#d9d4c3');
+  silverGold.addColorStop(0.5, '#E3E4E8');
   silverGold.addColorStop(1, '#a8997a');
   ctx.fillStyle = silverGold;
   ctx.shadowColor = 'rgba(0,0,0,0.7)';
@@ -1216,7 +1216,7 @@ function usePwaSetup(iconStyle: IconStyle) {
       el.content = content;
     };
     setMeta('viewport', 'width=device-width, initial-scale=1, viewport-fit=cover');
-    setMeta('theme-color', '#0B3B40');
+    setMeta('theme-color', '#FFD233');
     setMeta('apple-mobile-web-app-capable', 'yes');
     setMeta('mobile-web-app-capable', 'yes');
     setMeta('apple-mobile-web-app-status-bar-style', 'black-translucent');
@@ -1254,8 +1254,8 @@ function usePwaSetup(iconStyle: IconStyle) {
       start_url: base,
       scope: base,
       display: 'standalone',
-      background_color: '#F4F1EA',
-      theme_color: '#0B3B40',
+      background_color: '#F2F3F5',
+      theme_color: '#FFD233',
       lang: 'ko',
       icons: [
         { src: icon192, sizes: '192x192', type: 'image/png' },
@@ -1279,16 +1279,18 @@ function usePwaSetup(iconStyle: IconStyle) {
 /* =========================================================
  *  공통 UI
  * ========================================================= */
-const card = 'rounded-[14px] bg-white p-4';
-const btnGhost = 'rounded-xl bg-[#F4F1EA] px-3 py-2 text-sm font-semibold text-[#14262A] active:scale-95 transition';
+const card = 'rounded-[22px] bg-white p-5 shadow-[0_1px_2px_rgba(0,0,0,0.04)]';
+const btnGhost = 'rounded-full bg-[#F2F3F5] px-3 py-2 text-sm font-semibold text-[#191919] active:scale-95 transition';
 const input =
-  'w-full rounded-xl border border-[#E2DBCD] bg-[#F4F1EA] px-3 py-3 text-base text-[#14262A] placeholder:text-[#9aa5a6] outline-none focus:border-[#0E5A60]';
+  'w-full rounded-xl border border-[#E9EAEE] bg-[#F2F3F5] px-3 py-3 text-base text-[#191919] placeholder:text-[#9aa5a6] outline-none focus:border-[#191919]';
 
 function SectionTitle({ icon: Icon, title, right }: { icon: LucideIcon; title: string; right?: React.ReactNode }) {
   return (
     <div className="mb-4 flex items-center justify-between gap-2">
-      <h2 className="flex items-center gap-2 text-lg font-bold text-slate-50">
-        <Icon className="h-5 w-5 text-amber-300" />
+      <h2 className="flex items-center gap-2.5 text-[17px] font-extrabold tracking-tight text-slate-50">
+        <span className="grid h-8 w-8 shrink-0 place-items-center rounded-full bg-cw">
+          <Icon className="h-[18px] w-[18px] text-[#191919]" />
+        </span>
         {title}
       </h2>
       {right}
@@ -1298,10 +1300,10 @@ function SectionTitle({ icon: Icon, title, right }: { icon: LucideIcon; title: s
 
 function ProgressBar({ pct }: { pct: number }) {
   return (
-    <div className="h-4 w-full overflow-hidden rounded-full bg-[#F4F1EA]">
+    <div className="h-4 w-full overflow-hidden rounded-full bg-[#F2F3F5]">
       <div
         className={`h-full rounded-full transition-all duration-700 ${
-          pct >= 100 ? 'bg-gradient-to-r from-emerald-400 to-amber-300' : 'bg-gradient-to-r from-amber-400 to-yellow-300'
+          pct >= 100 ? 'bg-gradient-to-r from-emerald-400 to-cw' : 'bg-gradient-to-r from-cw to-yellow-300'
         }`}
         style={{ width: `${Math.min(100, pct)}%` }}
       />
@@ -1339,7 +1341,7 @@ function Confetti() {
       ))}
       <div className="absolute inset-x-0 top-1/3 flex justify-center px-6">
         <div
-          className="rounded-[14px] border border-amber-300/50 bg-white px-6 py-5 text-center"
+          className="rounded-[14px] border border-cw/50 bg-white px-6 py-5 text-center"
           style={{ animation: 'aisec-pop 0.6s ease-out' }}
         >
           <p className="text-4xl">🏆</p>
@@ -1391,12 +1393,12 @@ function BriefingTab(props: {
             </button>
           }
         />
-        <div className="mb-4 grid grid-cols-3 gap-1 rounded-2xl bg-[#F4F1EA] p-1">
+        <div className="mb-4 grid grid-cols-3 gap-1 rounded-2xl bg-[#F2F3F5] p-1">
           {(['here', ...Object.keys(CITIES)] as PlaceKey[]).map((c) => (
             <button
               key={c}
               onClick={() => setCity(c)}
-              className={`rounded-xl py-3 text-sm font-bold transition ${city === c ? 'bg-amber-300 text-white' : 'text-slate-300'}`}
+              className={`rounded-xl py-3 text-sm font-bold transition ${city === c ? 'bg-cw text-[#191919]' : 'text-slate-300'}`}
             >
               {c === 'here' ? (locating ? '📍 찾는 중…' : '📍 내 위치') : CITIES[c].name}
             </button>
@@ -1408,7 +1410,7 @@ function BriefingTab(props: {
           </p>
         )}
 
-        {!w && loading && <div className="h-40 animate-pulse rounded-2xl bg-[#F4F1EA]" />}
+        {!w && loading && <div className="h-40 animate-pulse rounded-2xl bg-[#F2F3F5]" />}
         {!w && !loading && error && (
           <div className="flex items-center gap-2 rounded-2xl bg-rose-500/10 p-4 text-sm text-rose-200">
             <TriangleAlert className="h-5 w-5 shrink-0" />
@@ -1432,17 +1434,17 @@ function BriefingTab(props: {
             </div>
 
             <div className="mt-4 grid grid-cols-3 gap-2 text-center">
-              <div className="rounded-2xl bg-[#F4F1EA] p-3">
+              <div className="rounded-2xl bg-[#F2F3F5] p-3">
                 <Droplets className="mx-auto h-5 w-5 text-sky-300" />
                 <p className="mt-1 text-xl font-bold">{w.humidity}%</p>
                 <p className="text-[11px] text-slate-400">습도</p>
               </div>
-              <div className="rounded-2xl bg-[#F4F1EA] p-3">
+              <div className="rounded-2xl bg-[#F2F3F5] p-3">
                 <Umbrella className="mx-auto h-5 w-5 text-indigo-300" />
                 <p className="mt-1 text-xl font-bold">{w.popNow}%</p>
                 <p className="text-[11px] text-slate-400">강수확률 (오늘 최고 {w.popMax}%)</p>
               </div>
-              <div className="rounded-2xl bg-[#F4F1EA] p-3">
+              <div className="rounded-2xl bg-[#F2F3F5] p-3">
                 <Wind className="mx-auto h-5 w-5 text-teal-300" />
                 <p className="mt-1 text-xl font-bold">{w.wind}</p>
                 <p className="text-[11px] text-slate-400">바람 m/s</p>
@@ -1468,8 +1470,8 @@ function BriefingTab(props: {
         <SectionTitle icon={Newspaper} title="오늘의 제주·시즌 이슈" />
         <ul className="space-y-3">
           {issues.map((it, i) => (
-            <li key={i} className={`rounded-2xl p-4 ${it.warn ? 'bg-rose-500/10' : 'bg-[#F4F1EA]'}`}>
-              <span className="rounded-full border border-amber-300/30 px-2 py-0.5 text-[11px] text-amber-200">{it.tag}</span>
+            <li key={i} className={`rounded-2xl p-4 ${it.warn ? 'bg-rose-500/10' : 'bg-[#F2F3F5]'}`}>
+              <span className="rounded-full border border-cw/30 px-2 py-0.5 text-[11px] text-amber-200">{it.tag}</span>
               <p className="mt-2 font-bold text-slate-50">{it.title}</p>
               <p className="mt-1 text-sm leading-relaxed text-slate-300">{it.desc}</p>
             </li>
@@ -1496,7 +1498,7 @@ function BriefingTab(props: {
             <p className="mb-2 text-sm text-slate-300">오늘의 황금키워드</p>
             <div className="flex flex-wrap gap-2">
               {golden.keywords.map((k) => (
-                <span key={k.kw} className="rounded-full bg-amber-300/15 px-3 py-1.5 text-sm font-semibold text-amber-200">
+                <span key={k.kw} className="rounded-full bg-cw/15 px-3 py-1.5 text-sm font-semibold text-amber-200">
                   #{k.kw}
                 </span>
               ))}
@@ -1540,7 +1542,7 @@ function RoutineForm({
   };
 
   return (
-    <div className="space-y-2 rounded-2xl border border-amber-300/30 bg-[#F4F1EA] p-4">
+    <div className="space-y-2 rounded-2xl border border-cw/30 bg-[#F2F3F5] p-4">
       <div className="flex gap-2">
         <input className={`${input} w-20 text-center`} value={emoji} onChange={(e) => setEmoji(e.target.value)} placeholder="😀" />
         <input className={input} value={category} onChange={(e) => setCategory(e.target.value)} placeholder="분류 (예: 건강 관리)" />
@@ -1554,10 +1556,10 @@ function RoutineForm({
       />
       <p className="text-[11px] text-slate-500">개별 체크 항목을 비워두면 한 번 터치로 완료되는 루틴이 됩니다.</p>
       <div className="flex gap-2 pt-1">
-        <button onClick={save} className="flex-1 rounded-xl bg-amber-300 py-3 font-bold text-white active:scale-95">
+        <button onClick={save} className="flex-1 rounded-xl bg-cw py-3 font-bold text-[#191919] active:scale-95">
           저장
         </button>
-        <button onClick={onCancel} className="flex-1 rounded-xl bg-[#F4F1EA] py-3 font-semibold text-slate-200 active:scale-95">
+        <button onClick={onCancel} className="flex-1 rounded-xl bg-[#F2F3F5] py-3 font-semibold text-slate-200 active:scale-95">
           취소
         </button>
       </div>
@@ -1630,8 +1632,8 @@ function RoutineTab(props: {
               <div key={d}>
                 <div
                   className={`mx-auto flex h-8 w-8 items-center justify-center rounded-full text-xs font-bold ${
-                    ok ? 'bg-emerald-400 text-white' : partial ? 'bg-amber-300/30 text-amber-100' : 'bg-[#F4F1EA] text-slate-500'
-                  } ${d === today ? 'ring-2 ring-amber-300' : ''}`}
+                    ok ? 'bg-emerald-400 text-white' : partial ? 'bg-cw/30 text-amber-100' : 'bg-[#F2F3F5] text-slate-500'
+                  } ${d === today ? 'ring-2 ring-cw' : ''}`}
                 >
                   {ok ? <Check className="h-4 w-4" /> : dd}
                 </div>
@@ -1658,7 +1660,7 @@ function RoutineTab(props: {
                 setEditingId(null);
                 setAdding(false);
               }}
-              className={`${btnGhost} ${editMode ? 'border-amber-300/60 text-amber-200' : ''}`}
+              className={`${btnGhost} ${editMode ? 'border-cw/60 text-amber-200' : ''}`}
             >
               {editMode ? '편집 완료' : '편집'}
             </button>
@@ -1688,7 +1690,7 @@ function RoutineTab(props: {
               <li
                 key={r.id}
                 className={`rounded-2xl border p-4 transition ${
-                  allDone ? 'border-emerald-400/40 bg-emerald-400/10' : 'border-[#E2DBCD] bg-[#F4F1EA]'
+                  allDone ? 'border-emerald-400/40 bg-emerald-400/10' : 'border-[#E9EAEE] bg-[#F2F3F5]'
                 }`}
               >
                 <div
@@ -1707,20 +1709,20 @@ function RoutineTab(props: {
                   )}
                   {editMode && (
                     <div className="flex shrink-0 items-center gap-1">
-                      <button onClick={() => move(idx, -1)} className="rounded-lg p-2 text-slate-300 active:bg-[#F4F1EA]" aria-label="위로">
+                      <button onClick={() => move(idx, -1)} className="rounded-lg p-2 text-slate-300 active:bg-[#F2F3F5]" aria-label="위로">
                         <ChevronUp className="h-5 w-5" />
                       </button>
-                      <button onClick={() => move(idx, 1)} className="rounded-lg p-2 text-slate-300 active:bg-[#F4F1EA]" aria-label="아래로">
+                      <button onClick={() => move(idx, 1)} className="rounded-lg p-2 text-slate-300 active:bg-[#F2F3F5]" aria-label="아래로">
                         <ChevronDown className="h-5 w-5" />
                       </button>
-                      <button onClick={() => setEditingId(r.id)} className="rounded-lg p-2 text-sky-300 active:bg-[#F4F1EA]" aria-label="수정">
+                      <button onClick={() => setEditingId(r.id)} className="rounded-lg p-2 text-sky-300 active:bg-[#F2F3F5]" aria-label="수정">
                         <Pencil className="h-5 w-5" />
                       </button>
                       <button
                         onClick={() => {
                           if (confirm(`'${r.title}' 루틴을 삭제할까요?`)) setRoutines((list) => list.filter((x) => x.id !== r.id));
                         }}
-                        className="rounded-lg p-2 text-rose-300 active:bg-[#F4F1EA]"
+                        className="rounded-lg p-2 text-rose-300 active:bg-[#F2F3F5]"
                         aria-label="삭제"
                       >
                         <Trash2 className="h-5 w-5" />
@@ -1767,7 +1769,7 @@ function RoutineTab(props: {
           ) : (
             <button
               onClick={() => setAdding(true)}
-              className="flex w-full items-center justify-center gap-2 rounded-2xl border border-dashed border-amber-300/40 py-4 font-bold text-amber-200 active:scale-[0.98]"
+              className="flex w-full items-center justify-center gap-2 rounded-2xl border border-dashed border-cw/40 py-4 font-bold text-amber-200 active:scale-[0.98]"
             >
               <Plus className="h-5 w-5" /> 루틴 추가
             </button>
@@ -1795,7 +1797,7 @@ function RankSheet({
   return (
     <div className="fixed inset-0 z-50 flex items-end bg-black/60" onClick={onClose}>
       <div
-        className="w-full rounded-t-3xl border-t border-[#E2DBCD] bg-white p-5 pb-[calc(env(safe-area-inset-bottom)+20px)]"
+        className="w-full rounded-t-3xl border-t border-[#E9EAEE] bg-white p-5 pb-[calc(env(safe-area-inset-bottom)+20px)]"
         onClick={(e) => e.stopPropagation()}
       >
         <div className="mb-4 flex items-center justify-between">
@@ -1810,7 +1812,7 @@ function RankSheet({
               key={n}
               onClick={() => onPick(n)}
               className={`rounded-xl py-3 text-lg font-bold active:scale-95 ${
-                current === n ? 'bg-amber-300 text-white' : 'bg-[#F4F1EA] text-slate-100'
+                current === n ? 'bg-cw text-[#191919]' : 'bg-[#F2F3F5] text-slate-100'
               }`}
             >
               {n}
@@ -1824,7 +1826,7 @@ function RankSheet({
           >
             권외 (순위 밖)
           </button>
-          <button onClick={() => onPick(undefined)} className="col-span-2 rounded-xl bg-[#F4F1EA] py-3 font-semibold text-slate-300 active:scale-95">
+          <button onClick={() => onPick(undefined)} className="col-span-2 rounded-xl bg-[#F2F3F5] py-3 font-semibold text-slate-300 active:scale-95">
             기록 지우기
           </button>
         </div>
@@ -1917,7 +1919,7 @@ function KeywordTab(props: {
   return (
     <div className="space-y-4">
       {/* 황금키워드 */}
-      <section className={`${card} border-amber-300/30 bg-white`}>
+      <section className={`${card} border-cw/30 bg-white`}>
         <SectionTitle
           icon={Sparkles}
           title="오늘의 황금키워드"
@@ -1929,7 +1931,7 @@ function KeywordTab(props: {
                     ? 'bg-sky-400/20 text-sky-200'
                     : golden.source === 'ai'
                       ? 'bg-emerald-400/20 text-emerald-200'
-                      : 'bg-[#F4F1EA] text-slate-300'
+                      : 'bg-[#F2F3F5] text-slate-300'
                 }`}
               >
                 {golden.source === 'agent'
@@ -1952,7 +1954,7 @@ function KeywordTab(props: {
           <>
             <ul className="space-y-2">
               {golden.keywords.map((k, i) => (
-                <li key={k.kw} className="rounded-2xl bg-[#F4F1EA] p-3">
+                <li key={k.kw} className="rounded-2xl bg-[#F2F3F5] p-3">
                   <div className="flex items-center justify-between gap-2">
                     <p className="font-extrabold text-amber-200">
                       {i + 1}. {k.kw}
@@ -1969,13 +1971,13 @@ function KeywordTab(props: {
                   {k.total !== undefined && (
                     <div className="mt-1.5 flex flex-wrap gap-1.5 text-[11px] font-bold">
                       <span className="rounded-full bg-sky-400/15 px-2 py-0.5 text-sky-200">월 {k.total.toLocaleString()}회</span>
-                      <span className="rounded-full bg-[#F4F1EA] px-2 py-0.5 text-slate-300">
+                      <span className="rounded-full bg-[#F2F3F5] px-2 py-0.5 text-slate-300">
                         모바일 {Math.round(((k.mobile ?? 0) / Math.max(1, k.total)) * 100)}%
                       </span>
                       {k.comp && (
                         <span
                           className={`rounded-full px-2 py-0.5 ${
-                            k.comp === '낮음' ? 'bg-emerald-400/15 text-emerald-200' : k.comp === '높음' ? 'bg-rose-400/15 text-rose-200' : 'bg-amber-300/15 text-amber-200'
+                            k.comp === '낮음' ? 'bg-emerald-400/15 text-emerald-200' : k.comp === '높음' ? 'bg-rose-400/15 text-rose-200' : 'bg-cw/15 text-amber-200'
                           }`}
                         >
                           경쟁 {k.comp}
@@ -1989,9 +1991,9 @@ function KeywordTab(props: {
             </ul>
 
             {golden.pool && golden.pool.length > 3 && (
-              <details className="mt-3 rounded-2xl bg-[#F4F1EA] p-3">
+              <details className="mt-3 rounded-2xl bg-[#F2F3F5] p-3">
                 <summary className="cursor-pointer text-sm font-bold text-sky-200">📊 데이터 후보 TOP {golden.pool.length} 보기</summary>
-                <ul className="mt-2 divide-y divide-[#E2DBCD]">
+                <ul className="mt-2 divide-y divide-[#E9EAEE]">
                   {golden.pool.map((k, i) => {
                     const tracked = keywords.some((x) => x.text.replace(/\s+/g, '') === k.kw.replace(/\s+/g, ''));
                     return (
@@ -2012,7 +2014,7 @@ function KeywordTab(props: {
                             setKeywords((l) => [...l, { id: uid(), text: k.kw }]);
                             toast(`'${k.kw}'를 순위 체크 키워드에 추가했습니다.`);
                           }}
-                          className="shrink-0 rounded-lg bg-[#F4F1EA] px-2 py-1 text-[11px] font-bold text-slate-200 disabled:opacity-40"
+                          className="shrink-0 rounded-lg bg-[#F2F3F5] px-2 py-1 text-[11px] font-bold text-slate-200 disabled:opacity-40"
                         >
                           {tracked ? '추적중' : '+추적'}
                         </button>
@@ -2027,7 +2029,7 @@ function KeywordTab(props: {
             <p className="mb-2 mt-5 text-sm font-bold text-slate-200">✍️ 클릭을 부르는 블로그 제목 & 도입부</p>
             <ul className="space-y-3">
               {golden.titles.map((t, i) => (
-                <li key={i} className="rounded-2xl border border-[#E2DBCD] bg-[#F4F1EA] p-4">
+                <li key={i} className="rounded-2xl border border-[#E9EAEE] bg-[#F2F3F5] p-4">
                   <p className="font-bold leading-snug text-slate-50">{t.title}</p>
                   <p className="mt-2 text-sm leading-relaxed text-slate-300">{t.intro}</p>
                   <div className="mt-3 flex gap-2">
@@ -2056,7 +2058,7 @@ function KeywordTab(props: {
           <button
             onClick={() => onGenerate('data')}
             disabled={gLoading}
-            className="mt-4 flex w-full items-center justify-center gap-2 rounded-xl bg-[#0E5A60] py-3.5 font-extrabold text-white active:scale-[0.98] disabled:opacity-60"
+            className="mt-4 flex w-full items-center justify-center gap-2 rounded-xl bg-[#191919] py-3.5 font-extrabold text-white active:scale-[0.98] disabled:opacity-60"
           >
             <Search className={`h-4 w-4 ${gLoading ? 'animate-pulse' : ''}`} />
             {gLoading ? '분석 중…' : '실제 검색량으로 황금키워드 찾기'}
@@ -2065,7 +2067,7 @@ function KeywordTab(props: {
         <div className={`${dataReady ? 'mt-2' : 'mt-4'} grid grid-cols-2 gap-2`}>
           <button
             onClick={() => onGenerate('local')}
-            className="flex items-center justify-center gap-2 rounded-xl bg-[#F4F1EA] py-3 font-bold text-slate-100 active:scale-95"
+            className="flex items-center justify-center gap-2 rounded-xl bg-[#F2F3F5] py-3 font-bold text-slate-100 active:scale-95"
           >
             <RefreshCw className="h-4 w-4" /> 다른 추천
           </button>
@@ -2073,7 +2075,7 @@ function KeywordTab(props: {
             onClick={() => (hasKey ? onGenerate('ai') : toast('우측 상단 ⚙️ 설정에서 Gemini API 키를 입력해 주세요.'))}
             disabled={gLoading}
             className={`flex items-center justify-center gap-2 rounded-xl py-3 font-bold active:scale-95 ${
-              hasKey ? 'bg-amber-300 text-white' : 'bg-amber-300/20 text-amber-200'
+              hasKey ? 'bg-cw text-[#191919]' : 'bg-cw/20 text-amber-200'
             } disabled:opacity-60`}
           >
             <Sparkles className={`h-4 w-4 ${gLoading ? 'animate-pulse' : ''}`} />
@@ -2090,7 +2092,7 @@ function KeywordTab(props: {
           right={
             <button
               onClick={() => setEditMode((v) => !v)}
-              className={`${btnGhost} ${editMode ? 'border-amber-300/60 text-amber-200' : ''}`}
+              className={`${btnGhost} ${editMode ? 'border-cw/60 text-amber-200' : ''}`}
             >
               {editMode ? '완료' : '편집'}
             </button>
@@ -2101,13 +2103,13 @@ function KeywordTab(props: {
             <button
               onClick={runAutoCheck}
               disabled={!!checking}
-              className="mb-3 flex w-full items-center justify-center gap-2 rounded-2xl bg-[#0E5A60] py-3.5 text-base font-extrabold text-white active:scale-[0.98] disabled:opacity-80"
+              className="mb-3 flex w-full items-center justify-center gap-2 rounded-2xl bg-[#191919] py-3.5 text-base font-extrabold text-white active:scale-[0.98] disabled:opacity-80"
             >
               <RefreshCw className={`h-5 w-5 ${checking ? 'animate-spin' : ''}`} />
               {checking ? `자동 체크 중… ${checking.done}/${checking.total}` : '블로그·홈페이지 순위 자동 체크'}
             </button>
             {checking && (
-              <div className="mb-3 h-2 overflow-hidden rounded-full bg-[#F4F1EA]">
+              <div className="mb-3 h-2 overflow-hidden rounded-full bg-[#F2F3F5]">
                 <div className="h-full rounded-full bg-emerald-400 transition-all" style={{ width: `${(checking.done / Math.max(1, checking.total)) * 100}%` }} />
               </div>
             )}
@@ -2116,7 +2118,7 @@ function KeywordTab(props: {
             </p>
           </>
         ) : (
-          <div className="mb-3 rounded-2xl bg-[#F4F1EA] p-3 text-xs leading-relaxed text-slate-300">
+          <div className="mb-3 rounded-2xl bg-[#F2F3F5] p-3 text-xs leading-relaxed text-slate-300">
             <b className="text-amber-200">빠른 기록:</b> 아래 <b>블로그 / 홈페이지</b> 버튼을 누르면 네이버 검색이 열립니다. 우리 업체가 몇 번째인지 보고 이 앱으로
             돌아오면 <b>순위 입력창이 자동으로 열립니다.</b> 숫자만 누르면 끝!
           </div>
@@ -2126,7 +2128,7 @@ function KeywordTab(props: {
           {keywords.map((k) => {
             const rec = todayRec[k.id] ?? {};
             return (
-              <li key={k.id} className="rounded-2xl border border-[#E2DBCD] bg-[#F4F1EA] p-3">
+              <li key={k.id} className="rounded-2xl border border-[#E9EAEE] bg-[#F2F3F5] p-3">
                 <div className="flex items-center justify-between gap-2">
                   <p className="min-w-0 flex-1 truncate text-base font-bold text-slate-50">{k.text}</p>
                   {editMode ? (
@@ -2202,7 +2204,7 @@ function KeywordTab(props: {
             onKeyDown={(e) => e.key === 'Enter' && addKeyword()}
             placeholder="키워드 추가 (예: 제주에어컨청소)"
           />
-          <button onClick={addKeyword} className="shrink-0 rounded-xl bg-amber-300 px-4 font-bold text-white active:scale-95" aria-label="추가">
+          <button onClick={addKeyword} className="shrink-0 rounded-xl bg-cw px-4 font-bold text-[#191919] active:scale-95" aria-label="추가">
             <Plus className="h-5 w-5" />
           </button>
         </div>
@@ -2249,10 +2251,10 @@ interface Deal {
 
 const STAGES: { key: DealStage; label: string; cls: string }[] = [
   { key: 'inquiry', label: '문의', cls: 'bg-sky-400/15 text-sky-200 border-sky-400/30' },
-  { key: 'quote', label: '견적', cls: 'bg-amber-300/15 text-amber-200 border-amber-300/30' },
+  { key: 'quote', label: '견적', cls: 'bg-cw/15 text-amber-200 border-cw/30' },
   { key: 'won', label: '계약', cls: 'bg-emerald-400/15 text-emerald-200 border-emerald-400/30' },
   { key: 'done', label: '완료', cls: 'bg-violet-400/15 text-violet-200 border-violet-400/30' },
-  { key: 'lost', label: '보류·실패', cls: 'bg-[#F4F1EA] text-slate-400 border-[#E2DBCD]' },
+  { key: 'lost', label: '보류·실패', cls: 'bg-[#F2F3F5] text-slate-400 border-[#E9EAEE]' },
 ];
 const stageOf = (k: DealStage) => STAGES.find((s) => s.key === k) ?? STAGES[0];
 const NEXT_STAGE: Partial<Record<DealStage, DealStage>> = { inquiry: 'quote', quote: 'won', won: 'done' };
@@ -2374,7 +2376,7 @@ function DealForm({
 
   const chip = (on: boolean) =>
     `rounded-full border px-3 py-1.5 text-sm font-semibold transition active:scale-95 ${
-      on ? 'border-amber-300 bg-amber-300 text-white' : 'border-[#E2DBCD] bg-[#F4F1EA] text-slate-300'
+      on ? 'border-cw bg-cw text-[#191919]' : 'border-[#E9EAEE] bg-[#F2F3F5] text-slate-300'
     }`;
 
   const save = () => {
@@ -2399,7 +2401,7 @@ function DealForm({
   };
 
   return (
-    <div className="space-y-3 rounded-2xl border border-amber-300/30 bg-[#F4F1EA] p-4">
+    <div className="space-y-3 rounded-2xl border border-cw/30 bg-[#F2F3F5] p-4">
       <div className="grid grid-cols-2 gap-2">
         <input className={input} value={name} onChange={(e) => setName(e.target.value)} placeholder="고객명 (예: 노형 김사장)" />
         <input className={input} value={phone} onChange={(e) => setPhone(e.target.value)} placeholder="연락처 (선택)" inputMode="tel" />
@@ -2446,10 +2448,10 @@ function DealForm({
       </div>
       <input className={input} value={note} onChange={(e) => setNote(e.target.value)} placeholder="메모 (평수, 특이사항 등)" />
       <div className="flex gap-2 pt-1">
-        <button onClick={save} className="flex-1 rounded-xl bg-amber-300 py-3 font-bold text-white active:scale-95">
+        <button onClick={save} className="flex-1 rounded-xl bg-cw py-3 font-bold text-[#191919] active:scale-95">
           저장
         </button>
-        <button onClick={onCancel} className="flex-1 rounded-xl bg-[#F4F1EA] py-3 font-semibold text-slate-200 active:scale-95">
+        <button onClick={onCancel} className="flex-1 rounded-xl bg-[#F2F3F5] py-3 font-semibold text-slate-200 active:scale-95">
           취소
         </button>
       </div>
@@ -2524,7 +2526,7 @@ function SalesTab(props: {
           }
         />
         {editTarget && (
-          <div className="mb-4 space-y-2 rounded-2xl bg-[#F4F1EA] p-3">
+          <div className="mb-4 space-y-2 rounded-2xl bg-[#F2F3F5] p-3">
             <label className="block">
               <span className="mb-1 block text-xs text-slate-400">이번 달 매출 목표 (만원)</span>
               <input className={input} value={targetMan} onChange={(e) => setTargetMan(e.target.value)} inputMode="decimal" placeholder="예: 1500" />
@@ -2540,7 +2542,7 @@ function SalesTab(props: {
                 setEditTarget(false);
                 toast('목표를 저장했습니다.');
               }}
-              className="w-full rounded-xl bg-amber-300 py-3 font-bold text-white active:scale-95"
+              className="w-full rounded-xl bg-cw py-3 font-bold text-[#191919] active:scale-95"
             >
               저장
             </button>
@@ -2550,7 +2552,7 @@ function SalesTab(props: {
         <div className="flex items-end justify-between">
           <div>
             <p className="text-xs text-slate-400">계약 기준 매출</p>
-            <p className="text-4xl font-num font-normal tabular-nums text-[#0E5A60]">{fmtWon(stats.revenue)}</p>
+            <p className="text-4xl font-num font-normal tabular-nums text-[#191919]">{fmtWon(stats.revenue)}</p>
           </div>
           {stats.target > 0 ? (
             <div className="text-right">
@@ -2583,7 +2585,7 @@ function SalesTab(props: {
             { k: '전환율', v: `${stats.conv}%` },
             { k: '객단가', v: stats.avg ? fmtWon(stats.avg).replace('만원', '만') : '-' },
           ].map((x) => (
-            <div key={x.k} className="rounded-2xl bg-[#F4F1EA] px-1 py-3">
+            <div key={x.k} className="rounded-2xl bg-[#F2F3F5] px-1 py-3">
               <p className="whitespace-nowrap text-lg font-extrabold tabular-nums text-slate-50">{x.v}</p>
               <p className="text-[11px] text-slate-400">{x.k}</p>
             </div>
@@ -2593,7 +2595,7 @@ function SalesTab(props: {
 
       {/* 오늘 챙길 일 */}
       {(stats.todayJobs.length > 0 || stats.followUps.length > 0 || stats.reviewAsks.length > 0) && (
-        <section className={`${card} border-amber-300/30`}>
+        <section className={`${card} border-cw/30`}>
           <SectionTitle icon={TriangleAlert} title="오늘 챙길 고객" />
           <ul className="space-y-2">
             {stats.todayJobs.map((d) => (
@@ -2613,7 +2615,7 @@ function SalesTab(props: {
               </li>
             ))}
             {stats.followUps.map((d) => (
-              <li key={'f' + d.id} className="rounded-2xl bg-amber-300/10 p-3">
+              <li key={'f' + d.id} className="rounded-2xl bg-cw/10 p-3">
                 <p className="text-sm font-bold text-amber-200">
                   📞 팔로업 · {d.name || '고객'} · {d.service} {stageOf(d.stage).label} 후 {daysBetween(d.followedAt ?? d.stageAt, today)}일째 연락 없음
                 </p>
@@ -2636,7 +2638,7 @@ function SalesTab(props: {
                       update(d.id, { followedAt: today });
                       toast(`연락 완료로 표시했습니다. ${FOLLOW_DAYS}일 뒤 다시 알려드립니다.`);
                     }}
-                    className="rounded-xl bg-amber-300 px-3 py-2 text-xs font-bold text-white active:scale-95"
+                    className="rounded-xl bg-cw px-3 py-2 text-xs font-bold text-[#191919] active:scale-95"
                   >
                     연락함
                   </button>
@@ -2678,7 +2680,7 @@ function SalesTab(props: {
           title="고객 문의 관리"
           right={
             !adding && (
-              <button onClick={() => setAdding(true)} className="flex items-center gap-1 rounded-xl bg-amber-300 px-3 py-2 text-sm font-bold text-white active:scale-95">
+              <button onClick={() => setAdding(true)} className="flex items-center gap-1 rounded-xl bg-cw px-3 py-2 text-sm font-bold text-[#191919] active:scale-95">
                 <Plus className="h-4 w-4" /> 새 문의
               </button>
             )
@@ -2698,7 +2700,7 @@ function SalesTab(props: {
           </div>
         )}
 
-        <div className="mb-3 grid grid-cols-3 gap-1 rounded-2xl bg-[#F4F1EA] p-1 text-sm">
+        <div className="mb-3 grid grid-cols-3 gap-1 rounded-2xl bg-[#F2F3F5] p-1 text-sm">
           {(
             [
               ['open', '진행 중'],
@@ -2706,14 +2708,14 @@ function SalesTab(props: {
               ['all', '전체'],
             ] as const
           ).map(([k, l]) => (
-            <button key={k} onClick={() => setFilter(k)} className={`rounded-xl py-2 font-bold ${filter === k ? 'bg-amber-300 text-white' : 'text-slate-300'}`}>
+            <button key={k} onClick={() => setFilter(k)} className={`rounded-xl py-2 font-bold ${filter === k ? 'bg-cw text-[#191919]' : 'text-slate-300'}`}>
               {l}
             </button>
           ))}
         </div>
 
         {list.length === 0 && (
-          <div className="rounded-2xl bg-[#F4F1EA] p-5 text-center text-sm leading-relaxed text-slate-400">
+          <div className="rounded-2xl bg-[#F2F3F5] p-5 text-center text-sm leading-relaxed text-slate-400">
             아직 등록된 문의가 없습니다.
             <br />
             전화·카톡 문의가 오면 <b className="text-amber-200">[새 문의]</b>로 바로 적어두세요.
@@ -2738,7 +2740,7 @@ function SalesTab(props: {
                 />
               </li>
             ) : (
-              <li key={d.id} className="rounded-2xl border border-[#E2DBCD] bg-[#F4F1EA] p-3">
+              <li key={d.id} className="rounded-2xl border border-[#E9EAEE] bg-[#F2F3F5] p-3">
                 <div className="flex items-start justify-between gap-2">
                   <div className="min-w-0">
                     <div className="flex flex-wrap items-center gap-1.5">
@@ -2786,7 +2788,7 @@ function SalesTab(props: {
                     {(d.stage === 'inquiry' || d.stage === 'quote') && (
                       <button
                         onClick={() => update(d.id, { stage: 'lost', stageAt: today })}
-                        className="rounded-xl bg-[#F4F1EA] px-3 py-2 text-sm font-semibold text-slate-300 active:scale-95"
+                        className="rounded-xl bg-[#F2F3F5] px-3 py-2 text-sm font-semibold text-slate-300 active:scale-95"
                       >
                         보류
                       </button>
@@ -2825,7 +2827,7 @@ function SalesTab(props: {
                       문의 {c.inquiries} · 계약 {c.wins} · <b className="text-emerald-300">{fmtWon(c.revenue)}</b>
                     </span>
                   </div>
-                  <div className="h-2.5 overflow-hidden rounded-full bg-[#F4F1EA]">
+                  <div className="h-2.5 overflow-hidden rounded-full bg-[#F2F3F5]">
                     <div className="h-full rounded-full bg-[#3F8F2E]" style={{ width: `${(c.revenue / maxChanRev) * 100}%` }} />
                   </div>
                 </li>
@@ -2892,7 +2894,7 @@ function AgentCard({
 
   if (!valid) {
     return (
-      <section className={`${card} border-dashed border-amber-300/30`}>
+      <section className={`${card} border-dashed border-cw/30`}>
         <SectionTitle icon={Sparkles} title="비서실장 아침 보고" />
         <p className="text-sm leading-relaxed text-slate-400">
           비서실장이 매일 <b className="text-amber-200">아침 8시 전</b>에 오늘 올릴 블로그 글 초안, 스레드 글, 황금키워드, 현장 메모를 직접 써서 여기에 올려둡니다.
@@ -2916,7 +2918,7 @@ function AgentCard({
   ).filter(([, , th]) => !!th);
 
   return (
-    <section className={`${card} border-amber-300/40 bg-white`}>
+    <section className={`${card} border-cw/40 bg-white`}>
       <SectionTitle
         icon={Sparkles}
         title={isTomorrow ? '비서실장 내일 보고 (미리)' : '비서실장 아침 보고'}
@@ -2928,7 +2930,7 @@ function AgentCard({
           )
         }
       />
-      {a.headline && <p className="mb-4 rounded-2xl bg-amber-300/10 p-3 text-[15px] font-semibold leading-relaxed text-amber-50">{a.headline}</p>}
+      {a.headline && <p className="mb-4 rounded-2xl bg-cw/10 p-3 text-[15px] font-semibold leading-relaxed text-amber-50">{a.headline}</p>}
 
       {a.todo && a.todo.length > 0 && (
         <div className="mb-4">
@@ -2938,7 +2940,7 @@ function AgentCard({
               const done = doneTodos.includes(i);
               return (
                 <li key={i}>
-                  <button onClick={() => onDoneTodo(i)} className="flex w-full items-start gap-2 rounded-xl bg-[#F4F1EA] p-2.5 text-left active:scale-[0.99]">
+                  <button onClick={() => onDoneTodo(i)} className="flex w-full items-start gap-2 rounded-xl bg-[#F2F3F5] p-2.5 text-left active:scale-[0.99]">
                     {done ? <CircleCheck className="mt-0.5 h-5 w-5 shrink-0 text-emerald-400" /> : <Circle className="mt-0.5 h-5 w-5 shrink-0 text-slate-500" />}
                     <span className={`text-sm leading-snug ${done ? 'text-slate-500 line-through' : 'text-slate-100'}`}>{t}</span>
                   </button>
@@ -2950,7 +2952,7 @@ function AgentCard({
       )}
 
       {a.blog && (
-        <div className="mb-3 rounded-2xl border border-[#E2DBCD] bg-[#F4F1EA] p-4">
+        <div className="mb-3 rounded-2xl border border-[#E9EAEE] bg-[#F2F3F5] p-4">
           <p className="text-[11px] font-bold text-sky-300">홍보수석실 · 오늘의 블로그 초안{a.blog.keyword ? ` · #${a.blog.keyword}` : ''}</p>
           <p className="mt-1 font-bold leading-snug text-slate-50">{a.blog.title}</p>
           <p className={`mt-2 whitespace-pre-line text-sm leading-relaxed text-slate-300 ${open === 'blog' ? '' : 'line-clamp-3'}`}>{a.blog.body}</p>
@@ -2960,7 +2962,7 @@ function AgentCard({
             </button>
             <button
               onClick={() => copy(`${a.blog!.title}\n\n${a.blog!.body}`, '블로그 초안을 복사했습니다. 네이버 블로그 앱에 붙여넣고 현장 사진만 넣으세요.')}
-              className="flex items-center gap-1 rounded-xl bg-amber-300 px-3 py-2 text-xs font-bold text-white active:scale-95"
+              className="flex items-center gap-1 rounded-xl bg-cw px-3 py-2 text-xs font-bold text-[#191919] active:scale-95"
             >
               <Copy className="h-3.5 w-3.5" /> 전체 복사
             </button>
@@ -2969,7 +2971,7 @@ function AgentCard({
       )}
 
       {threadBlocks.map(([key, label, th]) => (
-        <div key={key} className="mb-3 rounded-2xl border border-[#E2DBCD] bg-[#F4F1EA] p-4">
+        <div key={key} className="mb-3 rounded-2xl border border-[#E9EAEE] bg-[#F2F3F5] p-4">
           <p className="text-[11px] font-bold text-violet-300">{label}</p>
           <p className={`mt-1 whitespace-pre-line text-sm leading-relaxed text-slate-200 ${open === key ? '' : 'line-clamp-4'}`}>{th!.text}</p>
           {th!.tags && th!.tags.length > 0 && (
@@ -3003,7 +3005,7 @@ function AgentCard({
       )}
 
       {a.issues && a.issues.length > 0 && (
-        <div className="rounded-2xl bg-[#F4F1EA] p-3">
+        <div className="rounded-2xl bg-[#F2F3F5] p-3">
           <p className="mb-1.5 text-[11px] font-bold text-slate-300">전략수석실 · 오늘의 소식</p>
           <ul className="space-y-2">
             {a.issues.map((it, i) => (
@@ -3101,7 +3103,7 @@ function ExecBrief({
         <div className="flex items-end justify-between">
           <div>
             <p className="text-xs text-slate-400">{Number(stats.month.slice(5))}월 계약 매출</p>
-            <p className="text-3xl font-num font-normal tabular-nums text-[#0E5A60]">{fmtWon(stats.revenue)}</p>
+            <p className="text-3xl font-num font-normal tabular-nums text-[#191919]">{fmtWon(stats.revenue)}</p>
           </div>
           <p className="text-right text-xs text-slate-400">
             {stats.target > 0 ? (
@@ -3123,22 +3125,22 @@ function ExecBrief({
       </button>
 
       <div className="mt-4 grid grid-cols-3 gap-2 text-center">
-        <button onClick={() => goTab('sales')} className="rounded-2xl bg-[#F4F1EA] p-3 active:scale-95">
+        <button onClick={() => goTab('sales')} className="rounded-2xl bg-[#F2F3F5] p-3 active:scale-95">
           <p className="text-2xl font-num font-normal text-slate-50">{stats.todayJobs.length}</p>
           <p className="text-[11px] text-slate-400">오늘 작업</p>
         </button>
-        <button onClick={() => goTab('sales')} className="rounded-2xl bg-[#F4F1EA] p-3 active:scale-95">
+        <button onClick={() => goTab('sales')} className="rounded-2xl bg-[#F2F3F5] p-3 active:scale-95">
           <p className="text-2xl font-num font-normal text-slate-50">{stats.tomorrowJobs.length}</p>
           <p className="text-[11px] text-slate-400">내일 작업</p>
         </button>
-        <button onClick={() => goTab('sales')} className={`rounded-2xl p-3 active:scale-95 ${todo ? 'bg-amber-300/15' : 'bg-[#F4F1EA]'}`}>
+        <button onClick={() => goTab('sales')} className={`rounded-2xl p-3 active:scale-95 ${todo ? 'bg-cw/15' : 'bg-[#F2F3F5]'}`}>
           <p className={`text-2xl font-num font-normal ${todo ? 'text-amber-300' : 'text-slate-50'}`}>{todo}</p>
           <p className="text-[11px] text-slate-400">연락할 고객</p>
         </button>
       </div>
 
       {(ups.length > 0 || downs.length > 0) && (
-        <button onClick={() => goTab('keyword')} className="mt-4 w-full rounded-2xl bg-[#F4F1EA] p-3 text-left">
+        <button onClick={() => goTab('keyword')} className="mt-4 w-full rounded-2xl bg-[#F2F3F5] p-3 text-left">
           <p className="mb-1.5 text-xs font-bold text-slate-300">네이버 순위 변동</p>
           <ul className="space-y-1 text-sm">
             {ups.map((m) => (
@@ -3243,7 +3245,7 @@ function HubCard({
         <p className="text-sm leading-relaxed text-slate-400">
           세무장부 매출, 자동콜백 통화 기록, 순위노트 플레이스 순위를 이 화면에서 함께 봅니다. 비밀번호를 한 번만 넣어주세요.
         </p>
-        <button onClick={onOpenSettings} className="mt-3 rounded-xl bg-amber-300 px-4 py-2.5 text-sm font-bold text-white active:scale-95">
+        <button onClick={onOpenSettings} className="mt-3 rounded-xl bg-cw px-4 py-2.5 text-sm font-bold text-[#191919] active:scale-95">
           허브 비밀번호 넣기
         </button>
       </section>
@@ -3290,7 +3292,7 @@ function HubCard({
   const rt = (v: number | null) => (v === null ? '-' : v === 0 ? '권외' : `${v}위`);
 
   return (
-    <section className={`${card} border-[#0E5A60]/20`}>
+    <section className={`${card} border-[#191919]/20`}>
       <SectionTitle
         icon={Sparkles}
         title="🔗 링크 허브 · 연결된 앱"
@@ -3312,7 +3314,7 @@ function HubCard({
       {status === 'error' && !hub && <p className="mb-3 text-sm text-slate-400">허브에 연결하지 못했습니다. 잠시 후 새로고침을 눌러주세요.</p>}
 
       {/* 세무장부 */}
-      <div className="mb-3 rounded-2xl bg-[#F4F1EA] p-3">
+      <div className="mb-3 rounded-2xl bg-[#F2F3F5] p-3">
         <p className="mb-1 flex justify-between text-[11px] font-bold text-slate-300">
           <span>📒 세무장부 · {m}월 장부</span>
           {hub?.ledger?.updatedAt && <span className="font-normal text-slate-500">{agoText(hub.ledger.updatedAt)} 갱신</span>}
@@ -3322,7 +3324,7 @@ function HubCard({
             <div className="flex items-end justify-between">
               <div>
                 <p className="text-xs text-slate-400">매출 {cur.salesCount}건</p>
-                <p className="text-2xl font-num font-normal tabular-nums text-[#0E5A60]">{fmtWon(cur.sales)}</p>
+                <p className="text-2xl font-num font-normal tabular-nums text-[#191919]">{fmtWon(cur.sales)}</p>
               </div>
               {prev.sales > 0 && (
                 <p className="text-right text-xs text-slate-400">
@@ -3353,7 +3355,7 @@ function HubCard({
       </div>
 
       {/* 자동콜백 */}
-      <div className="mb-3 rounded-2xl bg-[#F4F1EA] p-3">
+      <div className="mb-3 rounded-2xl bg-[#F2F3F5] p-3">
         <p className="mb-1.5 flex justify-between text-[11px] font-bold text-slate-300">
           <span>📞 자동콜백 · 최근 3일 걸려온 전화</span>
           {hub?.calls?.updatedAt && <span className="font-normal text-slate-500">{agoText(hub.calls.updatedAt)} 갱신</span>}
@@ -3374,7 +3376,7 @@ function HubCard({
                   {reg ? (
                     <span className="shrink-0 text-[11px] text-slate-500">등록됨</span>
                   ) : (
-                    <button onClick={() => onAddDeal(c)} className="shrink-0 rounded-lg bg-[#0E5A60] px-2.5 py-1.5 text-[11px] font-bold text-white active:scale-95">
+                    <button onClick={() => onAddDeal(c)} className="shrink-0 rounded-lg bg-[#191919] px-2.5 py-1.5 text-[11px] font-bold text-white active:scale-95">
                       문의로 등록
                     </button>
                   )}
@@ -3391,7 +3393,7 @@ function HubCard({
       </div>
 
       {/* 순위노트 */}
-      <div className="rounded-2xl bg-[#F4F1EA] p-3">
+      <div className="rounded-2xl bg-[#F2F3F5] p-3">
         <p className="mb-1.5 flex justify-between text-[11px] font-bold text-slate-300">
           <span>📍 순위노트 · 플레이스 순위{lastD ? ` (${Number(lastD.slice(5, 7))}/${Number(lastD.slice(8))})` : ''}</span>
           {hub?.rank?.updatedAt && <span className="font-normal text-slate-500">{agoText(hub.rank.updatedAt)} 갱신</span>}
@@ -3410,7 +3412,7 @@ function HubCard({
             </thead>
             <tbody>
               {R.keywords.slice(0, 8).map((k) => (
-                <tr key={k.id} className="border-t border-[#E2DBCD]">
+                <tr key={k.id} className="border-t border-[#E9EAEE]">
                   <td className="truncate py-1.5 pr-2 text-slate-200">{k.name}</td>
                   {places.slice(0, 2).map((p, i) => {
                     const v = rk(lastD, k.id, i);
@@ -3494,21 +3496,21 @@ function WeeklyReport({
     <section className={card}>
       <SectionTitle icon={Newspaper} title="이번 주 리포트" />
       <div className="grid grid-cols-2 gap-2 text-center">
-        <div className="rounded-2xl bg-[#F4F1EA] p-3">
+        <div className="rounded-2xl bg-[#F2F3F5] p-3">
           <p className="text-xl font-extrabold text-emerald-300">{fmtWon(rev)}</p>
           <p className="text-[11px] text-slate-400">계약 {wonList.length}건</p>
         </div>
-        <div className="rounded-2xl bg-[#F4F1EA] p-3">
+        <div className="rounded-2xl bg-[#F2F3F5] p-3">
           <p className="text-xl font-extrabold text-slate-50">{inq}건</p>
           <p className="text-[11px] text-slate-400">신규 문의</p>
         </div>
-        <div className="rounded-2xl bg-[#F4F1EA] p-3">
+        <div className="rounded-2xl bg-[#F2F3F5] p-3">
           <p className="text-xl font-extrabold text-amber-300">
             {perfect}/{days.length}일
           </p>
           <p className="text-[11px] text-slate-400">루틴 완벽 달성</p>
         </div>
-        <div className="rounded-2xl bg-[#F4F1EA] p-3">
+        <div className="rounded-2xl bg-[#F2F3F5] p-3">
           <p className="text-xl font-extrabold text-sky-300">
             ▲{ups.length} <span className="text-rose-300">▼{downs.length}</span>
           </p>
@@ -3517,7 +3519,7 @@ function WeeklyReport({
       </div>
       <button
         onClick={async () => toast((await copyText(lines.join('\n'))) ? '주간 리포트를 복사했습니다. 카톡 ‘나와의 채팅’에 붙여넣어 보관하세요.' : '복사에 실패했습니다.')}
-        className="mt-3 flex w-full items-center justify-center gap-2 rounded-xl bg-[#F4F1EA] py-3 font-bold active:scale-95"
+        className="mt-3 flex w-full items-center justify-center gap-2 rounded-xl bg-[#F2F3F5] py-3 font-bold active:scale-95"
       >
         <Copy className="h-4 w-4" /> 카톡용 리포트 복사
       </button>
@@ -3597,7 +3599,7 @@ function MemoTab({
     .filter((m) => filter === '전체' || m.tag === filter)
     .sort((a, b) => Number(a.done) - Number(b.done) || b.createdAt - a.createdAt);
   const doneCount = memos.filter((m) => m.done).length;
-  const tagCls = (k: string) => MEMO_TAGS.find((t) => t.key === k)?.cls ?? 'bg-[#F4F1EA] text-slate-300 border-[#E2DBCD]';
+  const tagCls = (k: string) => MEMO_TAGS.find((t) => t.key === k)?.cls ?? 'bg-[#F2F3F5] text-slate-300 border-[#E9EAEE]';
 
   return (
     <div className="space-y-4">
@@ -3609,7 +3611,7 @@ function MemoTab({
               key={t.key}
               onClick={() => setTag(t.key)}
               className={`rounded-full border px-3 py-1.5 text-sm font-semibold transition ${
-                tag === t.key ? t.cls + ' ring-2 ring-[#0E5A60]/30' : 'border-[#E2DBCD] text-slate-400'
+                tag === t.key ? t.cls + ' ring-2 ring-[#191919]/30' : 'border-[#E9EAEE] text-slate-400'
               }`}
             >
               {t.key}
@@ -3636,7 +3638,7 @@ function MemoTab({
           <button
             onClick={toggleMic}
             className={`flex items-center justify-center gap-2 rounded-xl px-5 py-3.5 text-base font-bold active:scale-95 ${
-              listening ? 'bg-rose-500 text-white' : 'bg-[#F4F1EA] text-slate-100'
+              listening ? 'bg-rose-500 text-white' : 'bg-[#F2F3F5] text-slate-100'
             }`}
             aria-label="음성으로 메모"
           >
@@ -3645,7 +3647,7 @@ function MemoTab({
           </button>
           <button
             onClick={add}
-            className="flex items-center justify-center gap-2 rounded-xl bg-amber-300 py-3.5 text-base font-bold text-white active:scale-[0.98]"
+            className="flex items-center justify-center gap-2 rounded-xl bg-cw py-3.5 text-base font-bold text-[#191919] active:scale-[0.98]"
           >
             <Save className="h-5 w-5" /> 저장
           </button>
@@ -3659,7 +3661,7 @@ function MemoTab({
               key={f}
               onClick={() => setFilter(f)}
               className={`shrink-0 rounded-full px-3 py-1.5 text-sm font-semibold ${
-                filter === f ? 'bg-amber-300 text-white' : 'bg-[#F4F1EA] text-slate-300'
+                filter === f ? 'bg-cw text-[#191919]' : 'bg-[#F2F3F5] text-slate-300'
               }`}
             >
               {f} {f === '전체' ? memos.length : memos.filter((m) => m.tag === f).length}
@@ -3671,7 +3673,7 @@ function MemoTab({
 
         <ul className="space-y-2">
           {visible.map((m) => (
-            <li key={m.id} className={`flex items-start gap-3 rounded-2xl p-3 ${m.done ? 'bg-[#F4F1EA]/60' : 'bg-[#F4F1EA]'}`}>
+            <li key={m.id} className={`flex items-start gap-3 rounded-2xl p-3 ${m.done ? 'bg-[#F2F3F5]/60' : 'bg-[#F2F3F5]'}`}>
               <button
                 onClick={() => setMemos((l) => l.map((x) => (x.id === m.id ? { ...x, done: !x.done } : x)))}
                 className="mt-0.5 shrink-0"
@@ -3763,11 +3765,11 @@ function SiriTab({
         <p className="text-sm leading-relaxed text-slate-300">
           아이폰 기본 <b className="text-amber-200">‘단축어’</b> 앱에 아래 링크를 등록하면, “시리야 비서 브리핑”처럼 말로 비서실을 부를 수 있습니다.
         </p>
-        <div className="mt-3 rounded-2xl bg-[#F4F1EA] p-3">
+        <div className="mt-3 rounded-2xl bg-[#F2F3F5] p-3">
           <p className="text-[11px] text-slate-400">감지된 내 앱 주소</p>
           <p className="mt-1 break-all font-mono text-sm text-emerald-300">{base}</p>
         </div>
-        <button onClick={onSpeakTest} className="mt-3 flex w-full items-center justify-center gap-2 rounded-xl bg-[#F4F1EA] py-3 font-bold active:scale-95">
+        <button onClick={onSpeakTest} className="mt-3 flex w-full items-center justify-center gap-2 rounded-xl bg-[#F2F3F5] py-3 font-bold active:scale-95">
           <Volume2 className="h-5 w-5" /> 음성 브리핑 미리 듣기
         </button>
       </section>
@@ -3783,10 +3785,10 @@ function SiriTab({
         </ol>
         <ul className="space-y-3">
           {shortcuts.map((s) => (
-            <li key={s.phrase} className="rounded-2xl border border-[#E2DBCD] bg-[#F4F1EA] p-3">
+            <li key={s.phrase} className="rounded-2xl border border-[#E9EAEE] bg-[#F2F3F5] p-3">
               <div className="flex items-center justify-between gap-2">
                 <p className="font-extrabold text-amber-200">“시리야, {s.phrase}”</p>
-                <button onClick={() => copy(s.url)} className="flex shrink-0 items-center gap-1 rounded-xl bg-amber-300 px-3 py-2 text-sm font-bold text-white active:scale-95">
+                <button onClick={() => copy(s.url)} className="flex shrink-0 items-center gap-1 rounded-xl bg-cw px-3 py-2 text-sm font-bold text-[#191919] active:scale-95">
                   <Copy className="h-4 w-4" /> 복사
                 </button>
               </div>
@@ -3808,7 +3810,7 @@ function SiriTab({
           <li><b className="text-amber-200">④</b> 동작 <b>‘URL 열기’</b> 추가 (입력: 텍스트)</li>
           <li><b className="text-amber-200">⑤</b> 이름을 <b>비서 메모</b>로 저장 → “시리야, 비서 메모” 후 내용을 말하면 메모장에 자동 저장</li>
         </ol>
-        <button onClick={() => copy(`${base}?memo=`)} className="mt-3 flex w-full items-center justify-center gap-2 rounded-xl bg-amber-300 py-3 font-bold text-white active:scale-95">
+        <button onClick={() => copy(`${base}?memo=`)} className="mt-3 flex w-full items-center justify-center gap-2 rounded-xl bg-cw py-3 font-bold text-[#191919] active:scale-95">
           <Copy className="h-4 w-4" /> 메모용 주소 복사
         </button>
         <p className="mt-2 break-all font-mono text-[11px] text-slate-500">{base}?memo=</p>
@@ -3829,7 +3831,7 @@ function SiriTab({
 
       <section className={card}>
         <SectionTitle icon={Save} title="데이터 옮기기 (홈 화면 앱 ↔ 사파리)" />
-        <button onClick={exportData} className="flex w-full items-center justify-center gap-2 rounded-xl bg-[#F4F1EA] py-3 font-bold active:scale-95">
+        <button onClick={exportData} className="flex w-full items-center justify-center gap-2 rounded-xl bg-[#F2F3F5] py-3 font-bold active:scale-95">
           <Copy className="h-4 w-4" /> 이 기기 데이터 복사
         </button>
         <textarea
@@ -3842,7 +3844,7 @@ function SiriTab({
         <button
           onClick={importData}
           disabled={!importText.trim()}
-          className="mt-2 w-full rounded-xl bg-amber-300 py-3 font-bold text-white active:scale-95 disabled:opacity-40"
+          className="mt-2 w-full rounded-xl bg-cw py-3 font-bold text-[#191919] active:scale-95 disabled:opacity-40"
         >
           데이터 붙여넣기 (덮어쓰기)
         </button>
@@ -3892,7 +3894,7 @@ function IconStudio({
   };
 
   return (
-    <section className={`${card} border-amber-300/30`}>
+    <section className={`${card} border-cw/30`}>
       <SectionTitle icon={Sparkles} title="📱 아이폰 바탕화면 아이콘 꾸미기 & 다운로드" />
       <p className="-mt-2 mb-4 text-sm leading-relaxed text-slate-300">
         디자인을 고르면 이 앱의 홈 화면 아이콘으로 바로 적용됩니다. 고른 뒤 사파리 공유 버튼 › <b className="text-amber-200">홈 화면에 추가</b>를 누르세요.
@@ -3909,7 +3911,7 @@ function IconStudio({
                 toast(`${s.name} 아이콘을 적용했습니다.`);
               }}
               className={`rounded-2xl p-2 text-center transition active:scale-95 ${
-                on ? 'bg-amber-300/15 ring-2 ring-amber-300' : 'bg-[#F4F1EA]'
+                on ? 'bg-cw/15 ring-2 ring-cw' : 'bg-[#F2F3F5]'
               }`}
               aria-pressed={on}
             >
@@ -3920,7 +3922,7 @@ function IconStudio({
         })}
       </div>
 
-      <div className="mt-5 flex items-center gap-4 rounded-2xl bg-[#F4F1EA] p-4">
+      <div className="mt-5 flex items-center gap-4 rounded-2xl bg-[#F2F3F5] p-4">
         <img src={big} alt="선택한 아이콘 512px" className="h-24 w-24 shrink-0 rounded-[22%]" />
         <div className="min-w-0">
           <p className="font-extrabold text-amber-200">{ICON_STYLES.find((s) => s.key === iconStyle)?.name}</p>
@@ -3931,7 +3933,7 @@ function IconStudio({
 
       <button
         onClick={download}
-        className="mt-3 flex w-full items-center justify-center gap-2 rounded-xl bg-[#0E5A60] py-3.5 text-base font-extrabold text-white active:scale-[0.98]"
+        className="mt-3 flex w-full items-center justify-center gap-2 rounded-xl bg-[#191919] py-3.5 text-base font-extrabold text-white active:scale-[0.98]"
       >
         <Download className="h-5 w-5" /> icon-512.png 다운로드
       </button>
@@ -3965,7 +3967,7 @@ function SettingsModal({
   return (
     <div className="fixed inset-0 z-50 flex items-end bg-black/60 sm:items-center sm:justify-center" onClick={onClose}>
       <div
-        className="max-h-[90vh] w-full overflow-y-auto rounded-t-3xl border-t border-[#E2DBCD] bg-white p-5 pb-[calc(env(safe-area-inset-bottom)+20px)] sm:max-w-md sm:rounded-[14px]"
+        className="max-h-[90vh] w-full overflow-y-auto rounded-t-3xl border-t border-[#E9EAEE] bg-white p-5 pb-[calc(env(safe-area-inset-bottom)+20px)] sm:max-w-md sm:rounded-[14px]"
         onClick={(e) => e.stopPropagation()}
       >
         <div className="mb-4 flex items-center justify-between">
@@ -3980,7 +3982,7 @@ function SettingsModal({
         <div className="space-y-4">
           <button
             onClick={onOpenCenter}
-            className="flex w-full items-center justify-between rounded-2xl border border-amber-300/30 bg-amber-300/10 p-4 text-left active:scale-[0.98]"
+            className="flex w-full items-center justify-between rounded-2xl border border-cw/30 bg-cw/10 p-4 text-left active:scale-[0.98]"
           >
             <span>
               <span className="block font-bold text-amber-200">📱 시리 · 아이콘 · 백업 센터</span>
@@ -4009,7 +4011,7 @@ function SettingsModal({
                 <button
                   key={c}
                   onClick={() => set('defaultCity', c)}
-                  className={`rounded-xl py-3 font-bold ${draft.defaultCity === c ? 'bg-amber-300 text-white' : 'bg-[#F4F1EA] text-slate-200'}`}
+                  className={`rounded-xl py-3 font-bold ${draft.defaultCity === c ? 'bg-cw text-[#191919]' : 'bg-[#F2F3F5] text-slate-200'}`}
                 >
                   {CITIES[c].name}
                 </button>
@@ -4022,7 +4024,7 @@ function SettingsModal({
             <input className={input} value={draft.hubPin ?? ''} onChange={(e) => set('hubPin', e.target.value.replace(/\D/g, ''))} inputMode="numeric" placeholder="숫자 6자리" />
           </label>
 
-          <details className="rounded-2xl border border-[#E2DBCD] bg-[#F4F1EA] p-4" open={!!draft.rankWorkerUrl}>
+          <details className="rounded-2xl border border-[#E9EAEE] bg-[#F2F3F5] p-4" open={!!draft.rankWorkerUrl}>
             <summary className="cursor-pointer text-sm font-bold text-slate-300">
               고급 · 네이버 자동화 <span className="font-normal text-slate-500">(선택 · 네이버 등록 필요, 없어도 앱은 그대로 작동)</span>
             </summary>
@@ -4086,7 +4088,7 @@ function SettingsModal({
             <p className="mt-2 text-[11px] leading-relaxed text-slate-500">블로그 ID를 비워두면 블로그 이름에 업체명이 들어간 글을 찾습니다.</p>
           </details>
 
-          <div className="rounded-2xl border border-amber-300/20 bg-[#F4F1EA] p-4">
+          <div className="rounded-2xl border border-cw/20 bg-[#F2F3F5] p-4">
             <p className="mb-2 flex items-center gap-2 text-sm font-bold text-amber-200">
               <Sparkles className="h-4 w-4" /> Gemini AI (선택)
             </p>
@@ -4118,7 +4120,7 @@ function SettingsModal({
 
         <button
           onClick={() => onSave(draft)}
-          className="mt-5 w-full rounded-xl bg-amber-300 py-3.5 text-base font-bold text-white active:scale-[0.98]"
+          className="mt-5 w-full rounded-xl bg-cw py-3.5 text-base font-bold text-[#191919] active:scale-[0.98]"
         >
           저장
         </button>
@@ -4645,57 +4647,159 @@ export default function App() {
   const remaining = progress.total - progress.done;
 
   return (
-    <div className="min-h-screen bg-[#F4F1EA] font-sans text-[#14262A] antialiased">
+    <div className="min-h-screen bg-[#F2F3F5] font-sans text-[#191919] antialiased">
       <style>{`
         @keyframes aisec-fall { 0% { transform: translateY(-10vh) rotate(0deg); opacity: 1; } 100% { transform: translateY(110vh) rotate(720deg); opacity: 0.9; } }
+        @keyframes aisec-float { 0%,100% { transform: translateY(0); } 50% { transform: translateY(-6px); } }
         @keyframes aisec-pop { 0% { transform: scale(.6); opacity: 0; } 60% { transform: scale(1.08); opacity: 1; } 100% { transform: scale(1); } }
-        html, body { background: #F4F1EA; overscroll-behavior-y: none; -webkit-tap-highlight-color: transparent; }
+        html, body { background: #F2F3F5; font-feature-settings: 'tnum'; } .font-num { font-weight: 900 !important; letter-spacing: -0.03em; } html, body { overscroll-behavior-y: none; -webkit-tap-highlight-color: transparent; }
       `}</style>
 
-      {/* 헤더 */}
-      <header className="rounded-b-[22px] bg-[#0B3B40] px-3 pb-4 pt-[calc(env(safe-area-inset-top)+14px)] text-white">
+      {/* 헤더 — 노란 바탕 + 오늘 업무 링 */}
+      <header className={`relative overflow-hidden rounded-b-[32px] bg-cw px-4 ${tab === 'brief' ? 'pb-6' : 'pb-4'} pt-[calc(env(safe-area-inset-top)+12px)] text-[#191919]`}>
         <div className="mx-auto max-w-md">
-          <div className="flex items-start justify-between">
-            <div>
-              <p className="text-[11px] font-semibold tracking-[0.2em] text-[#9fd3cf]">AI 비서실 · 오늘 브리핑</p>
-              <h1 className="mt-1 font-num text-[30px] font-normal leading-[36px]">
-                {mm}월 {dd}일 <span className="text-[#F2964F]">{weekday}요일</span>
-              </h1>
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <span className="rounded-full bg-[#191919] px-2.5 py-1 text-[11px] font-extrabold tracking-tight text-cw">AI 비서실</span>
+              <span className="text-[15px] font-extrabold tracking-tight">
+                {mm}.{dd} ({weekday})
+              </span>
             </div>
-            <button onClick={() => setShowSettings(true)} className="rounded-xl bg-[#ffffff1a] p-2.5 text-white active:scale-95" aria-label="설정">
-              <Settings className="h-5 w-5" />
+            <div className="flex items-center gap-1.5">
+              {weather && (
+                <button onClick={() => setTab('brief')} className="flex items-center gap-1 rounded-full bg-white/70 px-2.5 py-1.5 text-[13px] font-extrabold">
+                  {(() => {
+                    const { Icon } = weatherInfo(weather.code);
+                    return <Icon className="h-4 w-4" />;
+                  })()}
+                  {Math.round(weather.temp)}°
+                </button>
+              )}
+              <button onClick={() => setShowSettings(true)} className="rounded-full bg-white/70 p-2 active:scale-95" aria-label="설정">
+                <Settings className="h-5 w-5" />
+              </button>
+            </div>
+          </div>
+
+          {tab === 'brief' && (
+          <>
+          {/* 링 */}
+          <div className="relative mx-auto mt-3 h-[212px] w-[212px]">
+            <svg viewBox="0 0 212 212" className="h-full w-full -rotate-90">
+              <circle cx="106" cy="106" r="92" fill="#FFFFFF" />
+              <circle cx="106" cy="106" r="92" fill="none" stroke="#F2F3F5" strokeWidth="14" />
+              <circle
+                cx="106"
+                cy="106"
+                r="92"
+                fill="none"
+                stroke="#191919"
+                strokeWidth="14"
+                strokeLinecap="round"
+                strokeDasharray={2 * Math.PI * 92}
+                strokeDashoffset={2 * Math.PI * 92 * (1 - Math.min(100, pct) / 100)}
+                style={{ transition: 'stroke-dashoffset .8s ease' }}
+              />
+            </svg>
+            <button onClick={() => setTab('routine')} className="absolute inset-0 flex flex-col items-center justify-center">
+              <span className="text-[13px] font-bold text-[#6B6E76]">오늘 업무</span>
+              <span className="font-num text-[56px] font-black leading-[60px] tracking-tighter tabular-nums">
+                {progress.done}
+                <span className="text-[26px] text-[#B0B3BA]">/{progress.total}</span>
+              </span>
+              <span className="mt-1 rounded-full bg-cw-soft px-2.5 py-0.5 text-[12px] font-extrabold">{pct === 100 ? '완벽 달성 🎉' : `${pct}% 완료`}</span>
+            </button>
+            {/* 떠 있는 버블 */}
+            {remaining > 0 && (
+              <button
+                onClick={() => setTab('routine')}
+                className="absolute -left-3 top-6 grid h-[58px] w-[58px] place-items-center rounded-full bg-white text-center shadow-[0_4px_12px_rgba(0,0,0,0.12)] active:scale-95"
+                style={{ animation: 'aisec-float 2.6s ease-in-out infinite' }}
+              >
+                <span className="text-[10px] font-bold leading-3 text-[#6B6E76]">
+                  남은 일
+                  <br />
+                  <b className="text-[17px] leading-5 text-[#191919]">{remaining}</b>
+                </span>
+              </button>
+            )}
+            {streak > 0 && (
+              <div
+                className="absolute -right-2 top-10 grid h-[54px] w-[54px] place-items-center rounded-full bg-[#191919] text-center text-cw shadow-[0_4px_12px_rgba(0,0,0,0.18)]"
+                style={{ animation: 'aisec-float 3.1s ease-in-out infinite .4s' }}
+              >
+                <span className="text-[10px] font-bold leading-3">
+                  🔥연속
+                  <br />
+                  <b className="text-[16px] leading-5">{streak}일</b>
+                </span>
+              </div>
+            )}
+            {salesTodo > 0 && (
+              <button
+                onClick={() => setTab('sales')}
+                className="absolute -right-4 bottom-6 grid h-[58px] w-[58px] place-items-center rounded-full bg-white text-center shadow-[0_4px_12px_rgba(0,0,0,0.12)] active:scale-95"
+                style={{ animation: 'aisec-float 2.8s ease-in-out infinite .8s' }}
+              >
+                <span className="text-[10px] font-bold leading-3 text-[#6B6E76]">
+                  연락
+                  <br />
+                  <b className="text-[17px] leading-5 text-[#191919]">{salesTodo}</b>
+                </span>
+              </button>
+            )}
+          </div>
+
+          {/* 3칸 숫자 */}
+          <div className="mt-4 grid grid-cols-3 divide-x divide-[#191919]/10 rounded-[20px] bg-white/60 py-3 text-center">
+            <button onClick={() => setTab('sales')}>
+              <p className="text-[11px] font-bold text-[#6B6E76]">{mm}월 매출</p>
+              <p className="mt-0.5 text-[16px] font-black tracking-tight">{fmtWon(salesStats.revenue)}</p>
+            </button>
+            <button onClick={() => setTab('sales')}>
+              <p className="text-[11px] font-bold text-[#6B6E76]">오늘 작업</p>
+              <p className="mt-0.5 text-[16px] font-black tracking-tight">{salesStats.todayJobs.length}건</p>
+            </button>
+            <button onClick={() => setTab('keyword')}>
+              <p className="text-[11px] font-bold text-[#6B6E76]">순위 변동</p>
+              <p className="mt-0.5 text-[16px] font-black tracking-tight">
+                {rankMoves.filter((m) => m.diff > 0).length}
+                <span className="text-[#14B86A]">▲</span> {rankMoves.filter((m) => m.diff < 0).length}
+                <span className="text-[#F04438]">▼</span>
+              </p>
             </button>
           </div>
-          <div className="mt-3 rounded-[14px] bg-[#ffffff14] p-4">
-            <p className="text-[15px] leading-relaxed text-white">
-              <span className="font-bold">대표님, {greeting}.</span> 오늘의 경영·영업·마케팅 브리핑이 준비되었습니다.
-            </p>
-            <p className="mt-1.5 text-sm text-[#cfe3e1]">{subLine}</p>
-          </div>
-          <div className="mt-2 grid grid-cols-[1fr_auto] gap-2">
+
+          <p className="mt-3 px-1 text-[14px] font-bold leading-snug">
+            대표님, {greeting}. <span className="font-medium text-[#45474D]">{subLine}</span>
+          </p>
+
+          <div className="mt-3 grid grid-cols-[1fr_auto] gap-2">
             <button
               onClick={toggleSpeak}
-              className={`flex items-center justify-center gap-2 rounded-full py-3.5 text-base font-bold active:scale-[0.98] ${
-                speaking ? 'bg-[#C0392B] text-white' : 'bg-[#F2964F] text-[#14262A]'
+              className={`flex items-center justify-center gap-2 rounded-full py-3.5 text-[15px] font-extrabold active:scale-[0.98] ${
+                speaking ? 'bg-[#F04438] text-white' : 'bg-[#191919] text-white'
               }`}
             >
-              {speaking ? <Square className="h-5 w-5" /> : <Volume2 className="h-5 w-5" />}
+              {speaking ? <Square className="h-5 w-5" /> : <Volume2 className="h-5 w-5 text-cw" />}
               {speaking ? '브리핑 멈추기' : '음성 브리핑 듣기'}
             </button>
             <a
               href="https://claude.ai/artifact/4WTtTbpRQy1YjG4MWyNboC"
               target="_blank"
               rel="noreferrer"
-              className="flex items-center justify-center rounded-full bg-[#ffffff1f] px-4 py-3.5 text-sm font-bold text-white active:scale-[0.98]"
+              className="flex items-center justify-center rounded-full bg-white px-4 py-3.5 text-[14px] font-extrabold text-[#191919] active:scale-[0.98]"
             >
               비서실장 ›
             </a>
           </div>
+          </>
+          )}
         </div>
       </header>
 
       {/* 본문 */}
-      <main className="mx-auto mt-2 max-w-md px-3 pb-[calc(env(safe-area-inset-bottom)+96px)]">
+      <main className="mx-auto mt-3 max-w-md px-3 pb-[calc(env(safe-area-inset-bottom)+96px)]">
         {tab === 'brief' && (
           <BriefingTab
             city={city}
@@ -4812,7 +4916,7 @@ export default function App() {
       </main>
 
       {/* 하단 탭바 */}
-      <nav className="fixed inset-x-0 bottom-0 z-40 border-t border-[#E2DBCD] bg-[#F4F1EA]/95 pb-[env(safe-area-inset-bottom)] backdrop-blur">
+      <nav className="fixed inset-x-0 bottom-0 z-40 rounded-t-[22px] bg-white pb-[env(safe-area-inset-bottom)] shadow-[0_-2px_14px_rgba(0,0,0,0.06)]">
         <div className="mx-auto grid max-w-md grid-cols-5">
           {TABS.map(({ key, label, Icon }) => {
             const active = tab === key;
@@ -4823,12 +4927,13 @@ export default function App() {
                   setTab(key);
                   window.scrollTo({ top: 0, behavior: 'smooth' });
                 }}
-                className={`relative flex flex-col items-center gap-1 py-3 text-[11px] font-semibold transition ${
-                  active ? 'text-amber-300' : 'text-slate-400'
+                className={`relative flex flex-col items-center gap-1 py-2.5 text-[11px] font-bold transition ${
+                  active ? 'text-[#191919]' : 'text-[#B0B3BA]'
                 }`}
               >
-                {active && <span className="absolute top-0 h-0.5 w-10 rounded-full bg-amber-300" />}
-                <Icon className="h-6 w-6" />
+                <span className={`grid h-9 w-12 place-items-center rounded-full transition ${active ? 'bg-cw' : ''}`}>
+                  <Icon className="h-[22px] w-[22px]" />
+                </span>
                 {label}
                 {key === 'routine' && remaining > 0 && (
                   <span className="absolute right-[22%] top-2 min-w-[18px] rounded-full bg-rose-500 px-1 text-[10px] font-bold leading-[18px] text-white">
@@ -4836,7 +4941,7 @@ export default function App() {
                   </span>
                 )}
                 {key === 'sales' && salesTodo > 0 && (
-                  <span className="absolute right-[22%] top-2 min-w-[18px] rounded-full bg-amber-400 px-1 text-[10px] font-bold leading-[18px] text-white">
+                  <span className="absolute right-[22%] top-2 min-w-[18px] rounded-full bg-cw px-1 text-[10px] font-bold leading-[18px] text-[#191919]">
                     {salesTodo}
                   </span>
                 )}
@@ -4866,7 +4971,7 @@ export default function App() {
       {briefPrompt && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 px-6" onClick={() => setBriefPrompt(false)}>
           <div
-            className="w-full max-w-sm rounded-[14px] border border-amber-300/40 bg-white p-6 text-center"
+            className="w-full max-w-sm rounded-[14px] border border-cw/40 bg-white p-6 text-center"
             onClick={(e) => e.stopPropagation()}
             style={{ animation: 'aisec-pop 0.4s ease-out' }}
           >
@@ -4875,7 +4980,7 @@ export default function App() {
             <p className="mt-1 text-sm text-slate-300">아래 버튼을 누르시면 비서실장이 오늘 브리핑을 읽어드립니다.</p>
             <button
               onClick={toggleSpeak}
-              className="mt-5 flex w-full items-center justify-center gap-2 rounded-2xl bg-[#0E5A60] py-4 text-lg font-extrabold text-white active:scale-95"
+              className="mt-5 flex w-full items-center justify-center gap-2 rounded-2xl bg-[#191919] py-4 text-lg font-extrabold text-white active:scale-95"
             >
               <Play className="h-6 w-6" /> 음성 브리핑 재생
             </button>
