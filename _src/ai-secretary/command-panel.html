@@ -79,6 +79,9 @@
   .go.busy { background: var(--line); color: var(--ink); cursor: progress; }
   .go.done { background: var(--leaf); color: #fff; }
   .go:disabled { opacity: .45; cursor: not-allowed; }
+  .go.today { background: #E8F8EF; color: #0B6B3D; opacity: 1; }
+  .badge { margin-left: auto; font-size: 12px; font-weight: 800; border-radius: 999px; padding: 4px 10px; background: #F2F3F5; color: var(--muted); white-space: nowrap; }
+  .badge.done { background: #14B86A; color: #fff; }
   .applink { display: block; text-align: center; border-radius: 999px; padding: 13px; font-weight: 700; font-size: 15px; color: var(--brand); background: var(--brand-tint); text-decoration: none; }
   .result { font-size: 13px; line-height: 1.5; }
   .result.ok { color: var(--leaf); font-weight: 600; } .result.bad { color: var(--danger); }
@@ -168,13 +171,13 @@
       ] },
     { key: 'pr', name: '홍보수석실', short: '홍보수석', duty: '6곳 게시·청소팁',
       tasks: [
-        { who: '홍보수석', id: 'trig_016jPWUjqTzeqPu8iZXrVMEe', title: '6곳 홍보 지금 올려', desc: '현장홍보 앱에 맡긴 현장 글을 인스타·스레드·구글·당근·카카오에 올리고, 플레이스용 글과 구글 리뷰 답글 초안을 보냅니다.', when: '매일 20:47', time: '약 10분', pc: true },
-        { who: '콘텐츠비서관', id: 'trig_016THjQ2oRs8P7hvAetYtXz8', title: '청소팁 카드 만들어', desc: '계절 청소팁 카드 3장과 6곳 글을 만들어 대기열에 넣고, 홈페이지 Q&A 칼럼을 1개 추가합니다. 게시는 그날 저녁.', when: '화·금 10:37', time: '약 8분', pc: true,
+        { who: '홍보수석', id: 'trig_016jPWUjqTzeqPu8iZXrVMEe', daily: true, title: '6곳 홍보 지금 올려', desc: '현장홍보 앱에 맡긴 현장 글을 인스타·스레드·구글·당근·카카오에 올리고, 플레이스용 글과 구글 리뷰 답글 초안을 보냅니다.', when: '매일 20:47', time: '약 10분', pc: true },
+        { who: '콘텐츠비서관', id: 'trig_016THjQ2oRs8P7hvAetYtXz8', daily: true, title: '청소팁 카드 만들어', desc: '계절 청소팁 카드 3장과 6곳 글을 만들어 대기열에 넣고, 홈페이지 Q&A 칼럼을 1개 추가합니다. 게시는 그날 저녁.', when: '화·금 10:37', time: '약 8분', pc: true,
           extra: '대표님이 지휘실 버튼으로 직접 요청했다. 0단계의 "최근 3일 안에 끝난 작업이 있으면 종료" 조건은 이번엔 무시하고 진행한다(대기 작업이 이미 있으면 그 사실만 알리고 종료).' }
       ] },
     { key: 'sns', name: '소통수석실', short: '소통수석', duty: '스레드·댓글',
       tasks: [
-        { who: '소통수석', id: 'trig_018fBTXudMg5QidizdmQs5gH', title: '아침 스레드 지금 올려', desc: '보고서에 준비된 아침 스레드 글을 @linkcleaning에 올리고, 30분 뒤 댓글에 답글을 답니다. (저녁 댓글·맞팔은 홍보수석 저녁 업무에 포함)', when: '버튼으로만', time: '약 3분', pc: true }
+        { who: '소통수석', id: 'trig_018fBTXudMg5QidizdmQs5gH', daily: true, title: '아침 스레드 지금 올려', desc: '보고서에 준비된 아침 스레드 글을 @linkcleaning에 올리고, 30분 뒤 댓글에 답글을 답니다. (저녁 댓글·맞팔은 홍보수석 저녁 업무에 포함)', when: '버튼으로만', time: '약 3분', pc: true }
       ] },
     { key: 'sales', name: '영업수석실', short: '영업수석', duty: '팔로업·후기',
       app: { title: '고객 팔로업·후기 요청', desc: '견적 후 연락 없는 고객, 작업 끝난 고객의 후기 요청 문자는 앱 \'영업\' 탭에서 바로 보냅니다. 비서실장 아침 보고에도 건수가 올라옵니다.' } },
@@ -186,7 +189,7 @@
       app: { title: '대표님 일정·건강 챙기기', desc: '출근 거울샷, 약 복용(아침·점심·저녁), 3초 메모는 앱 \'루틴\'·\'메모\' 탭에서 챙깁니다. 시리로 "약 먹었어", "비서 메모"라고 해도 됩니다.', link: '앱 루틴 탭 열기 ›' } },
     { key: 'biz', name: '제휴수석실', short: '제휴수석', duty: '쿠팡파트너스',
       tasks: [
-        { who: '제휴수석', id: 'trig_01Lg8r73Cc4NYs9sVYnDKyXC', title: '쿠팡 스레드 글 준비', desc: '살림 팁 계정(@linkdole2026)용 일반 글과 오늘의 쿠팡 상품 글을 준비해 보냅니다. 링크클린과 분리된 계정이에요.', when: '매일 18:43', time: '약 2분' }
+        { who: '제휴수석', id: 'trig_01Lg8r73Cc4NYs9sVYnDKyXC', daily: true, title: '쿠팡 스레드 글 준비', desc: '살림 팁 계정(@linkdole2026)용 일반 글과 오늘의 쿠팡 상품 글을 준비해 보냅니다. 링크클린과 분리된 계정이에요.', when: '매일 18:43', time: '약 2분' }
       ] },
   ];
 
@@ -197,6 +200,18 @@
     if (!iso) return ''; var d = new Date(iso); if (isNaN(d)) return '';
     var p = function (n) { return String(n).padStart(2, '0'); };
     return (d.getMonth() + 1) + '/' + d.getDate() + ' ' + p(d.getHours()) + ':' + p(d.getMinutes());
+  }
+  function dayKey(d) { return d.getFullYear() + '-' + (d.getMonth() + 1) + '-' + d.getDate(); }
+  var FIRED = 'fired-v1';
+  function localFired() { try { return JSON.parse(localStorage.getItem(FIRED) || '{}') || {}; } catch (e) { return {}; } }
+  function markFired(id) { var m = localFired(); m[id] = dayKey(new Date()); try { localStorage.setItem(FIRED, JSON.stringify(m)); } catch (e) {} }
+  /** 하루 1번 업무: 오늘 이미 실행(실패 제외)했으면 true */
+  function doneToday(t) {
+    if (!t || !t.daily) return false;
+    var today = dayKey(new Date());
+    var r = lastRuns[t.id], last = r && r.last_run;
+    if (last && last.fired_at && dayKey(new Date(last.fired_at)) === today && !/FAILED/.test(last.status || '')) return true;
+    return localFired()[t.id] === today && !(last && last.fired_at && dayKey(new Date(last.fired_at)) === today && /FAILED/.test(last.status || ''));
   }
   function el(tag, cls, text) { var e = document.createElement(tag); if (cls) e.className = cls; if (text != null) e.textContent = text; return e; }
 
@@ -214,7 +229,9 @@
     var root = document.getElementById('depts'); root.textContent = '';
     DEPTS.forEach(function (d) {
       var sec = el('section', 'dept'); sec.id = d.key;
-      var head = el('div', 'dept-head'); head.appendChild(el('h2', null, d.name)); head.appendChild(el('span', null, d.duty)); sec.appendChild(head);
+      var head = el('div', 'dept-head'); head.appendChild(el('h2', null, d.name)); head.appendChild(el('span', null, d.duty));
+      if ((d.tasks || []).some(function (t) { return t.daily; })) { var bg = el('span', 'badge', '오늘 0/1'); bg.id = 'badge-' + d.key; head.appendChild(bg); }
+      sec.appendChild(head);
       (d.tasks || []).forEach(function (t) {
         var card = el('article', 'task');
         var th = el('div', 'task-head');
@@ -223,7 +240,7 @@
         card.appendChild(th);
         card.appendChild(el('p', null, t.desc));
         var meta = el('div', 'meta'); meta.id = 'meta-' + t.id; card.appendChild(meta);
-        var btn = el('button', 'go', '지금 지시하기'); btn.type = 'button'; btn.disabled = !mcp;
+        var btn = el('button', 'go', '지금 지시하기'); btn.type = 'button'; btn.disabled = !mcp; btn.id = 'btn-' + t.id;
         var res = el('div', 'result'); res.setAttribute('aria-live', 'polite');
         btn.addEventListener('click', function () { onTap(t, btn, res); });
         card.appendChild(btn); card.appendChild(res);
@@ -242,6 +259,18 @@
   }
 
   function renderMeta() {
+    DEPTS.forEach(function (d) {
+      var dl = (d.tasks || []).filter(function (t) { return t.daily; });
+      var bg = document.getElementById('badge-' + d.key);
+      if (bg && dl.length) { var n = dl.filter(doneToday).length; bg.className = 'badge' + (n === dl.length ? ' done' : ''); bg.textContent = n === dl.length ? '오늘 완료 ✓' : (dl.length > 1 ? '오늘 ' + n + '/' + dl.length : '오늘 0/1'); }
+      (d.tasks || []).forEach(function (t) {
+        var b = document.getElementById('btn-' + t.id);
+        if (b && t.daily && !b.classList.contains('busy') && !b.classList.contains('armed') && !b.classList.contains('done')) {
+          if (doneToday(t)) { b.disabled = true; b.classList.add('today'); b.textContent = '오늘은 완료 ✓ · 내일 다시 가능'; }
+          else { b.disabled = !mcp; b.classList.remove('today'); b.textContent = '지금 지시하기'; }
+        }
+      });
+    });
     DEPTS.forEach(function (d) { (d.tasks || []).forEach(function (t) {
       var m = document.getElementById('meta-' + t.id); if (!m) return; m.textContent = '';
       var sched = el('span'); sched.append('정기 '); sched.appendChild(el('b', null, t.when)); m.appendChild(sched);
@@ -259,6 +288,7 @@
   var armTimers = {};
   function onTap(t, btn, res) {
     if (!mcp || btn.classList.contains('busy')) return;
+    if (doneToday(t)) { res.className = 'result'; res.textContent = '오늘은 이미 했어요. 하루 한 번만 하는 업무라 내일 다시 누를 수 있어요.'; renderMeta(); return; }
     if (!btn.classList.contains('armed')) {
       btn.classList.add('armed'); btn.textContent = '한 번 더 누르면 ' + t.who + '에게 지시';
       clearTimeout(armTimers[t.id]);
@@ -272,9 +302,10 @@
     var text = [t.extra, note ? '대표님 덧붙임: ' + note : ''].filter(Boolean).join('\n');
     var input = { trigger_id: t.id }; if (text) input.text = text;
     mcp.callTool(SERVER, 'fire_trigger', input, { cache: false }).then(function () {
+      if (t.daily) markFired(t.id);
       btn.classList.remove('busy'); btn.classList.add('done'); btn.textContent = t.who + ' 업무 시작';
       res.className = 'result ok'; res.textContent = t.who + '이(가) 일을 시작했습니다 (' + t.time + '). 끝나면 알림이 와요.';
-      setTimeout(function () { btn.classList.remove('done'); btn.textContent = '지금 지시하기'; }, 8000);
+      setTimeout(function () { btn.classList.remove('done'); btn.textContent = '지금 지시하기'; renderMeta(); }, 8000);
       if (mcp.invalidate) mcp.invalidate(SERVER, 'list_triggers').catch(function () {});
     }).catch(function (e) {
       btn.classList.remove('busy'); btn.textContent = '지금 지시하기';
@@ -327,7 +358,7 @@
   function today() { var d = new Date(); return d.getFullYear() + '-' + (d.getMonth() + 1) + '-' + d.getDate() + ' (' + '일월화수목금토'[d.getDay()] + ')'; }
   function rules() {
     var deptLines = DEPTS.map(function (d) {
-      var ts = (d.tasks || []).map(function (t) { return '  - [' + t.id + '] ' + t.who + ': ' + t.title + ' — ' + t.desc + ' (정기: ' + t.when + (t.pc ? ', PC 필요' : '') + ')'; }).join('\n');
+      var ts = (d.tasks || []).map(function (t) { return '  - [' + t.id + '] ' + t.who + ': ' + t.title + ' — ' + t.desc + ' (정기: ' + t.when + (t.pc ? ', PC 필요' : '') + (t.daily ? ', 하루 1번만' + (doneToday(t) ? ' — 오늘 이미 완료라 지시 불가' : '') : '') + ')'; }).join('\n');
       return '- ' + d.name + ' (' + d.duty + ')' + (ts ? '\n' + ts : '\n  - 앱에서 직접: ' + (d.app ? d.app.desc : ''));
     }).join('\n');
     return [
@@ -346,7 +377,8 @@
       '3) 너는 지금 인터넷을 볼 수 없다. 날씨·뉴스·가격·순위·사이트 상태 같은 최신 정보는 추측하지 말고, 모른다고 말한 뒤 직접 처리 지시서로 조사를 제안한다.',
       '4) 카드를 띄운 것은 아직 실행이 아니다. "지시서를 올렸습니다. [지시하기]를 누르시면 시작합니다"처럼 말하고, 했다고 말하지 않는다.',
       '5) 결제·송금·구매·삭제·계정 설정·고객에게 문자 보내기는 지시서에도 "준비만 하고 대표님 확인 받기"로 적는다.',
-      '6) 각 업무의 최근 실행 결과가 궁금하면 status 도구를 쓴다.'
+      '6) 각 업무의 최근 실행 결과가 궁금하면 status 도구를 쓴다.',
+      '7) "하루 1번만" 업무(아침 스레드·6곳 홍보·청소팁·쿠팡)는 오늘 이미 완료면 지시서를 띄우지 말고 "오늘은 이미 했어요, 내일 다시 가능"이라고 답한다. 스레드·쿠팡 글을 같은 날 여러 번 올리면 스팸으로 보일 수 있다.'
     ].join('\n');
   }
 
@@ -371,14 +403,20 @@
     var no = el('button', 'cancel', '취소'); no.type = 'button';
     var res = el('div', 'result');
     row.appendChild(go); row.appendChild(no); card.appendChild(row); card.appendChild(res);
+    if (found && doneToday(found.task)) {
+      go.disabled = true; go.textContent = '오늘은 완료 ✓';
+      res.className = 'result'; res.textContent = '이 업무는 하루 한 번만 해요. 오늘 이미 해서 내일 다시 지시할 수 있어요.';
+    }
     no.addEventListener('click', function () { card.classList.add('dropped'); go.disabled = true; no.disabled = true; res.textContent = '취소했습니다.'; });
     go.addEventListener('click', function () {
       if (!mcp) { res.className = 'result bad'; res.textContent = 'Claude 앱에서 열어야 지시할 수 있어요.'; return; }
+      if (found && doneToday(found.task)) { go.disabled = true; res.className = 'result'; res.textContent = '오늘은 이미 했어요. 내일 다시 지시할 수 있어요.'; return; }
       go.disabled = true; no.disabled = true; go.textContent = '전달 중…';
       var text = [found && found.task.extra, ta.value.trim() ? '대표님 지시: ' + ta.value.trim() : ''].filter(Boolean).join('\n');
       var input = { trigger_id: id }; if (text) input.text = text;
       mcp.callTool(SERVER, 'fire_trigger', input, { cache: false }).then(function () {
-        card.classList.add('sent'); go.textContent = '지시 완료';
+        if (found && found.task.daily) markFired(id);
+        card.classList.add('sent'); go.textContent = '지시 완료'; renderMeta();
         res.className = 'result ok'; res.textContent = who + '이(가) 일을 시작했습니다. 끝나면 알림으로 보고드려요.';
         turns.push({ role: 'user', content: '(대표님이 "' + (args.title || '') + '" 지시서를 승인해 ' + who + '에게 보냈음)' }); save();
         if (mcp.invalidate) mcp.invalidate(SERVER, 'list_triggers').catch(function () {});
