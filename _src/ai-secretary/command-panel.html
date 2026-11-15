@@ -118,6 +118,8 @@
   details.extra-box textarea { margin-top: 8px; }
   @media (max-width: 360px) { .suseok { grid-template-columns: repeat(2, 1fr); } }
   @media (prefers-reduced-motion: reduce) { .go { transition: none; } }
+  .totop { position: fixed; right: 16px; bottom: calc(env(safe-area-inset-bottom, 0px) + 20px); z-index: 50; width: 50px; height: 50px; border-radius: 999px; border: 0; background: #191919; color: #FFD233; font: 800 11px var(--sans); box-shadow: 0 4px 14px rgba(0,0,0,.25); display: none; cursor: pointer; line-height: 1.1; }
+  .totop.show { display: block; }
 </style>
 </head>
 <body>
@@ -159,8 +161,12 @@
   </p>
 </main>
 
+<button type="button" class="totop" id="toTop" aria-label="맨 위로">▲<br>맨 위</button>
 <script>
 (function () {
+  var tt = document.getElementById('toTop');
+  window.addEventListener('scroll', function () { tt.classList.toggle('show', window.scrollY > 500); }, { passive: true });
+  tt.addEventListener('click', function () { window.scrollTo({ top: 0, behavior: 'smooth' }); });
   var SERVER = 'Claude Code Remote';
   var APP = 'https://linkcleaning.github.io/ai-secretary/';
   // 수석실 → 소속 비서관 → 맡은 일

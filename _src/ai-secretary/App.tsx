@@ -4216,6 +4216,12 @@ export default function App() {
   const [gLoading, setGLoading] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
   const [toastMsg, setToastMsg] = useState('');
+  const [showTop, setShowTop] = useState(false);
+  useEffect(() => {
+    const onScroll = () => setShowTop(window.scrollY > 500);
+    window.addEventListener('scroll', onScroll, { passive: true });
+    return () => window.removeEventListener('scroll', onScroll);
+  }, []);
   const [celebrate, setCelebrate] = useState(false);
 
   const toastTimer = useRef<number | undefined>(undefined);
@@ -4917,6 +4923,18 @@ export default function App() {
           />
         )}
       </main>
+
+      {/* 맨 위로 */}
+      {showTop && (
+        <button
+          onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
+          className="fixed bottom-[calc(env(safe-area-inset-bottom)+84px)] right-4 z-40 flex h-12 w-12 flex-col items-center justify-center rounded-full bg-[#191919] text-cw shadow-[0_4px_14px_rgba(0,0,0,0.25)] active:scale-95"
+          aria-label="맨 위로"
+        >
+          <ChevronUp className="h-5 w-5" />
+          <span className="-mt-0.5 text-[9px] font-bold leading-none">맨 위</span>
+        </button>
+      )}
 
       {/* 하단 탭바 */}
       <nav className="fixed inset-x-0 bottom-0 z-40 rounded-t-[22px] bg-white pb-[env(safe-area-inset-bottom)] shadow-[0_-2px_14px_rgba(0,0,0,0.06)]">
