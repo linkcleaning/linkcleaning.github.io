@@ -160,6 +160,7 @@ interface AppSettings {
   siteDomain?: string; // 내 홈페이지 도메인
   monthlyTarget?: number; // 이번 달 매출 목표 (원)
   reviewUrl?: string; // 네이버 리뷰 작성 링크
+  hubPin?: string; // 링크 허브(세무장부·순위노트·자동콜백) 읽기 비밀번호 — 코드에 넣지 않고 이 폰에만 저장
 }
 
 type IconStyle = 'vip' | 'emerald' | 'mono';
@@ -2257,7 +2258,7 @@ const stageOf = (k: DealStage) => STAGES.find((s) => s.key === k) ?? STAGES[0];
 const NEXT_STAGE: Partial<Record<DealStage, DealStage>> = { inquiry: 'quote', quote: 'won', won: 'done' };
 
 const SERVICES = ['입주청소', '이사청소', '거주청소', '상가·사무실', '에어컨', '곰팡이', '별장·숙소', '기타'];
-const CHANNELS = ['네이버 블로그', '플레이스', '홈페이지', '당근', '인스타', '지인 소개', '재방문', '기타'];
+const CHANNELS = ['네이버 블로그', '플레이스', '홈페이지', '전화', '당근', '인스타', '지인 소개', '재방문', '기타'];
 
 const FOLLOW_DAYS = 2; // 견적 후 N일 지나면 팔로업 알림
 
@@ -3167,6 +3168,274 @@ function ExecBrief({
   );
 }
 
+/* =========================================================
+ *  🔗 링크 허브 — 세무장부 · 순위노트 · 자동콜백 앱이 보내준 자료
+ * ========================================================= */
+const HUB_BASE = 'https://linkclean-promo.han0829.workers.dev/api/hub';
+interface HubLedgerBiz { sales: number; salesVat: number; salesCount: number; purchase: number; purchaseVat: number; labor: number; cats?: Record<string, number> }
+interface HubCall { id: string; t: number; n: string; k: string; s?: string; tpl?: string; a?: boolean }
+interface HubData {
+  at?: string;
+  ledger?: { updatedAt?: string; data?: { bizList?: { id: string; name: string }[]; months?: Record<string, Record<string, HubLedgerBiz>> } } | null;
+  rank?: { updatedAt?: string; data?: { keywords?: { id: string; name: string }[]; places?: string[]; ranks?: Record<string, Record<string, (number | null)[]>> } } | null;
+  calls?: { updatedAt?: string; events?: HubCall[] } | null;
+}
+
+async function fetchHub(pin: string): Promise<HubData | 'badpin' | null> {
+  try {
+    const r = await fetch(`${HUB_BASE}?hpin=${encodeURIComponent(pin)}&t=${Date.now()}`, { cache: 'no-store' });
+    if (r.status === 401 || r.status === 403) return 'badpin';
+    if (!r.ok) return null;
+    const j = await r.json();
+    return j && j.ok ? (j as HubData) : null;
+  } catch {
+    return null;
+  }
+}
+
+const phoneDigits = (s?: string) => (s || '').replace(/\D/g, '');
+const prettyPhone = (s: string) => {
+  const d = phoneDigits(s);
+  if (d.length === 11) return `${d.slice(0, 3)}-${d.slice(3, 7)}-${d.slice(7)}`;
+  if (d.length === 10) return d.startsWith('02') ? `${d.slice(0, 2)}-${d.slice(2, 6)}-${d.slice(6)}` : `${d.slice(0, 3)}-${d.slice(3, 6)}-${d.slice(6)}`;
+  return s;
+};
+/** 숫자(ms) 또는 허브의 'YYYY-MM-DD HH:MM'(한국시간) 문자열 */
+const hubTime = (t?: number | string) => {
+  if (typeof t === 'number') return t;
+  const mm = typeof t === 'string' ? t.match(/^(\d{4})-(\d{2})-(\d{2})[ T](\d{2}):(\d{2})/) : null;
+  return mm ? Date.UTC(+mm[1], +mm[2] - 1, +mm[3], +mm[4] - 9, +mm[5]) : 0;
+};
+const agoText = (t0?: number | string) => {
+  const t = hubTime(t0);
+  if (!t) return '';
+  const m = Math.round((Date.now() - t) / 60000);
+  if (m < 1) return '방금';
+  if (m < 60) return `${m}분 전`;
+  if (m < 1440) return `${Math.round(m / 60)}시간 전`;
+  return `${Math.round(m / 1440)}일 전`;
+};
+
+function HubCard({
+  hub,
+  hasPin,
+  status,
+  today,
+  deals,
+  onRefresh,
+  onAddDeal,
+  onOpenSettings,
+}: {
+  hub: HubData | null;
+  hasPin: boolean;
+  status: '' | 'loading' | 'badpin' | 'error';
+  today: string;
+  deals: Deal[];
+  onRefresh: () => void;
+  onAddDeal: (c: HubCall) => void;
+  onOpenSettings: () => void;
+}) {
+  const [showAll, setShowAll] = useState(false);
+  if (!hasPin) {
+    return (
+      <section className={`${card} border-dashed`}>
+        <SectionTitle icon={Sparkles} title="🔗 링크 허브 · 다른 앱 연결" />
+        <p className="text-sm leading-relaxed text-slate-400">
+          세무장부 매출, 자동콜백 통화 기록, 순위노트 플레이스 순위를 이 화면에서 함께 봅니다. 비밀번호를 한 번만 넣어주세요.
+        </p>
+        <button onClick={onOpenSettings} className="mt-3 rounded-xl bg-amber-300 px-4 py-2.5 text-sm font-bold text-white active:scale-95">
+          허브 비밀번호 넣기
+        </button>
+      </section>
+    );
+  }
+
+  const ym = today.slice(0, 7);
+  const [y, m] = ym.split('-').map(Number);
+  const prevYm = `${m === 1 ? y - 1 : y}-${String(m === 1 ? 12 : m - 1).padStart(2, '0')}`;
+  const L = hub?.ledger?.data;
+  const sumMonth = (k: string) => {
+    const M = L?.months?.[k];
+    const o = { sales: 0, salesVat: 0, salesCount: 0, purchase: 0, purchaseVat: 0, labor: 0 };
+    if (M) Object.values(M).forEach((b) => (Object.keys(o) as (keyof typeof o)[]).forEach((x) => (o[x] += Number(b[x]) || 0)));
+    return o;
+  };
+  const cur = sumMonth(ym);
+  const prev = sumMonth(prevYm);
+  const vatDue = cur.salesVat - cur.purchaseVat;
+
+  const known = new Set(deals.map((d) => phoneDigits(d.phone)).filter(Boolean));
+  const since = Date.now() - 3 * 86400000;
+  const calls = (hub?.calls?.events ?? [])
+    .filter((c) => (c.k === '수신' || c.k === '부재중') && c.t >= since)
+    .sort((a, b) => b.t - a.t);
+  const seen = new Set<string>();
+  const uniq = calls.filter((c) => {
+    const d = phoneDigits(c.n);
+    if (!d || seen.has(d)) return false;
+    seen.add(d);
+    return true;
+  });
+  const shown = showAll ? uniq : uniq.slice(0, 5);
+
+  const R = hub?.rank?.data;
+  const rDates = Object.keys(R?.ranks ?? {}).sort();
+  const lastD = rDates[rDates.length - 1];
+  const prevD = rDates[rDates.length - 2];
+  const places = R?.places?.length ? R.places : ['제주시점', '서귀포점'];
+  const rk = (d: string | undefined, kid: string, i: number) => {
+    const v = d ? R?.ranks?.[d]?.[kid]?.[i] : undefined;
+    return v === undefined || v === null ? null : Number(v);
+  };
+  const rt = (v: number | null) => (v === null ? '-' : v === 0 ? '권외' : `${v}위`);
+
+  return (
+    <section className={`${card} border-[#0E5A60]/20`}>
+      <SectionTitle
+        icon={Sparkles}
+        title="🔗 링크 허브 · 연결된 앱"
+        right={
+          <button onClick={onRefresh} className="flex items-center gap-1 text-[11px] text-slate-400" aria-label="허브 새로고침">
+            <RefreshCw className={`h-3.5 w-3.5 ${status === 'loading' ? 'animate-spin' : ''}`} />
+            {hub?.at ? agoText(hub.at) : ''}
+          </button>
+        }
+      />
+      {status === 'badpin' && (
+        <p className="mb-3 rounded-xl bg-rose-400/10 p-3 text-sm text-rose-300">
+          허브 비밀번호가 맞지 않습니다.{' '}
+          <button onClick={onOpenSettings} className="font-bold underline">
+            설정에서 다시 넣기
+          </button>
+        </p>
+      )}
+      {status === 'error' && !hub && <p className="mb-3 text-sm text-slate-400">허브에 연결하지 못했습니다. 잠시 후 새로고침을 눌러주세요.</p>}
+
+      {/* 세무장부 */}
+      <div className="mb-3 rounded-2xl bg-[#F4F1EA] p-3">
+        <p className="mb-1 flex justify-between text-[11px] font-bold text-slate-300">
+          <span>📒 세무장부 · {m}월 장부</span>
+          {hub?.ledger?.updatedAt && <span className="font-normal text-slate-500">{agoText(hub.ledger.updatedAt)} 갱신</span>}
+        </p>
+        {L ? (
+          <>
+            <div className="flex items-end justify-between">
+              <div>
+                <p className="text-xs text-slate-400">매출 {cur.salesCount}건</p>
+                <p className="text-2xl font-num font-normal tabular-nums text-[#0E5A60]">{fmtWon(cur.sales)}</p>
+              </div>
+              {prev.sales > 0 && (
+                <p className="text-right text-xs text-slate-400">
+                  지난달 {fmtWon(prev.sales)}
+                  <br />
+                  <b className={cur.sales >= prev.sales ? 'text-emerald-300' : 'text-slate-300'}>{Math.round((cur.sales / prev.sales) * 100)}%</b>
+                </p>
+              )}
+            </div>
+            <div className="mt-2 grid grid-cols-3 gap-1.5 text-center text-[11px]">
+              <div className="rounded-xl bg-white p-2">
+                <p className="text-slate-400">매입</p>
+                <p className="font-bold text-slate-100">{fmtWon(cur.purchase)}</p>
+              </div>
+              <div className="rounded-xl bg-white p-2">
+                <p className="text-slate-400">인건비</p>
+                <p className="font-bold text-slate-100">{fmtWon(cur.labor)}</p>
+              </div>
+              <div className="rounded-xl bg-white p-2">
+                <p className="text-slate-400">예상 부가세</p>
+                <p className="font-bold text-amber-300">{fmtWon(Math.max(0, vatDue))}</p>
+              </div>
+            </div>
+          </>
+        ) : (
+          <p className="text-xs text-slate-400">세무장부 앱을 한 번 열면 월별 합계가 여기로 옵니다.</p>
+        )}
+      </div>
+
+      {/* 자동콜백 */}
+      <div className="mb-3 rounded-2xl bg-[#F4F1EA] p-3">
+        <p className="mb-1.5 flex justify-between text-[11px] font-bold text-slate-300">
+          <span>📞 자동콜백 · 최근 3일 걸려온 전화</span>
+          {hub?.calls?.updatedAt && <span className="font-normal text-slate-500">{agoText(hub.calls.updatedAt)} 갱신</span>}
+        </p>
+        {uniq.length === 0 ? (
+          <p className="text-xs text-slate-400">{hub?.calls ? '최근 3일 동안 들어온 전화가 없습니다.' : '안드로이드 자동콜백 앱을 업데이트하면 통화 기록이 여기로 옵니다.'}</p>
+        ) : (
+          <ul className="space-y-1.5">
+            {shown.map((c) => {
+              const reg = known.has(phoneDigits(c.n));
+              return (
+                <li key={c.id + c.t} className="flex items-center gap-2 rounded-xl bg-white p-2">
+                  <span className={`shrink-0 rounded-md px-1.5 py-0.5 text-[10px] font-bold ${c.k === '부재중' ? 'bg-rose-400/15 text-rose-300' : 'bg-sky-400/15 text-sky-200'}`}>{c.k}</span>
+                  <a href={`tel:${phoneDigits(c.n)}`} className="min-w-0 flex-1 truncate text-sm font-semibold text-slate-100">
+                    {prettyPhone(c.n)}
+                    <span className="ml-1.5 text-[11px] font-normal text-slate-500">{agoText(c.t)}</span>
+                  </a>
+                  {reg ? (
+                    <span className="shrink-0 text-[11px] text-slate-500">등록됨</span>
+                  ) : (
+                    <button onClick={() => onAddDeal(c)} className="shrink-0 rounded-lg bg-[#0E5A60] px-2.5 py-1.5 text-[11px] font-bold text-white active:scale-95">
+                      문의로 등록
+                    </button>
+                  )}
+                </li>
+              );
+            })}
+          </ul>
+        )}
+        {uniq.length > 5 && (
+          <button onClick={() => setShowAll(!showAll)} className="mt-1.5 w-full text-center text-[11px] text-slate-400">
+            {showAll ? '접기' : `${uniq.length - 5}건 더 보기`}
+          </button>
+        )}
+      </div>
+
+      {/* 순위노트 */}
+      <div className="rounded-2xl bg-[#F4F1EA] p-3">
+        <p className="mb-1.5 flex justify-between text-[11px] font-bold text-slate-300">
+          <span>📍 순위노트 · 플레이스 순위{lastD ? ` (${Number(lastD.slice(5, 7))}/${Number(lastD.slice(8))})` : ''}</span>
+          {hub?.rank?.updatedAt && <span className="font-normal text-slate-500">{agoText(hub.rank.updatedAt)} 갱신</span>}
+        </p>
+        {R?.keywords?.length && lastD ? (
+          <table className="w-full text-sm">
+            <thead>
+              <tr className="text-[11px] text-slate-500">
+                <th className="py-1 text-left font-normal">키워드</th>
+                {places.slice(0, 2).map((p) => (
+                  <th key={p} className="py-1 text-right font-normal">
+                    {p}
+                  </th>
+                ))}
+              </tr>
+            </thead>
+            <tbody>
+              {R.keywords.slice(0, 8).map((k) => (
+                <tr key={k.id} className="border-t border-[#E2DBCD]">
+                  <td className="truncate py-1.5 pr-2 text-slate-200">{k.name}</td>
+                  {places.slice(0, 2).map((p, i) => {
+                    const v = rk(lastD, k.id, i);
+                    const pv = rk(prevD, k.id, i);
+                    const better = v !== null && pv !== null && v > 0 && (pv === 0 || v < pv);
+                    const worse = v !== null && pv !== null && pv > 0 && (v === 0 || v > pv);
+                    return (
+                      <td key={p} className={`py-1.5 text-right font-bold tabular-nums ${better ? 'text-emerald-300' : worse ? 'text-rose-300' : 'text-slate-100'}`}>
+                        {rt(v)}
+                        {better ? ' ▲' : worse ? ' ▼' : ''}
+                      </td>
+                    );
+                  })}
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        ) : (
+          <p className="text-xs text-slate-400">순위노트 앱에 순위를 기록하면 여기에 함께 보입니다.</p>
+        )}
+      </div>
+    </section>
+  );
+}
+
 function mondayOf(date: string) {
   const [y, m, d] = date.split('-').map(Number);
   const wd = new Date(y, m - 1, d).getDay(); // 0=일
@@ -3748,6 +4017,11 @@ function SettingsModal({
             </div>
           </div>
 
+          <label className="block">
+            <span className="mb-1 block text-sm text-slate-300">링크 허브 비밀번호 <span className="text-slate-500">(세무장부·순위노트·자동콜백 연결)</span></span>
+            <input className={input} value={draft.hubPin ?? ''} onChange={(e) => set('hubPin', e.target.value.replace(/\D/g, ''))} inputMode="numeric" placeholder="숫자 6자리" />
+          </label>
+
           <details className="rounded-2xl border border-[#E2DBCD] bg-[#F4F1EA] p-4" open={!!draft.rankWorkerUrl}>
             <summary className="cursor-pointer text-sm font-bold text-slate-300">
               고급 · 네이버 자동화 <span className="font-normal text-slate-500">(선택 · 네이버 등록 필요, 없어도 앱은 그대로 작동)</span>
@@ -3887,6 +4161,42 @@ export default function App() {
   const [agent, setAgent] = useLocal<AgentDaily | null>('agent', null);
   const [agentRanks, setAgentRanks] = useLocal<AgentRanks | null>('agentRanks', null);
   const [agentDone, setAgentDone] = useLocal<{ date: string; idx: number[] }>('agentDone', { date: '', idx: [] });
+  const [hub, setHub] = useLocal<HubData | null>('hub', null);
+  const [hubStatus, setHubStatus] = useState<'' | 'loading' | 'badpin' | 'error'>('');
+  const hubPin = settings.hubPin ?? '';
+  const loadHub = useCallback(async (pin: string) => {
+    if (!pin) return;
+    setHubStatus('loading');
+    const r = await fetchHub(pin);
+    if (r === 'badpin') setHubStatus('badpin');
+    else if (!r) setHubStatus('error');
+    else {
+      setHub(r);
+      setHubStatus('');
+    }
+  }, [setHub]);
+  // ?hpin=xxxxxx 로 열면 비밀번호를 이 폰에 저장하고 주소창에서는 지움
+  useEffect(() => {
+    const sp = new URLSearchParams(window.location.search);
+    const hp = sp.get('hpin');
+    if (!hp) return;
+    const pin = hp.replace(/\D/g, '');
+    if (pin) setSettings((p) => ({ ...p, hubPin: pin }));
+    sp.delete('hpin');
+    const q = sp.toString();
+    try {
+      window.history.replaceState(null, '', window.location.pathname + (q ? '?' + q : '') + window.location.hash);
+    } catch {
+      /* ignore */
+    }
+  }, [setSettings]);
+  useEffect(() => {
+    if (!hubPin) return;
+    loadHub(hubPin);
+    const onVis = () => document.visibilityState === 'visible' && loadHub(hubPin);
+    document.addEventListener('visibilitychange', onVis);
+    return () => document.removeEventListener('visibilitychange', onVis);
+  }, [hubPin, loadHub]);
   const salesStats = useMemo(() => computeSales(deals, today, settings.monthlyTarget ?? 0), [deals, today, settings.monthlyTarget]);
   const salesTodo = salesStats.followUps.length + salesStats.reviewAsks.length + salesStats.todayJobs.length;
   const rankMoves = useMemo(() => rankMovesBetween(ranks, keywords, today, today), [ranks, keywords, today]);
@@ -4419,6 +4729,24 @@ export default function App() {
                   }
                 />
                 <ExecBrief stats={salesStats} moves={rankMoves} goTab={setTab} />
+                <HubCard
+                  hub={hub}
+                  hasPin={!!hubPin}
+                  status={hubStatus}
+                  today={today}
+                  deals={deals}
+                  onRefresh={() => loadHub(hubPin)}
+                  onOpenSettings={() => setShowSettings(true)}
+                  onAddDeal={(c) => {
+                    const d = new Date(c.t);
+                    const date = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+                    setDeals((l) => [
+                      { id: uid(), createdAt: Date.now(), date, name: '', phone: prettyPhone(c.n), service: '전화 문의', channel: '전화', stage: 'inquiry', stageAt: today, note: `${c.k} 전화 (자동콜백)` },
+                      ...l,
+                    ]);
+                    toast('영업 탭 문의 목록에 등록했습니다. 고객명·서비스만 채워주세요.');
+                  }}
+                />
               </>
             }
             bottom={
