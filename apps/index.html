@@ -77,11 +77,17 @@ h2 em { font-style: normal; font-family: var(--font-body); font-size: 12px; colo
 .lk span { font-size: 13px; overflow-wrap: anywhere; font-variant-numeric: tabular-nums; }
 .lk.text { background: none; border: 1px dashed var(--line); color: var(--muted); }
 .lk.text b { background: var(--plan); }
+.lkrow { display: flex; gap: 6px; min-width: 0; }
+.lkrow .lk { flex: 1; }
+.cp { flex: none; appearance: none; border: 1px solid var(--line); background: var(--card); color: var(--ink); font: inherit; font-size: 12px; font-weight: 600; border-radius: 8px; padding: 0 12px; cursor: pointer; }
+.cp.done { background: var(--teal); color: var(--bg); border-color: var(--teal); }
+#toast { white-space: nowrap; position: fixed; left: 50%; bottom: 24px; transform: translateX(-50%); background: var(--ink); color: var(--bg); font-size: 13px; padding: 8px 14px; border-radius: 999px; opacity: 0; transition: opacity .2s; pointer-events: none; }
+#toast.on { opacity: 1; }
 .empty { color: var(--muted); text-align: center; padding: 24px 0; }
 footer { color: var(--muted); font-size: 12px; }
 @media (max-width: 420px) { .tiles { grid-template-columns: repeat(2, 1fr); } }
 </style>
-<script src="/v.js" data-v="v8" defer></script>
+<script src="/v.js" data-v="v9" defer></script>
 </head>
 <body>
 <div class="wrap">
@@ -186,7 +192,7 @@ function card(a){
     if (k === "text") return `<div class="lk text"><b>메모</b><span>${esc(u)}</span></div>`;
     const tag = k === "store" ? (lab || "스토어") : (lab || "PWA");
     const txt = k === "store" ? (lab === "Google Play" ? "play.google.com · " + u.split("id=")[1] : short(u)) : short(u);
-    return `<a class="lk ${k}" href="${u}" target="_blank" rel="noopener"><b>${esc(tag)}</b><span>${esc(txt)}</span></a>`;
+    return `<div class="lkrow"><a class="lk ${k}" href="${u}" target="_blank" rel="noopener"><b>${esc(tag)}</b><span>${esc(txt)}</span></a><button type="button" class="cp" data-u="${esc(u)}" aria-label="${esc(a.name)} 주소 복사">복사</button></div>`;
   });
   return `<div class="row ${a.s==="merged"?"merged":""}" style="--c:${st.c}">
     <div class="top"><span class="name">${esc(a.name)}</span><span class="pill">${st.label}</span></div>
@@ -209,6 +215,21 @@ function render(){
   document.getElementById("list").innerHTML = html || `<p class="empty">찾는 앱이 없어요. 다른 이름으로 검색해 보세요.</p>`;
 }
 document.getElementById("q").addEventListener("input", render);
+// 주소 복사 (카톡 등으로 보낼 때)
+const toastEl = Object.assign(document.createElement("div"), { id: "toast", role: "status" });
+document.body.appendChild(toastEl);
+let toastT;
+function toast(m){ toastEl.textContent = m; toastEl.classList.add("on"); clearTimeout(toastT); toastT = setTimeout(() => toastEl.classList.remove("on"), 1600); }
+async function copyText(t){
+  try { await navigator.clipboard.writeText(t); return true; } catch {}
+  try { const ta = Object.assign(document.createElement("textarea"), { value: t }); ta.setAttribute("readonly", ""); ta.style.position = "fixed"; ta.style.opacity = "0"; document.body.appendChild(ta); ta.select(); ta.setSelectionRange(0, t.length); const ok = document.execCommand("copy"); ta.remove(); return ok; } catch { return false; }
+}
+document.getElementById("list").addEventListener("click", async (e) => {
+  const b = e.target.closest(".cp"); if (!b) return;
+  const ok = await copyText(b.dataset.u);
+  if (ok) { b.textContent = "복사됨"; b.classList.add("done"); toast("주소를 복사했어요. 카톡에 붙여넣으세요"); setTimeout(() => { b.textContent = "복사"; b.classList.remove("done"); }, 1500); }
+  else toast("복사가 안 됐어요. 주소를 길게 눌러 복사해 주세요");
+});
 tiles(); render();
 </script>
 </body>
