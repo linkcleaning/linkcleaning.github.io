@@ -139,6 +139,8 @@ object CallbackProcessor {
         val num = PhoneUtil.normalize(e.number)
         val who = PhoneUtil.pretty(num.ifEmpty { "번호없음" })
         if ((kind == KIND_IN && !Prefs.sendIncoming(c)) || (kind == KIND_MISSED && !Prefs.sendMissed(c)) || (kind == KIND_OUT && !Prefs.sendOutgoing(c))) {
+            // 문자는 안 보내도 통화 기록은 남김 → 링크 허브(AI 비서실)에 문의 전화로 뜨게
+            Prefs.addHistory(c, SendRecord(Prefs.newId(), System.currentTimeMillis(), num.ifEmpty { "알 수 없음" }, kind, "제외: '$kind' 자동 발송 꺼짐", "", true))
             Prefs.setLastEvent(c, "$kind $who → 설정에서 '$kind' 자동 발송이 꺼져 있음"); return
         }
 
