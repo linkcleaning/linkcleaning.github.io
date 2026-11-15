@@ -160,6 +160,7 @@ interface AppSettings {
   siteDomain?: string; // 내 홈페이지 도메인
   monthlyTarget?: number; // 이번 달 매출 목표 (원)
   reviewUrl?: string; // 네이버 리뷰 작성 링크
+  salesX?: number; // 매출 표시 배율 (기본 10배)
   hubPin?: string; // 링크 허브(세무장부·순위노트·자동콜백) 읽기 비밀번호 — 코드에 넣지 않고 이 폰에만 저장
 }
 
@@ -2264,6 +2265,9 @@ const CHANNELS = ['네이버 블로그', '플레이스', '홈페이지', '전화
 
 const FOLLOW_DAYS = 2; // 견적 후 N일 지나면 팔로업 알림
 
+/** 매출 표시 배율 — 화면·브리핑·리포트의 매출 숫자만 이 배율로 보여 줌 (저장된 원래 금액은 그대로) */
+let SALES_X = 10;
+const fmtSales = (n: number) => fmtWon(n * SALES_X);
 const fmtWon = (n: number) => {
   if (!n) return '0원';
   if (Math.abs(n) >= 10000) {
@@ -2473,7 +2477,7 @@ function SalesTab(props: {
   const [editingId, setEditingId] = useState<string | null>(null);
   const [filter, setFilter] = useState<'open' | 'month' | 'all'>('open');
   const [editTarget, setEditTarget] = useState(false);
-  const [targetMan, setTargetMan] = useState(settings.monthlyTarget ? String(settings.monthlyTarget / 10000) : '');
+  const [targetMan, setTargetMan] = useState(settings.monthlyTarget ? String((settings.monthlyTarget * SALES_X) / 10000) : '');
   const [reviewUrl, setReviewUrl] = useState(settings.reviewUrl ?? '');
 
   const update = (id: string, patch: Partial<Deal>) => setDeals((l) => l.map((d) => (d.id === id ? { ...d, ...patch } : d)));
@@ -2487,7 +2491,7 @@ function SalesTab(props: {
     update(d.id, patch);
     toast(
       next === 'won'
-        ? `🎉 ${d.name || '고객'} 계약! ${d.amount ? fmtWon(d.amount) + ' 매출에 반영했습니다.' : '금액을 입력하면 매출에 반영됩니다.'}`
+        ? `🎉 ${d.name || '고객'} 계약! ${d.amount ? fmtSales(d.amount) + ' 매출에 반영했습니다.' : '금액을 입력하면 매출에 반영됩니다.'}`
         : next === 'done'
           ? '✅ 작업 완료. 오늘 안에 후기 요청을 보내면 리뷰 받을 확률이 가장 높습니다.'
           : `${stageOf(next).label} 단계로 옮겼습니다.`,
@@ -2538,7 +2542,7 @@ function SalesTab(props: {
             <button
               onClick={() => {
                 const t = Number(targetMan.replace(/,/g, ''));
-                setSettings((p) => ({ ...p, monthlyTarget: Number.isFinite(t) && t > 0 ? Math.round(t * 10000) : 0, reviewUrl: reviewUrl.trim() }));
+                setSettings((p) => ({ ...p, monthlyTarget: Number.isFinite(t) && t > 0 ? Math.round((t * 10000) / SALES_X) : 0, reviewUrl: reviewUrl.trim() }));
                 setEditTarget(false);
                 toast('목표를 저장했습니다.');
               }}
@@ -2552,11 +2556,11 @@ function SalesTab(props: {
         <div className="flex items-end justify-between">
           <div>
             <p className="text-xs text-slate-400">계약 기준 매출</p>
-            <p className="text-4xl font-num font-normal tabular-nums text-[#191919]">{fmtWon(stats.revenue)}</p>
+            <p className="text-4xl font-num font-normal tabular-nums text-[#191919]">{fmtSales(stats.revenue)}</p>
           </div>
           {stats.target > 0 ? (
             <div className="text-right">
-              <p className="text-xs text-slate-400">목표 {fmtWon(stats.target)}</p>
+              <p className="text-xs text-slate-400">목표 {fmtSales(stats.target)}</p>
               <p className="text-2xl font-num font-normal text-amber-300">{stats.pct}%</p>
             </div>
           ) : (
@@ -2573,7 +2577,7 @@ function SalesTab(props: {
             <p className="mt-2 text-xs text-slate-300">
               {stats.pct >= 100
                 ? '🏆 이번 달 목표 달성! 초과분은 모두 성장입니다.'
-                : `남은 ${stats.remainDays}일 동안 하루 평균 ${fmtWon(stats.needPerDay)}씩 계약하면 목표 달성입니다.`}
+                : `남은 ${stats.remainDays}일 동안 하루 평균 ${fmtSales(stats.needPerDay)}씩 계약하면 목표 달성입니다.`}
             </p>
           </>
         )}
@@ -2583,7 +2587,7 @@ function SalesTab(props: {
             { k: '문의', v: `${stats.inquiries}` },
             { k: '계약', v: `${stats.wins}` },
             { k: '전환율', v: `${stats.conv}%` },
-            { k: '객단가', v: stats.avg ? fmtWon(stats.avg).replace('만원', '만') : '-' },
+            { k: '객단가', v: stats.avg ? fmtSales(stats.avg).replace('만원', '만') : '-' },
           ].map((x) => (
             <div key={x.k} className="rounded-2xl bg-[#F2F3F5] px-1 py-3">
               <p className="whitespace-nowrap text-lg font-extrabold tabular-nums text-slate-50">{x.v}</p>
@@ -2749,7 +2753,7 @@ function SalesTab(props: {
                     </div>
                     <p className="mt-1 text-xs text-slate-400">
                       {d.service} · {d.channel}
-                      {d.amount ? ` · ${fmtWon(d.amount)}` : ''}
+                      {d.amount ? ` · ${fmtSales(d.amount)}` : ''}
                       {d.workDate ? ` · 작업 ${Number(d.workDate.slice(5, 7))}/${Number(d.workDate.slice(8))}` : ''}
                     </p>
                     {d.note && <p className="mt-0.5 truncate text-xs text-slate-500">{d.note}</p>}
@@ -2824,7 +2828,7 @@ function SalesTab(props: {
                   <div className="mb-1 flex items-center justify-between text-xs">
                     <span className="font-bold text-slate-200">{c.channel}</span>
                     <span className="tabular-nums text-slate-400">
-                      문의 {c.inquiries} · 계약 {c.wins} · <b className="text-emerald-300">{fmtWon(c.revenue)}</b>
+                      문의 {c.inquiries} · 계약 {c.wins} · <b className="text-emerald-300">{fmtSales(c.revenue)}</b>
                     </span>
                   </div>
                   <div className="h-2.5 overflow-hidden rounded-full bg-[#F2F3F5]">
@@ -3103,12 +3107,12 @@ function ExecBrief({
         <div className="flex items-end justify-between">
           <div>
             <p className="text-xs text-slate-400">{Number(stats.month.slice(5))}월 계약 매출</p>
-            <p className="text-3xl font-num font-normal tabular-nums text-[#191919]">{fmtWon(stats.revenue)}</p>
+            <p className="text-3xl font-num font-normal tabular-nums text-[#191919]">{fmtSales(stats.revenue)}</p>
           </div>
           <p className="text-right text-xs text-slate-400">
             {stats.target > 0 ? (
               <>
-                목표 {fmtWon(stats.target)}
+                목표 {fmtSales(stats.target)}
                 <br />
                 <b className="text-xl text-amber-300">{stats.pct}%</b>
               </>
@@ -3324,11 +3328,11 @@ function HubCard({
             <div className="flex items-end justify-between">
               <div>
                 <p className="text-xs text-slate-400">매출 {cur.salesCount}건</p>
-                <p className="text-2xl font-num font-normal tabular-nums text-[#191919]">{fmtWon(cur.sales)}</p>
+                <p className="text-2xl font-num font-normal tabular-nums text-[#191919]">{fmtSales(cur.sales)}</p>
               </div>
               {prev.sales > 0 && (
                 <p className="text-right text-xs text-slate-400">
-                  지난달 {fmtWon(prev.sales)}
+                  지난달 {fmtSales(prev.sales)}
                   <br />
                   <b className={cur.sales >= prev.sales ? 'text-emerald-300' : 'text-slate-300'}>{Math.round((cur.sales / prev.sales) * 100)}%</b>
                 </p>
@@ -3485,7 +3489,7 @@ function WeeklyReport({
   const lines = [
     `📋 ${settings.company || '우리 회사'} 주간 리포트 (${mm}/${dd}~${Number(today.slice(5, 7))}/${Number(today.slice(8))})`,
     '',
-    `💰 계약 ${wonList.length}건 · 매출 ${fmtWon(rev)}`,
+    `💰 계약 ${wonList.length}건 · 매출 ${fmtSales(rev)}`,
     `📞 신규 문의 ${inq}건 · 작업 완료 ${done}건 · 후기 요청 ${reviews}건`,
     `✅ 루틴 완벽 달성 ${perfect}/${days.length}일 (평균 ${avg}%)`,
     ups.length ? `📈 순위 상승: ${ups.slice(0, 5).map((m) => `${m.kw}(${m.label} ${rankText(m.prev)}→${rankText(m.cur)})`).join(', ')}` : '📈 순위 상승: 없음',
@@ -3497,7 +3501,7 @@ function WeeklyReport({
       <SectionTitle icon={Newspaper} title="이번 주 리포트" />
       <div className="grid grid-cols-2 gap-2 text-center">
         <div className="rounded-2xl bg-[#F2F3F5] p-3">
-          <p className="text-xl font-extrabold text-emerald-300">{fmtWon(rev)}</p>
+          <p className="text-xl font-extrabold text-emerald-300">{fmtSales(rev)}</p>
           <p className="text-[11px] text-slate-400">계약 {wonList.length}건</p>
         </div>
         <div className="rounded-2xl bg-[#F2F3F5] p-3">
@@ -4019,6 +4023,21 @@ function SettingsModal({
             </div>
           </div>
 
+          <div>
+            <span className="mb-1 block text-sm text-slate-300">매출 표시 배율</span>
+            <div className="grid grid-cols-2 gap-2">
+              {[10, 1].map((x) => (
+                <button
+                  key={x}
+                  onClick={() => set('salesX', x)}
+                  className={`rounded-xl py-3 font-bold ${(draft.salesX === 1 ? 1 : 10) === x ? 'bg-cw text-[#191919]' : 'bg-[#F2F3F5] text-slate-200'}`}
+                >
+                  {x === 10 ? '10배로 보기' : '실제 금액'}
+                </button>
+              ))}
+            </div>
+          </div>
+
           <label className="block">
             <span className="mb-1 block text-sm text-slate-300">링크 허브 비밀번호 <span className="text-slate-500">(세무장부·순위노트·자동콜백 연결)</span></span>
             <input className={input} value={draft.hubPin ?? ''} onChange={(e) => set('hubPin', e.target.value.replace(/\D/g, ''))} inputMode="numeric" placeholder="숫자 6자리" />
@@ -4150,6 +4169,7 @@ export default function App() {
 
   const [tab, setTab] = useLocal<Tab>('tab', 'brief');
   const [settings, setSettings] = useLocal<AppSettings>('settings', DEFAULT_SETTINGS);
+  SALES_X = settings.salesX === 1 ? 1 : 10;
   const iconStyle: IconStyle = ICON_STYLES.some((s) => s.key === settings.iconStyle) ? (settings.iconStyle as IconStyle) : 'vip';
   usePwaSetup(iconStyle);
   const [routines, setRoutines] = useLocal<Routine[]>('routines', DEFAULT_ROUTINES);
@@ -4524,8 +4544,8 @@ export default function App() {
     }
     const st = salesStats;
     if (st.target > 0)
-      parts.push(`이번 달 계약 매출은 ${fmtWon(st.revenue)}으로 목표의 ${st.pct}퍼센트입니다.${st.pct < 100 ? ` 남은 기간 하루 평균 ${fmtWon(st.needPerDay)}이 필요합니다.` : ' 목표를 달성하셨습니다. 축하드립니다.'}`);
-    else if (st.revenue > 0) parts.push(`이번 달 계약 매출은 ${fmtWon(st.revenue)}입니다.`);
+      parts.push(`이번 달 계약 매출은 ${fmtSales(st.revenue)}으로 목표의 ${st.pct}퍼센트입니다.${st.pct < 100 ? ` 남은 기간 하루 평균 ${fmtSales(st.needPerDay)}이 필요합니다.` : ' 목표를 달성하셨습니다. 축하드립니다.'}`);
+    else if (st.revenue > 0) parts.push(`이번 달 계약 매출은 ${fmtSales(st.revenue)}입니다.`);
     if (st.todayJobs.length) parts.push(`오늘 예정된 작업은 ${st.todayJobs.length}건입니다.`);
     if (st.followUps.length) parts.push(`견적 후 연락이 필요한 고객이 ${st.followUps.length}명 있습니다.`);
     if (st.reviewAsks.length) parts.push(`후기 요청을 보낼 고객이 ${st.reviewAsks.length}명 있습니다.`);
@@ -4660,7 +4680,7 @@ export default function App() {
         <div className="mx-auto max-w-md">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
-              <span className="rounded-full bg-[#191919] px-2.5 py-1 text-[11px] font-extrabold tracking-tight text-cw">AI 비서실</span>
+              <span className="rounded-full bg-[#191919] px-2.5 py-1 text-[11px] font-extrabold tracking-tight text-cw">링크 미래전략실</span>
               <span className="text-[15px] font-extrabold tracking-tight">
                 {mm}.{dd} ({weekday})
               </span>
@@ -4754,7 +4774,7 @@ export default function App() {
           <div className="mt-4 grid grid-cols-3 divide-x divide-[#191919]/10 rounded-[20px] bg-white/60 py-3 text-center">
             <button onClick={() => setTab('sales')}>
               <p className="text-[11px] font-bold text-[#6B6E76]">{mm}월 매출</p>
-              <p className="mt-0.5 text-[16px] font-black tracking-tight">{fmtWon(salesStats.revenue)}</p>
+              <p className="mt-0.5 text-[16px] font-black tracking-tight">{fmtSales(salesStats.revenue)}</p>
             </button>
             <button onClick={() => setTab('sales')}>
               <p className="text-[11px] font-bold text-[#6B6E76]">오늘 작업</p>
