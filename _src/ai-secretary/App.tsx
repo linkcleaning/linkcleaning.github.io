@@ -2892,6 +2892,7 @@ function secJobsFor(date: string): SecJob[] {
   jobs.push({ key: 'threads', label: '아침 스레드 게시', who: '소통수석 김기훈', when: '버튼' });
   if (wd === 2 || wd === 5) jobs.push({ key: 'tip', label: '청소팁 카드', who: '홍보수석실 콘텐츠비서관', when: '10:37' });
   if (wd >= 1 && wd <= 5) jobs.push({ key: 'bids', label: '입찰·공고 찾기', who: '영업수석실 입찰비서관', when: '08:23' });
+  if (wd === 1) jobs.push({ key: 'keywords', label: '주간 키워드 리포트', who: '전략수석 최영길', when: '13:41' });
   jobs.push({ key: 'coupang', label: '쿠팡 글 준비', who: '제휴수석 박시은', when: '18:43' });
   jobs.push({ key: 'evening', label: '저녁 6곳 홍보', who: '홍보수석 한정민', when: '20:47' });
   return jobs;
