@@ -1,7 +1,7 @@
 {
-  "date": "2026-11-16",
-  "updatedAt": "2026-11-16T19:41:24+09:00",
-  "note": "새 공고 4건",
+  "date": "2026-11-17",
+  "updatedAt": "2026-11-17T07:45:00+09:00",
+  "note": "새 공고 없음",
   "items": [
     {
       "title": "하모지구 소규모 배수개선사업 건설폐기물 처리용역 수의견적 제출 안내공고",
@@ -12,7 +12,8 @@
       "url": "https://www.seogwipo.go.kr/info/news/bid/bid.htm",
       "why": "폐기물 처리 용역(서귀포 지역 수의견적). 건설폐기물 처리업 자격 필요 여부는 공고문 확인. 마감은 게재기간 끝 기준",
       "new": false,
-      "found": "2026-11-16"
+      "found": "2026-11-16",
+      "for": "link"
     },
     {
       "title": "우도 다회용기 세척센터 운영 민간위탁 수탁기관 공개모집 공고",
@@ -23,7 +24,8 @@
       "url": "https://www.jeju.go.kr/news/news/law/jeju2.htm",
       "why": "세척·환경 분야 민간위탁(우도 다회용기 세척센터 운영, ~2028년). 11/26~30 방문접수",
       "new": false,
-      "found": "2026-11-16"
+      "found": "2026-11-16",
+      "for": "both"
     },
     {
       "title": "입찰공고(성산하수처리구역 차집관로 정비사업(1공구) 폐기물처리용역)",
@@ -33,8 +35,9 @@
       "amount": "",
       "url": "https://www.jeju.go.kr/news/news/law/jeju2.htm",
       "why": "폐기물 처리 용역(11/9 공고). 마감·금액·자격(건설폐기물 처리업 등)은 첨부 공고문 확인",
-      "new": true,
-      "found": "2026-11-16"
+      "new": false,
+      "found": "2026-11-16",
+      "for": "link"
     },
     {
       "title": "입찰공고(성산하수처리구역 차집관로 정비사업(3공구) 폐기물처리용역)",
@@ -44,8 +47,9 @@
       "amount": "",
       "url": "https://www.jeju.go.kr/news/news/law/jeju2.htm",
       "why": "폐기물 처리 용역(11/9 공고). 마감·금액·자격(건설폐기물 처리업 등)은 첨부 공고문 확인",
-      "new": true,
-      "found": "2026-11-16"
+      "new": false,
+      "found": "2026-11-16",
+      "for": "link"
     },
     {
       "title": "입찰공고(동부하수처리구역 차집관로 정비사업(2공구) 건설폐기물처리용역)",
@@ -55,8 +59,9 @@
       "amount": "",
       "url": "https://www.jeju.go.kr/news/news/law/jeju2.htm",
       "why": "폐기물 처리 용역(11/9 공고). 마감·금액·자격(건설폐기물 처리업 등)은 첨부 공고문 확인",
-      "new": true,
-      "found": "2026-11-16"
+      "new": false,
+      "found": "2026-11-16",
+      "for": "link"
     },
     {
       "title": "입찰공고(동부하수처리구역 차집관로 정비사업(3공구) 건설폐기물처리용역)",
@@ -66,8 +71,9 @@
       "amount": "",
       "url": "https://www.jeju.go.kr/news/news/law/jeju2.htm",
       "why": "폐기물 처리 용역(11/9 공고). 마감·금액·자격(건설폐기물 처리업 등)은 첨부 공고문 확인",
-      "new": true,
-      "found": "2026-11-16"
+      "new": false,
+      "found": "2026-11-16",
+      "for": "link"
     }
   ]
 }
