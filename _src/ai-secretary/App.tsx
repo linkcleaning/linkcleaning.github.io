@@ -2894,6 +2894,8 @@ function secJobsFor(date: string): SecJob[] {
   jobs.push({ key: 'google', label: '구글 순위 확인', who: '전략수석 최영길', when: '11:17' });
   if (wd >= 1 && wd <= 5) jobs.push({ key: 'bids', label: '입찰·공고 찾기', who: '영업수석실 입찰비서관', when: '08:23' });
   if (wd === 1) jobs.push({ key: 'keywords', label: '주간 키워드 리포트', who: '전략수석 최영길', when: '13:41' });
+  if (wd === 1 || wd === 3 || wd === 5) jobs.push({ key: 'placenews', label: '플레이스 소식·영상', who: '홍보수석 한정민', when: '15:43' });
+  if (wd === 3) jobs.push({ key: 'areapage', label: '홈페이지 동네 페이지', who: '전략수석 최영길', when: '14:37' });
   jobs.push({ key: 'coupang', label: '쿠팡 글 준비', who: '제휴수석 박시은', when: '18:43' });
   jobs.push({ key: 'evening', label: '저녁 6곳 홍보', who: '홍보수석 한정민', when: '20:47' });
   return jobs;
@@ -3024,6 +3026,53 @@ function GoogleCard({ g }: { g: GoogleData | null }) {
             </tbody>
           </table>
           <p className="mt-2 text-[11px] leading-snug text-slate-500">지도 = 구글 지도 업체 목록 순서 · 홈페이지 = linkclean.co.kr 웹 순위 · 블로그 = 링크클린 네이버 블로그 글. {g?.note || ''}</p>
+        </>
+      )}
+    </section>
+  );
+}
+
+/* 플레이스 소식·짧은 영상 — 홍보수석 한정민 (월·수·금) data/place-news.json */
+interface PlaceNews { date: string; title: string; body: string; keyword?: string; clip?: string; photos?: number }
+interface PlaceNewsData { updatedAt?: string; items?: PlaceNews[] }
+
+function PlaceNewsCard({ data, toast }: { data: PlaceNewsData | null; toast: (m: string) => void }) {
+  const [open, setOpen] = useState(false);
+  const n = data?.items?.[0];
+  const copy = async (t: string, m: string) => toast((await copyText(t)) ? m : '복사에 실패했습니다.');
+  return (
+    <section className={card}>
+      <SectionTitle
+        icon={Newspaper}
+        title="플레이스 소식 · 홍보수석 한정민"
+        right={n ? <span className="text-[11px] text-slate-400">{Number(n.date.slice(5, 7))}/{Number(n.date.slice(8))} 준비</span> : undefined}
+      />
+      {!n ? (
+        <p className="text-sm leading-relaxed text-slate-400">
+          월·수·금 오후에 현장 사진으로 <b className="text-slate-200">플레이스 소식 글</b>과 <b className="text-slate-200">짧은 세로 영상</b>을 만들어 둡니다. 스마트플레이스 앱에 붙여넣고 올리기만 하세요.
+        </p>
+      ) : (
+        <>
+          {n.keyword && <p className="mb-1 text-[11px] font-bold text-sky-300">#{n.keyword}</p>}
+          <p className="font-bold leading-snug text-slate-50">{n.title}</p>
+          <p className={`mt-2 whitespace-pre-line text-sm leading-relaxed text-slate-300 ${open ? '' : 'line-clamp-3'}`}>{n.body}</p>
+          <div className="mt-3 grid grid-cols-3 gap-2">
+            <button onClick={() => setOpen(!open)} className={`${btnGhost} text-xs`}>
+              {open ? '접기' : '전체 보기'}
+            </button>
+            <button onClick={() => copy(n.title, '소식 제목을 복사했어요.')} className={`${btnGhost} text-xs`}>
+              제목 복사
+            </button>
+            <button onClick={() => copy(n.body, '소식 본문을 복사했어요. 스마트플레이스 > 소식에 붙여넣으세요.')} className="rounded-full bg-cw px-3 py-2 text-xs font-extrabold text-[#191919] active:scale-95">
+              본문 복사
+            </button>
+          </div>
+          {n.clip && (
+            <a href={n.clip} target="_blank" rel="noreferrer" className="mt-2 flex items-center justify-center gap-2 rounded-full bg-[#191919] py-3 text-sm font-extrabold text-cw active:scale-[0.98]">
+              ▶ 짧은 영상 열기 · 저장{n.photos ? ` (사진 ${n.photos}장)` : ''}
+            </a>
+          )}
+          <p className="mt-2 text-[11px] leading-snug text-slate-500">영상은 열어서 공유 → '비디오 저장' 후 스마트플레이스 소식(또는 클립)에 올리세요.</p>
         </>
       )}
     </section>
@@ -4379,6 +4428,7 @@ export default function App() {
   const [agentStatus, setAgentStatus] = useLocal<AgentStatus | null>('agentStatus', null);
   const [bids, setBids] = useLocal<BidsData | null>('bids', null);
   const [gRank, setGRank] = useLocal<GoogleData | null>('gRank', null);
+  const [placeNews, setPlaceNews] = useLocal<PlaceNewsData | null>('placeNews', null);
   const [agentDone, setAgentDone] = useLocal<{ date: string; idx: number[] }>('agentDone', { date: '', idx: [] });
   const [hub, setHub] = useLocal<HubData | null>('hub', null);
   const [hubStatus, setHubStatus] = useState<'' | 'loading' | 'badpin' | 'error'>('');
@@ -4571,24 +4621,26 @@ export default function App() {
   /* ---------- 🤵 비서 자동 업무 결과 불러오기 (앱을 열 때·다시 볼 때마다) ---------- */
   useEffect(() => {
     const load = async () => {
-      const [d, r, st, bd, gg] = await Promise.all([
+      const [d, r, st, bd, gg, pn] = await Promise.all([
         fetchAgentJson<AgentDaily>('today.json'),
         fetchAgentJson<AgentRanks>('ranks.json'),
         fetchAgentJson<AgentStatus>('status.json'),
         fetchAgentJson<BidsData>('bids.json'),
         fetchAgentJson<GoogleData>('google.json'),
+        fetchAgentJson<PlaceNewsData>('place-news.json'),
       ]);
       if (d && d.date) setAgent(d);
       if (r && r.byDate) setAgentRanks(r);
       if (st && st.date) setAgentStatus(st);
       if (bd && bd.date) setBids(bd);
       if (gg && gg.byDate) setGRank(gg);
+      if (pn && pn.items) setPlaceNews(pn);
     };
     load();
     const onVis = () => document.visibilityState === 'visible' && load();
     document.addEventListener('visibilitychange', onVis);
     return () => document.removeEventListener('visibilitychange', onVis);
-  }, [setAgent, setAgentRanks, setAgentStatus, setBids, setGRank]);
+  }, [setAgent, setAgentRanks, setAgentStatus, setBids, setGRank, setPlaceNews]);
 
   // 비서가 리서치한 황금키워드가 오늘 것이면 그걸 우선 사용
   useEffect(() => {
@@ -5090,6 +5142,7 @@ export default function App() {
                     })
                   }
                 />
+                <PlaceNewsCard data={placeNews} toast={toast} />
                 <ExecBrief stats={salesStats} moves={rankMoves} goTab={setTab} />
                 <BidsCard bids={bids} today={today} />
                 <HubCard

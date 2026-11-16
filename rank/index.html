@@ -174,8 +174,14 @@ main{padding:14px 14px 0}
   .rec .t { flex:1; min-width:0; }
   .rec .t b { display:block; font-size:15px; }
   .rec .t small { color:var(--mut); font-size:12px; }
+  .fx { white-space:pre-wrap; background:#f6f8f8; border-radius:12px; padding:12px; font-size:14px; line-height:1.6; margin:8px 0; }
+  .fxh { display:flex; justify-content:space-between; align-items:center; gap:8px; font-weight:800; font-size:15px; }
+  .fxh button { height:36px; padding:0 12px; }
+  .fxk { display:flex; flex-wrap:wrap; gap:6px; margin:8px 0; }
+  .fxk span { background:#191919; color:#FFD233; font-weight:800; border-radius:999px; padding:5px 10px; font-size:13px; }
+  .fxl { font-size:13px; color:var(--mut); line-height:1.6; margin:4px 0 0; padding-left:18px; }
 </style>
-<script src="/v.js" data-v="v4" defer></script>
+<script src="/v.js" data-v="v5" defer></script>
 </head>
 <body>
 <div class="app">
@@ -216,6 +222,8 @@ main{padding:14px 14px 0}
     <section id="tab-check" class="hide">
       <div class="sec-t">반복 루틴 <small>꾸준함이 순위를 만듭니다</small></div>
       <div class="card" id="routine"></div>
+      <div class="sec-t">플레이스 정보 정비안 <small>전략수석 최영길 · 한 번만</small></div>
+      <div id="fixPlan"></div>
       <div class="sec-t">플레이스 세팅 점검 <small id="ckCount"></small></div>
       <div class="card" id="ckRing"></div>
       <div id="checklist"></div>
@@ -553,6 +561,7 @@ function renderBadge(){
   const b = $('#dueBadge'); b.textContent = n; b.classList.toggle('hide', !n);
 }
 function renderCheck(){
+  renderFix();
   $('#routine').innerHTML = ROUTINE.map(r => {
     const st = routineState(r), last = S.routine[r.id];
     const doneToday = last === today();
@@ -580,6 +589,64 @@ function renderCheck(){
   });
 }
 $('#ckReset').onclick = () => { if (confirm('세팅 체크를 모두 초기화할까요?')) { S.checks = {}; save(); renderCheck(); } };
+
+// ---------- 전략수석 플레이스 정비안 (한 번만) ----------
+const FIX = {
+  intro: `제주에서 2016년부터 입주청소·이사청소를 해온 링크클린입니다. 대표 청소 경력 12년, 청소관리사 1급 대표가 직접 현장에 들어가고, 품질을 위해 하루 2팀만 운영합니다.
+
+■ 하는 일
+· 입주·이사청소 (신축 분진, 구축 찌든 때)
+· 거주청소 · 부분청소 (주방·욕실·창틀)
+· 상가·사무실·준공청소
+· 쓰레기집 청소 · 유품정리 · 특수청소 (비밀 보장, 오존 탈취)
+· 외벽·고소 유리창 청소
+
+■ 다니는 곳
+제주시(노형·연동·아라·삼화·이도·외도·애월·조천·한림)와 서귀포(동홍·서홍·대정·남원·성산·표선·중문) 등 제주 전지역
+
+■ 이렇게 진행해요
+날짜 예약 → 확인 전화 → 필요할 때만 무료 방문 견적 → 청소 → 구역별 전·후 사진 리포트 → 확인 후 잔금
+육지에서 이사 오셔서 현장에 못 오셔도 사진으로 확인하실 수 있어요.
+
+전화 064-763-4545 (연중무휴 08:30~20:00) · 톡톡 상담 가능`,
+  keywords: ['제주입주청소', '제주이사청소', '서귀포입주청소', '제주청소업체', '제주쓰레기집청소'],
+  menu: `입주·이사청소 — 신축 분진·구축 찌든 때, 전후 사진 리포트
+거주청소 — 주방 기름때·욕실 물때·곰팡이 집중
+부분청소 — 주방·욕실·창틀만 골라서
+상가·사무실청소 — 매장·업무공간 바닥·유리·집기 주변
+준공청소 — 공사 후 분진·자재 오염 제거
+쓰레기집·특수청소 — 분리 배출·악취 제거·비밀 보장
+유품정리 — 유품 분류·귀중품 전달·반출·오존 탈취
+외벽·고소 유리창 청소 — 고소 장비·로프 작업`,
+  todo: [
+    '업체 소개(상세설명)를 위 글로 바꾸기',
+    '대표 키워드 5개를 위 키워드로 바꾸기',
+    '메뉴(서비스) 8개 등록 · 가격은 "변동/방문견적"으로',
+    '대표사진 1장 = 가장 깔끔한 전·후 비교 사진, 메뉴마다 그 서비스 사진 연결',
+    '네이버 예약·톡톡 켜기, 영업시간(연중무휴 08:30~20:00) 확인',
+    '업체 이름에는 키워드를 넣지 않기 (네이버 가이드 위반 위험)',
+    '달린 리뷰에 모두 답글 달기 (저녁 홍보 보고에 답글 초안이 와요)'
+  ]
+};
+function renderFix(){
+  const box = $('#fixPlan'); if (!box) return;
+  const done = FIX.todo.filter((_, i) => S.checks['fx' + i]).length;
+  box.innerHTML = `<div class="card">
+    <div class="fxh">① 업체 소개 글 <button class="btn pri press" data-cp="intro">복사</button></div>
+    <div class="fx">${esc(FIX.intro)}</div>
+    <div class="fxh">② 대표 키워드 5개 <button class="btn pri press" data-cp="kw">복사</button></div>
+    <div class="fxk">${FIX.keywords.map(k => `<span>${esc(k)}</span>`).join('')}</div>
+    <div class="fxh">③ 메뉴(서비스) 이름·설명 <button class="btn pri press" data-cp="menu">복사</button></div>
+    <div class="fx">${esc(FIX.menu)}</div>
+    <div class="fxh" style="margin-top:6px">④ 바꿀 것 체크 <small style="color:var(--mut);font-weight:600">${done}/${FIX.todo.length}</small></div>
+    ${FIX.todo.map((t, i) => `<button class="ck ${S.checks['fx' + i] ? 'on' : ''}" data-fx="${i}"><span class="box">✓</span><span><div class="tt">${esc(t)}</div></span></button>`).join('')}
+    <p class="fxl">스마트플레이스 앱 → 업체정보에서 하나씩 붙여넣으세요. 제주시점·서귀포점 둘 다 해당돼요.</p></div>`;
+  box.querySelectorAll('[data-cp]').forEach(b => b.onclick = async () => {
+    const t = b.dataset.cp === 'intro' ? FIX.intro : b.dataset.cp === 'kw' ? FIX.keywords.join('\n') : FIX.menu;
+    try { await navigator.clipboard.writeText(t); toast('복사했어요'); } catch(e) { toast('길게 눌러 복사해 주세요'); }
+  });
+  box.querySelectorAll('[data-fx]').forEach(b => b.onclick = () => { const id = 'fx' + b.dataset.fx; S.checks[id] = !S.checks[id]; if (!S.checks[id]) delete S.checks[id]; save(); renderFix(); });
+}
 
 // ---------- 설정 탭 ----------
 function renderSet(){

@@ -20,3 +20,7 @@ note는 15자 이내, 고객 이름·전화번호·매출 금지. 못 했으면 
 
 ## data/google.json — 구글 순위 (전략수석실, 매일 11:17, 키워드 탭 '구글 순위' 카드)
 { "date", "checkedAt", "note", "byDate": { "YYYY-MM-DD": [ { "kw", "map": 지도 업체칸 순위|0=권외|null, "web": linkclean.co.kr 웹 순위, "blog": 링크클린 블로그 글 순위 } ] } } — 60일 보관. status 키: google.
+
+## data/place-news.json — 플레이스 소식·짧은 영상 (홍보수석, 월·수·금 15:43, 브리핑 '플레이스 소식' 카드)
+{ "updatedAt", "used": [사용한 현장 job id], "items": [ { "date", "title", "body", "keyword", "clip": 영상 주소, "photos": 사진 수 } ] } 최신 10개. status 키: placenews.
+## 홈페이지 동네 페이지 — 전략수석, 수 14:37, linkclean-web src/data/seoPages.json 의 view:"area" 항목 추가. status 키: areapage.
