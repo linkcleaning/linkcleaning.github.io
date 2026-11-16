@@ -2902,9 +2902,10 @@ function secJobsFor(date: string): SecJob[] {
   if (wd === 4) jobs.push({ key: 'appcare', label: '앱 점검·정비', who: '전략수석실 앱정비비서관', when: '13:17' });
   if (wd === 2 || wd === 4) jobs.push({ key: 'ekpromo', label: '이케이클린 글 준비', who: '홍보수석실 이케이클린 담당', when: '13:17' });
   if (wd === 3 || wd === 5) jobs.push({ key: 'areapage', label: '홈페이지 동네 페이지', who: '전략수석 최영길', when: '13:17' });
-  jobs.push({ key: 'coupang', label: '쿠팡 글 준비', who: '제휴수석 박시은', when: '18:57' });
+  jobs.push({ key: 'coupang', label: '살림기록소 글·릴스 준비', who: '제휴수석 박시은', when: '18:57' });
   jobs.push({ key: 'dayreport', label: '저녁 하루 보고', who: '비서실장 한정호', when: '18:57' });
   jobs.push({ key: 'evening', label: '저녁 6곳 홍보', who: '홍보수석 한정민', when: '20:47' });
+  jobs.push({ key: 'salim', label: '살림기록소 게시·이웃 댓글', who: '제휴수석 박시은', when: '20:47' });
   return jobs.sort((x, y) => x.when.localeCompare(y.when));
 }
 function secJobState(job: SecJob, status: AgentStatus | null, agent: AgentDaily | null, today: string): 'done' | 'fail' | 'wait' {
