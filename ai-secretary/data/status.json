@@ -1,10 +1,30 @@
 {
   "date": "2026-11-16",
   "items": {
-    "report": {"done": true, "at": "07:58", "note": "보고서·키워드 3개"},
-    "blog": {"done": true, "at": "07:58", "note": "제주입주청소"},
-    "threads": {"done": true, "at": "07:24", "note": "버튼으로 실행됨"},
-    "coupang": {"done": true, "at": "07:23", "note": "버튼으로 실행됨"},
-    "evening": {"done": true, "at": "07:25", "note": "버튼으로 실행됨"}
+    "report": {
+      "done": true,
+      "at": "07:58",
+      "note": "보고서·키워드 3개"
+    },
+    "blog": {
+      "done": true,
+      "at": "07:58",
+      "note": "제주입주청소"
+    },
+    "threads": {
+      "done": true,
+      "at": "07:24",
+      "note": "버튼으로 실행됨"
+    },
+    "coupang": {
+      "done": true,
+      "at": "18:44",
+      "note": "문틈 바람막이 글"
+    },
+    "evening": {
+      "done": true,
+      "at": "07:25",
+      "note": "버튼으로 실행됨"
+    }
   }
 }
