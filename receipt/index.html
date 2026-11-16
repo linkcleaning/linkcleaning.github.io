@@ -81,7 +81,7 @@ nav.tabs button.on{background:var(--ink);color:#fff}
 }
 </style>
 <link rel="stylesheet" href="theme.css">
-<script src="/v.js" data-v="v22" defer></script>
+<script src="/v.js" data-v="v23" defer></script>
 </head>
 <body>
 <header>
@@ -676,6 +676,19 @@ const fontsReady = (async () => {
   try{ await Promise.race([Promise.all([400,500,700,900].map(w => document.fonts.load(`${w} 20px "Noto Sans KR"`, '영수증가'))), new Promise(r => setTimeout(r, 2500))]); }catch(e){}
 })();
 
+// 다른 앱(통합 현장 관리 등)에서 넘어온 값으로 새 영수증 채우기: ?to=&item=&price=&date=
+(function(){
+  const q = new URLSearchParams(location.search);
+  if(!q.has('to') && !q.has('price')) return;
+  doc = blankDoc();
+  doc.customer = (q.get('to') || '').slice(0, 60);
+  const d = q.get('date') || ''; if(/^\d{4}-\d{2}-\d{2}$/.test(d)) doc.date = d;
+  doc.items[0].name = (q.get('item') || '').slice(0, 60);
+  const pr = (q.get('price') || '').replace(/[^0-9]/g, ''); if(pr) doc.items[0].price = pr;
+  LS.set('rc_draft', doc);
+  history.replaceState(null, '', location.pathname);
+  setTimeout(() => toast(q.get('from') === 'field' ? '현장 관리에서 받은 내용으로 채웠어요' : '받은 내용으로 채웠어요'), 300);
+})();
 fillProfileSel(); fillPresets(); fillCustList(); bindForm();
 loadStamp().then(draw);
 if('serviceWorker' in navigator) window.addEventListener('load', () => navigator.serviceWorker.register('sw.js').catch(()=>{}));
