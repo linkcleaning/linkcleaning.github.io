@@ -1,0 +1,44 @@
+{
+ "date": "2026-11-16",
+ "summary": "14개 앱 점검 · 1건 고침 · 2건 추가",
+ "checked": 14,
+ "fixed": [
+  {
+   "app": "callback-app",
+   "what": "설치 페이지에 아이콘·버전 꼬리표(v2) 빠져 있던 것 추가",
+   "url": "https://linkcleaning.github.io/callback-app/"
+  }
+ ],
+ "added": [
+  {
+   "app": "receipt",
+   "what": "받는 분 칸에 최근 발행한 이름이 자동완성으로 떠요 (v22)",
+   "url": "https://linkcleaning.github.io/receipt/"
+  },
+  {
+   "app": "callback-app",
+   "what": "아이폰 안내 아래에 '콜백문자 앱' 바로가기 추가",
+   "url": "https://linkcleaning.github.io/callback-app/"
+  }
+ ],
+ "proposals": [
+  {
+   "app": "field",
+   "what": "현장 관리에서 작업 끝난 현장을 누르면 영수증·견적서가 받는 분·금액 채워진 채로 열리게 연결"
+  },
+  {
+   "app": "linkclean-web",
+   "what": "동네 페이지 작업이 홈페이지 저장소 쓰기 권한이 없어 오늘 반영 못 함 — 권한 연결 필요"
+  },
+  {
+   "app": "members",
+   "what": "손님용 멤버스·명함 페이지에도 작은 버전 표시를 넣을지 결정(손님 화면이라 보류)"
+  }
+ ],
+ "history": [
+  {
+   "date": "2026-11-16",
+   "summary": "14개 앱 점검 · 1건 고침 · 2건 추가"
+  }
+ ]
+}
