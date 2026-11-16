@@ -2891,6 +2891,7 @@ function secJobsFor(date: string): SecJob[] {
   if (wd === 1 || wd === 4) jobs.push({ key: 'blog', label: '블로그 초안', who: '홍보수석 한정민', when: '07:17' });
   jobs.push({ key: 'threads', label: '아침 스레드 게시', who: '소통수석 김기훈', when: '버튼' });
   if (wd === 2 || wd === 5) jobs.push({ key: 'tip', label: '청소팁 카드', who: '홍보수석실 콘텐츠비서관', when: '10:37' });
+  jobs.push({ key: 'google', label: '구글 순위 확인', who: '전략수석 최영길', when: '11:17' });
   if (wd >= 1 && wd <= 5) jobs.push({ key: 'bids', label: '입찰·공고 찾기', who: '영업수석실 입찰비서관', when: '08:23' });
   if (wd === 1) jobs.push({ key: 'keywords', label: '주간 키워드 리포트', who: '전략수석 최영길', when: '13:41' });
   jobs.push({ key: 'coupang', label: '쿠팡 글 준비', who: '제휴수석 박시은', when: '18:43' });
@@ -2961,6 +2962,68 @@ function BidsCard({ bids, today }: { bids: BidsData | null; today: string }) {
               {all ? '접기' : `${items.length - 4}건 더 보기`}
             </button>
           )}
+        </>
+      )}
+    </section>
+  );
+}
+
+/* 구글 순위 — 전략수석실이 매일 PC 크롬으로 확인 (data/google.json) */
+interface GoogleRow { kw: string; map?: number | null; web?: number | null; blog?: number | null }
+interface GoogleData { date?: string; checkedAt?: string; note?: string; byDate?: Record<string, GoogleRow[]> }
+
+function GoogleCard({ g }: { g: GoogleData | null }) {
+  const dates = Object.keys(g?.byDate || {}).sort();
+  const last = dates[dates.length - 1];
+  const prev = dates[dates.length - 2];
+  const rows = last ? g!.byDate![last] : [];
+  const prevOf = (kw: string) => (prev ? g!.byDate![prev].find((r) => r.kw === kw) : undefined);
+  const cell = (v?: number | null, pv?: number | null) => {
+    const t = v == null ? '-' : v === 0 ? '권외' : `${v}위`;
+    const up = v != null && pv != null && v > 0 && (pv === 0 || v < pv);
+    const down = v != null && pv != null && pv > 0 && (v === 0 || v > pv);
+    return (
+      <span className={`font-bold tabular-nums ${up ? 'text-emerald-300' : down ? 'text-rose-300' : 'text-slate-100'}`}>
+        {t}
+        {up ? ' ▲' : down ? ' ▼' : ''}
+      </span>
+    );
+  };
+  return (
+    <section className={`${card} mb-3`}>
+      <SectionTitle
+        icon={Search}
+        title="구글 순위 · 전략수석실"
+        right={last ? <span className="text-[11px] text-slate-400">{Number(last.slice(5, 7))}/{Number(last.slice(8))} 자동 확인</span> : undefined}
+      />
+      {!rows.length ? (
+        <p className="text-sm leading-relaxed text-slate-400">매일 오전 11시 17분에 구글에서 링크클린이 <b className="text-slate-200">지도(업체) 칸</b>과 <b className="text-slate-200">웹 검색</b>에서 몇 번째인지 자동으로 확인해 여기에 적어 둡니다.</p>
+      ) : (
+        <>
+          <table className="w-full text-sm">
+            <thead>
+              <tr className="text-[11px] text-slate-500">
+                <th className="py-1 text-left font-normal">키워드</th>
+                <th className="py-1 text-right font-normal">지도</th>
+                <th className="py-1 text-right font-normal">홈페이지</th>
+                <th className="py-1 text-right font-normal">블로그</th>
+              </tr>
+            </thead>
+            <tbody>
+              {rows.map((r) => {
+                const p = prevOf(r.kw);
+                return (
+                  <tr key={r.kw} className="border-t border-[#E9EAEE]">
+                    <td className="max-w-[9rem] truncate py-1.5 pr-2 text-slate-200">{r.kw}</td>
+                    <td className="py-1.5 text-right">{cell(r.map, p?.map)}</td>
+                    <td className="py-1.5 text-right">{cell(r.web, p?.web)}</td>
+                    <td className="py-1.5 text-right">{cell(r.blog, p?.blog)}</td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+          <p className="mt-2 text-[11px] leading-snug text-slate-500">지도 = 구글 지도 업체 목록 순서 · 홈페이지 = linkclean.co.kr 웹 순위 · 블로그 = 링크클린 네이버 블로그 글. {g?.note || ''}</p>
         </>
       )}
     </section>
@@ -4315,6 +4378,7 @@ export default function App() {
   const [agentRanks, setAgentRanks] = useLocal<AgentRanks | null>('agentRanks', null);
   const [agentStatus, setAgentStatus] = useLocal<AgentStatus | null>('agentStatus', null);
   const [bids, setBids] = useLocal<BidsData | null>('bids', null);
+  const [gRank, setGRank] = useLocal<GoogleData | null>('gRank', null);
   const [agentDone, setAgentDone] = useLocal<{ date: string; idx: number[] }>('agentDone', { date: '', idx: [] });
   const [hub, setHub] = useLocal<HubData | null>('hub', null);
   const [hubStatus, setHubStatus] = useState<'' | 'loading' | 'badpin' | 'error'>('');
@@ -4507,22 +4571,24 @@ export default function App() {
   /* ---------- 🤵 비서 자동 업무 결과 불러오기 (앱을 열 때·다시 볼 때마다) ---------- */
   useEffect(() => {
     const load = async () => {
-      const [d, r, st, bd] = await Promise.all([
+      const [d, r, st, bd, gg] = await Promise.all([
         fetchAgentJson<AgentDaily>('today.json'),
         fetchAgentJson<AgentRanks>('ranks.json'),
         fetchAgentJson<AgentStatus>('status.json'),
         fetchAgentJson<BidsData>('bids.json'),
+        fetchAgentJson<GoogleData>('google.json'),
       ]);
       if (d && d.date) setAgent(d);
       if (r && r.byDate) setAgentRanks(r);
       if (st && st.date) setAgentStatus(st);
       if (bd && bd.date) setBids(bd);
+      if (gg && gg.byDate) setGRank(gg);
     };
     load();
     const onVis = () => document.visibilityState === 'visible' && load();
     document.addEventListener('visibilitychange', onVis);
     return () => document.removeEventListener('visibilitychange', onVis);
-  }, [setAgent, setAgentRanks, setAgentStatus, setBids]);
+  }, [setAgent, setAgentRanks, setAgentStatus, setBids, setGRank]);
 
   // 비서가 리서치한 황금키워드가 오늘 것이면 그걸 우선 사용
   useEffect(() => {
@@ -5075,6 +5141,7 @@ export default function App() {
         {tab === 'sales' && (
           <SalesTab today={today} deals={deals} setDeals={setDeals} settings={settings} setSettings={setSettings} stats={salesStats} toast={toast} />
         )}
+        {tab === 'keyword' && <GoogleCard g={gRank} />}
         {tab === 'keyword' && (
           <KeywordTab
             today={today}

@@ -17,3 +17,6 @@ note는 15자 이내, 고객 이름·전화번호·매출 금지. 못 했으면 
 ## data/bids.json — 입찰·공고 비서관 (평일 08:23, 앱 '입찰·공고 비서관' 카드)
 { "date", "updatedAt", "note", "items": [{ "title", "org", "kind": "입찰|수의견적|모집|소식", "deadline", "amount", "url", "why", "new", "found" }] }
 공공 공고 정보만. status.json 키: bids.
+
+## data/google.json — 구글 순위 (전략수석실, 매일 11:17, 키워드 탭 '구글 순위' 카드)
+{ "date", "checkedAt", "note", "byDate": { "YYYY-MM-DD": [ { "kw", "map": 지도 업체칸 순위|0=권외|null, "web": linkclean.co.kr 웹 순위, "blog": 링크클린 블로그 글 순위 } ] } } — 60일 보관. status 키: google.
