@@ -31,3 +31,8 @@ note는 15자 이내, 고객 이름·전화번호·매출 금지. 못 했으면 
   "proposals": [{"app","what"}],   // 대표님 승인 필요 — 전략기획실에 "제안 n번 해줘"
   "history": [{"date","summary"}]  // 최근 12주 }
 status.json items.appcare 로 '비서들이 한 일'에 표시. 공개 저장소: 고객·매출·비밀번호 금지.
+
+## data/day-report.json (비서실장 저녁 하루 보고, 매일 18:57)
+{ "date": "YYYY-MM-DD", "at": "HH:MM", "headline": "대표님, …", "done": ["오늘 비서실이 한 일 한 줄", …],
+  "tomorrow": ["HH:MM 내일 할 일", …], "approvals": ["앱: 승인할 제안 한 줄", …] }
+브리핑 탭 맨 위 검은 카드로 그날만 표시. status.json items.dayreport. 공개 저장소: 일정 상세·고객·매출 금지.

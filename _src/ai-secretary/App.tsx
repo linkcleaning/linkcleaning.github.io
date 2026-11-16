@@ -2901,6 +2901,7 @@ function secJobsFor(date: string): SecJob[] {
   if (wd === 4) jobs.push({ key: 'appcare', label: '앱 점검·정비', who: '전략수석실 앱정비비서관', when: '16:17' });
   if (wd === 3) jobs.push({ key: 'areapage', label: '홈페이지 동네 페이지', who: '전략수석 최영길', when: '14:37' });
   jobs.push({ key: 'coupang', label: '쿠팡 글 준비', who: '제휴수석 박시은', when: '18:43' });
+  jobs.push({ key: 'dayreport', label: '저녁 하루 보고', who: '비서실장 한정호', when: '18:57' });
   jobs.push({ key: 'evening', label: '저녁 6곳 홍보', who: '홍보수석 한정민', when: '20:47' });
   return jobs.sort((x, y) => x.when.localeCompare(y.when));
 }
@@ -3402,6 +3403,41 @@ function DrawerTab({ today }: { today: string }) {
         )}
       </section>
     </div>
+  );
+}
+
+interface DayReport { date?: string; at?: string; headline?: string; done?: string[]; tomorrow?: string[]; approvals?: string[] }
+function DayReportCard({ rep, today }: { rep: DayReport | null; today: string }) {
+  if (!rep || rep.date !== today) return null;
+  return (
+    <section className="rounded-[28px] bg-[#191919] p-5 text-white shadow-[0_6px_18px_rgba(0,0,0,0.18)]">
+      <div className="flex items-center justify-between">
+        <span className="rounded-full bg-cw px-2.5 py-1 text-[11px] font-extrabold text-[#191919]">🌙 비서실장 저녁 보고</span>
+        {rep.at && <span className="text-[11px] text-white/50">{rep.at}</span>}
+      </div>
+      {rep.headline && <p className="mt-3 text-[16px] font-bold leading-snug">{rep.headline}</p>}
+      {(rep.done || []).length > 0 && (
+        <ul className="mt-3 space-y-1 text-[13px] leading-snug text-white/85">
+          {(rep.done || []).map((x, i) => <li key={i}>✓ {x}</li>)}
+        </ul>
+      )}
+      {(rep.tomorrow || []).length > 0 && (
+        <>
+          <p className="mt-3 text-[11px] font-extrabold text-cw">내일 비서실이 할 일</p>
+          <ul className="mt-1 space-y-1 text-[13px] leading-snug text-white/85">
+            {(rep.tomorrow || []).map((x, i) => <li key={i}>· {x}</li>)}
+          </ul>
+        </>
+      )}
+      {(rep.approvals || []).length > 0 && (
+        <div className="mt-3 rounded-2xl bg-white/10 p-3">
+          <p className="text-[11px] font-extrabold text-cw">승인하실 것 — 저녁 보고 알림에 "1번 해줘"라고 답장만</p>
+          <ul className="mt-1 space-y-1 text-[13px] leading-snug">
+            {(rep.approvals || []).map((x, i) => <li key={i}>{i + 1}. {x}</li>)}
+          </ul>
+        </div>
+      )}
+    </section>
   );
 }
 
@@ -4745,6 +4781,7 @@ export default function App() {
   const [agentRanks, setAgentRanks] = useLocal<AgentRanks | null>('agentRanks', null);
   const [agentStatus, setAgentStatus] = useLocal<AgentStatus | null>('agentStatus', null);
   const [bids, setBids] = useLocal<BidsData | null>('bids', null);
+  const [dayRep, setDayRep] = useLocal<DayReport | null>('dayrep', null);
   const [gRank, setGRank] = useLocal<GoogleData | null>('gRank', null);
   const [placeNews, setPlaceNews] = useLocal<PlaceNewsData | null>('placeNews', null);
   const [agentDone, setAgentDone] = useLocal<{ date: string; idx: number[] }>('agentDone', { date: '', idx: [] });
@@ -4955,6 +4992,7 @@ export default function App() {
         fetchAgentJson<GoogleData>('google.json'),
         fetchAgentJson<PlaceNewsData>('place-news.json'),
       ]);
+      fetchAgentJson<DayReport>('day-report.json').then((x) => x && x.date && setDayRep(x));
       if (d && d.date) setAgent(d);
       if (r && r.byDate) setAgentRanks(r);
       if (st && st.date) setAgentStatus(st);
@@ -5436,6 +5474,7 @@ export default function App() {
             goTab={setTab}
             top={
               <>
+                <DayReportCard rep={dayRep} today={today} />
                 <AgentCard
                   agent={agent}
                   status={agentStatus}
