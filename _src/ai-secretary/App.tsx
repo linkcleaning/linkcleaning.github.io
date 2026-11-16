@@ -2899,6 +2899,7 @@ function secJobsFor(date: string): SecJob[] {
   if (wd === 1) jobs.push({ key: 'keywords', label: '주간 키워드 리포트', who: '전략수석 최영길', when: '13:41' });
   if (wd === 1 || wd === 3 || wd === 5) jobs.push({ key: 'placenews', label: '플레이스 소식·영상', who: '홍보수석 한정민', when: '15:43' });
   if (wd === 4) jobs.push({ key: 'appcare', label: '앱 점검·정비', who: '전략수석실 앱정비비서관', when: '16:17' });
+  if (wd === 2 || wd === 4) jobs.push({ key: 'ekpromo', label: '이케이클린 글 준비', who: '홍보수석실 이케이클린 담당', when: '13:17' });
   if (wd === 3) jobs.push({ key: 'areapage', label: '홈페이지 동네 페이지', who: '전략수석 최영길', when: '14:37' });
   jobs.push({ key: 'coupang', label: '쿠팡 글 준비', who: '제휴수석 박시은', when: '18:43' });
   jobs.push({ key: 'dayreport', label: '저녁 하루 보고', who: '비서실장 한정호', when: '18:57' });
@@ -2916,7 +2917,7 @@ function secJobState(job: SecJob, status: AgentStatus | null, agent: AgentDaily 
   return 'wait';
 }
 
-interface BidItem { title: string; org?: string; kind?: string; deadline?: string; amount?: string; url?: string; why?: string; new?: boolean; found?: string }
+interface BidItem { title: string; org?: string; kind?: string; deadline?: string; amount?: string; url?: string; why?: string; new?: boolean; found?: string; for?: string }
 interface BidsData { date?: string; updatedAt?: string; note?: string; items?: BidItem[] }
 
 function BidsCard({ bids, today }: { bids: BidsData | null; today: string }) {
@@ -2949,6 +2950,7 @@ function BidsCard({ bids, today }: { bids: BidsData | null; today: string }) {
                 <a href={b.url || '#'} target="_blank" rel="noreferrer" className="block rounded-2xl bg-[#F2F3F5] p-3 active:scale-[0.99]">
                   <div className="mb-1 flex flex-wrap items-center gap-1.5">
                     {b.new && <span className="rounded-full bg-[#F04438] px-1.5 py-0.5 text-[10px] font-extrabold text-white">NEW</span>}
+                    {(b.for === 'ek' || b.for === 'both') && <span className="rounded-full bg-[#D77C67] px-2 py-0.5 text-[10px] font-extrabold text-white">{b.for === 'ek' ? '이케이클린' : '두 회사'}</span>}
                     {b.kind && <span className="rounded-full bg-cw px-2 py-0.5 text-[10px] font-extrabold text-[#191919]">{b.kind}</span>}
                     {dday(b.deadline) && <span className="rounded-full bg-[#191919] px-2 py-0.5 text-[10px] font-extrabold text-cw">{dday(b.deadline)}</span>}
                     {b.org && <span className="truncate text-[11px] text-slate-400">{b.org}</span>}
@@ -3040,6 +3042,43 @@ function GoogleCard({ g }: { g: GoogleData | null }) {
 /* 플레이스 소식·짧은 영상 — 홍보수석 한정민 (월·수·금) data/place-news.json */
 interface PlaceNews { date: string; title: string; body: string; keyword?: string; clip?: string; photos?: number }
 interface PlaceNewsData { updatedAt?: string; items?: PlaceNews[] }
+
+interface EkData { date?: string; blog?: { keyword?: string; title: string; body: string }; place?: { title: string; body: string }; insta?: string; areaPage?: string }
+function EkCard({ data, toast, today }: { data: EkData | null; toast: (m: string) => void; today: string }) {
+  const [open, setOpen] = useState<string | null>(null);
+  const copy = async (t: string, m: string) => toast((await copyText(t)) ? m : '복사에 실패했습니다.');
+  const fresh = data?.date && daysBetween(data.date, today) <= 6;
+  const Block = ({ id, label, title, body }: { id: string; label: string; title?: string; body: string }) => (
+    <div className="rounded-2xl bg-[#FBF3EE] p-3">
+      <p className="text-[11px] font-extrabold text-[#B5604D]">{label}</p>
+      {title && <p className="mt-0.5 text-sm font-bold leading-snug text-slate-50">{title}</p>}
+      <p className={`mt-1 whitespace-pre-line text-[13px] leading-relaxed text-slate-300 ${open === id ? '' : 'line-clamp-2'}`}>{body}</p>
+      <div className="mt-2 flex gap-1.5">
+        <button onClick={() => setOpen(open === id ? null : id)} className={`${btnGhost} flex-1 text-xs`}>{open === id ? '접기' : '전체'}</button>
+        {title && <button onClick={() => copy(title, '제목을 복사했어요.')} className={`${btnGhost} flex-1 text-xs`}>제목 복사</button>}
+        <button onClick={() => copy(body, '본문을 복사했어요.')} className="flex-1 rounded-full bg-[#D77C67] px-3 py-2 text-xs font-extrabold text-white active:scale-95">본문 복사</button>
+      </div>
+    </div>
+  );
+  return (
+    <section className={card}>
+      <SectionTitle icon={Sparkles} title="이케이클린 · 서귀포 여성기업" right={data?.date ? <span className="text-[11px] text-slate-400">{Number(data.date.slice(5, 7))}/{Number(data.date.slice(8))} 준비</span> : undefined} />
+      {!fresh ? (
+        <p className="text-sm leading-relaxed text-slate-400">화·목 오후에 이케이클린 블로그·플레이스 소식·인스타 글을 링크클린과 다른 주제·말투로 준비해요. 목요일엔 홈페이지에 서귀포 동네 페이지도 하나씩 늘려요.</p>
+      ) : (
+        <div className="space-y-2">
+          {data?.blog && <Block id="b" label={`블로그${data.blog.keyword ? ` · #${data.blog.keyword}` : ''}`} title={data.blog.title} body={data.blog.body} />}
+          {data?.place && <Block id="p" label="플레이스 소식" title={data.place.title} body={data.place.body} />}
+          {data?.insta && <Block id="i" label="인스타 캡션" body={data.insta} />}
+          {data?.areaPage && (
+            <a href={data.areaPage} target="_blank" rel="noreferrer" className="block rounded-full bg-[#191919] py-3 text-center text-sm font-extrabold text-cw">새 동네 페이지 보기 ›</a>
+          )}
+          <p className="text-[11px] text-slate-500">사진은 이케이클린 현장 사진만 써 주세요. 링크클린 사진·글과 섞이면 둘 다 순위가 떨어질 수 있어요.</p>
+        </div>
+      )}
+    </section>
+  );
+}
 
 function PlaceNewsCard({ data, toast }: { data: PlaceNewsData | null; toast: (m: string) => void }) {
   const [open, setOpen] = useState(false);
@@ -4784,6 +4823,7 @@ export default function App() {
   const [dayRep, setDayRep] = useLocal<DayReport | null>('dayrep', null);
   const [gRank, setGRank] = useLocal<GoogleData | null>('gRank', null);
   const [placeNews, setPlaceNews] = useLocal<PlaceNewsData | null>('placeNews', null);
+  const [ekData, setEkData] = useLocal<EkData | null>('ekData', null);
   const [agentDone, setAgentDone] = useLocal<{ date: string; idx: number[] }>('agentDone', { date: '', idx: [] });
   const [hub, setHub] = useLocal<HubData | null>('hub', null);
   const [hubStatus, setHubStatus] = useState<'' | 'loading' | 'badpin' | 'error'>('');
@@ -4992,6 +5032,7 @@ export default function App() {
         fetchAgentJson<GoogleData>('google.json'),
         fetchAgentJson<PlaceNewsData>('place-news.json'),
       ]);
+      fetchAgentJson<EkData>('ek.json').then((x) => x && x.date && setEkData(x));
       fetchAgentJson<DayReport>('day-report.json').then((x) => x && x.date && setDayRep(x));
       if (d && d.date) setAgent(d);
       if (r && r.byDate) setAgentRanks(r);
@@ -5489,6 +5530,7 @@ export default function App() {
                   }
                 />
                 <PlaceNewsCard data={placeNews} toast={toast} />
+                <EkCard data={ekData} toast={toast} today={today} />
                 <ExecBrief stats={salesStats} moves={rankMoves} goTab={setTab} />
                 <BidsCard bids={bids} today={today} />
                 <HubCard
