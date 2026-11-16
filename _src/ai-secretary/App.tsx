@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import {
   Sun,
   Cloud,
@@ -2897,6 +2897,7 @@ function secJobsFor(date: string): SecJob[] {
   jobs.push({ key: 'neighbors', label: '스레드 이웃 댓글', who: '소통수석 김기훈', when: '07:17' });
   jobs.push({ key: 'google', label: '구글 순위 확인', who: '전략수석 최영길', when: '07:17' });
   if (wd >= 1 && wd <= 5) jobs.push({ key: 'bids', label: '입찰·공고 찾기', who: '영업수석실 입찰비서관', when: '07:17' });
+  if (wd === 1 || wd === 4) jobs.push({ key: 'grants', label: '소상공인 지원사업 찾기', who: '영업수석실 지원사업비서관', when: '07:17' });
   if (wd === 1) jobs.push({ key: 'keywords', label: '주간 키워드 리포트', who: '전략수석 최영길', when: '13:17' });
   if (wd >= 1 && wd <= 5) jobs.push({ key: 'placenews', label: '플레이스 소식·영상', who: '홍보수석 한정민', when: '13:17' });
   if (wd === 4) jobs.push({ key: 'appcare', label: '앱 점검·정비', who: '전략수석실 앱정비비서관', when: '13:17' });
@@ -2922,7 +2923,7 @@ function secJobState(job: SecJob, status: AgentStatus | null, agent: AgentDaily 
 interface BidItem { title: string; org?: string; kind?: string; deadline?: string; amount?: string; url?: string; why?: string; new?: boolean; found?: string; for?: string }
 interface BidsData { date?: string; updatedAt?: string; note?: string; items?: BidItem[] }
 
-function BidsCard({ bids, today }: { bids: BidsData | null; today: string }) {
+function BidsCard({ bids, today, title = '입찰·공고 비서관', intro, empty }: { bids: BidsData | null; today: string; title?: string; intro?: ReactNode; empty?: string }) {
   const [all, setAll] = useState(false);
   const items = (bids?.items || []).filter((b) => !b.deadline || b.deadline >= today);
   const shown = all ? items : items.slice(0, 4);
@@ -2935,15 +2936,15 @@ function BidsCard({ bids, today }: { bids: BidsData | null; today: string }) {
     <section className={card}>
       <SectionTitle
         icon={ClipboardList}
-        title="입찰·공고 비서관"
+        title={title}
         right={bids?.date ? <span className="text-[11px] text-slate-400">{Number(bids.date.slice(5, 7))}/{Number(bids.date.slice(8))} 확인</span> : undefined}
       />
       {!bids?.date ? (
-        <p className="text-sm leading-relaxed text-slate-400">
+        intro ? <p className="text-sm leading-relaxed text-slate-400">{intro}</p> : <p className="text-sm leading-relaxed text-slate-400">
           평일 아침 8시 23분에 제주도청·제주시·서귀포시·나라장터에서 <b className="text-slate-200">청소·미화·방역·폐기물</b> 관련 입찰과 견적 공고를 찾아 여기에 올려 둡니다.
         </p>
       ) : items.length === 0 ? (
-        <p className="text-sm text-slate-400">지금 열려 있는 청소 관련 공고가 없어요. {bids.note ? `(${bids.note})` : ''}</p>
+        <p className="text-sm text-slate-400">{empty || '지금 열려 있는 청소 관련 공고가 없어요.'} {bids.note ? `(${bids.note})` : ''}</p>
       ) : (
         <>
           <ul className="space-y-2">
@@ -4822,6 +4823,7 @@ export default function App() {
   const [agentRanks, setAgentRanks] = useLocal<AgentRanks | null>('agentRanks', null);
   const [agentStatus, setAgentStatus] = useLocal<AgentStatus | null>('agentStatus', null);
   const [bids, setBids] = useLocal<BidsData | null>('bids', null);
+  const [grants, setGrants] = useLocal<BidsData | null>('grants', null);
   const [dayRep, setDayRep] = useLocal<DayReport | null>('dayrep', null);
   const [gRank, setGRank] = useLocal<GoogleData | null>('gRank', null);
   const [placeNews, setPlaceNews] = useLocal<PlaceNewsData | null>('placeNews', null);
@@ -5034,6 +5036,7 @@ export default function App() {
         fetchAgentJson<GoogleData>('google.json'),
         fetchAgentJson<PlaceNewsData>('place-news.json'),
       ]);
+      fetchAgentJson<BidsData>('grants.json').then((x) => x && x.date && setGrants(x));
       fetchAgentJson<EkData>('ek.json').then((x) => x && x.date && setEkData(x));
       fetchAgentJson<DayReport>('day-report.json').then((x) => x && x.date && setDayRep(x));
       if (d && d.date) setAgent(d);
@@ -5535,6 +5538,13 @@ export default function App() {
                 <EkCard data={ekData} toast={toast} today={today} />
                 <ExecBrief stats={salesStats} moves={rankMoves} goTab={setTab} />
                 <BidsCard bids={bids} today={today} />
+                <BidsCard
+                  bids={grants}
+                  today={today}
+                  title="소상공인 지원사업"
+                  intro={<>월·목 아침에 제주도·경제통상진흥원·소상공인시장진흥공단·기업마당에서 <b className="text-slate-200">제주 소상공인 지원금·융자·교육·판로 지원</b>을 찾아 올려 둡니다.</>}
+                  empty="지금 신청할 수 있는 지원사업이 없어요."
+                />
                 <HubCard
                   hub={hub}
                   hasPin={!!hubPin}

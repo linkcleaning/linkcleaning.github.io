@@ -46,3 +46,6 @@ status.json items.appcare 로 '비서들이 한 일'에 표시. 공개 저장소
 
 ### salim.json (11/17)
 살림기록소(@linkdole2026) 글·릴스. 저녁 보고가 general[0]=살림 팩트체크 O/X #N, general[1]=공감·꿀팁, coupang(월수금), reel(먼지씨 vs 악당 EP.N, data/salim/날짜.mp4, 캐릭터 SVG는 data/salim/char/) 작성. 저녁 홍보가 posted·stats({날짜:{click,buy}}, 금액 없음) 기록.
+
+### grants.json (11/17, v31)
+제주 소상공인 지원사업(입찰과 별도). 형식은 bids.json 과 같음 `{"date","updatedAt","note","items":[{title,org,kind(지원금|융자|교육|컨설팅|판로|기타),deadline,amount,url,why,for(link|ek|both),new,found}]}`. 아침 근무 월·목 갱신, 앱 브리핑 '소상공인 지원사업' 카드.
