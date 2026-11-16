@@ -2878,20 +2878,90 @@ async function fetchAgentJson<T>(file: string): Promise<T | null> {
 
 const normKw = (s: string) => s.replace(/\s+/g, '');
 
+/* 비서실 업무 현황 — 각 예약 작업이 끝날 때 data/status.json 에 기록 */
+interface AgentStatus {
+  date?: string;
+  items?: Record<string, { done?: boolean; at?: string; note?: string }>;
+}
+interface SecJob { key: string; label: string; who: string; when: string }
+function secJobsFor(date: string): SecJob[] {
+  const [y, m, d] = date.split('-').map(Number);
+  const wd = new Date(y, m - 1, d).getDay(); // 0=일
+  const jobs: SecJob[] = [{ key: 'report', label: '아침 보고서', who: '비서실장', when: '07:17' }];
+  if (wd === 1 || wd === 4) jobs.push({ key: 'blog', label: '블로그 초안', who: '홍보수석', when: '07:17' });
+  jobs.push({ key: 'threads', label: '아침 스레드 게시', who: '소통수석', when: '버튼' });
+  if (wd === 2 || wd === 5) jobs.push({ key: 'tip', label: '청소팁 카드', who: '콘텐츠비서관', when: '10:37' });
+  jobs.push({ key: 'coupang', label: '쿠팡 글 준비', who: '제휴수석', when: '18:43' });
+  jobs.push({ key: 'evening', label: '저녁 6곳 홍보', who: '홍보수석', when: '20:47' });
+  return jobs;
+}
+function secJobState(job: SecJob, status: AgentStatus | null, agent: AgentDaily | null, today: string): 'done' | 'fail' | 'wait' {
+  const it = status && status.date === today ? status.items?.[job.key] : undefined;
+  if (it) return it.done ? 'done' : 'fail';
+  // 예전 방식 호환: 아침 보고서·블로그는 today.json 으로 확인
+  if (agent && agent.date === today) {
+    if (job.key === 'report') return 'done';
+    if (job.key === 'blog' && agent.blog) return 'done';
+  }
+  return 'wait';
+}
+
+function SecretaryWork({ status, agent, today }: { status: AgentStatus | null; agent: AgentDaily | null; today: string }) {
+  const jobs = secJobsFor(today);
+  return (
+    <ul className="space-y-1.5">
+      {jobs.map((j) => {
+        const st = secJobState(j, status, agent, today);
+        const it = status && status.date === today ? status.items?.[j.key] : undefined;
+        return (
+          <li key={j.key} className="flex items-center gap-2 rounded-xl bg-[#F2F3F5] p-2.5">
+            {st === 'done' ? (
+              <CircleCheck className="h-5 w-5 shrink-0 text-emerald-400" />
+            ) : st === 'fail' ? (
+              <TriangleAlert className="h-5 w-5 shrink-0 text-rose-400" />
+            ) : (
+              <Circle className="h-5 w-5 shrink-0 text-slate-500" />
+            )}
+            <div className="min-w-0 flex-1">
+              <p className={`text-sm font-semibold leading-snug ${st === 'done' ? 'text-slate-100' : 'text-slate-300'}`}>{j.label}</p>
+              <p className="truncate text-[11px] text-slate-400">
+                {j.who}
+                {it?.note ? ` · ${it.note}` : ''}
+              </p>
+            </div>
+            <span
+              className={`shrink-0 rounded-full px-2 py-0.5 text-[11px] font-bold ${
+                st === 'done' ? 'bg-emerald-400/15 text-emerald-200' : st === 'fail' ? 'bg-rose-400/15 text-rose-300' : 'bg-white text-slate-400'
+              }`}
+            >
+              {st === 'done' ? `${it?.at || ''} 완료`.trim() : st === 'fail' ? '못 함' : j.when === '버튼' ? '버튼 대기' : `${j.when} 예정`}
+            </span>
+          </li>
+        );
+      })}
+    </ul>
+  );
+}
+
 function AgentCard({
   agent,
   today,
   toast,
   onDoneTodo,
   doneTodos,
+  status,
 }: {
   agent: AgentDaily | null;
   today: string;
   toast: (m: string) => void;
   onDoneTodo: (i: number) => void;
   doneTodos: number[];
+  status: AgentStatus | null;
 }) {
   const [open, setOpen] = useState<'blog' | 'threads' | 'threadsEvening' | null>(null);
+  const [view, setView] = useState<'me' | 'sec'>('me');
+  const jobs = secJobsFor(today);
+  const secDone = jobs.filter((j) => secJobState(j, status, agent, today) === 'done').length;
   const tomorrow = addDays(today, 1);
   const valid = agent && (agent.date === today || agent.date === tomorrow);
 
@@ -2903,6 +2973,10 @@ function AgentCard({
           비서실장이 매일 <b className="text-amber-200">아침 8시 전</b>에 오늘 올릴 블로그 글 초안, 스레드 글, 황금키워드, 현장 메모를 직접 써서 여기에 올려둡니다.
           대표님은 확인하고 복사만 하시면 됩니다.
         </p>
+        <p className="mb-2 mt-4 text-xs font-bold text-slate-300">
+          비서들이 한 일 <b className="text-emerald-300">{secDone}</b>/{jobs.length}
+        </p>
+        <SecretaryWork status={status} agent={agent} today={today} />
       </section>
     );
   }
@@ -2935,7 +3009,20 @@ function AgentCard({
       />
       {a.headline && <p className="mb-4 rounded-2xl bg-cw/10 p-3 text-[15px] font-semibold leading-relaxed text-amber-50">{a.headline}</p>}
 
-      {a.todo && a.todo.length > 0 && (
+      <div className="mb-2 grid grid-cols-2 gap-1 rounded-full bg-[#F2F3F5] p-1">
+        <button onClick={() => setView('me')} className={`rounded-full py-2 text-[13px] font-extrabold ${view === 'me' ? 'bg-cw text-[#191919]' : 'text-slate-400'}`}>
+          대표님 할 일 {(a.todo || []).filter((_, i) => doneTodos.includes(i)).length}/{(a.todo || []).length}
+        </button>
+        <button onClick={() => setView('sec')} className={`rounded-full py-2 text-[13px] font-extrabold ${view === 'sec' ? 'bg-cw text-[#191919]' : 'text-slate-400'}`}>
+          비서들이 한 일 {secDone}/{jobs.length}
+        </button>
+      </div>
+      {view === 'sec' && (
+        <div className="mb-4">
+          <SecretaryWork status={status} agent={agent} today={today} />
+        </div>
+      )}
+      {view === 'me' && a.todo && a.todo.length > 0 && (
         <div className="mb-4">
           <p className="mb-2 text-xs font-bold text-slate-300"><span className="text-amber-200">비서실장</span> · 오늘 이것만 하시면 됩니다</p>
           <ul className="space-y-1.5">
@@ -4165,6 +4252,7 @@ export default function App() {
   const [deals, setDeals] = useLocal<Deal[]>('deals', []);
   const [agent, setAgent] = useLocal<AgentDaily | null>('agent', null);
   const [agentRanks, setAgentRanks] = useLocal<AgentRanks | null>('agentRanks', null);
+  const [agentStatus, setAgentStatus] = useLocal<AgentStatus | null>('agentStatus', null);
   const [agentDone, setAgentDone] = useLocal<{ date: string; idx: number[] }>('agentDone', { date: '', idx: [] });
   const [hub, setHub] = useLocal<HubData | null>('hub', null);
   const [hubStatus, setHubStatus] = useState<'' | 'loading' | 'badpin' | 'error'>('');
@@ -4204,6 +4292,8 @@ export default function App() {
   }, [hubPin, loadHub]);
   const salesStats = useMemo(() => computeSales(deals, today, settings.monthlyTarget ?? 0), [deals, today, settings.monthlyTarget]);
   const salesTodo = salesStats.followUps.length + salesStats.reviewAsks.length + salesStats.todayJobs.length;
+  const secJobs = secJobsFor(today);
+  const secDone = secJobs.filter((jb) => secJobState(jb, agentStatus, agent, today) === 'done').length;
   const rankMoves = useMemo(() => rankMovesBetween(ranks, keywords, today, today), [ranks, keywords, today]);
 
   // 날씨 위치: 기본은 휴대폰 현재 위치(자동). 위치 권한이 없으면 설정의 기본 지역으로.
@@ -4355,15 +4445,20 @@ export default function App() {
   /* ---------- 🤵 비서 자동 업무 결과 불러오기 (앱을 열 때·다시 볼 때마다) ---------- */
   useEffect(() => {
     const load = async () => {
-      const [d, r] = await Promise.all([fetchAgentJson<AgentDaily>('today.json'), fetchAgentJson<AgentRanks>('ranks.json')]);
+      const [d, r, st] = await Promise.all([
+        fetchAgentJson<AgentDaily>('today.json'),
+        fetchAgentJson<AgentRanks>('ranks.json'),
+        fetchAgentJson<AgentStatus>('status.json'),
+      ]);
       if (d && d.date) setAgent(d);
       if (r && r.byDate) setAgentRanks(r);
+      if (st && st.date) setAgentStatus(st);
     };
     load();
     const onVis = () => document.visibilityState === 'visible' && load();
     document.addEventListener('visibilitychange', onVis);
     return () => document.removeEventListener('visibilitychange', onVis);
-  }, [setAgent, setAgentRanks]);
+  }, [setAgent, setAgentRanks, setAgentStatus]);
 
   // 비서가 리서치한 황금키워드가 오늘 것이면 그걸 우선 사용
   useEffect(() => {
@@ -4744,6 +4839,22 @@ export default function App() {
                 </span>
               </div>
             )}
+            <button
+              onClick={() => {
+                setTab('brief');
+                window.scrollTo({ top: 520, behavior: 'smooth' });
+              }}
+              className="absolute -left-4 bottom-6 grid h-[58px] w-[58px] place-items-center rounded-full bg-[#191919] text-center shadow-[0_4px_12px_rgba(0,0,0,0.18)] active:scale-95"
+              style={{ animation: 'aisec-float 3.3s ease-in-out infinite 1.2s' }}
+            >
+              <span className="text-[10px] font-bold leading-3 text-white/70">
+                비서실
+                <br />
+                <b className="text-[15px] leading-5 text-cw">
+                  {secDone}/{secJobs.length}
+                </b>
+              </span>
+            </button>
             {salesTodo > 0 && (
               <button
                 onClick={() => setTab('sales')}
@@ -4831,6 +4942,7 @@ export default function App() {
               <>
                 <AgentCard
                   agent={agent}
+                  status={agentStatus}
                   today={today}
                   toast={toast}
                   doneTodos={agentDone.date === agent?.date ? agentDone.idx : []}
