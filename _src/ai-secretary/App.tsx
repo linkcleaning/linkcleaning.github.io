@@ -2892,16 +2892,16 @@ function secJobsFor(date: string): SecJob[] {
   const wd = new Date(y, m - 1, d).getDay(); // 0=일
   const jobs: SecJob[] = [{ key: 'report', label: '아침 보고서', who: '비서실장 한정호', when: '07:17' }];
   if (wd === 1 || wd === 4) jobs.push({ key: 'blog', label: '블로그 초안', who: '홍보수석 한정민', when: '07:17' });
-  jobs.push({ key: 'threads', label: '아침 스레드 게시', who: '소통수석 김기훈', when: '08:43' });
-  if (wd === 2 || wd === 5) jobs.push({ key: 'tip', label: '청소팁 카드', who: '홍보수석실 콘텐츠비서관', when: '10:37' });
-  jobs.push({ key: 'google', label: '구글 순위 확인', who: '전략수석 최영길', when: '11:17' });
-  if (wd >= 1 && wd <= 5) jobs.push({ key: 'bids', label: '입찰·공고 찾기', who: '영업수석실 입찰비서관', when: '08:23' });
-  if (wd === 1) jobs.push({ key: 'keywords', label: '주간 키워드 리포트', who: '전략수석 최영길', when: '13:41' });
-  if (wd === 1 || wd === 3 || wd === 5) jobs.push({ key: 'placenews', label: '플레이스 소식·영상', who: '홍보수석 한정민', when: '15:43' });
-  if (wd === 4) jobs.push({ key: 'appcare', label: '앱 점검·정비', who: '전략수석실 앱정비비서관', when: '16:17' });
+  jobs.push({ key: 'threads', label: '아침 스레드 게시', who: '소통수석 김기훈', when: '07:17' });
+  if (wd === 2 || wd === 5) jobs.push({ key: 'tip', label: '청소팁 카드', who: '홍보수석실 콘텐츠비서관', when: '13:17' });
+  jobs.push({ key: 'google', label: '구글 순위 확인', who: '전략수석 최영길', when: '07:17' });
+  if (wd >= 1 && wd <= 5) jobs.push({ key: 'bids', label: '입찰·공고 찾기', who: '영업수석실 입찰비서관', when: '07:17' });
+  if (wd === 1) jobs.push({ key: 'keywords', label: '주간 키워드 리포트', who: '전략수석 최영길', when: '13:17' });
+  if (wd === 1 || wd === 3 || wd === 5) jobs.push({ key: 'placenews', label: '플레이스 소식·영상', who: '홍보수석 한정민', when: '13:17' });
+  if (wd === 4) jobs.push({ key: 'appcare', label: '앱 점검·정비', who: '전략수석실 앱정비비서관', when: '13:17' });
   if (wd === 2 || wd === 4) jobs.push({ key: 'ekpromo', label: '이케이클린 글 준비', who: '홍보수석실 이케이클린 담당', when: '13:17' });
-  if (wd === 3) jobs.push({ key: 'areapage', label: '홈페이지 동네 페이지', who: '전략수석 최영길', when: '14:37' });
-  jobs.push({ key: 'coupang', label: '쿠팡 글 준비', who: '제휴수석 박시은', when: '18:43' });
+  if (wd === 3) jobs.push({ key: 'areapage', label: '홈페이지 동네 페이지', who: '전략수석 최영길', when: '13:17' });
+  jobs.push({ key: 'coupang', label: '쿠팡 글 준비', who: '제휴수석 박시은', when: '18:57' });
   jobs.push({ key: 'dayreport', label: '저녁 하루 보고', who: '비서실장 한정호', when: '18:57' });
   jobs.push({ key: 'evening', label: '저녁 6곳 홍보', who: '홍보수석 한정민', when: '20:47' });
   return jobs.sort((x, y) => x.when.localeCompare(y.when));
