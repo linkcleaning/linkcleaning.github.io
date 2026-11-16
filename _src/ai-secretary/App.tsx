@@ -2891,6 +2891,7 @@ function secJobsFor(date: string): SecJob[] {
   if (wd === 1 || wd === 4) jobs.push({ key: 'blog', label: '블로그 초안', who: '홍보수석', when: '07:17' });
   jobs.push({ key: 'threads', label: '아침 스레드 게시', who: '소통수석', when: '버튼' });
   if (wd === 2 || wd === 5) jobs.push({ key: 'tip', label: '청소팁 카드', who: '콘텐츠비서관', when: '10:37' });
+  if (wd >= 1 && wd <= 5) jobs.push({ key: 'bids', label: '입찰·공고 찾기', who: '입찰비서관', when: '08:23' });
   jobs.push({ key: 'coupang', label: '쿠팡 글 준비', who: '제휴수석', when: '18:43' });
   jobs.push({ key: 'evening', label: '저녁 6곳 홍보', who: '홍보수석', when: '20:47' });
   return jobs;
@@ -2904,6 +2905,65 @@ function secJobState(job: SecJob, status: AgentStatus | null, agent: AgentDaily 
     if (job.key === 'blog' && agent.blog) return 'done';
   }
   return 'wait';
+}
+
+interface BidItem { title: string; org?: string; kind?: string; deadline?: string; amount?: string; url?: string; why?: string; new?: boolean; found?: string }
+interface BidsData { date?: string; updatedAt?: string; note?: string; items?: BidItem[] }
+
+function BidsCard({ bids, today }: { bids: BidsData | null; today: string }) {
+  const [all, setAll] = useState(false);
+  const items = (bids?.items || []).filter((b) => !b.deadline || b.deadline >= today);
+  const shown = all ? items : items.slice(0, 4);
+  const dday = (d?: string) => {
+    if (!d) return '';
+    const n = daysBetween(today, d);
+    return n === 0 ? '오늘 마감' : n > 0 ? `D-${n}` : '';
+  };
+  return (
+    <section className={card}>
+      <SectionTitle
+        icon={ClipboardList}
+        title="입찰·공고 비서관"
+        right={bids?.date ? <span className="text-[11px] text-slate-400">{Number(bids.date.slice(5, 7))}/{Number(bids.date.slice(8))} 확인</span> : undefined}
+      />
+      {!bids?.date ? (
+        <p className="text-sm leading-relaxed text-slate-400">
+          평일 아침 8시 23분에 제주도청·제주시·서귀포시·나라장터에서 <b className="text-slate-200">청소·미화·방역·폐기물</b> 관련 입찰과 견적 공고를 찾아 여기에 올려 둡니다.
+        </p>
+      ) : items.length === 0 ? (
+        <p className="text-sm text-slate-400">지금 열려 있는 청소 관련 공고가 없어요. {bids.note ? `(${bids.note})` : ''}</p>
+      ) : (
+        <>
+          <ul className="space-y-2">
+            {shown.map((b, i) => (
+              <li key={i}>
+                <a href={b.url || '#'} target="_blank" rel="noreferrer" className="block rounded-2xl bg-[#F2F3F5] p-3 active:scale-[0.99]">
+                  <div className="mb-1 flex flex-wrap items-center gap-1.5">
+                    {b.new && <span className="rounded-full bg-[#F04438] px-1.5 py-0.5 text-[10px] font-extrabold text-white">NEW</span>}
+                    {b.kind && <span className="rounded-full bg-cw px-2 py-0.5 text-[10px] font-extrabold text-[#191919]">{b.kind}</span>}
+                    {dday(b.deadline) && <span className="rounded-full bg-[#191919] px-2 py-0.5 text-[10px] font-extrabold text-cw">{dday(b.deadline)}</span>}
+                    {b.org && <span className="truncate text-[11px] text-slate-400">{b.org}</span>}
+                  </div>
+                  <p className="text-sm font-bold leading-snug text-slate-100">{b.title}</p>
+                  {(b.why || b.amount) && (
+                    <p className="mt-0.5 text-[12px] leading-snug text-slate-400">
+                      {b.amount ? `💰 ${b.amount} · ` : ''}
+                      {b.why}
+                    </p>
+                  )}
+                </a>
+              </li>
+            ))}
+          </ul>
+          {items.length > 4 && (
+            <button onClick={() => setAll(!all)} className={`${btnGhost} mt-2 w-full text-xs`}>
+              {all ? '접기' : `${items.length - 4}건 더 보기`}
+            </button>
+          )}
+        </>
+      )}
+    </section>
+  );
 }
 
 function SecretaryWork({ status, agent, today }: { status: AgentStatus | null; agent: AgentDaily | null; today: string }) {
@@ -4253,6 +4313,7 @@ export default function App() {
   const [agent, setAgent] = useLocal<AgentDaily | null>('agent', null);
   const [agentRanks, setAgentRanks] = useLocal<AgentRanks | null>('agentRanks', null);
   const [agentStatus, setAgentStatus] = useLocal<AgentStatus | null>('agentStatus', null);
+  const [bids, setBids] = useLocal<BidsData | null>('bids', null);
   const [agentDone, setAgentDone] = useLocal<{ date: string; idx: number[] }>('agentDone', { date: '', idx: [] });
   const [hub, setHub] = useLocal<HubData | null>('hub', null);
   const [hubStatus, setHubStatus] = useState<'' | 'loading' | 'badpin' | 'error'>('');
@@ -4445,20 +4506,22 @@ export default function App() {
   /* ---------- 🤵 비서 자동 업무 결과 불러오기 (앱을 열 때·다시 볼 때마다) ---------- */
   useEffect(() => {
     const load = async () => {
-      const [d, r, st] = await Promise.all([
+      const [d, r, st, bd] = await Promise.all([
         fetchAgentJson<AgentDaily>('today.json'),
         fetchAgentJson<AgentRanks>('ranks.json'),
         fetchAgentJson<AgentStatus>('status.json'),
+        fetchAgentJson<BidsData>('bids.json'),
       ]);
       if (d && d.date) setAgent(d);
       if (r && r.byDate) setAgentRanks(r);
       if (st && st.date) setAgentStatus(st);
+      if (bd && bd.date) setBids(bd);
     };
     load();
     const onVis = () => document.visibilityState === 'visible' && load();
     document.addEventListener('visibilitychange', onVis);
     return () => document.removeEventListener('visibilitychange', onVis);
-  }, [setAgent, setAgentRanks, setAgentStatus]);
+  }, [setAgent, setAgentRanks, setAgentStatus, setBids]);
 
   // 비서가 리서치한 황금키워드가 오늘 것이면 그걸 우선 사용
   useEffect(() => {
@@ -4954,6 +5017,7 @@ export default function App() {
                   }
                 />
                 <ExecBrief stats={salesStats} moves={rankMoves} goTab={setTab} />
+                <BidsCard bids={bids} today={today} />
                 <HubCard
                   hub={hub}
                   hasPin={!!hubPin}

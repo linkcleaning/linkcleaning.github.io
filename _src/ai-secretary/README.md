@@ -13,3 +13,7 @@
 ```
 키: report(아침 보고서) · blog(블로그 초안, 월·목) · threads(아침 스레드 게시) · tip(청소팁 카드, 화·금) · coupang(쿠팡 글 준비) · evening(저녁 6곳 홍보).
 note는 15자 이내, 고객 이름·전화번호·매출 금지. 못 했으면 done:false + 이유.
+
+## data/bids.json — 입찰·공고 비서관 (평일 08:23, 앱 '입찰·공고 비서관' 카드)
+{ "date", "updatedAt", "note", "items": [{ "title", "org", "kind": "입찰|수의견적|모집|소식", "deadline", "amount", "url", "why", "new", "found" }] }
+공공 공고 정보만. status.json 키: bids.
