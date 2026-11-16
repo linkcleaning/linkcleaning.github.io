@@ -40,3 +40,9 @@ status.json items.appcare 로 '비서들이 한 일'에 표시. 공개 저장소
 ## data/ek.json (이케이클린 홍보 비서, 화·목 13:17)
 { "date", "updatedAt", "blog": {keyword,title,body}, "place": {title,body}, "insta": "캡션", "areaPage": "목요일 새 동네 페이지 주소 또는 ''", "items": [{date,topic}] }
 브리핑 탭 '이케이클린' 카드. status.json items.ekpromo. bids.json items[].for = link|ek|both (이케이클린 몫 표시).
+
+### stories.json (11/17)
+대표님 현장 한 줄 썰. `{"note","items":[{"date","text","used"}]}` — 저녁 보고 대화에 "썰: …"로 답하면 맨 앞에 추가, 목요일 아침 근무가 '청소 12년 차의 솔직 고백 #N' 블로그·스레드에 쓰고 used:true. 공개 저장소이므로 고객 이름·상세 주소·연락처 금지.
+
+### salim.json (11/17)
+살림기록소(@linkdole2026) 글·릴스. 저녁 보고가 general[0]=살림 팩트체크 O/X #N, general[1]=공감·꿀팁, coupang(월수금), reel(먼지씨 vs 악당 EP.N, data/salim/날짜.mp4, 캐릭터 SVG는 data/salim/char/) 작성. 저녁 홍보가 posted·stats({날짜:{click,buy}}, 금액 없음) 기록.
