@@ -164,8 +164,18 @@ main{padding:14px 14px 0}
 .toast{position:fixed;left:50%;bottom:calc(96px + env(safe-area-inset-bottom));transform:translateX(-50%) translateY(20px);background:var(--t9);color:#fff;font-weight:800;font-size:14px;padding:11px 18px;border-radius:14px;opacity:0;transition:.25s;z-index:60;pointer-events:none;white-space:nowrap}
 .toast.on{opacity:1;transform:translateX(-50%)}
 .empty{text-align:center;color:var(--mut);font-weight:700;font-size:14px;padding:26px 10px}
+  .adrow { display:flex; align-items:center; gap:8px; margin:10px 0 2px; font-size:13px; font-weight:700; color:var(--mut); }
+  .adrow #adPad { display:flex; gap:6px; flex:1; }
+  .adrow button { flex:1; height:38px; border-radius:12px; border:2px solid var(--line); background:#fff; font-weight:800; font-size:14px; }
+  .adrow button.cur { background:#191919; color:#FFD233; border-color:#191919; }
+  .adtag { font-size:11px; font-weight:800; color:var(--mut); background:#f1f3f3; border-radius:6px; padding:2px 6px; margin-left:6px; }
+  .rec { display:flex; align-items:center; gap:8px; padding:10px 0; border-top:1px solid var(--line); }
+  .rec:first-child { border-top:0; }
+  .rec .t { flex:1; min-width:0; }
+  .rec .t b { display:block; font-size:15px; }
+  .rec .t small { color:var(--mut); font-size:12px; }
 </style>
-<script src="/v.js" data-v="v3" defer></script>
+<script src="/v.js" data-v="v4" defer></script>
 </head>
 <body>
 <div class="app">
@@ -190,7 +200,7 @@ main{padding:14px 14px 0}
   <main>
     <!-- 순위 탭 -->
     <section id="tab-rank">
-      <div class="tip" id="rankTip">📍 <b>기록 방법</b> — 키워드 옆 <b>지도앱</b>을 눌러 네이버 지도에서 검색 → 링크클린이 몇 번째인지 세고 → 돌아와서 숫자만 탭. 광고(AD) 표시된 업체는 빼고 세세요. 순위가 안 보이면 <b>권외</b>.</div>
+      <div class="tip" id="rankTip">📍 <b>광고 제외 순위</b>로 적어요 — 키워드 옆 <b>지도앱</b>으로 검색 → <b>광고(AD) 업체는 빼고</b> 링크클린이 몇 번째인지 세기 → 숫자 탭. 숫자판 아래에서 <b>광고가 몇 개였는지</b>도 눌러 주세요(광고 적은 키워드를 찾는 데 써요). 안 보이면 <b>권외</b>.</div>
       <div id="kwList"></div>
     </section>
 
@@ -222,6 +232,8 @@ main{padding:14px 14px 0}
           <button class="btn pri press" id="kwAdd">추가</button>
         </div>
       </div>
+      <div class="sec-t">추천 키워드 <small id="recBy">전략수석 최영길</small></div>
+      <div class="card" id="recBox"></div>
       <div class="sec-t">플레이스(지점) 이름</div>
       <div class="card">
         <div class="lbl" style="margin-top:0">지점 1</div>
@@ -256,6 +268,7 @@ main{padding:14px 14px 0}
   <div class="sh-t" id="shT"></div>
   <div class="sh-s" id="shS"></div>
   <div class="pad" id="pad"></div>
+  <div class="adrow"><span>이 검색 광고(AD)</span><div id="adPad"></div></div>
   <div class="pad-row">
     <input id="padIn" type="number" inputmode="numeric" placeholder="21위 이상은 직접 입력" />
     <button class="btn pri press" id="padOk">저장</button>
@@ -327,7 +340,7 @@ function fresh(){
 }
 let S;
 try { S = JSON.parse(localStorage.getItem(KEY)) || fresh(); } catch(e) { S = fresh(); }
-S.ranks ||= {}; S.checks ||= {}; S.routine ||= {}; S.places ||= ['제주시점','서귀포점']; S.keywords ||= [];
+S.ranks ||= {}; S.ads ||= {}; S.checks ||= {}; S.routine ||= {}; S.places ||= ['제주시점','서귀포점']; S.keywords ||= [];
 function save(){ try { localStorage.setItem(KEY, JSON.stringify(S)); } catch(e) { toast('저장 공간 오류 — 백업을 받아주세요'); } hubPush(); }
 // 🔗 링크 허브: 순위 기록을 AI 비서실로 보냄 (최근 120일)
 let hubTimer = null;
@@ -337,8 +350,9 @@ function hubPush(){
     try {
       const since = addDays(today(), -120), ranks = {};
       Object.keys(S.ranks || {}).forEach(d => { if (d >= since) ranks[d] = S.ranks[d]; });
+      const ads = {}; Object.keys(S.ads || {}).forEach(d => { if (d >= since) ads[d] = S.ads[d]; });
       fetch('https://linkclean-promo.han0829.workers.dev/api/hub/rank', { method:'POST', headers:{'Content-Type':'application/json'}, keepalive:true,
-        body: JSON.stringify({ data: { keywords: S.keywords, places: S.places, ranks } }) }).catch(() => {});
+        body: JSON.stringify({ data: { keywords: S.keywords, places: S.places, ranks, ads } }) }).catch(() => {});
     } catch(e) {}
   }, 1500);
 }
@@ -431,7 +445,7 @@ function renderRank(){
         <div class="pn">${esc(S.places[p])}</div>${valHTML(v)}${chgHTML(v, prevR(cur, k.id, p))}</button>`;
     }).join('');
     return `<div class="card">
-      <div class="kw-top"><div class="kw-name">${esc(k.name)}</div>
+      <div class="kw-top"><div class="kw-name">${esc(k.name)}${S.ads[cur]?.[k.id] != null ? `<span class="adtag">AD ${S.ads[cur][k.id] >= 4 ? '4+' : S.ads[cur][k.id]}</span>` : ''}</div>
         <div class="srch">
           <a class="map press" href="https://m.map.naver.com/search2/search.naver?query=${q}" target="_blank" rel="noopener">지도앱</a>
           <a class="press" href="https://m.search.naver.com/search.naver?where=m&query=${q}" target="_blank" rel="noopener">통합검색</a>
@@ -453,6 +467,14 @@ function openPad(kid, p){
   $('#pad').innerHTML = Array.from({length:20}, (_, i) => `<button class="num press ${v === i+1 ? 'cur' : ''}" data-v="${i+1}">${i+1}</button>`).join('');
   $('#pad').querySelectorAll('button').forEach(b => b.onclick = () => commit(+b.dataset.v));
   $('#padIn').value = v > 20 ? v : '';
+  const av = S.ads[cur]?.[kid];
+  $('#adPad').innerHTML = [0,1,2,3,4].map(n => `<button class="press ${av === n ? 'cur' : ''}" data-n="${n}">${n === 4 ? '4+' : n}</button>`).join('');
+  $('#adPad').querySelectorAll('button').forEach(b => b.onclick = () => {
+    const n = +b.dataset.n; S.ads[cur] ||= {};
+    if (S.ads[cur][kid] === n) delete S.ads[cur][kid]; else S.ads[cur][kid] = n;
+    save(); $('#adPad').querySelectorAll('button').forEach(x => x.classList.toggle('cur', S.ads[cur]?.[kid] === +x.dataset.n));
+    renderRank(); toast(S.ads[cur]?.[kid] == null ? '광고 수 지움' : `광고 ${n === 4 ? '4개 이상' : n + '개'} 기록`);
+  });
   $('#dim').classList.add('on'); $('#sheet').classList.add('on');
 }
 function closePad(){ $('#dim').classList.remove('on'); $('#sheet').classList.remove('on'); $('#padIn').blur(); padCtx = null; }
@@ -573,6 +595,18 @@ function renderSet(){
     save(); renderSet();
   });
   $('#pl0').value = S.places[0]; $('#pl1').value = S.places[1];
+  renderRec();
+}
+// 추천 키워드: 전략수석 주간 리포트(ai-secretary/data/keywords.json) → 없으면 기본 동네 키워드
+const BASE_REC = ['노형동 입주청소','연동 입주청소','아라동 입주청소','삼화지구 입주청소','서귀포 이사청소','애월 입주청소','제주 쓰레기집 청소','제주 상가청소','제주 사무실청소','서귀포 유품정리'].map(kw => ({ kw, why: '동네·서비스 키워드 (광고 경쟁이 적은 편)' }));
+let REC = null;
+fetch('/ai-secretary/data/keywords.json?t=' + Date.now(), { cache: 'no-store' }).then(r => r.ok ? r.json() : null).then(d => { if (d && Array.isArray(d.items) && d.items.length) { REC = d; renderRec(); } }).catch(() => {});
+function renderRec(){
+  const box = $('#recBox'); if (!box) return;
+  const list = (REC ? REC.items : BASE_REC).filter(x => x && x.kw && !S.keywords.some(k => k.name === x.kw)).slice(0, 10);
+  $('#recBy').textContent = REC ? `전략수석 최영길 · ${String(REC.date || '').slice(5).replace('-','/')} 리포트` : '전략수석 최영길 · 기본 추천';
+  box.innerHTML = list.length ? list.map((x, i) => `<div class="rec"><div class="t"><b>${esc(x.kw)}</b><small>${esc(x.why || '')}</small></div><button class="btn pri press" data-i="${i}" style="height:40px;padding:0 14px">추가</button></div>`).join('') : `<div class="empty" style="padding:8px">추천 키워드를 모두 추가했어요</div>`;
+  box.querySelectorAll('button').forEach(b => b.onclick = () => { const x = list[+b.dataset.i]; S.keywords.push({ id: uid(), name: x.kw }); save(); renderSet(); toast(`"${x.kw}" 추가됨`); });
 }
 $('#kwAdd').onclick = () => {
   const n = $('#kwNew').value.trim(); if (!n) return;
