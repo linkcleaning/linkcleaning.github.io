@@ -2889,7 +2889,7 @@ function secJobsFor(date: string): SecJob[] {
   const wd = new Date(y, m - 1, d).getDay(); // 0=일
   const jobs: SecJob[] = [{ key: 'report', label: '아침 보고서', who: '비서실장 한정호', when: '07:17' }];
   if (wd === 1 || wd === 4) jobs.push({ key: 'blog', label: '블로그 초안', who: '홍보수석 한정민', when: '07:17' });
-  jobs.push({ key: 'threads', label: '아침 스레드 게시', who: '소통수석 김기훈', when: '버튼' });
+  jobs.push({ key: 'threads', label: '아침 스레드 게시', who: '소통수석 김기훈', when: '08:43' });
   if (wd === 2 || wd === 5) jobs.push({ key: 'tip', label: '청소팁 카드', who: '홍보수석실 콘텐츠비서관', when: '10:37' });
   jobs.push({ key: 'google', label: '구글 순위 확인', who: '전략수석 최영길', when: '11:17' });
   if (wd >= 1 && wd <= 5) jobs.push({ key: 'bids', label: '입찰·공고 찾기', who: '영업수석실 입찰비서관', when: '08:23' });
@@ -2898,7 +2898,7 @@ function secJobsFor(date: string): SecJob[] {
   if (wd === 3) jobs.push({ key: 'areapage', label: '홈페이지 동네 페이지', who: '전략수석 최영길', when: '14:37' });
   jobs.push({ key: 'coupang', label: '쿠팡 글 준비', who: '제휴수석 박시은', when: '18:43' });
   jobs.push({ key: 'evening', label: '저녁 6곳 홍보', who: '홍보수석 한정민', when: '20:47' });
-  return jobs;
+  return jobs.sort((x, y) => x.when.localeCompare(y.when));
 }
 function secJobState(job: SecJob, status: AgentStatus | null, agent: AgentDaily | null, today: string): 'done' | 'fail' | 'wait' {
   const it = status && status.date === today ? status.items?.[job.key] : undefined;
@@ -3132,7 +3132,6 @@ function AgentCard({
   status: AgentStatus | null;
 }) {
   const [open, setOpen] = useState<'blog' | 'threads' | 'threadsEvening' | null>(null);
-  const [view, setView] = useState<'me' | 'sec'>('me');
   const jobs = secJobsFor(today);
   const secDone = jobs.filter((j) => secJobState(j, status, agent, today) === 'done').length;
   const tomorrow = addDays(today, 1);
@@ -3182,28 +3181,21 @@ function AgentCard({
       />
       {a.headline && <p className="mb-4 rounded-2xl bg-cw/10 p-3 text-[15px] font-semibold leading-relaxed text-amber-50">{a.headline}</p>}
 
-      <div className="mb-2 grid grid-cols-2 gap-1 rounded-full bg-[#F2F3F5] p-1">
-        <button onClick={() => setView('me')} className={`rounded-full py-2 text-[13px] font-extrabold ${view === 'me' ? 'bg-cw text-[#191919]' : 'text-slate-400'}`}>
-          대표님 할 일 {(a.todo || []).filter((_, i) => doneTodos.includes(i)).length}/{(a.todo || []).length}
-        </button>
-        <button onClick={() => setView('sec')} className={`rounded-full py-2 text-[13px] font-extrabold ${view === 'sec' ? 'bg-cw text-[#191919]' : 'text-slate-400'}`}>
-          비서들이 한 일 {secDone}/{jobs.length}
-        </button>
+      <p className="mb-2 text-xs font-bold text-slate-300">
+        <span className="text-amber-200">비서실</span> · 오늘 비서들이 하는 일 <b className="text-emerald-300">{secDone}</b>/{jobs.length}
+      </p>
+      <div className="mb-4">
+        <SecretaryWork status={status} agent={agent} today={today} />
       </div>
-      {view === 'sec' && (
-        <div className="mb-4">
-          <SecretaryWork status={status} agent={agent} today={today} />
-        </div>
-      )}
-      {view === 'me' && a.todo && a.todo.length > 0 && (
-        <div className="mb-4">
-          <p className="mb-2 text-xs font-bold text-slate-300"><span className="text-amber-200">비서실장</span> · 오늘 이것만 하시면 됩니다</p>
+      {a.todo && a.todo.length > 0 && (
+        <div className="mb-4 rounded-2xl border-2 border-cw bg-cw-soft p-3">
+          <p className="mb-1.5 text-xs font-extrabold text-[#191919]">📲 네이버에만 대표님 손이 필요해요</p>
           <ul className="space-y-1.5">
             {a.todo.map((t, i) => {
               const done = doneTodos.includes(i);
               return (
                 <li key={i}>
-                  <button onClick={() => onDoneTodo(i)} className="flex w-full items-start gap-2 rounded-xl bg-[#F2F3F5] p-2.5 text-left active:scale-[0.99]">
+                  <button onClick={() => onDoneTodo(i)} className="flex w-full items-start gap-2 rounded-xl bg-white p-2.5 text-left active:scale-[0.99]">
                     {done ? <CircleCheck className="mt-0.5 h-5 w-5 shrink-0 text-emerald-400" /> : <Circle className="mt-0.5 h-5 w-5 shrink-0 text-slate-500" />}
                     <span className={`text-sm leading-snug ${done ? 'text-slate-500 line-through' : 'text-slate-100'}`}>{t}</span>
                   </button>
