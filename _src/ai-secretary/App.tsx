@@ -4973,7 +4973,7 @@ export default function App() {
               rel="noreferrer"
               className="flex items-center justify-center rounded-full bg-white px-4 py-3.5 text-[14px] font-extrabold text-[#191919] active:scale-[0.98]"
             >
-              미래전략실 ›
+              전략기획실 ›
             </a>
           </div>
           </>
