@@ -19,16 +19,17 @@
    "app": "callback-app",
    "what": "아이폰 안내 아래에 '콜백문자 앱' 바로가기 추가",
    "url": "https://linkcleaning.github.io/callback-app/"
+  },
+  {
+   "app": "field",
+   "what": "대납 정산 청구서마다 [영수증] 버튼 — 누르면 현장 이름·품목·금액·날짜가 채워진 영수증이 바로 열려요 (field v4·receipt v23)",
+   "url": "https://linkcleaning.github.io/field/"
   }
  ],
  "proposals": [
   {
-   "app": "field",
-   "what": "현장 관리에서 작업 끝난 현장을 누르면 영수증·견적서가 받는 분·금액 채워진 채로 열리게 연결"
-  },
-  {
    "app": "linkclean-web",
-   "what": "동네 페이지 작업이 홈페이지 저장소 쓰기 권한이 없어 오늘 반영 못 함 — 권한 연결 필요"
+   "what": "홈페이지 저장소(linkclean-web)에 비서실 쓰기 권한 연결 필요 — 대표님이 깃허브 Claude 앱 설치 화면에서 이 저장소를 체크해 주셔야 해요"
   },
   {
    "app": "members",
