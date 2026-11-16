@@ -87,7 +87,7 @@ h2 em { font-style: normal; font-family: var(--font-body); font-size: 12px; colo
 footer { color: var(--muted); font-size: 12px; }
 @media (max-width: 420px) { .tiles { grid-template-columns: repeat(2, 1fr); } }
 </style>
-<script src="/v.js" data-v="v9" defer></script>
+<script src="/v.js" data-v="v10" defer></script>
 </head>
 <body>
 <div class="wrap">
@@ -117,14 +117,14 @@ const P = "https://play.google.com/store/apps/details?id=";
 // l: [종류, 주소] — 종류: web(PWA 주소), store(스토어 링크), text(링크 없는 안내)
 const apps = [
   { cat: "링크클린 업무용", name: "콜백문자", s: "live", d: "통화 직후 감사 인사·홍보 사진 문자 보내기", l: [["web", G+"callback/"], ["web", G+"android-app/", "안드로이드"], ["web", G+"callback-app/", "자동콜백 설치"]] },
-  { cat: "링크클린 업무용", name: "간이영수증·견적서", s: "live", d: "영수증·견적서 작성 후 카톡 전송, 링크클린 도장 내장", l: [["web", G+"receipt/"]] },
+  { cat: "링크클린 업무용", name: "간이영수증·견적서", s: "live", d: "영수증·견적서 작성 후 카톡 전송, 링크클린 도장 내장, 받는 분 자동완성", l: [["web", G+"receipt/"]] },
   { cat: "링크클린 업무용", name: "순위노트", s: "live", d: "네이버 플레이스 키워드 순위 기록 + 세팅 체크리스트", l: [["web", G+"rank/"]] },
   { cat: "링크클린 업무용", name: "후기부스터", s: "live", d: "플레이스·구글 후기 요청과 관리, 직원 공용", l: [["web", G+"review/"]] },
   { cat: "링크클린 업무용", name: "인스타 영업 비서", s: "live", d: "제주 사장님·부동산·인테리어 잠재 고객 찾기, 영업장부", n: "공공데이터로 신규 타겟 자동 수집 연결", l: [["web", G+"insta/"]] },
   { cat: "링크클린 업무용", name: "모바일 명함", s: "live", d: "콜백 문자에 넣는 링크클린 명함 페이지", l: [["web", G+"card/"]] },
   { cat: "링크클린 업무용", name: "링크 패스", s: "live", d: "아이폰 지갑에 넣는 링크클린 회원카드 발급 (실버·골드·VIP·패밀리)", n: "구글 월렛 발급자 가입 진행", l: [["web", G+"pass/"]] },
   { cat: "링크클린 업무용", name: "링크클린 멤버스", s: "live", d: "손님용 회원 페이지, 지인 소개 코드", l: [["web", G+"members/"]] },
-  { cat: "링크클린 업무용", name: "통합 현장관리", s: "live", d: "별장·계단·건물 입퇴실·청소 일정, 현장 리포트, 대납 정산", l: [["web", G+"field/"]] },
+  { cat: "링크클린 업무용", name: "통합 현장관리", s: "live", d: "별장·계단·건물 입퇴실·청소 일정, 현장 리포트, 대납 정산 (청구서 → 영수증 바로 만들기)", l: [["web", G+"field/"]] },
   { cat: "링크클린 업무용", name: "오늘의 스레드", s: "live", d: "버튼 하나로 스레드 글 + 추천 사진 팁 생성 (제주살이·생활 꿀팁·AI 앱 이야기) · 쿠팡 글 탭: 쿠팡파트너스 링크로 본문+첫 댓글", l: [["web", G+"threads/"]] },
   { cat: "링크클린 업무용", name: "링크 미래전략실", s: "live", d: "대표용 하루 업무·영업·마케팅 브리핑, 비서실장 지시, 세무장부·순위노트·자동콜백 연결", l: [["web", G+"ai-secretary/"]] },
   { cat: "링크클린 업무용", name: "문앞비움", s: "dev", d: "서귀포 문 앞 쓰레기 수거 서비스 (위미~모슬포)", n: "카카오 로그인 작동, Cloudflare 배포 예정", l: [["text", "GitHub · linkclean-pickup"]] },
