@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>링크 미래전략실 · 비서실장</title>
+<title>링크 미래전략실 · 비서실</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700;800;900&display=swap">
 <style>
@@ -125,12 +125,12 @@
 <body>
 <header class="top"><div class="in">
   <div class="eyebrow">링크 미래전략실</div>
-  <h1>비서실장실</h1>
-  <p class="lead">비서실장에게 무엇이든 물어보거나 맡기세요. 실제 일은 담당 부서에 지시서를 올려 대표님 확인 후 실행합니다. 결과는 휴대폰 알림으로 와요.</p>
+  <h1>비서실</h1>
+  <p class="lead">수석실별 업무를 바로 지시하거나, 아래 비서실장에게 무엇이든 물어보고 맡기세요. 결과는 휴대폰 알림으로 와요.</p>
   <nav class="org" aria-label="비서실 조직도">
     <div class="node ceo">대표<small>한승우</small></div>
     <div class="stem"></div>
-    <div class="node chief">비서실장<small>Claude</small></div>
+    <a class="node chief" href="#chat" style="text-decoration:none" onclick="event.preventDefault();document.getElementById('chat').scrollIntoView({behavior:'smooth'})">비서실장 💬<small>대화하기</small></a>
     <div class="stem"></div>
     <div class="bar"></div>
     <div class="suseok" id="orgChips"></div>
@@ -139,6 +139,12 @@
 
 <main class="wrap">
   <div class="status" id="status"><span class="dot" id="dot"></span><span id="statusText">연결 확인 중…</span></div>
+  <details class="extra-box">
+    <summary>아래 지시 버튼에 덧붙일 말 (선택)</summary>
+    <label for="extra" style="position:absolute;left:-9999px">덧붙일 말</label>
+    <textarea id="extra" placeholder="예: 오늘은 결로 주제로 써 줘 / 이 글로 올려 줘: …"></textarea>
+  </details>
+  <div id="depts" style="display:grid;gap:8px"></div>
   <section class="chat" id="chat" aria-label="비서실장에게 말하기">
     <div class="chat-head"><b>비서실장에게 말하기</b><button type="button" id="clearChat">대화 지우기</button></div>
     <div class="log" id="log" aria-live="polite"></div>
@@ -149,12 +155,6 @@
       <button class="go" type="submit" id="send">보내기</button>
     </form>
   </section>
-  <details class="extra-box">
-    <summary>아래 지시 버튼에 덧붙일 말 (선택)</summary>
-    <label for="extra" style="position:absolute;left:-9999px">덧붙일 말</label>
-    <textarea id="extra" placeholder="예: 오늘은 결로 주제로 써 줘 / 이 글로 올려 줘: …"></textarea>
-  </details>
-  <div id="depts" style="display:grid;gap:8px"></div>
   <p class="foot">
     오늘 준비된 글 보기 → <a href="https://linkcleaning.github.io/ai-secretary/">링크 미래전략실 앱</a><br>
     Claude 앱 채팅으로 말씀하셔도 됩니다.
