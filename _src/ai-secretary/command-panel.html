@@ -40,6 +40,8 @@
   .node { border-radius: 999px; padding: 7px 16px; font-weight: 700; font-size: 14px; white-space: nowrap; }
   .node small { font-weight: 500; opacity: .8; margin-left: 6px; font-size: 12px; }
   .node.ceo { background: #fff; color: var(--ink); }
+  .node.chair { background: #191919; color: #fff; border: 2px solid #fff; }
+  .su i { font-style: normal; font-size: 12px; font-weight: 700; color: var(--ink); }
   .node.chief { background: #191919; color: #FFD233; }
   .stem { width: 2px; height: 14px; background: #19191933; }
   .bar { width: 100%; height: 2px; background: #19191933; margin-top: 0; }
@@ -128,9 +130,11 @@
   <h1>비서실</h1>
   <p class="lead">수석실별 업무를 바로 지시하거나, 아래 비서실장에게 무엇이든 물어보고 맡기세요. 결과는 휴대폰 알림으로 와요.</p>
   <nav class="org" aria-label="비서실 조직도">
-    <div class="node ceo">대표<small>한승우</small></div>
+    <div class="node chair">회장 이은경<small>이케이그룹</small></div>
     <div class="stem"></div>
-    <a class="node chief" href="#chat" style="text-decoration:none" onclick="event.preventDefault();document.getElementById('chat').scrollIntoView({behavior:'smooth'})">비서실장 💬<small>대화하기</small></a>
+    <div class="node ceo">대표 한승우<small>링크클린</small></div>
+    <div class="stem"></div>
+    <a class="node chief" href="#chat" style="text-decoration:none" onclick="event.preventDefault();document.getElementById('chat').scrollIntoView({behavior:'smooth'})">비서실장 한정호 💬<small>대화하기</small></a>
     <div class="stem"></div>
     <div class="bar"></div>
     <div class="suseok" id="orgChips"></div>
@@ -171,32 +175,32 @@
   var APP = 'https://linkcleaning.github.io/ai-secretary/';
   // 수석실 → 소속 비서관 → 맡은 일
   var DEPTS = [
-    { key: 'chief', name: '비서실장실', short: '실장실', duty: '아침 보고 총괄',
+    { person: '한정호', key: 'chief', name: '비서실장실', short: '실장실', duty: '아침 보고 총괄',
       tasks: [
         { who: '비서실장', id: 'trig_01YVSejMCeuJTD6iRW1xNzwH', title: '오늘 업무 보고서 다시 써 줘', desc: '오늘 할 일 3개, 블로그 초안(월·목), 아침 스레드 글, 황금키워드, 현장 메모, 제주 소식을 새로 정리해 앱에 올립니다.', when: '매일 07:17', time: '약 5분' }
       ] },
-    { key: 'pr', name: '홍보수석실', short: '홍보수석', duty: '6곳 게시·청소팁',
+    { person: '한정민', key: 'pr', name: '홍보수석실', short: '홍보수석', duty: '6곳 게시·청소팁',
       tasks: [
         { who: '홍보수석', id: 'trig_016jPWUjqTzeqPu8iZXrVMEe', daily: true, title: '6곳 홍보 지금 올려', desc: '현장홍보 앱에 맡긴 현장 글을 인스타·스레드·구글·당근·카카오에 올리고, 플레이스용 글과 구글 리뷰 답글 초안을 보냅니다.', when: '매일 20:47', time: '약 10분', pc: true },
         { who: '콘텐츠비서관', id: 'trig_016THjQ2oRs8P7hvAetYtXz8', daily: true, title: '청소팁 카드 만들어', desc: '계절 청소팁 카드 3장과 6곳 글을 만들어 대기열에 넣고, 홈페이지 Q&A 칼럼을 1개 추가합니다. 게시는 그날 저녁.', when: '화·금 10:37', time: '약 8분', pc: true,
           extra: '대표님이 지휘실 버튼으로 직접 요청했다. 0단계의 "최근 3일 안에 끝난 작업이 있으면 종료" 조건은 이번엔 무시하고 진행한다(대기 작업이 이미 있으면 그 사실만 알리고 종료).' }
       ] },
-    { key: 'sns', name: '소통수석실', short: '소통수석', duty: '스레드·댓글',
+    { person: '김기훈', key: 'sns', name: '소통수석실', short: '소통수석', duty: '스레드·댓글',
       tasks: [
         { who: '소통수석', id: 'trig_018fBTXudMg5QidizdmQs5gH', daily: true, title: '아침 스레드 지금 올려', desc: '보고서에 준비된 아침 스레드 글을 @linkcleaning에 올리고, 30분 뒤 댓글에 답글을 답니다. (저녁 댓글·맞팔은 홍보수석 저녁 업무에 포함)', when: '버튼으로만', time: '약 3분', pc: true }
       ] },
-    { key: 'sales', name: '영업수석실', short: '영업수석', duty: '입찰·팔로업',
+    { person: '안규태', key: 'sales', name: '영업수석실', short: '영업수석', duty: '입찰·팔로업',
       tasks: [
         { who: '입찰비서관', id: 'trig_014aFaCPZaiNux3JGX6HAKiB', daily: true, title: '청소 입찰·공고 찾아 줘', desc: '제주도청·제주시·서귀포시·나라장터에서 청소·미화·방역·폐기물 관련 입찰과 견적·모집 공고를 찾아 앱 \'입찰·공고 비서관\' 칸에 올리고, 새 공고가 있으면 알려 드립니다.', when: '평일 08:23', time: '약 5분', pc: true }
       ],
       app: { title: '고객 팔로업·후기 요청', desc: '견적 후 연락 없는 고객, 작업 끝난 고객의 후기 요청 문자는 앱 \'영업\' 탭에서 바로 보냅니다. 비서실장 아침 보고에도 건수가 올라옵니다.' } },
-    { key: 'strategy', name: '전략수석실', short: '전략수석', duty: '키워드·노출 점검',
+    { person: '최영길', key: 'strategy', name: '전략수석실', short: '전략수석', duty: '키워드·노출 점검',
       tasks: [
         { who: '전략수석', id: 'trig_015PL4T2GXK3r5JGdzAkgvop', title: 'AI·검색 노출 점검해 줘', desc: '"제주 입주청소" 등 6개 검색어에서 링크클린이 나오는지, 경쟁 업체는 누구인지 표로 정리해 보냅니다.', when: '매월 1일 08:47', time: '약 3분' }
       ] },
     { key: 'office', name: '부속실', short: '부속실', duty: '루틴·건강·메모',
       app: { title: '대표님 일정·건강 챙기기', desc: '출근 거울샷, 약 복용(아침·점심·저녁), 3초 메모는 앱 \'루틴\'·\'메모\' 탭에서 챙깁니다. 시리로 "약 먹었어", "비서 메모"라고 해도 됩니다.', link: '앱 루틴 탭 열기 ›' } },
-    { key: 'biz', name: '제휴수석실', short: '제휴수석', duty: '쿠팡파트너스',
+    { person: '박시은', key: 'biz', name: '제휴수석실', short: '제휴수석', duty: '쿠팡파트너스',
       tasks: [
         { who: '제휴수석', id: 'trig_01Lg8r73Cc4NYs9sVYnDKyXC', daily: true, title: '쿠팡 스레드 글 준비', desc: '살림 팁 계정(@linkdole2026)용 일반 글과 오늘의 쿠팡 상품 글을 준비해 보냅니다. 링크클린과 분리된 계정이에요.', when: '매일 18:43', time: '약 2분' }
       ] },
@@ -228,7 +232,7 @@
     var box = document.getElementById('orgChips'); box.textContent = '';
     DEPTS.filter(function (d) { return d.key !== 'chief'; }).forEach(function (d) {
       var a = el('a', 'su'); a.href = '#' + d.key;
-      a.appendChild(el('b', null, d.short)); a.appendChild(el('span', null, d.duty));
+      a.appendChild(el('b', null, d.short)); if (d.person) a.appendChild(el('i', null, d.person)); a.appendChild(el('span', null, d.duty));
       a.addEventListener('click', function (ev) { ev.preventDefault(); var t = document.getElementById(d.key); if (t) t.scrollIntoView({ behavior: 'smooth', block: 'start' }); });
       box.appendChild(a);
     });
@@ -238,13 +242,13 @@
     var root = document.getElementById('depts'); root.textContent = '';
     DEPTS.forEach(function (d) {
       var sec = el('section', 'dept'); sec.id = d.key;
-      var head = el('div', 'dept-head'); head.appendChild(el('h2', null, d.name)); head.appendChild(el('span', null, d.duty));
+      var head = el('div', 'dept-head'); head.appendChild(el('h2', null, d.name)); head.appendChild(el('span', null, (d.person ? d.person + ' · ' : '') + d.duty));
       if ((d.tasks || []).some(function (t) { return t.daily; })) { var bg = el('span', 'badge', '오늘 0/1'); bg.id = 'badge-' + d.key; head.appendChild(bg); }
       sec.appendChild(head);
       (d.tasks || []).forEach(function (t) {
         var card = el('article', 'task');
         var th = el('div', 'task-head');
-        var left = el('div'); left.appendChild(el('div', 'who', t.who)); left.appendChild(el('h3', null, t.title)); th.appendChild(left);
+        var left = el('div'); left.appendChild(el('div', 'who', t.who + (d.person && /수석|실장/.test(t.who) ? ' ' + d.person : ''))); left.appendChild(el('h3', null, t.title)); th.appendChild(left);
         th.appendChild(el('span', 'chip' + (t.pc ? ' pc' : ''), t.pc ? 'PC 켜져 있어야 함' : t.time));
         card.appendChild(th);
         card.appendChild(el('p', null, t.desc));
@@ -368,10 +372,10 @@
   function rules() {
     var deptLines = DEPTS.map(function (d) {
       var ts = (d.tasks || []).map(function (t) { return '  - [' + t.id + '] ' + t.who + ': ' + t.title + ' — ' + t.desc + ' (정기: ' + t.when + (t.pc ? ', PC 필요' : '') + (t.daily ? ', 하루 1번만' + (doneToday(t) ? ' — 오늘 이미 완료라 지시 불가' : '') : '') + ')'; }).join('\n');
-      return '- ' + d.name + ' (' + d.duty + ')' + (ts ? '\n' + ts : '\n  - 앱에서 직접: ' + (d.app ? d.app.desc : ''));
+      return '- ' + d.name + (d.person ? ' [' + d.person + ']' : '') + ' (' + d.duty + ')' + (ts ? '\n' + ts : '\n  - 앱에서 직접: ' + (d.app ? d.app.desc : ''));
     }).join('\n');
     return [
-      '너는 제주 청소업체 링크클린 대표 한승우(대표님)의 AI 비서실장이다. 오늘은 ' + today() + '.',
+      '너는 제주 청소업체 링크클린 대표 한승우(대표님)의 AI 비서실장 "한정호"다. 조직: 회장 이은경(이케이그룹) → 대표 한승우 → 비서실장 한정호 → 수석실. 오늘은 ' + today() + '.',
       '말투: 존댓말, 짧고 명확하게. 휴대폰 화면이니 마크다운 제목·표·굵게(**)는 쓰지 말고, 필요하면 줄바꿈과 • 로만 정리한다.',
       '',
       '회사: 링크클린, 2016년 설립, 대표 청소 경력 12년, 제주 전 지역. 대표번호 064-763-4545(홍보용), 앱·스토어용 050-6520-0440. 홈페이지 www.linkclean.co.kr. 서비스: 입주·이사청소, 거주, 상가·사무실, 준공, 쓰레기집·특수청소, 유품정리, 폐기물 수거, 유리창, 오존 살균 탈취. 가격은 공개하지 않고 방문견적. 자매업체 이케이클린(서귀포 여성기업)은 브랜드 분리. 홍보 글에 스카이차량·벌집클린 단어 금지, 지어낸 현장 일화·통계 금지. 스레드 글은 해시태그·전화번호·URL 없이, 첫 문장에 제주+주제.',

@@ -2887,13 +2887,13 @@ interface SecJob { key: string; label: string; who: string; when: string }
 function secJobsFor(date: string): SecJob[] {
   const [y, m, d] = date.split('-').map(Number);
   const wd = new Date(y, m - 1, d).getDay(); // 0=일
-  const jobs: SecJob[] = [{ key: 'report', label: '아침 보고서', who: '비서실장', when: '07:17' }];
-  if (wd === 1 || wd === 4) jobs.push({ key: 'blog', label: '블로그 초안', who: '홍보수석', when: '07:17' });
-  jobs.push({ key: 'threads', label: '아침 스레드 게시', who: '소통수석', when: '버튼' });
-  if (wd === 2 || wd === 5) jobs.push({ key: 'tip', label: '청소팁 카드', who: '콘텐츠비서관', when: '10:37' });
-  if (wd >= 1 && wd <= 5) jobs.push({ key: 'bids', label: '입찰·공고 찾기', who: '입찰비서관', when: '08:23' });
-  jobs.push({ key: 'coupang', label: '쿠팡 글 준비', who: '제휴수석', when: '18:43' });
-  jobs.push({ key: 'evening', label: '저녁 6곳 홍보', who: '홍보수석', when: '20:47' });
+  const jobs: SecJob[] = [{ key: 'report', label: '아침 보고서', who: '비서실장 한정호', when: '07:17' }];
+  if (wd === 1 || wd === 4) jobs.push({ key: 'blog', label: '블로그 초안', who: '홍보수석 한정민', when: '07:17' });
+  jobs.push({ key: 'threads', label: '아침 스레드 게시', who: '소통수석 김기훈', when: '버튼' });
+  if (wd === 2 || wd === 5) jobs.push({ key: 'tip', label: '청소팁 카드', who: '홍보수석실 콘텐츠비서관', when: '10:37' });
+  if (wd >= 1 && wd <= 5) jobs.push({ key: 'bids', label: '입찰·공고 찾기', who: '영업수석실 입찰비서관', when: '08:23' });
+  jobs.push({ key: 'coupang', label: '쿠팡 글 준비', who: '제휴수석 박시은', when: '18:43' });
+  jobs.push({ key: 'evening', label: '저녁 6곳 홍보', who: '홍보수석 한정민', when: '20:47' });
   return jobs;
 }
 function secJobState(job: SecJob, status: AgentStatus | null, agent: AgentDaily | null, today: string): 'done' | 'fail' | 'wait' {
