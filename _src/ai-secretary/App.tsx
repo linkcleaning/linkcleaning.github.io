@@ -4957,23 +4957,30 @@ export default function App() {
             대표님, {greeting}. <span className="font-medium text-[#45474D]">{subLine}</span>
           </p>
 
-          <div className="mt-3 grid grid-cols-[1fr_auto] gap-2">
+          <div className="mt-3 grid grid-cols-[auto_1fr] items-stretch gap-2">
             <button
               onClick={toggleSpeak}
-              className={`flex items-center justify-center gap-2 rounded-full py-3.5 text-[15px] font-extrabold active:scale-[0.98] ${
+              className={`flex items-center justify-center gap-1.5 rounded-full px-4 py-3 text-[14px] font-extrabold active:scale-[0.98] ${
                 speaking ? 'bg-[#F04438] text-white' : 'bg-[#191919] text-white'
               }`}
             >
-              {speaking ? <Square className="h-5 w-5" /> : <Volume2 className="h-5 w-5 text-cw" />}
-              {speaking ? '브리핑 멈추기' : '음성 브리핑 듣기'}
+              {speaking ? <Square className="h-4 w-4" /> : <Volume2 className="h-4 w-4 text-cw" />}
+              {speaking ? '멈추기' : '음성 브리핑'}
             </button>
             <a
               href="https://claude.ai/artifact/4WTtTbpRQy1YjG4MWyNboC"
               target="_blank"
               rel="noreferrer"
-              className="flex items-center justify-center rounded-full bg-white px-4 py-3.5 text-[14px] font-extrabold text-[#191919] active:scale-[0.98]"
+              className="group relative flex items-center gap-3 overflow-hidden rounded-[18px] border-2 border-[#191919] bg-[#191919] px-3 py-2 text-left shadow-[0_4px_0_#7a5c00] active:translate-y-[2px] active:shadow-[0_2px_0_#7a5c00]"
+              aria-label="전략기획실 열기"
             >
-              전략기획실 ›
+              <span className="pointer-events-none absolute inset-[3px] rounded-[14px] border border-cw/50" />
+              <span className="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-cw text-[18px] leading-none">🏛️</span>
+              <span className="min-w-0 flex-1">
+                <span className="block text-[9px] font-extrabold tracking-[0.18em] text-cw/80">LINK STRATEGY</span>
+                <span className="block truncate text-[18px] font-black leading-6 tracking-tight text-cw">전략기획실</span>
+              </span>
+              <span className="text-[18px] font-black text-cw">›</span>
             </a>
           </div>
           </>
