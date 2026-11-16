@@ -38,9 +38,11 @@ import {
   Mic,
   MicOff,
   Smartphone,
+  Wallet,
+  Phone,
+  LayoutGrid,
   Play,
   Download,
-  TrendingUp,
   ArrowLeft,
   type LucideIcon,
 } from 'lucide-react';
@@ -3079,6 +3081,289 @@ function PlaceNewsCard({ data, toast }: { data: PlaceNewsData | null; toast: (m:
   );
 }
 
+
+/* =========================================================
+ *  💰 돈 · 📞 고객 · 🗂 서랍 — 대표님이 적지 않아도 비서실·허브가 채우는 탭
+ * ========================================================= */
+const TAX_DATES = [
+  { md: '01-25', label: '부가세 확정신고·납부 (지난해 7~12월분)' },
+  { md: '04-25', label: '부가세 예정고지 납부 (1~3월분, 고지서 금액)' },
+  { md: '05-31', label: '종합소득세 신고·납부 (지난해 소득)' },
+  { md: '07-25', label: '부가세 확정신고·납부 (1~6월분)' },
+  { md: '10-25', label: '부가세 예정고지 납부 (7~9월분, 고지서 금액)' },
+];
+function nextTaxDates(today: string) {
+  const y = Number(today.slice(0, 4));
+  const all = [y, y + 1].flatMap((yy) => TAX_DATES.map((t) => ({ date: `${yy}-${t.md}`, label: t.label })));
+  return all.filter((t) => t.date >= today).slice(0, 3);
+}
+
+function HubNeedPin({ what, onOpen }: { what: string; onOpen: () => void }) {
+  return (
+    <section className={card}>
+      <p className="text-sm leading-relaxed text-slate-400">{what}은(는) 링크 허브에서 자동으로 가져와요. 설정에서 허브 비밀번호를 한 번만 넣어 주세요.</p>
+      <button onClick={onOpen} className="mt-3 rounded-full bg-cw px-4 py-2.5 text-sm font-extrabold text-[#191919] active:scale-95">
+        허브 비밀번호 넣기
+      </button>
+    </section>
+  );
+}
+
+function MoneyTab({ hub, hasPin, today, onOpenSettings }: { hub: HubData | null; hasPin: boolean; today: string; onOpenSettings: () => void }) {
+  if (!hasPin) return <HubNeedPin what="세무장부 매출·세금" onOpen={onOpenSettings} />;
+  const L = hub?.ledger?.data;
+  const ym = today.slice(0, 7);
+  const y = Number(today.slice(0, 4)), m = Number(today.slice(5, 7));
+  const half = m <= 6 ? [1, 6] : [7, 12];
+  const halfMonths = Array.from({ length: half[1] - half[0] + 1 }, (_, i) => `${y}-${String(half[0] + i).padStart(2, '0')}`).filter((k) => k <= ym);
+  const bizList = L?.bizList?.length ? L.bizList : [{ id: 'main', name: '링크클린' }];
+  const months6 = Array.from({ length: 6 }, (_, i) => {
+    const d = new Date(y, m - 1 - (5 - i), 1);
+    return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
+  });
+  const v = (k: string, bz: string): HubLedgerBiz | undefined => L?.months?.[k]?.[bz];
+  const due = nextTaxDates(today);
+  return (
+    <div className="space-y-3">
+      <section className={card}>
+        <SectionTitle icon={Wallet} title="돈 · 세금 달력" />
+        <ul className="space-y-1.5">
+          {due.map((t) => {
+            const n = daysBetween(today, t.date);
+            return (
+              <li key={t.date} className="flex items-center gap-2 rounded-xl bg-[#F2F3F5] p-2.5">
+                <span className={`shrink-0 rounded-full px-2 py-0.5 text-[11px] font-extrabold ${n <= 14 ? 'bg-[#F04438] text-white' : 'bg-[#191919] text-cw'}`}>D-{n}</span>
+                <span className="min-w-0 flex-1 text-sm font-semibold text-slate-100">
+                  {Number(t.date.slice(5, 7))}/{Number(t.date.slice(8))} {t.label}
+                </span>
+              </li>
+            );
+          })}
+        </ul>
+        <p className="mt-2 text-[11px] leading-snug text-slate-500">마감일이 주말·공휴일이면 다음 평일까지예요. 예정고지는 국세청 고지서 금액을 내면 돼요.</p>
+      </section>
+
+      {!L ? (
+        <section className={card}>
+          <p className="text-sm text-slate-400">세무장부 앱을 한 번 열면 월별 합계가 여기로 와요.</p>
+          <a href="https://linkcleaning.github.io/ledger/" className="mt-3 inline-block rounded-full bg-cw px-4 py-2.5 text-sm font-extrabold text-[#191919]">
+            세무장부 열기 ›
+          </a>
+        </section>
+      ) : (
+        bizList.map((b) => {
+          const cur = v(ym, b.id);
+          const vatHalf = halfMonths.reduce((acc, k) => acc + ((v(k, b.id)?.salesVat || 0) - (v(k, b.id)?.purchaseVat || 0)), 0);
+          const max = Math.max(1, ...months6.map((k) => v(k, b.id)?.sales || 0));
+          return (
+            <section key={b.id} className={card}>
+              <SectionTitle icon={Wallet} title={b.name} right={hub?.ledger?.updatedAt ? <span className="text-[11px] text-slate-400">{agoText(hub.ledger.updatedAt)} 갱신</span> : undefined} />
+              <div className="grid grid-cols-3 gap-2 text-center">
+                <div className="rounded-2xl bg-[#F2F3F5] p-3">
+                  <p className="text-[11px] text-slate-400">{m}월 매출</p>
+                  <p className="mt-0.5 font-num text-[17px]">{fmtWon(cur?.sales || 0)}</p>
+                  <p className="text-[10px] text-slate-500">{cur?.salesCount || 0}건</p>
+                </div>
+                <div className="rounded-2xl bg-[#F2F3F5] p-3">
+                  <p className="text-[11px] text-slate-400">{m}월 매입</p>
+                  <p className="mt-0.5 font-num text-[17px]">{fmtWon(cur?.purchase || 0)}</p>
+                </div>
+                <div className="rounded-2xl bg-[#F2F3F5] p-3">
+                  <p className="text-[11px] text-slate-400">{m}월 인건비</p>
+                  <p className="mt-0.5 font-num text-[17px]">{fmtWon(cur?.labor || 0)}</p>
+                </div>
+              </div>
+              <div className="mt-3 rounded-2xl border-2 border-cw bg-cw-soft p-3">
+                <p className="text-[12px] font-bold text-[#45474D]">
+                  {half[0]}~{half[1]}월 예상 부가세 (매출세액 − 매입세액, 지금까지)
+                </p>
+                <p className="mt-0.5 font-num text-[24px]">{fmtWon(Math.max(0, vatHalf))}</p>
+                <p className="text-[11px] text-[#45474D]">👉 세금통장에 이만큼 떼어 두세요. 참고용 추정이고, 신고는 세무장부의 홈택스 요약표로 해요.</p>
+              </div>
+              <div className="mt-3">
+                <p className="mb-1 text-[11px] font-bold text-slate-400">최근 6개월 매출</p>
+                <div className="flex h-24 items-end gap-1.5">
+                  {months6.map((k) => {
+                    const sv = v(k, b.id)?.sales || 0;
+                    return (
+                      <div key={k} className="flex flex-1 flex-col items-center gap-1">
+                        <div className={`w-full rounded-t-md ${k === ym ? 'bg-[#191919]' : 'bg-cw'}`} style={{ height: `${Math.max(4, (sv / max) * 72)}px` }} />
+                        <span className="text-[10px] text-slate-500">{Number(k.slice(5))}월</span>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            </section>
+          );
+        })
+      )}
+      <a href="https://linkcleaning.github.io/ledger/" className="block rounded-full bg-[#191919] py-3.5 text-center text-sm font-extrabold text-cw">
+        세무장부 열기 (영수증·매입 입력) ›
+      </a>
+    </div>
+  );
+}
+
+function CallsTab({ hub, hasPin, toast, onOpenSettings }: { hub: HubData | null; hasPin: boolean; toast: (m: string) => void; onOpenSettings: () => void }) {
+  const [filter, setFilter] = useState<'all' | 'missed' | 'today'>('all');
+  if (!hasPin) return <HubNeedPin what="자동콜백 통화 기록" onOpen={onOpenSettings} />;
+  const now = Date.now();
+  const startToday = new Date(); startToday.setHours(0, 0, 0, 0);
+  const ev = (hub?.calls?.events ?? []).filter((c) => hubTime(c.t) >= now - 14 * 86400000);
+  const groups = new Map<string, { n: string; last: HubCall; calls: HubCall[] }>();
+  ev.slice().sort((a, b) => hubTime(b.t) - hubTime(a.t)).forEach((c) => {
+    const k = phoneDigits(c.n) || c.n;
+    const g = groups.get(k);
+    if (g) g.calls.push(c); else groups.set(k, { n: c.n, last: c, calls: [c] });
+  });
+  let list = [...groups.values()];
+  if (filter === 'missed') list = list.filter((g) => g.calls.some((c) => c.k === '부재중'));
+  if (filter === 'today') list = list.filter((g) => hubTime(g.last.t) >= startToday.getTime());
+  const today = ev.filter((c) => hubTime(c.t) >= startToday.getTime());
+  const sent = (c: HubCall) => (c.s || '').startsWith('성공');
+  return (
+    <div className="space-y-3">
+      <section className={card}>
+        <SectionTitle icon={Phone} title="고객 · 전화함" right={hub?.calls?.updatedAt ? <span className="text-[11px] text-slate-400">{agoText(hub.calls.updatedAt)} 갱신</span> : undefined} />
+        <div className="grid grid-cols-3 gap-2 text-center">
+          <div className="rounded-2xl bg-[#F2F3F5] p-3">
+            <p className="font-num text-[24px]">{today.filter((c) => c.k !== '발신').length}</p>
+            <p className="text-[11px] text-slate-400">오늘 전화</p>
+          </div>
+          <div className="rounded-2xl bg-[#F2F3F5] p-3">
+            <p className="font-num text-[24px] text-rose-300">{today.filter((c) => c.k === '부재중').length}</p>
+            <p className="text-[11px] text-slate-400">오늘 부재중</p>
+          </div>
+          <div className="rounded-2xl bg-[#F2F3F5] p-3">
+            <p className="font-num text-[24px] text-emerald-300">{today.filter(sent).length}</p>
+            <p className="text-[11px] text-slate-400">자동 문자</p>
+          </div>
+        </div>
+        <p className="mt-2 text-[11px] leading-snug text-slate-500">세컨폰 자동콜백 앱이 통화 기록과 문자 발송 결과를 자동으로 보내요. 적으실 건 없어요.</p>
+      </section>
+      <div className="grid grid-cols-3 gap-1 rounded-full bg-white p-1">
+        {([['all', '최근 2주'], ['missed', '부재중'], ['today', '오늘']] as const).map(([k, l]) => (
+          <button key={k} onClick={() => setFilter(k)} className={`rounded-full py-2 text-[13px] font-extrabold ${filter === k ? 'bg-cw text-[#191919]' : 'text-slate-400'}`}>
+            {l}
+          </button>
+        ))}
+      </div>
+      {list.length === 0 ? (
+        <section className={card}>
+          <p className="text-sm text-slate-400">{hub?.calls ? '해당하는 전화가 없어요.' : '세컨폰 자동콜백 앱을 업데이트하면 통화 기록이 여기로 와요.'}</p>
+        </section>
+      ) : (
+        <section className={`${card} space-y-2`}>
+          {list.map((g) => {
+            const missed = g.calls.filter((c) => c.k === '부재중').length;
+            return (
+              <div key={g.n} className="flex items-center gap-2 rounded-2xl bg-[#F2F3F5] p-3">
+                <span className={`grid h-9 w-9 shrink-0 place-items-center rounded-full text-[11px] font-extrabold ${g.last.k === '부재중' ? 'bg-[#F04438] text-white' : g.last.k === '발신' ? 'bg-white text-slate-400' : 'bg-[#191919] text-cw'}`}>
+                  {g.last.k === '부재중' ? '부재' : g.last.k === '발신' ? '발신' : '수신'}
+                </span>
+                <div className="min-w-0 flex-1">
+                  <p className="text-[15px] font-bold tabular-nums text-slate-100">{prettyPhone(g.n)}</p>
+                  <p className="truncate text-[11px] text-slate-400">
+                    {agoText(g.last.t)} · {g.calls.length}통{missed ? ` (부재 ${missed})` : ''}
+                    {g.last.s ? ` · 문자 ${g.last.s.replace(/^제외: /, '안 보냄: ')}` : ''}
+                  </p>
+                </div>
+                <button
+                  onClick={async () => toast((await copyText(phoneDigits(g.n))) ? '번호를 복사했어요. 세컨폰에서 전화·문자하세요.' : '복사 실패')}
+                  className="shrink-0 rounded-full bg-white px-3 py-2 text-[12px] font-bold text-slate-200 active:scale-95"
+                >
+                  번호 복사
+                </button>
+              </div>
+            );
+          })}
+        </section>
+      )}
+    </div>
+  );
+}
+
+const DRAWER_APPS: { name: string; url: string; ic: string; d: string }[] = [
+  { name: '전략기획실', url: 'https://claude.ai/artifact/4WTtTbpRQy1YjG4MWyNboC', ic: '🏛️', d: '비서실 지시·비서실장 대화' },
+  { name: '현장홍보', url: 'https://linkclean-promo.han0829.workers.dev/', ic: '📸', d: '현장 사진 맡기기 → 6곳 홍보' },
+  { name: '세무장부', url: 'https://linkcleaning.github.io/ledger/', ic: '📒', d: '매출·매입·홈택스 요약' },
+  { name: '순위노트', url: 'https://linkcleaning.github.io/rank/', ic: '📍', d: '플레이스 순위·정비안' },
+  { name: '간이영수증·견적서', url: 'https://linkcleaning.github.io/receipt/', ic: '🧾', d: '견적서·영수증 카톡 전송' },
+  { name: '후기부스터', url: 'https://linkcleaning.github.io/review/', ic: '⭐', d: '후기 요청·관리' },
+  { name: '콜백문자', url: 'https://linkcleaning.github.io/callback-app/', ic: '💬', d: '통화 후 문자 설정' },
+  { name: '통합 현장관리', url: 'https://linkcleaning.github.io/field/', ic: '🗓️', d: '별장·건물 일정·리포트' },
+  { name: '모바일 명함', url: 'https://linkcleaning.github.io/card/', ic: '🪪', d: '링크클린 명함 페이지' },
+  { name: '인스타 영업 비서', url: 'https://linkcleaning.github.io/insta/', ic: '📈', d: '잠재 고객·영업장부' },
+  { name: '홈페이지', url: 'https://www.linkclean.co.kr/', ic: '🏠', d: 'linkclean.co.kr' },
+  { name: '앱 현황판', url: 'https://linkcleaning.github.io/apps/', ic: '🧩', d: '만든 앱 전체' },
+];
+
+function DrawerTab({ today }: { today: string }) {
+  const [reports, setReports] = useState<{ date: string; d: AgentDaily }[] | null>(null);
+  const [open, setOpen] = useState<string | null>(null);
+  useEffect(() => {
+    let alive = true;
+    (async () => {
+      const out: { date: string; d: AgentDaily }[] = [];
+      for (let i = 0; i < 7; i++) {
+        const dt = addDays(today, -i);
+        const d = await fetchAgentJson<AgentDaily>(`archive/${dt}.json`);
+        if (d && d.headline) out.push({ date: dt, d });
+      }
+      if (alive) setReports(out);
+    })();
+    return () => { alive = false; };
+  }, [today]);
+  return (
+    <div className="space-y-3">
+      <section className={card}>
+        <SectionTitle icon={LayoutGrid} title="서랍 · 링크클린 앱" />
+        <div className="grid grid-cols-3 gap-2">
+          {DRAWER_APPS.map((a) => (
+            <a key={a.name} href={a.url} target={a.url.includes('claude.ai') ? '_blank' : undefined} rel="noreferrer" className="flex flex-col items-center gap-1 rounded-2xl bg-[#F2F3F5] px-1 py-3 text-center active:scale-95">
+              <span className="text-[26px] leading-none">{a.ic}</span>
+              <span className="text-[12px] font-extrabold leading-tight text-slate-100">{a.name}</span>
+              <span className="line-clamp-2 text-[10px] leading-tight text-slate-500">{a.d}</span>
+            </a>
+          ))}
+        </div>
+      </section>
+      <section className={card}>
+        <SectionTitle icon={Newspaper} title="보고함 · 최근 7일" />
+        {reports === null ? (
+          <p className="text-sm text-slate-400">불러오는 중…</p>
+        ) : reports.length === 0 ? (
+          <p className="text-sm text-slate-400">아직 쌓인 보고가 없어요. 매일 아침 보고가 여기에 모여요.</p>
+        ) : (
+          <ul className="space-y-2">
+            {reports.map(({ date, d }) => (
+              <li key={date}>
+                <button onClick={() => setOpen(open === date ? null : date)} className="w-full rounded-2xl bg-[#F2F3F5] p-3 text-left">
+                  <p className="text-[11px] font-extrabold text-slate-400">
+                    {Number(date.slice(5, 7))}/{Number(date.slice(8))} ({'일월화수목금토'[new Date(date + 'T00:00:00').getDay()]})
+                  </p>
+                  <p className={`mt-0.5 text-sm leading-snug text-slate-100 ${open === date ? '' : 'line-clamp-2'}`}>{d.headline}</p>
+                  {open === date && (
+                    <div className="mt-2 space-y-1 text-[12px] text-slate-300">
+                      {d.blog && <p>✍️ 블로그: {d.blog.title}</p>}
+                      {d.threads && <p className="line-clamp-2">🧵 스레드: {d.threads.text}</p>}
+                      {(d.golden || []).length > 0 && <p>🔑 키워드: {(d.golden || []).map((g) => g.kw).join(', ')}</p>}
+                      {(d.issues || []).map((it, i) => (
+                        <p key={i}>📰 {it.title}</p>
+                      ))}
+                    </div>
+                  )}
+                </button>
+              </li>
+            ))}
+          </ul>
+        )}
+      </section>
+    </div>
+  );
+}
+
 function SecretaryWork({ status, agent, today }: { status: AgentStatus | null; agent: AgentDaily | null; today: string }) {
   const jobs = secJobsFor(today);
   return (
@@ -3525,7 +3810,7 @@ function HubCard({
   const since = Date.now() - 3 * 86400000;
   const calls = (hub?.calls?.events ?? [])
     .filter((c) => (c.k === '수신' || c.k === '부재중') && c.t >= since)
-    .sort((a, b) => b.t - a.t);
+    .sort((a, b) => hubTime(b.t) - hubTime(a.t));
   const seen = new Set<string>();
   const uniq = calls.filter((c) => {
     const d = phoneDigits(c.n);
@@ -4389,10 +4674,10 @@ function SettingsModal({
  * ========================================================= */
 const TABS: { key: Tab; label: string; Icon: LucideIcon }[] = [
   { key: 'brief', label: '브리핑', Icon: Newspaper },
-  { key: 'routine', label: '루틴', Icon: ClipboardList },
-  { key: 'sales', label: '영업', Icon: TrendingUp },
+  { key: 'routine', label: '돈', Icon: Wallet },
+  { key: 'sales', label: '고객', Icon: Phone },
   { key: 'keyword', label: '키워드', Icon: KeyRound },
-  { key: 'memo', label: '메모', Icon: StickyNote },
+  { key: 'memo', label: '서랍', Icon: LayoutGrid },
 ];
 
 /** 이름/분류로 기본 루틴 찾기 (사용자가 수정해도 최대한 찾아냄) */
@@ -4462,6 +4747,14 @@ export default function App() {
   const salesTodo = salesStats.followUps.length + salesStats.reviewAsks.length + salesStats.todayJobs.length;
   const secJobs = secJobsFor(today);
   const secDone = secJobs.filter((jb) => secJobState(jb, agentStatus, agent, today) === 'done').length;
+  const secPct = secJobs.length ? Math.round((secDone / secJobs.length) * 100) : 0;
+  const _t0 = new Date(); _t0.setHours(0, 0, 0, 0);
+  const callsTodayList = (hub?.calls?.events ?? []).filter((c) => hubTime(c.t) >= _t0.getTime());
+  const callsToday = callsTodayList.filter((c) => c.k !== '발신').length;
+  const missedToday = callsTodayList.filter((c) => c.k === '부재중').length;
+  const hubMonthSales = hub?.ledger?.data?.months?.[today.slice(0, 7)]
+    ? Object.values(hub.ledger.data.months[today.slice(0, 7)]).reduce((acc, x) => acc + ((x as HubLedgerBiz)?.sales || 0), 0)
+    : null;
   const rankMoves = useMemo(() => rankMovesBetween(ranks, keywords, today, today), [ranks, keywords, today]);
 
   // 날씨 위치: 기본은 휴대폰 현재 위치(자동). 위치 권한이 없으면 설정의 기본 지역으로.
@@ -4918,9 +5211,7 @@ export default function App() {
             ? '좋은 오후입니다'
             : '오늘 하루도 수고 많으셨습니다';
   const subLine =
-    pct === 100
-      ? `오늘 루틴 완벽 달성! 🔥 ${streak}일 연속입니다.`
-      : `루틴 ${progress.done}/${progress.total} 완료 · 남은 ${progress.total - progress.done}건을 챙겨드리겠습니다.`;
+    secPct === 100 ? '오늘 비서실 업무를 모두 마쳤습니다.' : `비서실이 오늘 ${secJobs.length}건 중 ${secDone}건을 처리했습니다.`;
 
   const remaining = progress.total - progress.done;
 
@@ -4975,70 +5266,53 @@ export default function App() {
                 strokeWidth="14"
                 strokeLinecap="round"
                 strokeDasharray={2 * Math.PI * 92}
-                strokeDashoffset={2 * Math.PI * 92 * (1 - Math.min(100, pct) / 100)}
+                strokeDashoffset={2 * Math.PI * 92 * (1 - Math.min(100, secPct) / 100)}
                 style={{ transition: 'stroke-dashoffset .8s ease' }}
               />
             </svg>
-            <button onClick={() => setTab('routine')} className="absolute inset-0 flex flex-col items-center justify-center">
-              <span className="text-[13px] font-bold text-[#6B6E76]">오늘 업무</span>
+            <button onClick={() => window.scrollTo({ top: 520, behavior: 'smooth' })} className="absolute inset-0 flex flex-col items-center justify-center">
+              <span className="text-[13px] font-bold text-[#6B6E76]">비서실 오늘 업무</span>
               <span className="font-num text-[56px] font-black leading-[60px] tracking-tighter tabular-nums">
-                {progress.done}
-                <span className="text-[26px] text-[#B0B3BA]">/{progress.total}</span>
+                {secDone}
+                <span className="text-[26px] text-[#B0B3BA]">/{secJobs.length}</span>
               </span>
-              <span className="mt-1 rounded-full bg-cw-soft px-2.5 py-0.5 text-[12px] font-extrabold">{pct === 100 ? '완벽 달성 🎉' : `${pct}% 완료`}</span>
+              <span className="mt-1 rounded-full bg-cw-soft px-2.5 py-0.5 text-[12px] font-extrabold">{secPct === 100 ? '오늘 업무 끝 🎉' : `${secPct}% 완료`}</span>
             </button>
             {/* 떠 있는 버블 */}
-            {remaining > 0 && (
+            {secJobs.length - secDone > 0 && (
               <button
-                onClick={() => setTab('routine')}
+                onClick={() => window.scrollTo({ top: 520, behavior: 'smooth' })}
                 className="absolute -left-3 top-6 grid h-[58px] w-[58px] place-items-center rounded-full bg-white text-center shadow-[0_4px_12px_rgba(0,0,0,0.12)] active:scale-95"
                 style={{ animation: 'aisec-float 2.6s ease-in-out infinite' }}
               >
                 <span className="text-[10px] font-bold leading-3 text-[#6B6E76]">
                   남은 일
                   <br />
-                  <b className="text-[17px] leading-5 text-[#191919]">{remaining}</b>
+                  <b className="text-[17px] leading-5 text-[#191919]">{secJobs.length - secDone}</b>
                 </span>
               </button>
             )}
-            {streak > 0 && (
-              <div
-                className="absolute -right-2 top-10 grid h-[54px] w-[54px] place-items-center rounded-full bg-[#191919] text-center text-cw shadow-[0_4px_12px_rgba(0,0,0,0.18)]"
-                style={{ animation: 'aisec-float 3.1s ease-in-out infinite .4s' }}
-              >
-                <span className="text-[10px] font-bold leading-3">
-                  🔥연속
-                  <br />
-                  <b className="text-[16px] leading-5">{streak}일</b>
-                </span>
-              </div>
-            )}
             <button
-              onClick={() => {
-                setTab('brief');
-                window.scrollTo({ top: 520, behavior: 'smooth' });
-              }}
+              onClick={() => setTab('sales')}
               className="absolute -left-4 bottom-6 grid h-[58px] w-[58px] place-items-center rounded-full bg-[#191919] text-center shadow-[0_4px_12px_rgba(0,0,0,0.18)] active:scale-95"
               style={{ animation: 'aisec-float 3.3s ease-in-out infinite 1.2s' }}
             >
               <span className="text-[10px] font-bold leading-3 text-white/70">
-                비서실
+                오늘 전화
                 <br />
-                <b className="text-[15px] leading-5 text-cw">
-                  {secDone}/{secJobs.length}
-                </b>
+                <b className="text-[15px] leading-5 text-cw">{callsToday}</b>
               </span>
             </button>
-            {salesTodo > 0 && (
+            {missedToday > 0 && (
               <button
                 onClick={() => setTab('sales')}
-                className="absolute -right-4 bottom-6 grid h-[58px] w-[58px] place-items-center rounded-full bg-white text-center shadow-[0_4px_12px_rgba(0,0,0,0.12)] active:scale-95"
+                className="absolute -right-4 bottom-6 grid h-[58px] w-[58px] place-items-center rounded-full bg-[#F04438] text-center shadow-[0_4px_12px_rgba(0,0,0,0.18)] active:scale-95"
                 style={{ animation: 'aisec-float 2.8s ease-in-out infinite .8s' }}
               >
-                <span className="text-[10px] font-bold leading-3 text-[#6B6E76]">
-                  연락
+                <span className="text-[10px] font-bold leading-3 text-white/80">
+                  부재중
                   <br />
-                  <b className="text-[17px] leading-5 text-[#191919]">{salesTodo}</b>
+                  <b className="text-[17px] leading-5 text-white">{missedToday}</b>
                 </span>
               </button>
             )}
@@ -5046,13 +5320,13 @@ export default function App() {
 
           {/* 3칸 숫자 */}
           <div className="mt-4 grid grid-cols-3 divide-x divide-[#191919]/10 rounded-[20px] bg-white/60 py-3 text-center">
-            <button onClick={() => setTab('sales')}>
+            <button onClick={() => setTab('routine')}>
               <p className="text-[11px] font-bold text-[#6B6E76]">{mm}월 매출</p>
-              <p className="mt-0.5 text-[16px] font-black tracking-tight">{fmtSales(salesStats.revenue)}</p>
+              <p className="mt-0.5 text-[16px] font-black tracking-tight">{hubMonthSales == null ? '-' : fmtWon(hubMonthSales)}</p>
             </button>
             <button onClick={() => setTab('sales')}>
-              <p className="text-[11px] font-bold text-[#6B6E76]">오늘 작업</p>
-              <p className="mt-0.5 text-[16px] font-black tracking-tight">{salesStats.todayJobs.length}건</p>
+              <p className="text-[11px] font-bold text-[#6B6E76]">오늘 전화</p>
+              <p className="mt-0.5 text-[16px] font-black tracking-tight">{callsToday}통</p>
             </button>
             <button onClick={() => setTab('keyword')}>
               <p className="text-[11px] font-bold text-[#6B6E76]">순위 변동</p>
@@ -5171,21 +5445,8 @@ export default function App() {
             }
           />
         )}
-        {tab === 'routine' && (
-          <RoutineTab
-            today={today}
-            routines={routines}
-            setRoutines={setRoutines}
-            checks={checks}
-            toggle={toggle}
-            progress={progress}
-            streak={streak}
-            history={history}
-          />
-        )}
-        {tab === 'sales' && (
-          <SalesTab today={today} deals={deals} setDeals={setDeals} settings={settings} setSettings={setSettings} stats={salesStats} toast={toast} />
-        )}
+        {tab === 'routine' && <MoneyTab hub={hub} hasPin={!!hubPin} today={today} onOpenSettings={() => setShowSettings(true)} />}
+        {tab === 'sales' && <CallsTab hub={hub} hasPin={!!hubPin} toast={toast} onOpenSettings={() => setShowSettings(true)} />}
         {tab === 'keyword' && <GoogleCard g={gRank} />}
         {tab === 'keyword' && (
           <KeywordTab
@@ -5204,7 +5465,7 @@ export default function App() {
             openSettings={() => setShowSettings(true)}
           />
         )}
-        {tab === 'memo' && <MemoTab memos={memos} setMemos={setMemos} toast={toast} />}
+        {tab === 'memo' && <DrawerTab today={today} />}
         {tab === 'siri' && (
           <button onClick={() => setTab('brief')} className="mb-3 flex items-center gap-1.5 text-sm font-bold text-amber-200">
             <ArrowLeft className="h-4 w-4" /> 브리핑으로 돌아가기
@@ -5252,14 +5513,9 @@ export default function App() {
                   <Icon className="h-[22px] w-[22px]" />
                 </span>
                 {label}
-                {key === 'routine' && remaining > 0 && (
+                {key === 'sales' && missedToday > 0 && (
                   <span className="absolute right-[22%] top-2 min-w-[18px] rounded-full bg-rose-500 px-1 text-[10px] font-bold leading-[18px] text-white">
-                    {remaining}
-                  </span>
-                )}
-                {key === 'sales' && salesTodo > 0 && (
-                  <span className="absolute right-[22%] top-2 min-w-[18px] rounded-full bg-cw px-1 text-[10px] font-bold leading-[18px] text-[#191919]">
-                    {salesTodo}
+                    {missedToday}
                   </span>
                 )}
               </button>
