@@ -1,60 +1,10 @@
 {
- "date": "2026-11-16",
+ "date": "2026-11-17",
  "items": {
   "report": {
    "done": true,
-   "at": "07:58",
+   "at": "07:31",
    "note": "보고서·키워드 3개"
-  },
-  "blog": {
-   "done": true,
-   "at": "07:58",
-   "note": "제주입주청소"
-  },
-  "threads": {
-   "done": true,
-   "at": "07:24",
-   "note": "버튼으로 실행됨"
-  },
-  "coupang": {
-   "done": true,
-   "at": "18:44",
-   "note": "문틈 바람막이 글"
-  },
-  "evening": {
-   "done": true,
-   "at": "20:52",
-   "note": "맡긴 현장 없음·댓글만"
-  },
-  "bids": {
-   "done": true,
-   "at": "19:41",
-   "note": "새 공고 4건"
-  },
-  "keywords": {
-   "done": true,
-   "at": "20:56",
-   "note": "집중 3개·후보 10개"
-  },
-  "google": {
-   "done": true,
-   "at": "20:59",
-   "note": "11개 확인"
-  },
-  "placenews": {
-   "done": true,
-   "at": "21:10",
-   "note": "제주 주방청소 소식"
-  },
-  "areapage": {
-   "done": false,
-   "at": "21:13",
-   "note": "노형동 작성 완료, 저장소 권한 없어 미반영"
-  },
-  "appcare": {
-   "done": true,
-   "at": "22:10",
-   "note": "1건 고침·2건 추가"
   }
  }
 }
