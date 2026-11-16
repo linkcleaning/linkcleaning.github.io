@@ -39,6 +39,7 @@ import {
   MicOff,
   Smartphone,
   Wallet,
+  Wrench,
   Phone,
   LayoutGrid,
   Play,
@@ -2897,6 +2898,7 @@ function secJobsFor(date: string): SecJob[] {
   if (wd >= 1 && wd <= 5) jobs.push({ key: 'bids', label: '입찰·공고 찾기', who: '영업수석실 입찰비서관', when: '08:23' });
   if (wd === 1) jobs.push({ key: 'keywords', label: '주간 키워드 리포트', who: '전략수석 최영길', when: '13:41' });
   if (wd === 1 || wd === 3 || wd === 5) jobs.push({ key: 'placenews', label: '플레이스 소식·영상', who: '홍보수석 한정민', when: '15:43' });
+  if (wd === 4) jobs.push({ key: 'appcare', label: '앱 점검·정비', who: '전략수석실 앱정비비서관', when: '16:17' });
   if (wd === 3) jobs.push({ key: 'areapage', label: '홈페이지 동네 페이지', who: '전략수석 최영길', when: '14:37' });
   jobs.push({ key: 'coupang', label: '쿠팡 글 준비', who: '제휴수석 박시은', when: '18:43' });
   jobs.push({ key: 'evening', label: '저녁 6곳 홍보', who: '홍보수석 한정민', when: '20:47' });
@@ -3299,6 +3301,44 @@ const DRAWER_APPS: { name: string; url: string; ic: string; d: string }[] = [
   { name: '앱 현황판', url: 'https://linkcleaning.github.io/apps/', ic: '🧩', d: '만든 앱 전체' },
 ];
 
+interface AppCareItem { app: string; what: string; kind?: string; url?: string }
+interface AppCareData { date?: string; summary?: string; fixed?: AppCareItem[]; added?: AppCareItem[]; proposals?: AppCareItem[]; checked?: number; history?: { date: string; summary: string }[] }
+
+function AppCareCard() {
+  const [d, setD] = useState<AppCareData | null>(null);
+  useEffect(() => {
+    fetchAgentJson<AppCareData>('appcare.json').then((x) => setD(x));
+  }, []);
+  const row = (it: AppCareItem, i: number, mark: string) => (
+    <li key={i} className="rounded-xl bg-[#F2F3F5] p-2.5 text-[13px] leading-snug">
+      <b className="text-slate-100">{mark} {it.app}</b>
+      <span className="text-slate-300"> — {it.what}</span>
+    </li>
+  );
+  return (
+    <section className={card}>
+      <SectionTitle icon={Wrench} title="앱 정비 기록" right={d?.date ? <span className="text-[11px] text-slate-400">{Number(d.date.slice(5, 7))}/{Number(d.date.slice(8))} 점검</span> : undefined} />
+      {!d ? (
+        <p className="text-sm leading-relaxed text-slate-400">전략수석실 앱정비비서관이 매주 목요일 오후에 링크클린 앱들을 열어 보고, 고칠 건 고치고 필요한 건 추가해요. 첫 점검이 끝나면 여기에 기록돼요.</p>
+      ) : (
+        <div className="space-y-2">
+          {d.summary && <p className="text-sm font-semibold leading-snug text-slate-100">{d.summary}</p>}
+          <ul className="space-y-1.5">
+            {(d.fixed || []).map((it, i) => row(it, i, '🔧'))}
+            {(d.added || []).map((it, i) => row(it, i, '✨'))}
+          </ul>
+          {(d.proposals || []).length > 0 && (
+            <>
+              <p className="pt-1 text-[12px] font-extrabold text-slate-400">대표님 승인이 필요한 제안 (전략기획실에 "제안 n번 해줘"라고 하시면 돼요)</p>
+              <ul className="space-y-1.5">{(d.proposals || []).map((it, i) => row(it, i, `${i + 1}.`))}</ul>
+            </>
+          )}
+        </div>
+      )}
+    </section>
+  );
+}
+
 function DrawerTab({ today }: { today: string }) {
   const [reports, setReports] = useState<{ date: string; d: AgentDaily }[] | null>(null);
   const [open, setOpen] = useState<string | null>(null);
@@ -3329,6 +3369,7 @@ function DrawerTab({ today }: { today: string }) {
           ))}
         </div>
       </section>
+      <AppCareCard />
       <section className={card}>
         <SectionTitle icon={Newspaper} title="보고함 · 최근 7일" />
         {reports === null ? (

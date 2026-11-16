@@ -24,3 +24,10 @@ note는 15자 이내, 고객 이름·전화번호·매출 금지. 못 했으면 
 ## data/place-news.json — 플레이스 소식·짧은 영상 (홍보수석, 월·수·금 15:43, 브리핑 '플레이스 소식' 카드)
 { "updatedAt", "used": [사용한 현장 job id], "items": [ { "date", "title", "body", "keyword", "clip": 영상 주소, "photos": 사진 수 } ] } 최신 10개. status 키: placenews.
 ## 홈페이지 동네 페이지 — 전략수석, 수 14:37, linkclean-web src/data/seoPages.json 의 view:"area" 항목 추가. status 키: areapage.
+
+## data/appcare.json (전략수석실 앱정비비서관, 매주 목 16:17)
+{ "date": "YYYY-MM-DD", "summary": "한 줄", "checked": 점검한 앱 수,
+  "fixed": [{"app","what","url"}], "added": [{"app","what","url"}],
+  "proposals": [{"app","what"}],   // 대표님 승인 필요 — 전략기획실에 "제안 n번 해줘"
+  "history": [{"date","summary"}]  // 최근 12주 }
+status.json items.appcare 로 '비서들이 한 일'에 표시. 공개 저장소: 고객·매출·비밀번호 금지.
