@@ -34,7 +34,7 @@
   textarea, input, select { font-size: 17px !important; }
   .tab-on { color:#0369a1; } .tab-on .tab-dot { opacity:1; }
 </style>
-<script src="/v.js" data-v="v41" defer></script>
+<script src="/v.js" data-v="v42" defer></script>
 </head>
 <body class="bg-slate-100 font-sans text-slate-800 antialiased">
 
@@ -266,11 +266,11 @@
   <div class="absolute inset-0 bg-black/50" data-close="pasteSheet"></div>
   <div class="absolute bottom-0 left-1/2 w-full max-w-md -translate-x-1/2 rounded-t-3xl bg-white p-6 safe-b">
     <p class="text-center text-5xl">✅</p>
-    <h3 class="mt-2 text-center text-[20px] font-extrabold">사진+문구가 복사되었어요</h3>
+    <h3 id="pasteTitle" class="mt-2 text-center text-[20px] font-extrabold">사진이 복사되었어요</h3>
     <ol class="mt-4 space-y-2 rounded-2xl bg-brand-50 p-4 text-[16px] font-semibold text-slate-700">
       <li>1. 아래 <b>'💬 문자 앱 열기'</b>를 누르세요</li>
       <li>2. 문자 앱에서 <b>입력창을 꾹 누르세요</b></li>
-      <li>3. <b>'붙여넣기'</b>를 누르면 끝 → <b>전송</b>!</li>
+      <li>3. <b>'붙여넣기'</b>로 사진 넣고 → <b>전송</b>!</li>
     </ol>
     <p id="pasteMore" class="mt-2 hidden text-center text-[13px] text-slate-500">사진 아래에 문구까지 한 장에 담았어요. 글자는 따로 안 쳐도 돼요!</p>
     <button id="btnOpenSms" class="press mt-4 h-16 w-full rounded-2xl bg-brand-600 text-[18px] font-extrabold text-white">💬 문자 앱 열기</button>
@@ -899,11 +899,26 @@ async function shareImage(readyBlob, fname, method, build) {
     location.href = smsHref(true);
   } catch (e) { toast('보내기에 실패했어요. 다시 시도해 주세요', 'err'); }
 }
+// 사진은 복사 → '문자 앱 열기'를 누르면 번호(+문구)가 채워진 문자창이 열림 → 붙여넣기만
+let _openBody = true;
+async function copyThenSheet(blobOrPromise, method, withBody, title) {
+  if (!(navigator.clipboard && window.ClipboardItem)) { toast('이 기기는 사진 복사를 지원하지 않아요', 'err'); return false; }
+  vib();
+  try {
+    await navigator.clipboard.write([new ClipboardItem({ 'image/png': blobOrPromise })]);
+    record(method);
+    _openBody = withBody;
+    $('pasteTitle').textContent = title;
+    $('pasteMore').textContent = withBody ? '번호와 문구는 문자창에 이미 들어가 있어요. 사진만 붙여넣으면 돼요!' : '번호는 문자창에 이미 들어가 있어요. 사진만 붙여넣으면 돼요!';
+    $('pasteMore').classList.remove('hidden');
+    $('pasteSheet').classList.remove('hidden');
+    return true;
+  } catch (e) { toast('복사에 실패했어요. 다시 눌러 주세요', 'err'); return false; }
+}
 async function sendCard() {
   if (!guard()) return;
-  if (isAccountTpl(curTpl())) return shareImage(_acct.key === JSON.stringify(ACC()) ? _acct.blob : null, 'linkclean_계좌안내.png', '계좌카드', accountBlob);
-  const ready = (_card.key === cardKey()) ? _card.blob : null;
-  await shareImage(ready, 'linkclean_예약카드.png', '예약카드', cardBlob);
+  if (isAccountTpl(curTpl())) return copyThenSheet((_acct.key === JSON.stringify(ACC()) && _acct.blob) || accountBlob(), '계좌카드', false, '계좌 카드가 복사되었어요');
+  return copyThenSheet(((_card.key === cardKey()) && _card.blob) || cardBlob(), '예약카드', false, '예약 카드가 복사되었어요');
 }
 $('btnSms').onclick = () => { if (isCardTpl(curTpl()) || isAccountTpl(curTpl())) return sendCard(); if (!guard()) return; vib(); record('문자'); location.href = smsHref(); };
 
@@ -912,8 +927,8 @@ $('btnShareAll').onclick = async () => {
   if (!guard()) return;
   const imgs = tplImgs(curTpl());
   if (!imgs.length) { toast('🖼️ 등록된 사진이 없어요. 공통 홍보 사진을 넣어주세요'); if (usesCommon(curTpl())) go('msgs'); else openEditor(curTpl().id); return; }
-  const ready = (_pt.key === ptKey()) ? _pt.blob : null;
-  await shareImage(ready, 'linkclean.png', '사진+문자', pickedBlob);
+  // 홍보 사진은 그대로(글자 안 넣음) 복사 → 문자창에 번호·문구 자동 입력
+  await copyThenSheet(toPng(pickedImgUrl()), '사진+문자', true, '홍보 사진이 복사되었어요');
 };
 
 if ($('btnImgSms')) $('btnImgSms').onclick = async () => {
@@ -933,7 +948,7 @@ if ($('btnImgSms')) $('btnImgSms').onclick = async () => {
     location.href = smsHref();
   } catch (e) { toast("사진 복사에 실패했어요. '📤 공유'로 보내 주세요", 'err'); }
 };
-$('btnOpenSms').onclick = () => { location.href = smsHref(true); }; // 문구가 사진/카드에 있으니 번호만
+$('btnOpenSms').onclick = () => { location.href = smsHref(!_openBody); }; // 번호(+문구)가 채워진 문자창 → 사진만 붙여넣기
 
 // 문자 편집 중에는 하단 버튼을 숨겨 입력칸을 가리지 않게
 $('draft').addEventListener('focus', () => $('sendBar').classList.add('hidden'));
