@@ -87,7 +87,7 @@ h2 em { font-style: normal; font-family: var(--font-body); font-size: 12px; colo
 footer { color: var(--muted); font-size: 12px; }
 @media (max-width: 420px) { .tiles { grid-template-columns: repeat(2, 1fr); } }
 </style>
-<script src="/v.js" data-v="v10" defer></script>
+<script src="/v.js" data-v="v11" defer></script>
 </head>
 <body>
 <div class="wrap">
@@ -168,7 +168,9 @@ const apps = [
 
   { cat: "크리머스", name: "크리머스 홈페이지", s: "live", d: "광안리 케이크 가게 모바일 홈페이지, 예약 안내, 홍보 이미지" },
   { cat: "크리머스", name: "크림어스 예약노트", s: "live", d: "똑톡 대체 — 카톡 주문서 1초 등록, 픽업 시간순 예약 목록, 입금 안내 복사, 매출·백업 (며느리용)", l: [["web", G+"creamus-booking/"]] },
-  { cat: "크리머스", name: "크림어스 손님 주문서", s: "live", d: "손님이 케이크·맛·디자인 골라 주문서 만들어 카톡으로 보내는 페이지 (채널 예약하기 버튼용, 예약노트가 그대로 읽음)", l: [["web", G+"creamus-order/"]] }
+  { cat: "크리머스", name: "크림어스 손님 주문서", s: "live", d: "손님이 케이크·맛·디자인 골라 주문서 만들어 카톡으로 보내는 페이지 (채널 예약하기 버튼용, 예약노트가 그대로 읽음)", l: [["web", G+"creamus-order/"]] },
+
+  { cat: "외부 의뢰", name: "광주 디월트 AS · SNS 발행기", s: "live", d: "현장 사진+메모 → AI가 인스타·스레드 글 작성, 원클릭 동시 발행(Meta API)·복사 백업, 게시 기록", n: "Meta 토큰·Cloudinary 연결은 앱 안 가이드 참고, Vercel 서버 모드 선택", l: [["web", G+"dewalt/"]] }
 ];
 const cats = [...new Set(apps.map(a => a.cat))];
 let filter = null;
