@@ -623,7 +623,7 @@ small.zero,.seg small.mn.zero{color:#ff8a80!important}
 
 <script>
 'use strict';
-const VER='v80';
+const VER='v81';
 const $=s=>document.querySelector(s);
 const sleep=ms=>new Promise(r=>setTimeout(r,ms));
 const rnd=n=>Math.floor(Math.random()*n);
@@ -643,9 +643,9 @@ function loadDB(){
   const def={players:[],cur:'',stats:{},history:[],
     set:{sound:true,bgm:true,voice:false,vib:true,hint:true,twoTap:false,level:1,target:3,opp:'link'},vs:{},money:{},cfg:Object.assign({},CFG_DEF),nagari:0,first:0};
   try{const d=JSON.parse(localStorage.getItem(KEY)||'null');if(d){DB=Object.assign(def,d);DB.set=Object.assign(def.set,d.set||{});}else DB=def;}catch(e){DB=def}
-  DB.cfg=Object.assign({},CFG_DEF,DB.cfg||{});DB.money=DB.money||{};
+  DB.cfg=Object.assign({},CFG_DEF,DB.cfg||{});DB.money=DB.money||{};DB.mbase=DB.mbase||{};
   if(DB.set.voiceMig!==1){DB.set.voice=false;DB.set.voiceMig=1}
-  if(DB.cfg.sv!==SEASON_V){DB.cfg.start=30000;DB.money={}}
+  if(DB.cfg.sv!==SEASON_V){DB.cfg.start=30000;DB.money={};DB.mbase={}}
   // 예전 기본 프로필(아빠·엄마)은 기록이 없으면 정리
   // 예전 기본 프로필(아빠·엄마)은 완전히 정리
   const OLD=['p1','p2'];DB.players=DB.players.filter(p=>!OLD.includes(p.id));OLD.forEach(id=>{delete DB.money[id];delete DB.stats[id]});
@@ -677,15 +677,19 @@ async function syncDown(){
   if(bk&&typeof bk==='object')BANK=bk;if(dc&&typeof dc==='object'){DECO=dc;try{clearSvgCache()}catch(e){}}
   if(c&&c.start){DB.cfg=Object.assign({},CFG_DEF,c);CMT_REWARD=DB.cfg.cmt||30000;evSync()}
   if(m&&Object.keys(m).length>2){try{const dk=new Date(Date.now()+9*3600e3).toISOString().slice(0,10);if(localStorage.getItem('mg_snap')!==dk){localStorage.setItem('mg_snap',dk);LG.req('matgo/snap/'+dk).then(x=>{if(x&&!Object.keys(x).length)LG.req('matgo/snap/'+dk,'PUT',{money:m,bank:bk||{},ts:Date.now()})})}}catch(e){}}
-  if(m){['p1','p2'].forEach(id=>{if(m[id]!=null){delete m[id];LG.req('matgo/money/'+id,'DELETE')}});Object.assign(DB.money,m)}
+  if(m){['p1','p2'].forEach(id=>{if(m[id]!=null){delete m[id];LG.req('matgo/money/'+id,'DELETE')}});Object.keys(m).forEach(k=>{if(typeof m[k]!=='number')return;const b=DB.mbase[k],pend=b!=null?moneyOf(k)-b:0;DB.money[k]=m[k]+pend;DB.mbase[k]=m[k]})}
   if(c&&c.start&&typeof c.sv==='number'&&c.sv<SEASON_V){   // 새 시즌: 모두 3만원으로 시작 (서버 설정을 제대로 읽었을 때만)
     DB.cfg=Object.assign({},CFG_DEF,c&&c.start?c:{},{start:30000,sv:SEASON_V});
-    const nm={};allPlayers().forEach(p=>nm[p.id]=30000);DB.money=nm;
+    const nm={};allPlayers().forEach(p=>nm[p.id]=30000);DB.money=nm;DB.mbase=Object.assign({},nm);
     await LG.req('matgo/cfg','PATCH',Object.assign(DB.cfg,{sv:SEASON_V}));await LG.req('matgo/money','PUT',nm);
   }
   saveDB();return true;
 }
-async function pushMoney(ids){const o={};ids.forEach(id=>o[id]=moneyOf(id));await LG.req('matgo/money','PATCH',o)}
+// 돈 저장: 서버 값에 '변한 만큼만' 더해요 (다른 폰에서 바뀐 돈을 덮어쓰지 않게)
+async function pushMoney(ids){const o={};[...new Set(ids)].forEach(id=>{const b=DB.mbase[id];if(b==null)o[id]=moneyOf(id);else{const d=moneyOf(id)-b;if(d)o[id]={'.sv':{increment:d}}}});
+  if(!Object.keys(o).length)return true;const r=await LG.req('matgo/money','PATCH',o);
+  if(r&&typeof r==='object'){Object.keys(o).forEach(id=>{if(typeof r[id]==='number'){DB.mbase[id]=r[id];DB.money[id]=r[id]}})}saveDB();return !!r}
+async function setMoneyAbs(id,val){DB.money[id]=val;const r=await LG.req('matgo/money','PATCH',{[id]:val});if(r)DB.mbase[id]=val;saveDB();return !!r}
 async function settleMoney(wId,lId,pts,per){
   await syncDown();
   const want=pts*(per||DB.cfg.per);
@@ -2531,7 +2535,7 @@ function admLive(bg){   // 돈 ±·설정은 창을 닫지 않고 그 자리에�
       DB.money[a]=Math.max(0,moneyOf(a)+(+b));saveDB();const el=bg.querySelector('#am_'+a);if(el){el.innerHTML=admMoneyHTML(a);el.className=moneyOf(a)<=0?'zero':''}
       t.animate&&t.animate([{transform:'scale(.85)'},{transform:'none'}],{duration:180});SFX.coin();
       say(`${oppOf(a).nick} ${won(Math.abs(+b))} ${+b>0?'충전':'차감'} → 지갑 ${won(moneyOf(a))} ⏳`);
-      const ok=await LG.req('matgo/money','PATCH',{[a]:moneyOf(a)});
+      const ok=await pushMoney([a]);
       say(ok?`✅ ${oppOf(a).nick} 지갑 ${won(moneyOf(a))} 저장 완료`:'📶 저장 실패! 인터넷을 확인해 주세요');
       if(ok)LG.req('matgo/log','POST',{w:+b>0?a:'관리인',l:+b>0?'관리인':a,pts:0,pay:Math.abs(+b),ts:Date.now()});
     }else if(k==='s'){e.stopPropagation();e.preventDefault();
@@ -2539,7 +2543,7 @@ function admLive(bg){   // 돈 ±·설정은 창을 닫지 않고 그 자리에�
       if(val==null)return;
       const before=moneyOf(a);DB.money[a]=val;saveDB();const el=bg.querySelector('#am_'+a);if(el){el.innerHTML=admMoneyHTML(a);el.className=val<=0?'zero':''}SFX.coin();
       say(`⏳ ${oppOf(a).nick} 지갑 ${won(val)} 저장 중…`);
-      const ok=await LG.req('matgo/money','PATCH',{[a]:val});
+      const ok=await setMoneyAbs(a,val);
       say(ok?`✅ ${oppOf(a).nick} 지갑 ${won(val)} 저장 완료`:'📶 저장 실패! 인터넷을 확인해 주세요');
       if(ok&&val!==before)LG.req('matgo/log','POST',{w:val>before?a:'관리인',l:val>before?'관리인':a,pts:0,pay:Math.abs(val-before),ts:Date.now()});
     }else if(v==='msPerSet'){e.stopPropagation();e.preventDefault();
@@ -2601,10 +2605,10 @@ async function adminPanel(msg=''){
   if(k==='cf'){await LG.req('matgo/claims/'+a,'PATCH',{done:true});return adminPanel('커피 지급 완료로 표시했어요')}
   if(k==='m'){DB.money[a]=Math.max(0,moneyOf(a)+(+b));await pushMoney([a]);SFX.coin();return adminPanel(`${won(Math.abs(+b))} ${+b>0?'충전':'차감'} 완료`)}
   if(k==='s'){let val=null;await modal(`<h2>금액 직접 입력</h2><input class="inp" id="mv" type="number" inputmode="numeric" value="${moneyOf(a)}">`,[{t:'취소',cls:'alt',v:0},{t:'저장',keep:true,fn:(bg,close)=>{val=Math.max(0,Math.round(+bg.querySelector('#mv').value||0));close(1)}}]);
-    if(val!=null){DB.money[a]=val;await pushMoney([a]);SFX.coin()}return adminPanel(val!=null?'금액을 바꿨어요':'')}
+    if(val!=null){await setMoneyAbs(a,val);SFX.coin()}return adminPanel(val!=null?'금액을 바꿨어요':'')}
   if(k==='c'){DB.cfg[a]=b==='true'?true:b==='false'?false:+b;saveDB();await LG.req('matgo/cfg','PATCH',Object.assign(DB.cfg,{sv:SEASON_V}));SFX.select();return adminPanel('설정을 저장했어요')}
   if(v==='reset'){const ok=await modal(`<h2>새 시즌 초기화</h2><p>모든 사람 지갑을 ${won(DB.cfg.start)}으로 맞출까요?</p>`,[{t:'취소',cls:'alt',v:0},{t:'초기화',v:1}]);
-    if(ok){allPlayers().forEach(p=>DB.money[p.id]=DB.cfg.start);await LG.req('matgo/money','PUT',DB.money);SFX.win()}return adminPanel(ok?'새 시즌 시작!':'')}
+    if(ok){allPlayers().forEach(p=>DB.money[p.id]=DB.cfg.start);await LG.req('matgo/money','PUT',DB.money);DB.mbase=Object.assign({},DB.money);saveDB();SFX.win()}return adminPanel(ok?'새 시즌 시작!':'')}
   return adminPanel();
 }
 async function openRules(){await modal('<h2>📖 맞고 규칙</h2>'+RULES,[{t:'알겠어요!',v:1}],{dismiss:0})}
