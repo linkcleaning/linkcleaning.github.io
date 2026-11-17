@@ -56,3 +56,9 @@ status.json items.appcare 로 '비서들이 한 일'에 표시. 공개 저장소
 
 ### office.html (11/17, v33)
 전략기획실 버튼·서랍 링크는 이제 앱 안의 ai-secretary/office.html(조직도·수석실 업무·status.json 완료 표시)로 열림 — Claude 앱으로 넘어가 화면이 남는 문제 해결. 비서실장 대화만 Claude 아티팩트(4WTtTbpRQy1YjG4MWyNboC)로 연결. 수석실 업무를 바꾸면 office.html 의 NOW 도 같이 고칠 것.
+
+### rank-meeting.json — 순위 하락 회의 (11/17, 대표님 상시 지시)
+- 대표님 지시: "구글 순위가 떨어지면 비서실에서 회의해서 왜 떨어졌는지, 다시 올리려면 어떻게 할지 알려주고 조치까지. 네이버도."
+- 아침 근무가 구글 순위(google.json)를 적은 뒤, 어제보다 web·map이 떨어진 키워드와 순위노트(허브 rank.data)의 네이버 플레이스 하락을 찾아 회의한다: ① 원인(증거로 확인한 것만, 아니면 '추정') ② 다시 올릴 방법 1~3개 ③ 조치(그날 바로: today.json golden·threads, keywords.json focus 맨 앞에 그 키워드 → 낮 근무 청소팁·소식·동네 페이지·칼럼이 사용 / 대표님 손 필요한 것은 승인 항목).
+- 형식: {"date","at","note","items":[{engine(google|naver),kw,what,from,to,cause:[],actions:[{who,what,when,status}]}]}. 전날 '예정' 조치는 다음 날 회복 여부를 적는다. status 키: rankmeeting.
+- 보고: 아침 근무 SendUserMessage에 "📉 순위 하락 회의" 묶음, 저녁 하루 보고에 한 줄.
