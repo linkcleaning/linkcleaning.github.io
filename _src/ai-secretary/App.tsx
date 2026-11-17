@@ -3044,7 +3044,7 @@ function GoogleCard({ g }: { g: GoogleData | null }) {
 }
 
 /* 플레이스 소식·짧은 영상 — 홍보수석 한정민 (월·수·금) data/place-news.json */
-interface PlaceNews { date: string; title: string; body: string; keyword?: string; clip?: string; photos?: number }
+interface PlaceNews { date: string; title: string; body: string; keyword?: string; clip?: string; photos?: number | string[] }
 interface PlaceNewsData { updatedAt?: string; items?: PlaceNews[] }
 
 interface EkData { date?: string; blog?: { keyword?: string; title: string; body: string }; place?: { title: string; body: string }; insta?: string; areaPage?: string }
@@ -3117,7 +3117,7 @@ function PlaceNewsCard({ data, toast }: { data: PlaceNewsData | null; toast: (m:
           </div>
           {n.clip && (
             <a href={n.clip} target="_blank" rel="noreferrer" className="mt-2 flex items-center justify-center gap-2 rounded-full bg-[#191919] py-3 text-sm font-extrabold text-cw active:scale-[0.98]">
-              ▶ 짧은 영상 열기 · 저장{n.photos ? ` (사진 ${n.photos}장)` : ''}
+              ▶ 짧은 영상 열기 · 저장{(Array.isArray(n.photos) ? n.photos.length : n.photos) ? ` (사진 ${Array.isArray(n.photos) ? n.photos.length : n.photos}장)` : ''}
             </a>
           )}
           <p className="mt-2 text-[11px] leading-snug text-slate-500">영상은 열어서 공유 → '비디오 저장' 후 스마트플레이스 소식(또는 클립)에 올리세요.</p>
@@ -3331,7 +3331,7 @@ function CallsTab({ hub, hasPin, toast, onOpenSettings }: { hub: HubData | null;
 }
 
 const DRAWER_APPS: { name: string; url: string; ic: string; d: string }[] = [
-  { name: '전략기획실', url: './office.html', ic: '🏛️', d: '비서실 지시·비서실장 대화' },
+  { name: '전략기획실', url: 'https://claude.ai/artifact/4WTtTbpRQy1YjG4MWyNboC', ic: '🏛️', d: '비서실 지시·비서실장 대화' },
   { name: '현장홍보', url: 'https://linkclean-promo.han0829.workers.dev/', ic: '📸', d: '현장 사진 맡기기 → 6곳 홍보' },
   { name: '세무장부', url: 'https://linkcleaning.github.io/ledger/', ic: '📒', d: '매출·매입·홈택스 요약' },
   { name: '순위노트', url: 'https://linkcleaning.github.io/rank/', ic: '📍', d: '플레이스 순위·정비안' },
@@ -5493,7 +5493,9 @@ export default function App() {
               {speaking ? '멈추기' : '음성 브리핑'}
             </button>
             <a
-              href="./office.html"
+              href="https://claude.ai/artifact/4WTtTbpRQy1YjG4MWyNboC"
+              target="_blank"
+              rel="noreferrer"
               className="group relative flex items-center gap-3 overflow-hidden rounded-[18px] border-2 border-[#191919] bg-[#191919] px-3 py-2 text-left shadow-[0_4px_0_#7a5c00] active:translate-y-[2px] active:shadow-[0_2px_0_#7a5c00]"
               aria-label="전략기획실 열기"
             >
