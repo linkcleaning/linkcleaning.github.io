@@ -40,6 +40,14 @@
       "note": "창틀 솔잎 현장 소식 + 영상",
       "title": "제주 창틀청소 솔잎·먼지 쌓인 바깥 창틀 레일 정리",
       "clip": "https://linkclean-promo.han0829.workers.dev/api/clip/288cda6c-764.mp4"
+    },
+    "tip": {
+      "done": true,
+      "at": "14:05",
+      "note": "세탁기 고무패킹 곰팡이 카드 3장 · 저녁 게시 예약",
+      "topic": "세탁기 고무패킹·세제통 곰팡이",
+      "jobId": "6677f7dc-4b59-4109-9a6e-670311394ea2",
+      "qa": "홈페이지 Q&A는 linkclean-web 저장소 권한이 이 세션에 없어 못 올림"
     }
   }
 }
