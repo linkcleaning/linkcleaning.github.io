@@ -5045,13 +5045,14 @@ export default function App() {
     [here, loadWeather, settings.defaultCity, toast],
   );
 
-  // 앱을 열 때마다 현재 위치 자동 확인 (예전 위치가 있으면 그 날씨를 먼저 보여주고 갱신)
+  // 앱을 열 때 위치를 묻지 않음(아이폰 홈 화면 앱은 매번 권한을 다시 물어서, v38).
+  // 예전에 잡아둔 위치가 있으면 그 날씨, 없으면 기본 지역 날씨. 위치는 '📍 내 위치'를 누를 때만 새로 잡음.
   const located = useRef(false);
   useEffect(() => {
     if (located.current) return;
     located.current = true;
     if (here) loadWeather('here', here);
-    locate(true);
+    else setCity(settings.defaultCity ?? 'jeju');
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
