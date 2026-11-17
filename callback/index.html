@@ -34,7 +34,7 @@
   textarea, input, select { font-size: 17px !important; }
   .tab-on { color:#0369a1; } .tab-on .tab-dot { opacity:1; }
 </style>
-<script src="/v.js" data-v="v42" defer></script>
+<script src="/v.js" data-v="v43" defer></script>
 </head>
 <body class="bg-slate-100 font-sans text-slate-800 antialiased">
 
@@ -109,7 +109,7 @@
   <!-- 보내기 하단 버튼 -->
   <div id="sendBar" class="fixed left-1/2 z-40 w-full max-w-md -translate-x-1/2 border-t border-slate-200 bg-white/95 px-4 pb-2 pt-3 backdrop-blur" style="bottom:calc(env(safe-area-inset-bottom) + 64px)">
     <button id="btnSms" class="press mb-2 flex h-16 w-full items-center justify-center gap-2 rounded-2xl bg-brand-600 text-[19px] font-extrabold text-white shadow-lg shadow-brand-600/30">💬 문자만 보내기 <span class="rounded-full bg-white/25 px-2 py-0.5 text-[12px]">글만</span></button>
-    <button id="btnShareAll" class="press flex h-16 w-full items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-sky-500 to-cyan-500 text-[18px] font-extrabold text-white shadow-lg shadow-sky-500/30">🖼️ 사진+문자 공유하기</button>
+    <button id="btnShareAll" class="press flex h-16 w-full items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-sky-500 to-cyan-500 text-[18px] font-extrabold text-white shadow-lg shadow-sky-500/30">🖼️ 사진+문자 보내기</button>
   </div>
 
   <!-- ===================== 문자설정 ===================== -->
@@ -148,6 +148,13 @@
 
   <!-- ===================== 설정 ===================== -->
   <main id="tab-settings" class="tab-page hidden flex-1 space-y-4 px-4 pb-28 pt-4">
+    <section class="rounded-3xl bg-white p-4 shadow-sm ring-2 ring-orange-200">
+      <h2 class="mb-1 text-[16px] font-bold">⚡ 아이폰 단축어 바로 보내기</h2>
+      <p class="text-[13px] text-slate-500">단축어를 한 번 만들어 두면, 사진+문구가 <b>붙여넣기 없이</b> 받는 번호로 바로 전송돼요.</p>
+      <p id="scState" class="mt-2 text-[14px] font-bold"></p>
+      <button id="btnScGuide" class="press mt-2 h-12 w-full rounded-xl bg-orange-500 text-[15px] font-extrabold text-white">⚡ 단축어 만드는 법 보기</button>
+    </section>
+
     <section class="rounded-3xl bg-white p-4 shadow-sm ring-1 ring-slate-200">
       <h2 class="mb-1 text-[16px] font-bold">🏦 계좌 카드 정보</h2>
       <p class="mb-3 text-[13px] text-slate-500">계좌 안내 카드와 예약 카드에 들어가요. 바꾸면 바로 적용돼요.</p>
@@ -204,7 +211,8 @@
         <li>• <b>자동 발송은 안 돼요.</b> 웹앱은 통화 종료를 감지할 수 없어서, 통화 후 앱을 열고 버튼을 눌러 보내는 방식이에요. (대신 아이폰·안드로이드 모두 쓸 수 있어요)</li>
         <li>• <b>번호 복사:</b> 최근 통화 목록에서 번호를 꾹 눌러 복사한 뒤 '📋 붙여넣기'를 누르세요.</li>
         <li>• <b>💬 문자만 보내기:</b> 번호와 글이 바로 채워져 빠르게 전송돼요. 단, 아이폰은 문자에 사진을 붙일 수 없어 <b>글만</b> 나가요.</li>
-        <li>• <b>🖼️ 사진+문자 공유하기:</b> 사진을 고른 뒤 버튼을 누르면 <b>공유창</b>이 떠요. <b>'메시지'</b>를 고르면 사진(아래에 문구까지 들어간 한 장)이 <b>이미 첨부된 채로</b> 열려요 — 붙여넣기 필요 없음. 받는 번호만 고르거나 입력(최근 통화에서 선택)하고 전송하면 끝. 카톡으로 보내려면 공유창에서 카톡을 고르면 돼요.</li>
+        <li>• <b>🖼️ 사진+문자 보내기 (아이폰):</b> 사진이 복사되고 번호·문구가 채워진 문자창이 열려요. 입력칸을 <b>꾹 → 붙여넣기</b>하면 사진이 붙어요.</li>
+        <li>• <b>⚡ 단축어로 바로 보내기 (아이폰 추천):</b> 설정 → <b>⚡ 아이폰 단축어</b>에서 한 번만 만들어 두면, 버튼 한 번에 <b>사진+문구가 붙여넣기 없이 바로 전송</b>돼요.</li>
         <li>• 문자 요금은 휴대폰 요금제의 기본 문자(무료 문자)로 나가요.</li>
       </ul>
       <button id="btnResetAll" class="mt-4 h-12 w-full rounded-xl bg-red-50 text-[14px] font-bold text-red-600">⚠️ 전체 초기화</button>
@@ -261,6 +269,33 @@
   </div>
 </div>
 
+
+<!-- 아이폰 단축어 만들기 안내 -->
+<div id="scSheet" class="fixed inset-0 z-[70] hidden">
+  <div class="absolute inset-0 bg-black/50" data-close="scSheet"></div>
+  <div class="absolute bottom-0 left-1/2 max-h-[92vh] w-full max-w-md -translate-x-1/2 overflow-y-auto rounded-t-3xl bg-white p-5 safe-b">
+    <h3 class="text-center text-[20px] font-extrabold">⚡ 아이폰 단축어 만들기 <span class="text-[13px] font-bold text-slate-400">(딱 한 번)</span></h3>
+    <p class="mt-1 text-center text-[13px] text-slate-500">만들어 두면 사진+문구가 <b>붙여넣기 없이 바로</b> 전송돼요</p>
+    <ol class="mt-4 space-y-3 text-[15px] leading-relaxed text-slate-700">
+      <li class="rounded-2xl bg-slate-50 p-3"><b>1.</b> 아이폰 <b>'단축어'</b> 앱 → 오른쪽 위 <b>＋</b> → 맨 위 이름을 <b class="text-orange-600">링크클린문자</b> 로 바꾸기 <button id="scCopyName" class="ml-1 rounded-lg bg-white px-2 py-0.5 text-[12px] font-bold text-brand-700 ring-1 ring-slate-200">이름 복사</button></li>
+      <li class="rounded-2xl bg-slate-50 p-3"><b>2.</b> 아래 검색창에 <b>사전</b> → <b>'입력에서 사전 가져오기'</b> 추가</li>
+      <li class="rounded-2xl bg-slate-50 p-3"><b>3.</b> 검색 <b>클립보드</b> → <b>'클립보드 가져오기'</b> 추가</li>
+      <li class="rounded-2xl bg-slate-50 p-3"><b>4.</b> 검색 <b>메시지</b> → <b>'메시지 보내기'</b> 추가<br>
+        · 메시지 칸 → <b>클립보드</b> 선택<br>
+        · 받는 사람 칸 → <b>사전</b> 선택 → 다시 눌러 <b>키</b>에 <b class="text-orange-600">번호</b> 입력<br>
+        · 오른쪽 <b>⌄</b> 눌러 <b>'실행 시 보기' 끄기</b></li>
+      <li class="rounded-2xl bg-slate-50 p-3"><b>5.</b> 검색 <b>만약</b> → <b>'만약'</b> 추가 → 입력 칸에 <b>사전</b> → 키 <b class="text-orange-600">문구</b> → 조건 <b>'값이 있음'</b></li>
+      <li class="rounded-2xl bg-slate-50 p-3"><b>6.</b> '만약'과 '그렇지 않으면' 사이에 <b>'메시지 보내기'</b> 하나 더<br>
+        · 메시지 칸 → <b>사전</b> → 키 <b class="text-orange-600">문구</b><br>
+        · 받는 사람 → <b>사전</b> → 키 <b class="text-orange-600">번호</b><br>
+        · <b>'실행 시 보기' 끄기</b> → 오른쪽 위 <b>완료</b></li>
+      <li class="rounded-2xl bg-amber-50 p-3 ring-1 ring-amber-200">💡 처음 보낼 때 <b>'메시지 보내기를 허용할까요?'</b>가 뜨면 <b>항상 허용</b>을 눌러 주세요. 보낸 뒤엔 화면 아래에서 쓸어 올려 이 앱으로 돌아오면 돼요.</li>
+    </ol>
+    <button id="scDone" class="press mt-4 h-14 w-full rounded-2xl bg-brand-600 text-[17px] font-extrabold text-white">✅ 다 만들었어요 (바로 보내기 켜기)</button>
+    <button id="scOff" class="mt-2 h-11 w-full text-[14px] font-bold text-slate-500">단축어 안 쓰기</button>
+  </div>
+</div>
+
 <!-- 사진 복사 안내 시트 -->
 <div id="pasteSheet" class="fixed inset-0 z-[60] hidden">
   <div class="absolute inset-0 bg-black/50" data-close="pasteSheet"></div>
@@ -273,7 +308,10 @@
       <li>3. <b>'붙여넣기'</b>로 사진 넣고 → <b>전송</b>!</li>
     </ol>
     <p id="pasteMore" class="mt-2 hidden text-center text-[13px] text-slate-500">사진 아래에 문구까지 한 장에 담았어요. 글자는 따로 안 쳐도 돼요!</p>
-    <button id="btnOpenSms" class="press mt-4 h-16 w-full rounded-2xl bg-brand-600 text-[18px] font-extrabold text-white">💬 문자 앱 열기</button>
+    <button id="btnRunSc" class="press mt-4 hidden h-16 w-full rounded-2xl bg-gradient-to-r from-orange-500 to-amber-500 text-[18px] font-extrabold text-white shadow-lg shadow-orange-500/30">⚡ 단축어로 바로 보내기</button>
+    <p id="scHint" class="mt-1 hidden text-center text-[12px] text-slate-500">붙여넣기 없이 사진+문구가 자동으로 전송돼요</p>
+    <button id="btnOpenSms" class="press mt-3 h-14 w-full rounded-2xl bg-brand-600 text-[17px] font-extrabold text-white">💬 문자 앱 열고 붙여넣기</button>
+    <button id="btnScSetup" class="mt-2 hidden h-11 w-full rounded-xl bg-orange-50 text-[14px] font-bold text-orange-700 ring-1 ring-orange-200">⚡ 붙여넣기 없이 보내고 싶다면? (단축어 1회 설정)</button>
     <button data-close="pasteSheet" class="mt-2 h-12 w-full text-[16px] font-bold text-slate-500">닫기</button>
   </div>
 </div>
@@ -714,6 +752,8 @@ function renderSendImgs() {
     $('sendImgs').innerHTML = `<div class="w-full"><p class="mb-2 rounded-xl bg-brand-50 px-3 py-2 text-[14px] font-bold text-brand-700 ring-1 ring-brand-200">🏦 이 계좌 카드 사진을 보내요<br><span class="font-medium">계좌 변경: 설정 → 🏦 계좌 카드 정보</span></p>
       <img id="acctPrev" class="w-full rounded-2xl ring-1 ring-slate-200" src="${_acct.url || ''}" alt="계좌 카드"/></div>`;
     accountBlob().then(() => { const im = document.getElementById('acctPrev'); if (im) im.src = _acct.url; }).catch(() => {});
+    $('btnShareAll').classList.add('hidden'); $('btnSms').classList.remove('mb-2');
+    $('btnSms').innerHTML = '🏦 계좌 카드 보내기';
     return;
   }
   ['draft', 'charInfo'].forEach(id => $(id) && $(id).classList.toggle('hidden', cardMode));
@@ -724,7 +764,7 @@ function renderSendImgs() {
     // 카드는 보낼 게 한 가지뿐 → 버튼 하나만
     $('btnShareAll').classList.add('hidden');
     $('btnSms').classList.remove('mb-2');
-    $('btnSms').innerHTML = '📇 예약 카드 공유하기';
+    $('btnSms').innerHTML = '📇 예약 카드 보내기';
     renderCardPreview();
     return;
   }
@@ -901,6 +941,17 @@ async function shareImage(readyBlob, fname, method, build) {
 }
 // 사진은 복사 → '문자 앱 열기'를 누르면 번호(+문구)가 채워진 문자창이 열림 → 붙여넣기만
 let _openBody = true;
+const SC_NAME = '링크클린문자';
+function scRender() {
+  const on = isIOS && !!S.sc;
+  $('btnRunSc').classList.toggle('hidden', !on); $('scHint').classList.toggle('hidden', !on);
+  $('btnScSetup').classList.toggle('hidden', !isIOS || !!S.sc);
+  if ($('scState')) $('scState').innerHTML = S.sc ? '<span class="text-emerald-600">✅ 켜짐 — 보낼 때 ⚡ 버튼이 나와요</span>' : '<span class="text-slate-400">꺼짐 — 아직 단축어를 안 만들었어요</span>';
+}
+function scUrl() {
+  const data = JSON.stringify({ 번호: digits($('phone').value), 문구: _openBody ? message() : '' });
+  return 'shortcuts://run-shortcut?name=' + encodeURIComponent(SC_NAME) + '&input=text&text=' + encodeURIComponent(data);
+}
 async function copyThenSheet(blobOrPromise, method, withBody, title) {
   if (!(navigator.clipboard && window.ClipboardItem)) { toast('이 기기는 사진 복사를 지원하지 않아요', 'err'); return false; }
   vib();
@@ -911,6 +962,7 @@ async function copyThenSheet(blobOrPromise, method, withBody, title) {
     $('pasteTitle').textContent = title;
     $('pasteMore').textContent = withBody ? '번호와 문구는 문자창에 이미 들어가 있어요. 사진만 붙여넣으면 돼요!' : '번호는 문자창에 이미 들어가 있어요. 사진만 붙여넣으면 돼요!';
     $('pasteMore').classList.remove('hidden');
+    scRender();
     $('pasteSheet').classList.remove('hidden');
     return true;
   } catch (e) { toast('복사에 실패했어요. 다시 눌러 주세요', 'err'); return false; }
@@ -948,7 +1000,14 @@ if ($('btnImgSms')) $('btnImgSms').onclick = async () => {
     location.href = smsHref();
   } catch (e) { toast("사진 복사에 실패했어요. '📤 공유'로 보내 주세요", 'err'); }
 };
-$('btnOpenSms').onclick = () => { location.href = smsHref(!_openBody); }; // 번호(+문구)가 채워진 문자창 → 사진만 붙여넣기
+$('btnOpenSms').onclick = () => { location.href = smsHref(!_openBody); };
+$('btnRunSc').onclick = () => { vib(); location.href = scUrl(); }; // 단축어가 클립보드 사진 + 문구를 번호로 바로 전송
+$('btnScSetup').onclick = () => { $('pasteSheet').classList.add('hidden'); $('scSheet').classList.remove('hidden'); };
+$('btnScGuide').onclick = () => $('scSheet').classList.remove('hidden');
+$('scCopyName').onclick = async () => { try { await navigator.clipboard.writeText(SC_NAME); toast('📋 이름 복사됨', 'ok'); } catch (e) {} };
+$('scDone').onclick = () => { S.sc = true; save(); scRender(); $('scSheet').classList.add('hidden'); toast('⚡ 바로 보내기 켜짐! 이제 보낼 때 ⚡ 버튼을 누르세요', 'ok'); };
+$('scOff').onclick = () => { S.sc = false; save(); scRender(); $('scSheet').classList.add('hidden'); };
+scRender(); // 번호(+문구)가 채워진 문자창 → 사진만 붙여넣기
 
 // 문자 편집 중에는 하단 버튼을 숨겨 입력칸을 가리지 않게
 $('draft').addEventListener('focus', () => $('sendBar').classList.add('hidden'));
