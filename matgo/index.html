@@ -623,7 +623,7 @@ small.zero,.seg small.mn.zero{color:#ff8a80!important}
 
 <script>
 'use strict';
-const VER='v79';
+const VER='v80';
 const $=s=>document.querySelector(s);
 const sleep=ms=>new Promise(r=>setTimeout(r,ms));
 const rnd=n=>Math.floor(Math.random()*n);
@@ -676,6 +676,7 @@ async function syncDown(){
   const [c,m,bk,dc]=await Promise.all([LG.req('matgo/cfg'),LG.req('matgo/money'),LG.req('matgo/bank'),LG.req('matgo/deco')]);if(!c&&!m)return false;
   if(bk&&typeof bk==='object')BANK=bk;if(dc&&typeof dc==='object'){DECO=dc;try{clearSvgCache()}catch(e){}}
   if(c&&c.start){DB.cfg=Object.assign({},CFG_DEF,c);CMT_REWARD=DB.cfg.cmt||30000;evSync()}
+  if(m&&Object.keys(m).length>2){try{const dk=new Date(Date.now()+9*3600e3).toISOString().slice(0,10);if(localStorage.getItem('mg_snap')!==dk){localStorage.setItem('mg_snap',dk);LG.req('matgo/snap/'+dk).then(x=>{if(x&&!Object.keys(x).length)LG.req('matgo/snap/'+dk,'PUT',{money:m,bank:bk||{},ts:Date.now()})})}}catch(e){}}
   if(m){['p1','p2'].forEach(id=>{if(m[id]!=null){delete m[id];LG.req('matgo/money/'+id,'DELETE')}});Object.assign(DB.money,m)}
   if(c&&c.start&&typeof c.sv==='number'&&c.sv<SEASON_V){   // 새 시즌: 모두 3만원으로 시작 (서버 설정을 제대로 읽었을 때만)
     DB.cfg=Object.assign({},CFG_DEF,c&&c.start?c:{},{start:30000,sv:SEASON_V});
