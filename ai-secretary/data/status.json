@@ -1,30 +1,32 @@
 {
- "date": "2026-11-17",
- "items": {
-  "report": {
-   "done": true,
-   "at": "07:19",
-   "note": "보고서·키워드 3개"
-  },
-  "bids": {
-   "done": true,
-   "at": "07:20",
-   "note": "새 공고 없음"
-  },
-  "threads": {
-   "done": true,
-   "at": "07:21",
-   "note": "배수구 글 게시"
-  },
-  "google": {
-   "done": true,
-   "at": "07:23",
-   "note": "11개 확인"
-  },
-  "neighbors": {
-   "done": true,
-   "at": "07:25",
-   "note": "댓글 3개"
+  "date": "2026-11-17",
+  "items": {
+    "report": {
+      "done": true,
+      "at": "07:19",
+      "note": "보고서·키워드 3개"
+    },
+    "bids": {
+      "done": true,
+      "at": "07:20",
+      "note": "새 공고 없음"
+    },
+    "threads": {
+      "done": true,
+      "at": "07:21",
+      "note": "배수구 글 게시",
+      "detail": "제주 오늘 오후부터 비에 바람까지 세게 분대요.\n이런 날 지나고 나면 베란다 배수구에 낙엽이랑 흙이 꼭 모여 있어요.\n그대로 두면 다음 비에 물이 안 빠져서 바닥에 고이더라고요.\n비 그치면 배수구 덮개만 한번 열어서 걷어내 주세요.\n여러분 집 베란다 배수구는 언제 마지막으로 열어 보셨어요?\n\n주제 태그: 살림",
+      "url": "https://www.threads.com/@linkcleaning/post/Df0arA-ElZB"
+    },
+    "google": {
+      "done": true,
+      "at": "07:23",
+      "note": "11개 확인"
+    },
+    "neighbors": {
+      "done": true,
+      "at": "07:25",
+      "note": "댓글 3개"
+    }
   }
- }
 }
