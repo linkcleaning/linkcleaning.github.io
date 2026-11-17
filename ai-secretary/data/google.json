@@ -135,9 +135,136 @@
     "web": 0,
     "blog": 0
    }
+  ],
+  "2026-11-18": [
+   {
+    "kw": "제주 입주청소",
+    "map": 3,
+    "web": 3,
+    "blog": 0
+   },
+   {
+    "kw": "제주 이사청소",
+    "map": null,
+    "web": 4,
+    "blog": 0
+   },
+   {
+    "kw": "제주 청소업체",
+    "map": 2,
+    "web": 7,
+    "blog": 0,
+    "rivals": [
+     {
+      "rank": 1,
+      "domain": "jejuclean.net",
+      "title": "제주크린넷"
+     },
+     {
+      "rank": 2,
+      "domain": "boyhomeclean.mycafe24.com",
+      "title": "정직한 청년사장의 제주 청소전문업체"
+     },
+     {
+      "rank": 3,
+      "domain": "m.119clean.com",
+      "title": "제주청소119"
+     },
+     {
+      "rank": 4,
+      "domain": "jejuhansung.com",
+      "title": "제주청소업체"
+     },
+     {
+      "rank": 5,
+      "domain": "blog.naver.com",
+      "title": "제주시청소업체 : 네이버 블로그"
+     }
+    ],
+    "mapRivals": [
+     "청년홈클린",
+     "링크클린",
+     "제주크린넷"
+    ]
+   },
+   {
+    "kw": "서귀포 입주청소",
+    "map": 1,
+    "web": 2,
+    "blog": 0
+   },
+   {
+    "kw": "제주 외벽청소",
+    "map": null,
+    "web": 0,
+    "blog": 0
+   },
+   {
+    "kw": "제주 준공청소",
+    "map": null,
+    "web": 0,
+    "blog": 0
+   },
+   {
+    "kw": "제주 유품정리",
+    "map": null,
+    "web": 10,
+    "blog": 0,
+    "rivals": [
+     {
+      "rank": 1,
+      "domain": "banhadaclean.tistory.com",
+      "title": "제주 유품정리 과정과 비용 투명하게 알려드립니다."
+     },
+     {
+      "rank": 2,
+      "domain": "m.blog.naver.com",
+      "title": "제주도 방치된 유품정리 since 1996"
+     },
+     {
+      "rank": 3,
+      "domain": "law.go.kr",
+      "title": "제주특별자치도 공영장례 및 유품정리 지원 조례"
+     },
+     {
+      "rank": 4,
+      "domain": "miso.kr",
+      "title": "제주 유품정리 후기"
+     },
+     {
+      "rank": 5,
+      "domain": "threads.com",
+      "title": "우리집처럼클린 | 제주청소업체 특수청소…"
+     }
+    ]
+   },
+   {
+    "kw": "제주 특수청소",
+    "map": null,
+    "web": 0,
+    "blog": 0
+   },
+   {
+    "kw": "제주 쓰레기집 청소",
+    "map": null,
+    "web": 6,
+    "blog": 0
+   },
+   {
+    "kw": "노형동 입주청소",
+    "map": 1,
+    "web": 3,
+    "blog": 0
+   },
+   {
+    "kw": "제주상가청소",
+    "map": null,
+    "web": 0,
+    "blog": 0
+   }
   ]
  },
- "date": "2026-11-17",
- "checkedAt": "2026-11-17T07:23:00+09:00",
- "note": "홈페이지 11개 중 7개 1페이지, 지도 1위 3개 · 쓰레기집 청소 6위 진입"
+ "date": "2026-11-18",
+ "checkedAt": "2026-11-18T07:22:00+09:00",
+ "note": "홈페이지 11개 중 7개 1페이지 · 제주 청소업체 지도 1→2위, 유품정리 8→10위 · 노형동 입주청소 4→3위"
 }
