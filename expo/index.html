@@ -1,0 +1,248 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>도쿄 청소박람회 포켓 가이드</title>
+<meta name="theme-color" content="#0e4f55">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="박람회">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<link rel="apple-touch-icon" href="icon-180.png">
+<link rel="manifest" href="manifest.json">
+<link href="https://fonts.googleapis.com/css2?family=Gowun+Dodum&family=Noto+Sans+JP:wght@500;700&display=swap" rel="stylesheet">
+<style>
+:root{--teal:#0e4f55;--teal2:#16707a;--orange:#e8833a;--green:#5aa832;--bg:#f6f3ee;--card:#fff;--ink:#1d2a2c;--mute:#6b7778;--line:#e6e0d6}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:"Gowun Dodum",system-ui,sans-serif;font-size:16px;line-height:1.5;padding-bottom:calc(76px + env(safe-area-inset-bottom))}
+header{background:var(--teal);color:#fff;padding:calc(14px + env(safe-area-inset-top)) 18px 16px}
+header h1{margin:0;font-size:20px;letter-spacing:-.3px}
+header p{margin:4px 0 0;font-size:13px;opacity:.85}
+.off{font-size:13px;border-radius:10px;padding:8px 12px;margin:0 0 10px;background:#fff;color:var(--mute)}.off.ok{background:#e9f5e1;color:#3d7a1f}
+main{padding:14px 14px 0;max-width:560px;margin:0 auto}
+section{display:none}section.on{display:block}
+h2{font-size:17px;margin:18px 2px 8px;color:var(--teal)}
+.hint{font-size:13px;color:var(--mute);margin:0 2px 10px}
+.card{background:var(--card);border-radius:14px;padding:14px 14px 12px;margin-bottom:10px;box-shadow:0 1px 0 var(--line)}
+.top{border-left:5px solid var(--orange)}
+.row{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.booth{font-weight:700;background:var(--teal);color:#fff;border-radius:8px;padding:2px 8px;font-size:14px;letter-spacing:.3px}
+.star{color:var(--orange);font-size:13px}
+.name{font-family:"Noto Sans JP",sans-serif;font-weight:700;font-size:16px}
+.what{margin:6px 0 4px;font-size:15px}
+.use{font-size:14px;color:var(--teal2)}
+.use b{color:var(--orange);font-weight:400}
+.ask{font-size:13px;color:var(--mute);margin-top:4px}
+.done{opacity:.45}
+.chk{margin-left:auto;border:2px solid var(--line);background:#fff;border-radius:10px;padding:4px 10px;font:inherit;font-size:13px;color:var(--mute)}
+.done .chk{background:var(--green);border-color:var(--green);color:#fff}
+.hall{display:flex;gap:6px;overflow-x:auto;padding:2px 0 8px;scrollbar-width:none}
+.hall button{flex:none;border:0;border-radius:20px;padding:7px 14px;background:#fff;font:inherit;font-size:14px;color:var(--ink)}
+.hall button.on{background:var(--orange);color:#fff}
+.ph{display:block;width:100%;text-align:left;border:0;background:var(--card);border-radius:14px;padding:14px;margin-bottom:8px;font:inherit;color:var(--ink);box-shadow:0 1px 0 var(--line)}
+.ph .ko{font-size:14px;color:var(--mute)}
+.ph .jp{font-family:"Noto Sans JP",sans-serif;font-size:19px;font-weight:700;margin-top:2px}
+.big{position:fixed;inset:0;background:#fff;z-index:20;display:none;flex-direction:column;justify-content:center;align-items:center;padding:30px;text-align:center}
+.big.on{display:flex}
+.big .jp{font-family:"Noto Sans JP",sans-serif;font-weight:700;font-size:34px;line-height:1.45;color:var(--ink)}
+.big .ko{margin-top:10px;font-size:16px;color:var(--mute)}
+.ph .rd{font-size:17px;color:var(--orange);margin-top:2px}
+.big .rd{margin-top:22px;font-size:22px;color:var(--orange);line-height:1.4}
+.big small{position:absolute;bottom:calc(24px + env(safe-area-inset-bottom));color:#aaa;font-size:13px}
+.todo{display:flex;gap:12px;align-items:flex-start;background:var(--card);border-radius:12px;padding:12px 14px;margin-bottom:8px;border:0;width:100%;text-align:left;font:inherit;color:var(--ink)}
+.box{flex:none;width:24px;height:24px;border-radius:7px;border:2px solid var(--line);margin-top:1px;display:flex;align-items:center;justify-content:center;color:#fff;font-size:15px}
+.todo.done{opacity:1}.todo.done .box{background:var(--green);border-color:var(--green)}
+.todo.done .t{text-decoration:line-through;color:var(--mute)}
+.todo .s{display:block;font-size:13px;color:var(--mute)}
+.sem .time{font-weight:700;color:var(--teal)}
+.sem .code{font-size:12px;background:var(--bg);border-radius:6px;padding:1px 6px;margin-left:6px;color:var(--mute)}
+.day{font-size:14px;font-weight:700;color:#fff;background:var(--teal2);display:inline-block;border-radius:8px;padding:2px 10px;margin:14px 0 8px}
+nav{position:fixed;left:0;right:0;bottom:0;background:#fff;border-top:1px solid var(--line);display:flex;padding-bottom:env(safe-area-inset-bottom);z-index:10}
+nav button{flex:1;border:0;background:none;padding:9px 0 10px;font:inherit;font-size:12px;color:var(--mute)}
+nav button i{display:block;font-style:normal;font-size:20px;line-height:1.2}
+nav button.on{color:var(--orange)}
+.note{background:#fff7ef;border-radius:12px;padding:12px 14px;font-size:14px;margin-bottom:10px}
+</style>
+</head>
+<body>
+<header>
+  <h1>도쿄 청소박람회 포켓 가이드</h1>
+  <p>11.18(수)~20(금) · 도쿄 빅사이트 · 남 10:00 / 서 9:30 ~ 17:00</p>
+</header>
+<main>
+
+<!-- 준비 -->
+<section id="prep">
+  <h2>출발 전 준비 (일본어 몰라도 OK)</h2>
+  <div class="off" id="off">오프라인 저장 확인 중…</div>
+  <p class="hint">누르면 체크돼요. 이 폰에만 저장돼요.</p>
+  <div id="todos"></div>
+  <div class="note">팁: 부스 직원에게 <b>「韓国から来ました」</b>(한국에서 왔어요)라고 먼저 말하면, 영어나 손짓으로 천천히 설명해 주는 경우가 많아요. 카탈로그는 받아서 <b>파파고 이미지 번역</b>으로 읽으면 돼요.</div>
+</section>
+
+<!-- 부스 -->
+<section id="booth">
+  <h2>부스 동선</h2>
+  <p class="hint">홀을 고르세요. 주황 줄 = 꼭 가볼 곳. 다녀오면 ✓를 누르세요.</p>
+  <div class="hall" id="halls"></div>
+  <div id="list"></div>
+</section>
+
+<!-- 일본어 -->
+<section id="jp">
+  <h2>보여주는 일본어</h2>
+  <p class="hint">주황 글씨(🔊)를 그대로 읽으면 돼요. "-"는 소리를 길게 끌라는 뜻이에요. 누르면 크게 떠서 직원에게 보여줄 수도 있어요.</p>
+  <div id="phrases"></div>
+</section>
+
+<!-- 세미나 -->
+<section id="sem">
+  <h2>들을 만한 세미나</h2>
+  <p class="hint">모두 일본어 진행이에요. 슬라이드 사진을 찍어 오는 용도로 추천해요. 신청은 방문자 마이페이지에서 (하루 3개까지).</p>
+  <div id="sems"></div>
+</section>
+
+</main>
+
+<div class="big" id="big"><div class="jp" id="bigjp"></div><div class="rd" id="bigrd"></div><div class="ko" id="bigko"></div><small>화면을 누르면 닫혀요</small></div>
+<script src="/v.js" data-v="v1" defer></script>
+
+<nav>
+  <button data-t="prep"><i>✅</i>준비</button>
+  <button data-t="booth"><i>🗺️</i>부스</button>
+  <button data-t="jp"><i>🗣️</i>일본어</button>
+  <button data-t="sem"><i>🎤</i>세미나</button>
+</nav>
+
+<script>
+const store={get(k,d){try{return JSON.parse(localStorage.getItem(k))??d}catch(e){return d}},set(k,v){try{localStorage.setItem(k,JSON.stringify(v))}catch(e){}}};
+
+const TODOS=[
+ ["파파고 앱 설치 + 일본어 오프라인 번역 받기","박람회장 와이파이가 약할 때 대비. 대화 모드·이미지 번역(카탈로그) 둘 다 써요"],
+ ["구글 렌즈(구글 앱) 설치","부스 간판·제품 설명을 카메라로 비추면 바로 한국어로 보여요"],
+ ["로밍 또는 일본 eSIM 개통","번역 앱과 이 가이드를 쓰려면 데이터가 필요해요"],
+ ["입장 배지 PDF 4명 모두 휴대폰에 저장","입구에서 QR을 찍어요. 메일함에서 미리 받아 두기"],
+ ["영문 명함 30장 (링크클린 LINKCLEAN)","가능하면 뒷면에 「韓国・済州島の清掃会社」 한 줄 추가"],
+ ["보조배터리 + 충전 케이블","번역·촬영으로 배터리가 빨리 닳아요"],
+ ["카탈로그 담을 가방(에코백)","부스마다 종이 자료를 많이 줘요"],
+ ["역할 나누기","대표: 상담·명함 / 과장: 영상 촬영 / 이케이클린: 약품·도구 사진·가격 메모"],
+ ["촬영 계획: 세로 영상 5~15초","로봇 시연, 약품 시연, 입구 인증샷 → 인스타 릴스·스레드용"],
+ ["엔화 현금 조금","샘플·소량 판매 부스가 있으면 현금만 받는 곳도 있어요"]
+];
+
+const B=[
+ // h: S1 / S2 / W2
+ {h:"S2",b:"S2-H03",n:"允・セサミ",top:1,w:"업무용 욕실 물때 세정제 「風呂職人」, 에어컨 세정제 「エアコン職人」",u:"입주청소 욕실 물때 시간 단축, 에어컨 청소 신규 메뉴",a:"물때 종류별 사용법, 한국 배송"},
+ {h:"S2",b:"S2-H05",n:"ナルビー",top:1,w:"교체날식 스크레이퍼 (3중 날·좁은 날)",u:"새집 유리·타일 스티커·페인트 제거",a:"유리용 날 종류, 샘플 구매"},
+ {h:"S2",b:"S2-H07",n:"サンリミックス",top:1,w:"「クロス再生」 벽지 세정 특허기술",u:"도배 교체 대신 벽지 세정 → 임대인·부동산 B2B 상품",a:"한국 대리점·교육, 약품 단가"},
+ {h:"S2",b:"S2-G03",n:"日本エアコンクリーニング協会",top:1,w:"에어컨 분해 청소 기술·교육",u:"제주 여름 에어컨 청소 매출",a:"외국인 수강 가능 여부, 장비 목록"},
+ {h:"S2",b:"S2-G06",n:"エステーPRO",top:1,w:"업무용 탈취제 「消臭力」, 욕실 코팅, 바이오 정제",u:"쓰레기집·유품정리 후 탈취, 입주청소 마무리",a:"코팅 지속 기간, 대용량 가격"},
+ {h:"S2",b:"S2-P09",n:"Revive and design",top:1,w:"유리 상처·산화·물때 제거, 스텐 연마, 코팅",u:"클린앤스카이 유리·상가 쇼윈도 고부가 작업",a:"장비 가격, 교육 기간"},
+ {h:"S2",b:"S2-L13",n:"Life Polish",w:"광촉매 코팅, 물사용 공간·석재 재생연마",u:"입주청소 + 코팅 패키지로 객단가 ↑"},
+ {h:"S2",b:"S2-K12",n:"レッツクリエイト",w:"Edelstein 코팅 시스템",u:"상가·바닥 코팅 메뉴"},
+ {h:"S2",b:"S2-L12",n:"J-クリエイト",w:"세라믹 타일 코팅",u:"욕실·현관 타일 코팅"},
+ {h:"S2",b:"S2-L16",n:"西日本薬業",w:"곰팡이 방지제 「かびからまもるくん」, 기름때 제거제",u:"제주 습기 곰팡이 옵션"},
+ {h:"S2",b:"S2-N13",n:"LIXIL",w:"창문 닦기 로봇 HOBOT-S7 Pro / SP10",u:"고층 유리 보조, 릴스 소재"},
+ {h:"S2",b:"S2-N09",n:"シンショー",w:"배터리식·온수 고압세척기",u:"물 없는 현장 세척"},
+ {h:"S2",b:"S2-K09",n:"ビアンコジャパン",w:"청소 업체용 상품 (19일 세미나 C-10)",u:"SNS 제안력 팁"},
+ {h:"S2",b:"S2-G16",n:"プロワン/ミツモア",w:"현장업 견적·일정·청구 앱",u:"직접 만드는 업무 앱 참고"},
+ {h:"S2",b:"S2-H12",n:"L is B",w:"현장 사진 자동 분류 「タグショット」",u:"현장보고 앱 기능 참고"},
+ {h:"S2",b:"S2-B06",n:"G-Smart",w:"노코드 현장 보고 앱",u:"현장보고 앱 비교"},
+ {h:"S2",b:"S2-N03",n:"アイウイズロボティクス",w:"바닥·창문·화장실 청소 로봇",u:"릴스용: \"일본은 로봇이 청소\""},
+ {h:"S2",b:"S2-K03",n:"Pudu Robotics",w:"청소 로봇 다수",u:"릴스용 로봇 시연"},
+ {h:"S2",b:"S2-K19",n:"ソフトバンクロボティクス",w:"청소 로봇 Whiz",u:"릴스용 로봇 시연"},
+ {h:"S1",b:"S1-F13",n:"MAS",top:1,w:"로프 액세스(무비계) 공법",u:"클린앤스카이 로프 작업 안전·장비 비교",a:"안전 장비 구성, 작업 단가"},
+ {h:"S1",b:"S1-S11",n:"CHEMIPAZ",w:"외벽 세정제 PAZCLEAR BR-310",u:"클린앤스카이 외벽 세척"},
+ {h:"S1",b:"S1-Q01",n:"エレクター(ラバーメイド)",w:"유리 청소 신제품, 청소 카트",u:"유리 도구 비교"},
+ {h:"S1",b:"S1-J19",n:"ケルヒャー",w:"소파·카펫 세척기 Puzzi 2/1, 로봇 청소기 KIRA",u:"소파·매트리스 세척 부가 서비스"},
+ {h:"S1",b:"S1-U16",n:"レボテック",w:"온수 고압세척기, 카펫 장비",u:"특수청소 찌든 때"},
+ {h:"S1",b:"S1-R09",n:"マキタ",w:"충전식 청소 장비",u:"현장 청소기 교체 참고"},
+ {h:"S1",b:"S1-U03",n:"グリーンテックジャパン",w:"드라이아이스 세척기",u:"물 없이 찌든 때 제거 가능한지"},
+ {h:"S1",b:"S1-V05",n:"東海機器工業",w:"매트리스 항균·탈취 건조기",u:"매트리스 케어 메뉴"},
+ {h:"S1",b:"S1-J16",n:"ミッケル化学",w:"욕실·화장실 세정제, 탈취제",u:"친환경 약품 비교"},
+ {h:"S1",b:"S1-V06",n:"オーブ・テック",w:"카펫 샴푸, 은이온 제균제, 녹·변기 클리너",u:"화장실 누런 때"},
+ {h:"S1",b:"S1-S03",n:"3M",w:"스코치브라이트 패드·스펀지",u:"기본 소모품"},
+ {h:"S1",b:"S1-S12",n:"ユニフォームネット",w:"소취·방취 셔츠, 팬 재킷",u:"링크클린 유니폼 제작 참고"},
+ {h:"W2",b:"W2-Q35",n:"オーニット",top:1,w:"업무용 제품 「剛腕 2800 / 6000」, 「Eyes on」",u:"오존 살균·탈취 장비 비교 (오존 장비인지 현장 확인)",a:"사양(농도·평수), 220V 사용 가능 여부"},
+ {h:"W2",b:"W2-R38",n:"IICRC",w:"청소·복원 국제 인증 기관",u:"특수청소·수해 복구 자격으로 브랜드화"}
+];
+
+const P=[
+ ["한국 제주도에서 청소 회사를 하고 있어요","韓国の済州島で清掃会社をしています","칸코쿠노 사이슈토-데 세-소-가이샤오 시테 이마스"],
+ ["일본어를 잘 못해요. 천천히 부탁해요","日本語があまりできません。ゆっくりお願いします","니홍고가 아마리 데키마셍. 윳쿠리 오네가이시마스"],
+ ["사진·영상 찍어도 될까요?","写真や動画を撮ってもいいですか？","샤싱야 도-가오 톳테모 이-데스카?"],
+ ["가격은 얼마예요?","価格はいくらですか？","카카쿠와 이쿠라데스카?"],
+ ["한국으로 배송되나요?","韓国へ発送できますか？","칸코쿠에 핫소- 데키마스카?"],
+ ["한국에 대리점이 있나요?","韓国に代理店はありますか？","칸코쿠니 다이리텡와 아리마스카?"],
+ ["샘플을 받을 수 있나요?","サンプルをいただけますか？","삼푸루오 이타다케마스카?"],
+ ["카탈로그 주세요","カタログをいただけますか？","카타로구오 이타다케마스카?"],
+ ["220V에서 쓸 수 있나요?","220Vで使えますか？","니햐쿠니주- 보루토데 츠카에마스카?"],
+ ["교육(강습)이 있나요?","研修（講習）はありますか？","켄슈-(코-슈-)와 아리마스카?"],
+ ["시연을 보여 주세요","実演を見せてください","지츠엥오 미세테 쿠다사이"],
+ ["명함 교환해도 될까요?","名刺交換してもよろしいですか？","메-시 코-칸 시테모 요로시-데스카?"],
+ ["여기에 써 주세요 (가격·메일)","ここに書いていただけますか？","코코니 카이테 이타다케마스카?"],
+ ["화장실은 어디예요?","トイレはどこですか？","토이레와 도코데스카?"],
+ ["감사합니다","ありがとうございました","아리가토- 고자이마시타"]
+];
+
+const S=[
+ ["18(수)","11:35","B-2","청소 장인 「きよきよ」 현장 청소 기술","실전 기술, 청소 유튜버의 영상 연출"],
+ ["18(수)","13:20","C-4","재생연마 비즈니스 (Revive and design)","유리·스텐 연마 신사업"],
+ ["18(수)","16:00","C-7","외주 없이 자사에서 만드는 업무 앱","직접 만드는 앱 방향 확인"],
+ ["19(목)","11:35","B-8","수해 후 곰팡이 — 발생 원인과 현장","특수청소·곰팡이 작업"],
+ ["19(목)","12:30","C-10","SNS 시대 청소 업체의 제안력 (ビアンコジャパン)","인스타·스레드 홍보"],
+ ["19(목)","14:50","B-11","미국의 재해 건물 복구 기술과 제도 (IICRC)","특수청소 브랜드화"],
+ ["19(목)","15:00","C-13","알코올과 오일로 만든 기름때 제거제","주방 기름때"],
+ ["19(목)","16:00","C-14","「おそうじアカデミア」 (允・セサミ)","직원 교육·브랜딩"],
+ ["20(금)","10:30","C-15","가격 경쟁에서 벗어나는 법 (에어컨클리닝협회)","제값 받는 에어컨 청소"],
+ ["20(금)","13:45","B-16","하우스클리닝으로 돈 버는 사업 만들기","가격 → 부가가치 전략"],
+ ["20(금)","16:00","C-21","주택·시설 곰팡이의 상식과 비상식","제주 곰팡이 설명 자료"]
+];
+
+// todos
+const tdone=store.get('td',{});
+const tEl=document.getElementById('todos');
+TODOS.forEach(([t,s],i)=>{const b=document.createElement('button');b.className='todo'+(tdone[i]?' done':'');b.innerHTML=`<span class="box">✓</span><span><span class="t">${t}</span><span class="s">${s}</span></span>`;b.onclick=()=>{tdone[i]=!tdone[i];store.set('td',tdone);b.classList.toggle('done')};tEl.appendChild(b)});
+
+// booths
+const bdone=store.get('bd',{});
+const halls=[["TOP","⭐ 꼭 가볼 8곳"],["S2","남 2홀"],["S1","남 1홀"],["W2","서 2홀"]];
+let cur=store.get('hall','TOP');
+const hEl=document.getElementById('halls'),lEl=document.getElementById('list');
+function renderHalls(){hEl.innerHTML='';halls.forEach(([k,l])=>{const b=document.createElement('button');b.textContent=l;if(k===cur)b.className='on';b.onclick=()=>{cur=k;store.set('hall',k);renderHalls();renderList()};hEl.appendChild(b)})}
+function renderList(){
+ const items=(cur==='TOP'?B.filter(x=>x.top):B.filter(x=>x.h===cur)).slice().sort((a,b)=>a.b.localeCompare(b.b));
+ lEl.innerHTML='';
+ items.forEach(x=>{const d=document.createElement('div');d.className='card'+(x.top?' top':'')+(bdone[x.b]?' done':'');
+  d.innerHTML=`<div class="row"><span class="booth">${x.b}</span><span class="name">${x.n}</span>${x.top?'<span class="star">★★★</span>':''}<button class="chk">${bdone[x.b]?'✓ 완료':'✓'}</button></div><div class="what">${x.w}</div><div class="use"><b>→</b> ${x.u}</div>${x.a?`<div class="ask">물어볼 것: ${x.a}</div>`:''}`;
+  d.querySelector('.chk').onclick=()=>{bdone[x.b]=!bdone[x.b];store.set('bd',bdone);renderList()};
+  lEl.appendChild(d)});
+}
+renderHalls();renderList();
+
+// phrases
+const pEl=document.getElementById('phrases'),big=document.getElementById('big');
+P.forEach(([ko,jp,rd])=>{const b=document.createElement('button');b.className='ph';b.innerHTML=`<div class="ko">${ko}</div><div class="rd">🔊 ${rd}</div><div class="jp">${jp}</div>`;b.onclick=()=>{document.getElementById('bigjp').textContent=jp;document.getElementById('bigrd').textContent=rd;document.getElementById('bigko').textContent=ko;big.classList.add('on')};pEl.appendChild(b)});
+big.onclick=()=>big.classList.remove('on');
+
+// seminars
+const sEl=document.getElementById('sems');let lastDay='';
+S.forEach(([d,t,c,ti,u])=>{if(d!==lastDay){const h=document.createElement('div');h.className='day';h.textContent=d+(d.startsWith('18')?' · 내일':'');sEl.appendChild(h);lastDay=d}
+ const c2=document.createElement('div');c2.className='card sem';c2.innerHTML=`<div><span class="time">${t}</span><span class="code">${c}</span></div><div class="what">${ti}</div><div class="use"><b>→</b> ${u}</div>`;sEl.appendChild(c2)});
+
+// tabs
+const tabs=[...document.querySelectorAll('nav button')];
+function show(t){document.querySelectorAll('section').forEach(s=>s.classList.toggle('on',s.id===t));tabs.forEach(b=>b.classList.toggle('on',b.dataset.t===t));store.set('tab',t);window.scrollTo(0,0)}
+tabs.forEach(b=>b.onclick=()=>show(b.dataset.t));
+show(store.get('tab','prep'));
+
+// 오프라인(인터넷 없이) 사용
+const off=document.getElementById('off');
+function offOk(){off.className='off ok';off.textContent='✓ 인터넷 없이도 열려요 (이 폰에 저장 완료)'}
+if('serviceWorker' in navigator && /^https?:/.test(location.protocol)){
+  navigator.serviceWorker.register('sw.js').catch(()=>{off.textContent='오프라인 저장을 못 했어요. 와이파이에서 한 번 더 열어 주세요'});
+  navigator.serviceWorker.ready.then(offOk);
+} else {off.textContent='이 화면에서는 오프라인 저장이 안 돼요. linkcleaning.github.io/expo 로 열어 주세요'}
+</script>
+</body>
+</html>

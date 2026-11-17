@@ -1,0 +1,15 @@
+{
+  "name": "도쿄 청소박람회 포켓 가이드",
+  "short_name": "박람회",
+  "description": "도쿄 청소박람회 2026 — 링크클린 맞춤 부스·일본어 카드·세미나",
+  "start_url": "./index.html",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#f6f3ee",
+  "theme_color": "#0e4f55",
+  "icons": [
+    {"src": "icon-192.png", "sizes": "192x192", "type": "image/png"},
+    {"src": "icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any maskable"}
+  ]
+}
