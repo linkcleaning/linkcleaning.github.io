@@ -1,5 +1,5 @@
 // 광주 디월트 AS SNS — 서비스 워커 (버전 올릴 때 C 숫자도 같이 올리기)
-const C = 'dewalt-sns-v1'
+const C = 'dewalt-sns-v2'
 self.addEventListener('install', () => self.skipWaiting())
 self.addEventListener('activate', (e) =>
   e.waitUntil(caches.keys().then((ks) => Promise.all(ks.filter((k) => k !== C).map((k) => caches.delete(k)))).then(() => self.clients.claim())),

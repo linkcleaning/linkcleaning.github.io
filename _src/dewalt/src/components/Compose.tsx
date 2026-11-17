@@ -59,7 +59,7 @@ function footer(s: Settings, d: Draft): string {
   const lines: string[] = []
   if (d.delivery) lines.push(`📦 ${s.deliveryText || '택배 접수 · 전국 발송 가능'}`)
   if (d.visit) {
-    lines.push(`📍 ${s.shopName || '광주 디월트 AS센터'}${s.address ? ` · ${s.address}` : ' · 광주광역시'}`)
+    lines.push(`📍 ${s.shopName || '디월트 광주서비스센터'}${s.address ? ` · ${s.address}` : ' · 광주광역시'}`)
     if (s.phone) lines.push(`☎ ${s.phone}`)
     if (s.hours) lines.push(`🕘 ${s.hours}`)
   }

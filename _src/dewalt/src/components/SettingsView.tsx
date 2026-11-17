@@ -115,7 +115,7 @@ export default function SettingsView({ s, setS, toast }: { s: Settings; setS: (s
           <Field label="매장 이름" value={s.shopName} onChange={(v) => up({ shopName: v })} />
           <Field label="주소" value={s.address} onChange={(v) => up({ address: v })} placeholder="광주광역시 ○○구 ○○로 00" />
           <Field label="전화번호" value={s.phone} onChange={(v) => up({ phone: v })} placeholder="062-000-0000" type="tel" />
-          <Field label="영업시간" value={s.hours} onChange={(v) => up({ hours: v })} placeholder="평일 08:30~18:00 · 토 08:30~13:00" />
+          <Field label="영업시간" value={s.hours} onChange={(v) => up({ hours: v })} placeholder="예: 평일 08:30~18:00" />
           <Field label="택배 안내 문구" value={s.deliveryText} onChange={(v) => up({ deliveryText: v })} />
           <label className="block">
             <span className="mb-1 block text-[13px] font-semibold">기본 해시태그 (항상 포함)</span>

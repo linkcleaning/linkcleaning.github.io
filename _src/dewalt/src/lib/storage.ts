@@ -39,12 +39,12 @@ export const DEFAULT_SETTINGS: Settings = {
   uploadPreset: '',
   imgbbKey: '',
   apiMode: 'auto',
-  shopName: '광주 디월트 공식 AS센터',
-  address: '',
-  phone: '',
-  hours: '',
+  shopName: '디월트 광주서비스센터',
+  address: '광주 북구 하남대로 721-1',
+  phone: '062-512-0933',
+  hours: '18:00 영업 종료 · 네이버 예약 가능',
   deliveryText: '택배 접수 · 전국 발송 가능',
-  baseHashtags: '#디월트 #디월트AS #광주디월트 #광주전동공구 #디월트수리 #전동공구부속 #현장필수템',
+  baseHashtags: '#디월트 #디월트AS #광주디월트 #광주전동공구 #디월트서비스센터 #디월트수리 #전동공구부속 #현장필수템',
 }
 
 const SK = 'dw-sns-settings-v1'
@@ -52,7 +52,11 @@ const HK = 'dw-sns-history-v1'
 
 export function loadSettings(): Settings {
   try {
-    return { ...DEFAULT_SETTINGS, ...(JSON.parse(localStorage.getItem(SK) || '{}') as Partial<Settings>) }
+    const saved = JSON.parse(localStorage.getItem(SK) || '{}') as Partial<Settings>
+    // 예전 기본값이거나 비어 있으면 실제 매장 정보로 채움
+    if (!saved.shopName || saved.shopName === '광주 디월트 공식 AS센터') saved.shopName = DEFAULT_SETTINGS.shopName
+    for (const k of ['address', 'phone', 'hours'] as const) if (!saved[k]) saved[k] = DEFAULT_SETTINGS[k]
+    return { ...DEFAULT_SETTINGS, ...saved }
   } catch {
     return { ...DEFAULT_SETTINGS }
   }
