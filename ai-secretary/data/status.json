@@ -1,68 +1,78 @@
 {
-  "date": "2026-11-17",
-  "items": {
-    "report": {
-      "done": true,
-      "at": "07:19",
-      "note": "보고서·키워드 3개"
-    },
-    "bids": {
-      "done": true,
-      "at": "07:20",
-      "note": "새 공고 없음"
-    },
-    "threads": {
-      "done": true,
-      "at": "07:21",
-      "note": "배수구 글 게시",
-      "detail": "제주 오늘 오후부터 비에 바람까지 세게 분대요.\n이런 날 지나고 나면 베란다 배수구에 낙엽이랑 흙이 꼭 모여 있어요.\n그대로 두면 다음 비에 물이 안 빠져서 바닥에 고이더라고요.\n비 그치면 배수구 덮개만 한번 열어서 걷어내 주세요.\n여러분 집 베란다 배수구는 언제 마지막으로 열어 보셨어요?\n\n주제 태그: 살림",
-      "url": "https://www.threads.com/@linkcleaning/post/Df0arA-ElZB"
-    },
-    "google": {
-      "done": true,
-      "at": "07:23",
-      "note": "11개 확인"
-    },
-    "neighbors": {
-      "done": true,
-      "at": "07:25",
-      "note": "댓글 3개"
-    },
-    "replies": {
-      "done": true,
-      "at": "13:40",
-      "note": "답글 4개",
-      "detail": "@jeju_staydalring: 제주는 물받이도 자주 확인해야 한다 → 물받이까지 막히면 물이 넘치니 바람 잦아들면 같이 봐 주시라고 답글\n@ans600524: 꽃향유 사진 장소는 신풍신천목장 바닷가 → 알려줘서 고맙다, 꽃 지기 전에 걸어보겠다고 답글 (+맞팔)\n@kps15503: 흰 고양이는 매일, 노랑이는 가끔 온다 → 흰 아이는 단골손님이라고 답글\n@chameleon_698420: 목요일부터 바람 차가워져 이불 집게 챙기겠다 → 비 그치는 틈에 말리고 감기 조심하라고 답글"
-    },
-    "placenews": {
-      "done": true,
-      "at": "13:50",
-      "note": "창틀 솔잎 현장 소식 + 영상",
-      "title": "제주 창틀청소 솔잎·먼지 쌓인 바깥 창틀 레일 정리",
-      "clip": "https://linkclean-promo.han0829.workers.dev/api/clip/288cda6c-764.mp4"
-    },
-    "tip": {
-      "done": true,
-      "at": "14:05",
-      "note": "세탁기 고무패킹 곰팡이 카드 3장 · 저녁 게시 예약",
-      "topic": "세탁기 고무패킹·세제통 곰팡이",
-      "jobId": "6677f7dc-4b59-4109-9a6e-670311394ea2",
-      "qa": "홈페이지 Q&A는 linkclean-web 저장소 권한이 이 세션에 없어 못 올림"
-    },
-    "ekpromo": {
-      "done": true,
-      "at": "14:15",
-      "note": "이케이클린 블로그·소식·인스타: 서귀포 상가청소"
-    },
-    "coupang": {
-      "done": true,
-      "at": "19:10",
-      "note": "일반2·릴스"
-    },
-    "dayreport": {
-      "done": true,
-      "at": "19:12",
-      "note": "12건 중 11건 처리"
-    }
+ "date": "2026-11-17",
+ "items": {
+  "report": {
+   "done": true,
+   "at": "07:19",
+   "note": "보고서·키워드 3개"
+  },
+  "bids": {
+   "done": true,
+   "at": "07:20",
+   "note": "새 공고 없음"
+  },
+  "threads": {
+   "done": true,
+   "at": "07:21",
+   "note": "배수구 글 게시",
+   "detail": "제주 오늘 오후부터 비에 바람까지 세게 분대요.\n이런 날 지나고 나면 베란다 배수구에 낙엽이랑 흙이 꼭 모여 있어요.\n그대로 두면 다음 비에 물이 안 빠져서 바닥에 고이더라고요.\n비 그치면 배수구 덮개만 한번 열어서 걷어내 주세요.\n여러분 집 베란다 배수구는 언제 마지막으로 열어 보셨어요?\n\n주제 태그: 살림",
+   "url": "https://www.threads.com/@linkcleaning/post/Df0arA-ElZB"
+  },
+  "google": {
+   "done": true,
+   "at": "07:23",
+   "note": "11개 확인"
+  },
+  "neighbors": {
+   "done": true,
+   "at": "07:25",
+   "note": "댓글 3개"
+  },
+  "replies": {
+   "done": true,
+   "at": "13:40",
+   "note": "답글 4개",
+   "detail": "@jeju_staydalring: 제주는 물받이도 자주 확인해야 한다 → 물받이까지 막히면 물이 넘치니 바람 잦아들면 같이 봐 주시라고 답글\n@ans600524: 꽃향유 사진 장소는 신풍신천목장 바닷가 → 알려줘서 고맙다, 꽃 지기 전에 걸어보겠다고 답글 (+맞팔)\n@kps15503: 흰 고양이는 매일, 노랑이는 가끔 온다 → 흰 아이는 단골손님이라고 답글\n@chameleon_698420: 목요일부터 바람 차가워져 이불 집게 챙기겠다 → 비 그치는 틈에 말리고 감기 조심하라고 답글"
+  },
+  "placenews": {
+   "done": true,
+   "at": "13:50",
+   "note": "창틀 솔잎 현장 소식 + 영상",
+   "title": "제주 창틀청소 솔잎·먼지 쌓인 바깥 창틀 레일 정리",
+   "clip": "https://linkclean-promo.han0829.workers.dev/api/clip/288cda6c-764.mp4"
+  },
+  "tip": {
+   "done": true,
+   "at": "14:05",
+   "note": "세탁기 고무패킹 곰팡이 카드 3장 · 저녁 게시 예약",
+   "topic": "세탁기 고무패킹·세제통 곰팡이",
+   "jobId": "6677f7dc-4b59-4109-9a6e-670311394ea2",
+   "qa": "홈페이지 Q&A는 linkclean-web 저장소 권한이 이 세션에 없어 못 올림"
+  },
+  "ekpromo": {
+   "done": true,
+   "at": "14:15",
+   "note": "이케이클린 블로그·소식·인스타: 서귀포 상가청소"
+  },
+  "coupang": {
+   "done": true,
+   "at": "19:10",
+   "note": "일반2·릴스"
+  },
+  "dayreport": {
+   "done": true,
+   "at": "19:12",
+   "note": "12건 중 11건 처리"
+  },
+  "salim": {
+   "done": true,
+   "at": "21:31",
+   "note": "글1·댓글2·릴스실패"
+  },
+  "evening": {
+   "done": true,
+   "at": "21:31",
+   "note": "팁카드 4곳 게시"
   }
+ }
 }
