@@ -1,9 +1,9 @@
 {
-"updated": "2026-11-16 10:17",
+"updated": "2026-11-17 13:06",
 "stats": {
 "cafe": 80,
-"restaurant": 150,
 "minbak": 82,
+"restaurant": 150,
 "build_done": 139,
 "build_start": 109
 },
@@ -33,18 +33,6 @@
 "firstSeen": "2026-11-16 10:17"
 },
 {
-"id": "restaurant:6520000-101-2026-00404",
-"src": "restaurant",
-"name": "중국분식",
-"type": "한식",
-"addr": "제주특별자치도 서귀포시 중정로91번길 18 (서귀동)",
-"date": "2026-11-13",
-"area": "24.00",
-"tel": "",
-"franchise": false,
-"firstSeen": "2026-11-16 10:17"
-},
-{
 "id": "minbak:AGCV065100002026000381",
 "src": "minbak",
 "name": "스테이 뒷빌레",
@@ -57,6 +45,18 @@
 "firstSeen": "2026-11-16 10:17"
 },
 {
+"id": "restaurant:6520000-101-2026-00404",
+"src": "restaurant",
+"name": "중국분식",
+"type": "한식",
+"addr": "제주특별자치도 서귀포시 중정로91번길 18 (서귀동)",
+"date": "2026-11-13",
+"area": "24.00",
+"tel": "",
+"franchise": false,
+"firstSeen": "2026-11-16 10:17"
+},
+{
 "id": "cafe:6510000-104-2026-00413",
 "src": "cafe",
 "name": "백억커피아라점",
@@ -64,18 +64,6 @@
 "addr": "제주특별자치도 제주시 중앙로 582, 1층 (아라일동)",
 "date": "2026-11-12",
 "area": "68.00",
-"tel": "",
-"franchise": false,
-"firstSeen": "2026-11-15 10:11"
-},
-{
-"id": "restaurant:6520000-101-2026-00403",
-"src": "restaurant",
-"name": "한국생활개선 서귀포시연합회",
-"type": "한식",
-"addr": "제주특별자치도 서귀포시 남원읍 하례리 1558",
-"date": "2026-11-12",
-"area": "615.00",
 "tel": "",
 "franchise": false,
 "firstSeen": "2026-11-15 10:11"
@@ -100,6 +88,18 @@
 "addr": "제주특별자치도 제주시 애월읍 광령5길 28",
 "date": "2026-11-12",
 "area": "",
+"tel": "",
+"franchise": false,
+"firstSeen": "2026-11-15 10:11"
+},
+{
+"id": "restaurant:6520000-101-2026-00403",
+"src": "restaurant",
+"name": "한국생활개선 서귀포시연합회",
+"type": "한식",
+"addr": "제주특별자치도 서귀포시 남원읍 하례리 1558",
+"date": "2026-11-12",
+"area": "615.00",
 "tel": "",
 "franchise": false,
 "firstSeen": "2026-11-15 10:11"
@@ -165,6 +165,18 @@
 "firstSeen": "2026-11-14 10:42"
 },
 {
+"id": "minbak:AGCV065100002026000377",
+"src": "minbak",
+"name": "제주와봄",
+"type": "",
+"addr": "제주특별자치도 제주시 벌랑6길 18-1 (삼양삼동)",
+"date": "2026-11-11",
+"area": "506",
+"tel": "",
+"franchise": false,
+"firstSeen": "2026-11-14 10:42"
+},
+{
 "id": "restaurant:6520000-101-2026-00402",
 "src": "restaurant",
 "name": "거북이냉삼",
@@ -184,18 +196,6 @@
 "addr": "제주특별자치도 서귀포시 성산읍 일주동로 4228",
 "date": "2026-11-11",
 "area": "187.23",
-"tel": "",
-"franchise": false,
-"firstSeen": "2026-11-14 10:42"
-},
-{
-"id": "minbak:AGCV065100002026000377",
-"src": "minbak",
-"name": "제주와봄",
-"type": "",
-"addr": "제주특별자치도 제주시 벌랑6길 18-1 (삼양삼동)",
-"date": "2026-11-11",
-"area": "506",
 "tel": "",
 "franchise": false,
 "firstSeen": "2026-11-14 10:42"
@@ -261,6 +261,18 @@
 "firstSeen": "2026-11-13 11:05"
 },
 {
+"id": "minbak:AGCV065100002026000376",
+"src": "minbak",
+"name": "호호담",
+"type": "",
+"addr": "제주특별자치도 제주시 한림읍 협재남2길 45-83",
+"date": "2026-11-10",
+"area": "",
+"tel": "",
+"franchise": false,
+"firstSeen": "2026-11-13 11:05"
+},
+{
 "id": "restaurant:6520000-101-2026-00400",
 "src": "restaurant",
 "name": "영숙싸롱",
@@ -292,18 +304,6 @@
 "addr": "제주특별자치도 서귀포시 대정읍 글로벌에듀로 370, 이노에듀파크 156호",
 "date": "2026-11-10",
 "area": "66.00",
-"tel": "",
-"franchise": false,
-"firstSeen": "2026-11-13 11:05"
-},
-{
-"id": "minbak:AGCV065100002026000376",
-"src": "minbak",
-"name": "호호담",
-"type": "",
-"addr": "제주특별자치도 제주시 한림읍 협재남2길 45-83",
-"date": "2026-11-10",
-"area": "",
 "tel": "",
 "franchise": false,
 "firstSeen": "2026-11-13 11:05"
@@ -345,18 +345,6 @@
 "firstSeen": "2026-11-13 11:05"
 },
 {
-"id": "restaurant:6520000-101-2026-00397",
-"src": "restaurant",
-"name": "반소반",
-"type": "한식",
-"addr": "제주특별자치도 서귀포시 성산읍 신양로 5, 1층",
-"date": "2026-11-09",
-"area": "119.79",
-"tel": "",
-"franchise": false,
-"firstSeen": "2026-11-13 11:05"
-},
-{
 "id": "minbak:AGCV065200002026000162",
 "src": "minbak",
 "name": "일상하루",
@@ -376,6 +364,18 @@
 "addr": "제주특별자치도 서귀포시 성산읍 난산로 50",
 "date": "2026-11-09",
 "area": "",
+"tel": "",
+"franchise": false,
+"firstSeen": "2026-11-13 11:05"
+},
+{
+"id": "restaurant:6520000-101-2026-00397",
+"src": "restaurant",
+"name": "반소반",
+"type": "한식",
+"addr": "제주특별자치도 서귀포시 성산읍 신양로 5, 1층",
+"date": "2026-11-09",
+"area": "119.79",
 "tel": "",
 "franchise": false,
 "firstSeen": "2026-11-13 11:05"
@@ -717,18 +717,6 @@
 "firstSeen": "2026-11-06 10:43"
 },
 {
-"id": "restaurant:6520000-101-2026-00393",
-"src": "restaurant",
-"name": "청마식당",
-"type": "한식",
-"addr": "제주특별자치도 서귀포시 쇠소깍로 203, 청마식당 (하효동)",
-"date": "2026-11-03",
-"area": "48.32",
-"tel": "",
-"franchise": false,
-"firstSeen": "2026-11-06 10:43"
-},
-{
 "id": "minbak:AGCV065100002026000367",
 "src": "minbak",
 "name": "평화의상징",
@@ -748,6 +736,18 @@
 "addr": "제주특별자치도 제주시 조천읍 선교로 159-22",
 "date": "2026-11-03",
 "area": "1650",
+"tel": "",
+"franchise": false,
+"firstSeen": "2026-11-06 10:43"
+},
+{
+"id": "restaurant:6520000-101-2026-00393",
+"src": "restaurant",
+"name": "청마식당",
+"type": "한식",
+"addr": "제주특별자치도 서귀포시 쇠소깍로 203, 청마식당 (하효동)",
+"date": "2026-11-03",
+"area": "48.32",
 "tel": "",
 "franchise": false,
 "firstSeen": "2026-11-06 10:43"
@@ -1269,18 +1269,6 @@
 "firstSeen": "2026-11-01 01:58"
 },
 {
-"id": "restaurant:6520000-101-2026-00387",
-"src": "restaurant",
-"name": "화이팅",
-"type": "한식",
-"addr": "제주특별자치도 서귀포시 성산읍 고성동서로 67, 2층",
-"date": "2026-10-27",
-"area": "78.00",
-"tel": "",
-"franchise": false,
-"firstSeen": "2026-11-01 01:58"
-},
-{
 "id": "minbak:AGCV065100002026000363",
 "src": "minbak",
 "name": "무루 스테이",
@@ -1300,6 +1288,18 @@
 "addr": "제주특별자치도 제주시 애월읍 장소로 215, 2호",
 "date": "2026-10-27",
 "area": "",
+"tel": "",
+"franchise": false,
+"firstSeen": "2026-11-01 01:58"
+},
+{
+"id": "restaurant:6520000-101-2026-00387",
+"src": "restaurant",
+"name": "화이팅",
+"type": "한식",
+"addr": "제주특별자치도 서귀포시 성산읍 고성동서로 67, 2층",
+"date": "2026-10-27",
+"area": "78.00",
 "tel": "",
 "franchise": false,
 "firstSeen": "2026-11-01 01:58"
@@ -1509,18 +1509,6 @@
 "firstSeen": "2026-11-01 01:58"
 },
 {
-"id": "restaurant:6520000-101-2026-00383",
-"src": "restaurant",
-"name": "원다방",
-"type": "정종/대포집/소주방",
-"addr": "제주특별자치도 서귀포시 표선면 표선동서로 228, 1층",
-"date": "2026-10-23",
-"area": "40.90",
-"tel": "",
-"franchise": false,
-"firstSeen": "2026-11-01 01:58"
-},
-{
 "id": "minbak:AGCV065100002026000357",
 "src": "minbak",
 "name": "마르웨",
@@ -1552,6 +1540,18 @@
 "addr": "제주특별자치도 서귀포시 남원읍 남한로 11-7",
 "date": "2026-10-23",
 "area": "",
+"tel": "",
+"franchise": false,
+"firstSeen": "2026-11-01 01:58"
+},
+{
+"id": "restaurant:6520000-101-2026-00383",
+"src": "restaurant",
+"name": "원다방",
+"type": "정종/대포집/소주방",
+"addr": "제주특별자치도 서귀포시 표선면 표선동서로 228, 1층",
+"date": "2026-10-23",
+"area": "40.90",
 "tel": "",
 "franchise": false,
 "firstSeen": "2026-11-01 01:58"
@@ -2001,18 +2001,6 @@
 "firstSeen": "2026-11-01 01:58"
 },
 {
-"id": "restaurant:6520000-101-2026-00377",
-"src": "restaurant",
-"name": "머슬 덮밥",
-"type": "경양식",
-"addr": "제주특별자치도 서귀포시 대정읍 보성구억로 209, A동 101호 (한돌 빌라)",
-"date": "2026-10-19",
-"area": "34.20",
-"tel": "",
-"franchise": false,
-"firstSeen": "2026-11-01 01:58"
-},
-{
 "id": "minbak:AGCV065100002026000351",
 "src": "minbak",
 "name": "이도고산",
@@ -2032,6 +2020,18 @@
 "addr": "제주특별자치도 제주시 한경면 판포2길 30-10",
 "date": "2026-10-19",
 "area": "837",
+"tel": "",
+"franchise": false,
+"firstSeen": "2026-11-01 01:58"
+},
+{
+"id": "restaurant:6520000-101-2026-00377",
+"src": "restaurant",
+"name": "머슬 덮밥",
+"type": "경양식",
+"addr": "제주특별자치도 서귀포시 대정읍 보성구억로 209, A동 101호 (한돌 빌라)",
+"date": "2026-10-19",
+"area": "34.20",
 "tel": "",
 "franchise": false,
 "firstSeen": "2026-11-01 01:58"
@@ -2097,18 +2097,6 @@
 "firstSeen": "2026-11-01 01:58"
 },
 {
-"id": "restaurant:6520000-101-2026-00375",
-"src": "restaurant",
-"name": "금등갈비",
-"type": "한식",
-"addr": "제주특별자치도 서귀포시 일주동로 8720, 1층 (서홍동)",
-"date": "2026-10-16",
-"area": "71.72",
-"tel": "",
-"franchise": false,
-"firstSeen": "2026-11-01 01:58"
-},
-{
 "id": "minbak:AGCV065100002026000349",
 "src": "minbak",
 "name": "솔솔합서",
@@ -2152,6 +2140,18 @@
 "addr": "제주특별자치도 서귀포시 대정읍 도원로 20",
 "date": "2026-10-16",
 "area": "753",
+"tel": "",
+"franchise": false,
+"firstSeen": "2026-11-01 01:58"
+},
+{
+"id": "restaurant:6520000-101-2026-00375",
+"src": "restaurant",
+"name": "금등갈비",
+"type": "한식",
+"addr": "제주특별자치도 서귀포시 일주동로 8720, 1층 (서홍동)",
+"date": "2026-10-16",
+"area": "71.72",
 "tel": "",
 "franchise": false,
 "firstSeen": "2026-11-01 01:58"
@@ -2277,6 +2277,18 @@
 "firstSeen": "2026-11-01 01:58"
 },
 {
+"id": "minbak:AGCV065100002026000345",
+"src": "minbak",
+"name": "애월스테이 연",
+"type": "",
+"addr": "제주특별자치도 제주시 애월읍 신엄9길 46",
+"date": "2026-10-14",
+"area": "",
+"tel": "",
+"franchise": false,
+"firstSeen": "2026-11-01 01:58"
+},
+{
 "id": "restaurant:6520000-101-2026-00374",
 "src": "restaurant",
 "name": "표선제주닭집서귀포점",
@@ -2301,18 +2313,6 @@
 "firstSeen": "2026-11-01 01:58"
 },
 {
-"id": "minbak:AGCV065100002026000345",
-"src": "minbak",
-"name": "애월스테이 연",
-"type": "",
-"addr": "제주특별자치도 제주시 애월읍 신엄9길 46",
-"date": "2026-10-14",
-"area": "",
-"tel": "",
-"franchise": false,
-"firstSeen": "2026-11-01 01:58"
-},
-{
 "id": "restaurant:6510000-101-2026-00662",
 "src": "restaurant",
 "name": "정성스레보말칼국수",
@@ -2332,30 +2332,6 @@
 "addr": "제주특별자치도 제주시 남성로 39, 1층 (용담일동)",
 "date": "2026-10-13",
 "area": "70.00",
-"tel": "",
-"franchise": false,
-"firstSeen": "2026-11-01 01:58"
-},
-{
-"id": "restaurant:6520000-101-2026-00372",
-"src": "restaurant",
-"name": "여행가게와 연필가게",
-"type": "패밀리레스트랑",
-"addr": "제주특별자치도 서귀포시 남원읍 태위로 929",
-"date": "2026-10-13",
-"area": "70.00",
-"tel": "",
-"franchise": false,
-"firstSeen": "2026-11-01 01:58"
-},
-{
-"id": "restaurant:6520000-101-2026-00371",
-"src": "restaurant",
-"name": "동백포차",
-"type": "한식",
-"addr": "제주특별자치도 서귀포시 516로 537 (상효동)",
-"date": "2026-10-13",
-"area": "60.00",
 "tel": "",
 "franchise": false,
 "firstSeen": "2026-11-01 01:58"
@@ -2392,6 +2368,30 @@
 "addr": "제주특별자치도 서귀포시 신서로122번길 87 (강정동)",
 "date": "2026-10-13",
 "area": "",
+"tel": "",
+"franchise": false,
+"firstSeen": "2026-11-01 01:58"
+},
+{
+"id": "restaurant:6520000-101-2026-00372",
+"src": "restaurant",
+"name": "여행가게와 연필가게",
+"type": "패밀리레스트랑",
+"addr": "제주특별자치도 서귀포시 남원읍 태위로 929",
+"date": "2026-10-13",
+"area": "70.00",
+"tel": "",
+"franchise": false,
+"firstSeen": "2026-11-01 01:58"
+},
+{
+"id": "restaurant:6520000-101-2026-00371",
+"src": "restaurant",
+"name": "동백포차",
+"type": "한식",
+"addr": "제주특별자치도 서귀포시 516로 537 (상효동)",
+"date": "2026-10-13",
+"area": "60.00",
 "tel": "",
 "franchise": false,
 "firstSeen": "2026-11-01 01:58"
@@ -2577,18 +2577,6 @@
 "firstSeen": "2026-11-01 01:58"
 },
 {
-"id": "restaurant:6520000-101-2026-00369",
-"src": "restaurant",
-"name": "에그 앤 꼬꼬",
-"type": "한식",
-"addr": "제주특별자치도 서귀포시 중앙로71번길 15-2, 1층 (서귀동)",
-"date": "2026-10-08",
-"area": "43.84",
-"tel": "",
-"franchise": false,
-"firstSeen": "2026-11-01 01:58"
-},
-{
 "id": "minbak:AGCV065200002026000148",
 "src": "minbak",
 "name": "팽나무아래보목",
@@ -2596,6 +2584,18 @@
 "addr": "제주특별자치도 서귀포시 보목로 47-3 (보목동)",
 "date": "2026-10-08",
 "area": "",
+"tel": "",
+"franchise": false,
+"firstSeen": "2026-11-01 01:58"
+},
+{
+"id": "restaurant:6520000-101-2026-00369",
+"src": "restaurant",
+"name": "에그 앤 꼬꼬",
+"type": "한식",
+"addr": "제주특별자치도 서귀포시 중앙로71번길 15-2, 1층 (서귀동)",
+"date": "2026-10-08",
+"area": "43.84",
 "tel": "",
 "franchise": false,
 "firstSeen": "2026-11-01 01:58"
@@ -2632,30 +2632,6 @@
 "addr": "제주특별자치도 제주시 한림읍 한림리 1584-4",
 "date": "2026-10-08",
 "area": "12.50",
-"tel": "",
-"franchise": false,
-"firstSeen": "2026-11-01 01:58"
-},
-{
-"id": "restaurant:6520000-101-2026-00367",
-"src": "restaurant",
-"name": "성산막회",
-"type": "횟집",
-"addr": "제주특별자치도 서귀포시 성산읍 일출로 233, 1층",
-"date": "2026-10-07",
-"area": "64.50",
-"tel": "064-787-9688",
-"franchise": false,
-"firstSeen": "2026-11-01 01:58"
-},
-{
-"id": "restaurant:6520000-101-2026-00366",
-"src": "restaurant",
-"name": "새머거본말고기식당",
-"type": "한식",
-"addr": "제주특별자치도 서귀포시 중정로91번길 41-1 (서귀동)",
-"date": "2026-10-07",
-"area": "39.60",
 "tel": "",
 "franchise": false,
 "firstSeen": "2026-11-01 01:58"
@@ -2728,6 +2704,30 @@
 "addr": "제주특별자치도 서귀포시 열리로40번길 16 (상예동)",
 "date": "2026-10-07",
 "area": "",
+"tel": "",
+"franchise": false,
+"firstSeen": "2026-11-01 01:58"
+},
+{
+"id": "restaurant:6520000-101-2026-00367",
+"src": "restaurant",
+"name": "성산막회",
+"type": "횟집",
+"addr": "제주특별자치도 서귀포시 성산읍 일출로 233, 1층",
+"date": "2026-10-07",
+"area": "64.50",
+"tel": "064-787-9688",
+"franchise": false,
+"firstSeen": "2026-11-01 01:58"
+},
+{
+"id": "restaurant:6520000-101-2026-00366",
+"src": "restaurant",
+"name": "새머거본말고기식당",
+"type": "한식",
+"addr": "제주특별자치도 서귀포시 중정로91번길 41-1 (서귀동)",
+"date": "2026-10-07",
+"area": "39.60",
 "tel": "",
 "franchise": false,
 "firstSeen": "2026-11-01 01:58"
@@ -4020,19 +4020,6 @@
 "firstSeen": "2026-10-31 23:36"
 },
 {
-"id": "build_done:1000000000000000893919",
-"src": "build_done",
-"name": "도두일동 2456-1  근생",
-"type": "제2종근린생활시설",
-"addr": "제주특별자치도 제주시 도두일동 2456-1번지",
-"date": "2026-09-23",
-"area": 189.4,
-"hhld": "",
-"permitDate": "2026-02-25",
-"franchise": false,
-"firstSeen": "2026-10-31 23:36"
-},
-{
 "id": "build_done:1000000000000000962411",
 "src": "build_done",
 "name": "도두이동 177-12  단독주택",
@@ -4133,6 +4120,19 @@
 "area": 97.42,
 "hhld": "",
 "permitDate": "2026-05-29",
+"franchise": false,
+"firstSeen": "2026-10-31 23:36"
+},
+{
+"id": "build_done:1000000000000000893919",
+"src": "build_done",
+"name": "도두일동 2456-1  근생",
+"type": "제2종근린생활시설",
+"addr": "제주특별자치도 제주시 도두일동 2456-1번지",
+"date": "2026-09-23",
+"area": 189.4,
+"hhld": "",
+"permitDate": "2026-02-25",
 "franchise": false,
 "firstSeen": "2026-10-31 23:36"
 },
@@ -4347,19 +4347,6 @@
 "firstSeen": "2026-10-31 23:36"
 },
 {
-"id": "build_done:1000000000000000736226",
-"src": "build_done",
-"name": "단독주택 (도두일동)",
-"type": "단독주택",
-"addr": "제주특별자치도 제주시 도두일동 2530번지",
-"date": "2026-09-22",
-"area": 809.18,
-"hhld": "",
-"permitDate": "2025-05-30",
-"franchise": false,
-"firstSeen": "2026-10-31 23:36"
-},
-{
 "id": "build_start:1000000000000001030827",
 "src": "build_start",
 "name": "볼튼호텔",
@@ -4499,6 +4486,19 @@
 "area": 417.99,
 "hhld": "",
 "permitDate": "2020-09-29",
+"franchise": false,
+"firstSeen": "2026-10-31 23:36"
+},
+{
+"id": "build_done:1000000000000000736226",
+"src": "build_done",
+"name": "단독주택 (도두일동)",
+"type": "단독주택",
+"addr": "제주특별자치도 제주시 도두일동 2530번지",
+"date": "2026-09-22",
+"area": 809.18,
+"hhld": "",
+"permitDate": "2025-05-30",
 "franchise": false,
 "firstSeen": "2026-10-31 23:36"
 },
@@ -6979,64 +6979,60 @@
 ],
 "debug": {
 "errors": [
-"cafe {'cond[OPN_ATMY_GRP_CD::EQ]': '6510000'} p3: The read operation timed out",
-"cafe {'cond[OPN_ATMY_GRP_CD::EQ]': '6520000'} p2: The read operation timed out",
-"restaurant {'cond[OPN_ATMY_GRP_CD::EQ]': '6520000'} p4: The read operation timed out"
+"restaurant {'cond[OPN_ATMY_GRP_CD::EQ]': '6510000'} p1: The read operation timed out",
+"restaurant {'cond[OPN_ATMY_GRP_CD::EQ]': '6520000'} p1: The read operation timed out",
+"build 제주시 도두일동 p1: HTTP Error 503: Service Unavailable"
 ],
-"calls": 244,
+"calls": 256,
 "notes": [
 "cafe path=rest_cafes",
 "cafe 6510000 total=410",
 "cafe 6520000 total=155",
 "cafe 6500000 total=0",
-"cafe collected=57",
+"cafe collected=56",
 "restaurant path=general_restaurants",
-"restaurant 6510000 total=0",
-"restaurant 6520000 total=403",
 "restaurant 6500000 total=0",
-"restaurant collected=27",
+"restaurant collected=0",
 "minbak path=rural_homestays",
 "minbak 6510000 total=377",
 "minbak 6520000 total=162",
 "minbak 6500000 total=0",
-"minbak collected=53",
+"minbak collected=52",
 "build 제주시 일도이동 total=3",
-"build 제주시 삼도일동 total=1",
-"build 제주시 삼도이동 total=2",
+"build 제주시 삼도이동 total=1",
 "build 제주시 건입동 total=2",
-"build 제주시 용담일동 total=3",
+"build 제주시 용담일동 total=2",
 "build 제주시 용담이동 total=2",
 "build 제주시 용담삼동 total=2",
 "build 제주시 화북일동 total=2",
 "build 제주시 화북이동 total=1",
-"build 제주시 삼양일동 total=6",
+"build 제주시 삼양일동 total=5",
 "build 제주시 봉개동 total=3",
 "build 제주시 아라일동 total=4",
-"build 제주시 아라이동 total=3",
-"build 제주시 오라이동 total=6",
+"build 제주시 아라이동 total=1",
+"build 제주시 오라이동 total=5",
 "build 제주시 오라삼동 total=3",
-"build 제주시 노형동 total=5",
-"build 제주시 외도일동 total=4",
-"build 제주시 이호일동 total=2",
-"build 제주시 도두일동 total=4",
+"build 제주시 노형동 total=4",
+"build 제주시 외도일동 total=3",
+"build 제주시 이호일동 total=1",
 "build 제주시 도두이동 total=3",
 "build 제주시 도남동 total=2",
 "build 제주시 회천동 total=1",
 "build 제주시 오등동 total=2",
 "build 제주시 월평동 total=1",
-"build 제주시 영평동 total=2",
-"build 제주시 연동 total=6",
+"build 제주시 영평동 total=1",
+"build 제주시 연동 total=4",
 "build 제주시 도평동 total=2",
-"build 제주시 해안동 total=3",
+"build 제주시 해안동 total=2",
 "build 제주시 내도동 total=2",
-"build 제주시 한림읍 귀덕리 total=2",
+"build 제주시 한림읍 귀덕리 total=1",
 "build 제주시 한림읍 한림리 total=5",
 "build 제주시 한림읍 금악리 total=3",
 "build 제주시 한림읍 동명리 total=3",
 "build 제주시 한림읍 옹포리 total=1",
 "build 제주시 한림읍 상대리 total=1",
 "build 제주시 한림읍 상명리 total=3",
-"build 제주시 한림읍 협재리 total=8",
+"build 제주시 한림읍 협재리 total=6",
 "build 제주시 한림읍 월령리 total=1",
 "build 제주시 한림읍 금능리 total=2",
 "build 제주시 애월읍 광령리 total=3",
@@ -7046,11 +7042,11 @@
 "build 제주시 애월읍 신엄리 total=5",
 "build 제주시 애월읍 장전리 total=1",
 "build 제주시 애월읍 고성리 total=3",
-"build 제주시 애월읍 애월리 total=6",
+"build 제주시 애월읍 애월리 total=3",
 "build 제주시 애월읍 어음리 total=1",
 "build 제주시 애월읍 곽지리 total=4",
 "build 제주시 애월읍 금성리 total=2",
-"build 제주시 애월읍 봉성리 total=6",
+"build 제주시 애월읍 봉성리 total=5",
 "build 제주시 애월읍 하귀2리 total=1",
 "build 제주시 애월읍 유수암리 total=2",
 "build 제주시 구좌읍 동복리 total=1",
@@ -7058,7 +7054,7 @@
 "build 제주시 구좌읍 송당리 total=4",
 "build 제주시 구좌읍 월정리 total=4",
 "build 제주시 구좌읍 행원리 total=1",
-"build 제주시 구좌읍 세화리 total=5",
+"build 제주시 구좌읍 세화리 total=4",
 "build 제주시 구좌읍 상도리 total=1",
 "build 제주시 구좌읍 한동리 total=2",
 "build 제주시 구좌읍 하도리 total=2",
@@ -7067,33 +7063,32 @@
 "build 제주시 구좌읍 김녕리 total=4",
 "build 제주시 조천읍 신촌리 total=1",
 "build 제주시 조천읍 조천리 total=6",
-"build 제주시 조천읍 함덕리 total=5",
+"build 제주시 조천읍 함덕리 total=2",
 "build 제주시 조천읍 대흘리 total=2",
 "build 제주시 조천읍 북촌리 total=4",
 "build 제주시 조천읍 와산리 total=2",
-"build 제주시 조천읍 교래리 total=1",
-"build 제주시 조천읍 선흘리 total=10",
-"build 제주시 한경면 청수리 total=3",
-"build 제주시 한경면 용수리 total=5",
+"build 제주시 조천읍 선흘리 total=8",
+"build 제주시 한경면 청수리 total=2",
+"build 제주시 한경면 용수리 total=4",
 "build 제주시 한경면 고산리 total=1",
-"build 제주시 한경면 금등리 total=2",
+"build 제주시 한경면 금등리 total=1",
 "build 제주시 한경면 조수리 total=4",
 "build 제주시 한경면 신창리 total=1",
 "build 제주시 한경면 저지리 total=1",
 "build 제주시 추자면 대서리 total=1",
 "build 제주시 추자면 묵리 total=2",
 "build 제주시 추자면 신양리 total=1",
-"build 제주시 우도면 연평리 total=2",
+"build 제주시 우도면 연평리 total=1",
 "build 서귀포시 서귀동 total=1",
 "build 서귀포시 법환동 total=2",
 "build 서귀포시 서호동 total=1",
-"build 서귀포시 호근동 total=14",
+"build 서귀포시 호근동 total=7",
 "build 서귀포시 동홍동 total=3",
 "build 서귀포시 서홍동 total=2",
 "build 서귀포시 상효동 total=2",
 "build 서귀포시 하효동 total=2",
-"build 서귀포시 보목동 total=2",
-"build 서귀포시 토평동 total=7",
+"build 서귀포시 보목동 total=1",
+"build 서귀포시 토평동 total=5",
 "build 서귀포시 중문동 total=2",
 "build 서귀포시 대포동 total=3",
 "build 서귀포시 월평동 total=1",
@@ -7101,15 +7096,13 @@
 "build 서귀포시 도순동 total=1",
 "build 서귀포시 색달동 total=2",
 "build 서귀포시 상예동 total=2",
-"build 서귀포시 대정읍 상모리 total=5",
+"build 서귀포시 대정읍 상모리 total=4",
 "build 서귀포시 대정읍 안성리 total=4",
-"build 서귀포시 대정읍 인성리 total=1",
 "build 서귀포시 대정읍 일과리 total=1",
 "build 서귀포시 대정읍 동일리 total=1",
 "build 서귀포시 대정읍 보성리 total=2",
 "build 서귀포시 대정읍 구억리 total=1",
 "build 서귀포시 대정읍 무릉리 total=3",
-"build 서귀포시 대정읍 영락리 total=1",
 "build 서귀포시 대정읍 신도리 total=2",
 "build 서귀포시 남원읍 남원리 total=1",
 "build 서귀포시 남원읍 태흥리 total=1",
@@ -7120,9 +7113,8 @@
 "build 서귀포시 남원읍 하례리 total=1",
 "build 서귀포시 남원읍 신례리 total=1",
 "build 서귀포시 성산읍 오조리 total=2",
-"build 서귀포시 성산읍 시흥리 total=1",
 "build 서귀포시 성산읍 고성리 total=3",
-"build 서귀포시 성산읍 수산리 total=2",
+"build 서귀포시 성산읍 수산리 total=1",
 "build 서귀포시 성산읍 온평리 total=4",
 "build 서귀포시 성산읍 신산리 total=3",
 "build 서귀포시 성산읍 삼달리 total=1",
@@ -7139,9 +7131,8 @@
 "build 서귀포시 표선면 하천리 total=3",
 "build 서귀포시 표선면 성읍리 total=1",
 "build 서귀포시 표선면 가시리 total=5",
-"build 서귀포시 표선면 세화리 total=1",
 "build 서귀포시 표선면 토산리 total=1",
-"buildings collected=110"
+"buildings collected=92"
 ]
 }
 }
