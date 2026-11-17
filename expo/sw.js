@@ -1,5 +1,5 @@
 // 도쿄 청소박람회 포켓 가이드 - 서비스워커 (인터넷 없이 실행 · 연결되면 최신 버전 우선)
-const CACHE = 'expo-guide-v1';
+const CACHE = 'expo-guide-v2';
 const ASSETS = ['./', './index.html', './manifest.json', './icon-180.png', './icon-192.png', './icon-512.png', '/v.js',
   'https://fonts.googleapis.com/css2?family=Gowun+Dodum&family=Noto+Sans+JP:wght@500;700&display=swap'];
 self.addEventListener('install', e => {

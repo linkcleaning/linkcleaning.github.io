@@ -61,6 +61,7 @@ nav{position:fixed;left:0;right:0;bottom:0;background:#fff;border-top:1px solid 
 nav button{flex:1;border:0;background:none;padding:9px 0 10px;font:inherit;font-size:12px;color:var(--mute)}
 nav button i{display:block;font-style:normal;font-size:20px;line-height:1.2}
 nav button.on{color:var(--orange)}
+.grp{font-size:14px;font-weight:700;color:#fff;background:var(--orange);display:inline-block;border-radius:8px;padding:2px 10px;margin:14px 0 8px}
 .note{background:#fff7ef;border-radius:12px;padding:12px 14px;font-size:14px;margin-bottom:10px}
 </style>
 </head>
@@ -88,6 +89,15 @@ nav button.on{color:var(--orange)}
   <div id="list"></div>
 </section>
 
+<!-- 촬영 -->
+<section id="shot">
+  <h2>홍보용 촬영 체크</h2>
+  <p class="hint">찍으면 누르세요. 세로로, 5~15초. 부스 안은 꼭 허락받고 찍어요.</p>
+  <div class="off" id="shotcount"></div>
+  <div id="shots"></div>
+  <div class="note">매일 저녁 숙소에서 <b>베스트 사진 3장 + 한 줄 메모</b>("제주 현장에 바로 쓸 것 1가지")를 Claude에게 보내 주세요. 스레드·인스타 초안을 만들어 드려요.<br><br>홍보 글에는 <b>"박람회 참관·공부"</b>까지만. 실제로 쓰기 전엔 "일본 장비 도입" 같은 표현은 금지예요.</div>
+</section>
+
 <!-- 일본어 -->
 <section id="jp">
   <h2>보여주는 일본어</h2>
@@ -105,11 +115,12 @@ nav button.on{color:var(--orange)}
 </main>
 
 <div class="big" id="big"><div class="jp" id="bigjp"></div><div class="rd" id="bigrd"></div><div class="ko" id="bigko"></div><small>화면을 누르면 닫혀요</small></div>
-<script src="/v.js" data-v="v1" defer></script>
+<script src="/v.js" data-v="v2" defer></script>
 
 <nav>
   <button data-t="prep"><i>✅</i>준비</button>
   <button data-t="booth"><i>🗺️</i>부스</button>
+  <button data-t="shot"><i>📸</i>촬영</button>
   <button data-t="jp"><i>🗣️</i>일본어</button>
   <button data-t="sem"><i>🎤</i>세미나</button>
 </nav>
@@ -229,6 +240,40 @@ big.onclick=()=>big.classList.remove('on');
 const sEl=document.getElementById('sems');let lastDay='';
 S.forEach(([d,t,c,ti,u])=>{if(d!==lastDay){const h=document.createElement('div');h.className='day';h.textContent=d+(d.startsWith('18')?' · 내일':'');sEl.appendChild(h);lastDay=d}
  const c2=document.createElement('div');c2.className='card sem';c2.innerHTML=`<div><span class="time">${t}</span><span class="code">${c}</span></div><div class="what">${ti}</div><div class="use"><b>→</b> ${u}</div>`;sEl.appendChild(c2)});
+
+// 촬영 체크
+const SH=[
+ ["사진 · 신뢰감용",[
+  ["입구 대형 간판 앞 4명 단체 사진","블로그·매거진 표지·네이버 플레이스"],
+  ["대표님 배지 목에 건 사진","\"12년 차 대표, 도쿄 박람회 직접 참관\" 근거"],
+  ["부스 직원과 상담하는 대표님 (과장님이 촬영)","전문가 이미지"],
+  ["세미나장 뒷모습 + 슬라이드","\"일본 청소 업계 최신 흐름 공부\""]
+ ]],
+ ["영상 · 릴스·스레드용 (세로 5~15초)",[
+  ["청소 로봇 시연 (바닥·창문·화장실)","\"일본은 로봇이 청소한다\" 릴스 — 조회수 1순위"],
+  ["욕실 물때 제거 시연 비포/애프터","S2-H03 允・セサミ 등"],
+  ["유리 물때·상처 제거 시연","S2-P09 Revive and design"],
+  ["벽지 세정 「クロス再生」 시연","S2-H07 サンリミックス"],
+  ["스크레이퍼·유리 도구 손 클로즈업","청소팁 시리즈 소재"],
+  ["박람회장 전경 걷는 영상 10초","인트로용"]
+ ]],
+ ["챙겨 올 것",[
+  ["세정제·도구 샘플","제주 현장 \"일본 vs 한국 비교\" 영상"],
+  ["카탈로그 (파파고 사진 번역)","블로그 정보 글 재료"],
+  ["관심 업체 명함","수입·교육 문의용"]
+ ]],
+ ["매일 저녁",[
+  ["18일 베스트 3장 + 한 줄 메모 → Claude",""],
+  ["19일 베스트 3장 + 한 줄 메모 → Claude",""],
+  ["20일 베스트 3장 + 한 줄 메모 → Claude",""]
+ ]]
+];
+const sdone=store.get('sh',{}); const shEl=document.getElementById('shots'), shc=document.getElementById('shotcount');
+const shTotal=SH.reduce((a,g)=>a+g[1].length,0);
+function shCount(){const n=Object.values(sdone).filter(Boolean).length;shc.textContent=`📸 ${n} / ${shTotal} 완료`;shc.className='off'+(n===shTotal?' ok':'')}
+SH.forEach(([g,items],gi)=>{const h=document.createElement('div');h.className='grp';h.textContent=g;shEl.appendChild(h);
+ items.forEach(([t,sub],i)=>{const k=gi+'-'+i;const b=document.createElement('button');b.className='todo'+(sdone[k]?' done':'');b.innerHTML=`<span class="box">✓</span><span><span class="t">${t}</span>${sub?`<span class="s">${sub}</span>`:''}</span>`;b.onclick=()=>{sdone[k]=!sdone[k];store.set('sh',sdone);b.classList.toggle('done');shCount()};shEl.appendChild(b)})});
+shCount();
 
 // tabs
 const tabs=[...document.querySelectorAll('nav button')];
