@@ -2061,7 +2061,7 @@ function KeywordTab(props: {
           <button
             onClick={() => onGenerate('data')}
             disabled={gLoading}
-            className="mt-4 flex w-full items-center justify-center gap-2 rounded-xl bg-[#191919] py-3.5 font-extrabold text-white active:scale-[0.98] disabled:opacity-60"
+            className="mt-4 flex w-full items-center justify-center gap-2 rounded-xl bg-[#191919] py-3.5 font-extrabold text-white active:scale-[0.98]"
           >
             <Search className={`h-4 w-4 ${gLoading ? 'animate-pulse' : ''}`} />
             {gLoading ? '분석 중…' : '실제 검색량으로 황금키워드 찾기'}
@@ -3088,6 +3088,28 @@ function PlaceNewsCard({ data, toast }: { data: PlaceNewsData | null; toast: (m:
   const [open, setOpen] = useState(false);
   const n = data?.items?.[0];
   const copy = async (t: string, m: string) => toast((await copyText(t)) ? m : '복사에 실패했습니다.');
+  const [saving, setSaving] = useState(false);
+  const saveClip = async (url: string) => {
+    setSaving(true);
+    try {
+      const r = await fetch(url);
+      if (!r.ok) throw new Error(String(r.status));
+      const blob = await r.blob();
+      const name = 'linkclean-place-' + new Date().toISOString().slice(0, 10) + '.mp4';
+      const file = new File([blob], name, { type: blob.type || 'video/mp4' });
+      const nav = navigator as Navigator & { canShare?: (d: ShareData) => boolean };
+      if (nav.canShare && nav.canShare({ files: [file] })) {
+        try { await nav.share({ files: [file] }); } catch (e) { if ((e as Error).name !== 'AbortError') throw e; }
+      } else {
+        const a = document.createElement('a'); a.href = URL.createObjectURL(file); a.download = name;
+        document.body.appendChild(a); a.click(); a.remove();
+        setTimeout(() => URL.revokeObjectURL(a.href), 60000);
+        toast('영상을 내려받았어요. 파일 앱의 다운로드 폴더에 있어요.');
+      }
+    } catch {
+      toast('영상을 받지 못했어요. 아래 영상 미리보기를 길게 눌러 저장해 보세요.');
+    } finally { setSaving(false); }
+  };
   return (
     <section className={card}>
       <SectionTitle
@@ -3116,11 +3138,14 @@ function PlaceNewsCard({ data, toast }: { data: PlaceNewsData | null; toast: (m:
             </button>
           </div>
           {n.clip && (
-            <a href={n.clip} target="_blank" rel="noreferrer" className="mt-2 flex items-center justify-center gap-2 rounded-full bg-[#191919] py-3 text-sm font-extrabold text-cw active:scale-[0.98]">
-              ▶ 짧은 영상 열기 · 저장{(Array.isArray(n.photos) ? n.photos.length : n.photos) ? ` (사진 ${Array.isArray(n.photos) ? n.photos.length : n.photos}장)` : ''}
-            </a>
+            <>
+              <button onClick={() => saveClip(n.clip!)} disabled={saving} className="mt-2 flex w-full items-center justify-center gap-2 rounded-full bg-[#191919] py-3 text-sm font-extrabold text-cw active:scale-[0.98]">
+                {saving ? '영상 받는 중…' : '⬇ 영상 저장 (사진 앨범)'}
+              </button>
+              <a href={n.clip} target="_blank" rel="noreferrer" className="mt-1 block text-center text-xs font-bold text-slate-500 underline">영상 미리보기{(Array.isArray(n.photos) ? n.photos.length : n.photos) ? ` · 사진 ${Array.isArray(n.photos) ? n.photos.length : n.photos}장` : ''}</a>
+            </>
           )}
-          <p className="mt-2 text-[11px] leading-snug text-slate-500">영상은 열어서 공유 → '비디오 저장' 후 스마트플레이스 소식(또는 클립)에 올리세요.</p>
+          <p className="mt-2 text-[11px] leading-snug text-slate-500">'영상 저장'을 누르고 뜨는 창에서 '비디오 저장'을 고르면 사진 앨범에 들어가요. 스마트플레이스 소식에서 앨범의 영상을 고르세요.</p>
         </>
       )}
     </section>
