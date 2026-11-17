@@ -52,3 +52,6 @@ status.json items.appcare 로 '비서들이 한 일'에 표시. 공개 저장소
 
 ### status.json items — detail/url (11/17, v32)
 각 업무 키에 `"detail"`(올린 글 전문·단 댓글/답글 목록, 여러 줄 가능)과 `"url"`(올린 게시물 주소)을 넣으면 앱 '비서들이 한 일'에서 "내용 보기"로 펼쳐 보인다. 새 키 `replies` = 스레드 댓글 답글(평일 13:17 낮 근무, 주말 20:47 저녁 홍보). 공개 저장소이므로 남의 계정 이름은 @아이디까지만, 전화번호·고객 정보 금지.
+
+### office.html (11/17, v33)
+전략기획실 버튼·서랍 링크는 이제 앱 안의 ai-secretary/office.html(조직도·수석실 업무·status.json 완료 표시)로 열림 — Claude 앱으로 넘어가 화면이 남는 문제 해결. 비서실장 대화만 Claude 아티팩트(4WTtTbpRQy1YjG4MWyNboC)로 연결. 수석실 업무를 바꾸면 office.html 의 NOW 도 같이 고칠 것.

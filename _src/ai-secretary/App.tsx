@@ -3331,7 +3331,7 @@ function CallsTab({ hub, hasPin, toast, onOpenSettings }: { hub: HubData | null;
 }
 
 const DRAWER_APPS: { name: string; url: string; ic: string; d: string }[] = [
-  { name: '전략기획실', url: 'https://claude.ai/artifact/4WTtTbpRQy1YjG4MWyNboC', ic: '🏛️', d: '비서실 지시·비서실장 대화' },
+  { name: '전략기획실', url: './office.html', ic: '🏛️', d: '비서실 지시·비서실장 대화' },
   { name: '현장홍보', url: 'https://linkclean-promo.han0829.workers.dev/', ic: '📸', d: '현장 사진 맡기기 → 6곳 홍보' },
   { name: '세무장부', url: 'https://linkcleaning.github.io/ledger/', ic: '📒', d: '매출·매입·홈택스 요약' },
   { name: '순위노트', url: 'https://linkcleaning.github.io/rank/', ic: '📍', d: '플레이스 순위·정비안' },
@@ -5493,9 +5493,7 @@ export default function App() {
               {speaking ? '멈추기' : '음성 브리핑'}
             </button>
             <a
-              href="https://claude.ai/artifact/4WTtTbpRQy1YjG4MWyNboC"
-              target="_blank"
-              rel="noreferrer"
+              href="./office.html"
               className="group relative flex items-center gap-3 overflow-hidden rounded-[18px] border-2 border-[#191919] bg-[#191919] px-3 py-2 text-left shadow-[0_4px_0_#7a5c00] active:translate-y-[2px] active:shadow-[0_2px_0_#7a5c00]"
               aria-label="전략기획실 열기"
             >
