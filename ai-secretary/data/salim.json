@@ -18,12 +18,12 @@
  },
  "posted": {
   "threads1": true,
-  "threads2": false,
+  "threads2": true,
   "coupang": null,
   "kakao": null,
   "reel": false,
   "neighbors": 2,
-  "at": "21:31"
+  "at": "21:32"
  },
  "history": [
   {
