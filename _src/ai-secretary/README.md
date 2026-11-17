@@ -49,3 +49,6 @@ status.json items.appcare 로 '비서들이 한 일'에 표시. 공개 저장소
 
 ### grants.json (11/17, v31)
 제주 소상공인 지원사업(입찰과 별도). 형식은 bids.json 과 같음 `{"date","updatedAt","note","items":[{title,org,kind(지원금|융자|교육|컨설팅|판로|기타),deadline,amount,url,why,for(link|ek|both),new,found}]}`. 아침 근무 월·목 갱신, 앱 브리핑 '소상공인 지원사업' 카드.
+
+### status.json items — detail/url (11/17, v32)
+각 업무 키에 `"detail"`(올린 글 전문·단 댓글/답글 목록, 여러 줄 가능)과 `"url"`(올린 게시물 주소)을 넣으면 앱 '비서들이 한 일'에서 "내용 보기"로 펼쳐 보인다. 새 키 `replies` = 스레드 댓글 답글(평일 13:17 낮 근무, 주말 20:47 저녁 홍보). 공개 저장소이므로 남의 계정 이름은 @아이디까지만, 전화번호·고객 정보 금지.

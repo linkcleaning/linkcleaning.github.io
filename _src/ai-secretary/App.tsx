@@ -2884,7 +2884,7 @@ const normKw = (s: string) => s.replace(/\s+/g, '');
 /* 비서실 업무 현황 — 각 예약 작업이 끝날 때 data/status.json 에 기록 */
 interface AgentStatus {
   date?: string;
-  items?: Record<string, { done?: boolean; at?: string; note?: string }>;
+  items?: Record<string, { done?: boolean; at?: string; note?: string; detail?: string; url?: string }>;
 }
 interface SecJob { key: string; label: string; who: string; when: string }
 function secJobsFor(date: string): SecJob[] {
@@ -2895,6 +2895,7 @@ function secJobsFor(date: string): SecJob[] {
   jobs.push({ key: 'threads', label: '아침 스레드 게시', who: '소통수석 김기훈', when: '07:17' });
   if (wd >= 1 && wd <= 5) jobs.push({ key: 'tip', label: '청소팁 카드', who: '홍보수석실 콘텐츠비서관', when: '13:17' });
   jobs.push({ key: 'neighbors', label: '스레드 이웃 댓글', who: '소통수석 김기훈', when: '07:17' });
+  jobs.push({ key: 'replies', label: '스레드 댓글 답글', who: '소통수석 김기훈', when: wd >= 1 && wd <= 5 ? '13:17' : '20:47' });
   jobs.push({ key: 'google', label: '구글 순위 확인', who: '전략수석 최영길', when: '07:17' });
   if (wd >= 1 && wd <= 5) jobs.push({ key: 'bids', label: '입찰·공고 찾기', who: '영업수석실 입찰비서관', when: '07:17' });
   if (wd === 1 || wd === 4) jobs.push({ key: 'grants', label: '소상공인 지원사업 찾기', who: '영업수석실 지원사업비서관', when: '07:17' });
@@ -3485,13 +3486,15 @@ function DayReportCard({ rep, today }: { rep: DayReport | null; today: string })
 
 function SecretaryWork({ status, agent, today }: { status: AgentStatus | null; agent: AgentDaily | null; today: string }) {
   const jobs = secJobsFor(today);
+  const [open, setOpen] = useState<string | null>(null);
   return (
     <ul className="space-y-1.5">
       {jobs.map((j) => {
         const st = secJobState(j, status, agent, today);
         const it = status && status.date === today ? status.items?.[j.key] : undefined;
         return (
-          <li key={j.key} className="flex items-center gap-2 rounded-xl bg-[#F2F3F5] p-2.5">
+          <li key={j.key} className="rounded-xl bg-[#F2F3F5] p-2.5">
+           <button type="button" disabled={!(it?.detail || it?.url)} onClick={() => setOpen(open === j.key ? null : j.key)} className="flex w-full items-center gap-2 text-left">
             {st === 'done' ? (
               <CircleCheck className="h-5 w-5 shrink-0 text-emerald-400" />
             ) : st === 'fail' ? (
@@ -3504,6 +3507,7 @@ function SecretaryWork({ status, agent, today }: { status: AgentStatus | null; a
               <p className="truncate text-[11px] text-slate-400">
                 {j.who}
                 {it?.note ? ` · ${it.note}` : ''}
+                {(it?.detail || it?.url) && <b className="text-[#1A73E8]"> · {open === j.key ? '접기' : '내용 보기'}</b>}
               </p>
             </div>
             <span
@@ -3513,6 +3517,17 @@ function SecretaryWork({ status, agent, today }: { status: AgentStatus | null; a
             >
               {st === 'done' ? `${it?.at || ''} 완료`.trim() : st === 'fail' ? '못 함' : j.when === '버튼' ? '버튼 대기' : `${j.when} 예정`}
             </span>
+           </button>
+           {open === j.key && (
+             <div className="mt-2 rounded-lg bg-white p-2.5 text-[13px] leading-relaxed text-slate-200">
+               {it?.detail && <p className="whitespace-pre-line">{it.detail}</p>}
+               {it?.url && (
+                 <a href={it.url} target="_blank" rel="noreferrer" className="mt-1.5 inline-block font-bold text-[#1A73E8]">
+                   올린 글 열어 보기 →
+                 </a>
+               )}
+             </div>
+           )}
           </li>
         );
       })}
