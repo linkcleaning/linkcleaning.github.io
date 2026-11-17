@@ -258,6 +258,34 @@
   .to-top { position:fixed; right:16px; bottom:calc(env(safe-area-inset-bottom) + 18px); width:46px; height:46px; border-radius:999px; background:var(--deep); color:#fff; display:grid; place-items:center; box-shadow:0 8px 22px rgba(11,59,64,.3); opacity:0; transform:translateY(12px); pointer-events:none; transition:all .2s; z-index:14; }
   .to-top svg { width:22px; height:22px; }
   .to-top.show { opacity:1; transform:none; pointer-events:auto; }
+
+  /* ---------- 비밀번호 잠금 ---------- */
+  .lh-lock { width:38px; height:38px; border-radius:999px; display:grid; place-items:center; color:#fff; opacity:.8; }
+  .lh-lock svg { width:20px; height:20px; }
+  .lh-lock.on { color:#F2964F; opacity:1; }
+  #lock { position:fixed; inset:0; z-index:100; background:#0B3B40; color:#fff; display:flex; align-items:center; justify-content:center; padding:env(safe-area-inset-top) 24px env(safe-area-inset-bottom); font-family:"IBM Plex Sans KR","SUIT Variable",system-ui,sans-serif; -webkit-user-select:none; user-select:none; }
+  .lk-in { width:100%; max-width:320px; display:flex; flex-direction:column; align-items:center; }
+  .lk-logo { width:64px; height:64px; border-radius:16px; margin-bottom:18px; }
+  .lk-title { font-size:18px; font-weight:700; }
+  .lk-sub { font-size:13px; opacity:.7; margin-top:6px; min-height:18px; text-align:center; }
+  .lk-dots { display:flex; gap:18px; margin:26px 0 34px; }
+  .lk-dots i { width:14px; height:14px; border-radius:999px; border:2px solid rgba(255,255,255,.7); }
+  .lk-dots i.on { background:#F2964F; border-color:#F2964F; }
+  .lk-dots.shake { animation:shk .4s; }
+  @keyframes shk { 20%,60% { transform:translateX(-10px); } 40%,80% { transform:translateX(10px); } }
+  .lk-pad { display:grid; grid-template-columns:repeat(3, 76px); gap:16px 26px; }
+  .lk-pad button { width:76px; height:76px; border-radius:999px; background:rgba(255,255,255,.1); font-size:28px; font-weight:500; display:grid; place-items:center; }
+  .lk-pad button:active { background:rgba(255,255,255,.25); }
+  .lk-pad .lk-sm { background:none; font-size:15px; }
+  .lk-pad .lk-sm svg { width:28px; height:28px; }
+  .lk-pad .lk-sm.gone { visibility:hidden; }
+  .lk-forgot { margin-top:26px; font-size:13px; opacity:.6; text-decoration:underline; }
+  #lockMenu { position:fixed; inset:0; z-index:90; background:rgba(11,59,64,.45); display:flex; align-items:flex-end; justify-content:center; padding:12px 12px calc(env(safe-area-inset-bottom) + 12px); }
+  .lm-box { width:100%; max-width:420px; background:#fff; color:#14262A; border-radius:22px; overflow:hidden; font-family:"IBM Plex Sans KR",system-ui,sans-serif; }
+  .lm-t { font-size:13px; color:#56676A; text-align:center; padding:14px 0 10px; }
+  .lm-box button { display:block; width:100%; padding:16px; font-size:16px; font-weight:600; border-top:1px solid #E2DBCD; }
+  .lm-red { color:#C0392B; }
+  .lm-close { color:#56676A; font-weight:500 !important; }
 </style>
 </head>
 <body class="antialiased">
@@ -269,6 +297,9 @@
       <img id="logo" alt="" class="lh-logo">
       <div class="lh-title">추억의만화빵</div>
       <span id="usage" class="lh-usage"></span>
+      <button id="btnLock" class="lh-lock" aria-label="비밀번호">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4.5" y="10.5" width="15" height="10" rx="2.5"/><path d="M8 10.5V7.5a4 4 0 0 1 8 0v3"/></svg>
+      </button>
       <button id="btnAdd" class="lh-add off" aria-label="책 넣기">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>
       </button>
@@ -419,7 +450,32 @@
 <div id="toast" class="rounded-full bg-panel border border-line px-4 py-2 text-[13px] shadow-xl whitespace-nowrap"></div>
 <div id="loading" class="hidden"><div class="spin"></div><div id="loadMsg" class="text-[13px] text-mute">여는 중…</div></div>
 <div id="dropHint">여기에 놓으면 바로 열려요</div>
-<div id="ver" aria-hidden="true">v10</div>
+<!-- 비밀번호 잠금 화면 -->
+<div id="lock" class="hidden">
+  <div class="lk-in">
+    <img id="lockLogo" alt="" class="lk-logo">
+    <div id="lockTitle" class="lk-title">비밀번호를 눌러 주세요</div>
+    <div id="lockSub" class="lk-sub"></div>
+    <div id="lockDots" class="lk-dots"><i></i><i></i><i></i><i></i></div>
+    <div class="lk-pad" id="lockPad">
+      <button>1</button><button>2</button><button>3</button>
+      <button>4</button><button>5</button><button>6</button>
+      <button>7</button><button>8</button><button>9</button>
+      <button data-k="x" class="lk-sm" id="lockCancel">취소</button><button>0</button><button data-k="b" class="lk-sm" aria-label="지우기">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 5h11v14H9l-6-7z"/><path d="m13 9 5 6M18 9l-5 6"/></svg></button>
+    </div>
+    <button id="lockForgot" class="lk-forgot">비밀번호를 잊었어요</button>
+  </div>
+</div>
+<div id="lockMenu" class="hidden">
+  <div class="lm-box">
+    <div class="lm-t">비밀번호 잠금</div>
+    <button data-m="change">비밀번호 바꾸기</button>
+    <button data-m="off" class="lm-red">잠금 끄기</button>
+    <button data-m="close" class="lm-close">닫기</button>
+  </div>
+</div>
+<div id="ver" aria-hidden="true">v11</div>
 
 <!--
   서비스워커 코드 (오프라인 실행용)
@@ -428,7 +484,7 @@
     (linkcleaning.github.io/viewer/ 에는 이미 올려 두었습니다)
 -->
 <script type="text/plain" id="sw-source">
-const CACHE = 'neomgim-v10';
+const CACHE = 'neomgim-v11';
 const CORE = ['./', './index.html', './manifest.webmanifest', './icon-180.png', './icon-192.png', './icon-512.png'];
 const CDN = [
   'https://cdn.tailwindcss.com',
@@ -1276,6 +1332,90 @@ if (isIOS && !standalone) $('#iosTip').classList.remove('hidden');
 if ('serviceWorker' in navigator && /^https?:/.test(location.protocol)) {
   addEventListener('load', () => navigator.serviceWorker.register('sw.js').catch(() => {}));
 }
+
+/* ---------- 비밀번호 잠금 (4자리, 기기 안에만 암호화된 형태로 저장) ---------- */
+const PIN_KEY = 'pin';
+const pinInfo = () => ls.get(PIN_KEY, null);
+async function pinHash(pin, salt) {
+  const data = new TextEncoder().encode(salt + ':' + pin);
+  if (crypto.subtle) { const h = await crypto.subtle.digest('SHA-256', data); return [...new Uint8Array(h)].map(b => b.toString(16).padStart(2, '0')).join(''); }
+  return hash(salt + ':' + pin);
+}
+const PAD = { mode: null, buf: '', first: '' };
+function padDraw() { [...$('#lockDots').children].forEach((d, i) => d.classList.toggle('on', i < PAD.buf.length)); }
+function padShow(mode) {
+  Object.assign(PAD, { mode, buf: '', first: '' });
+  const T = {
+    unlock: ['비밀번호를 눌러 주세요', ''],
+    set: ['새 비밀번호 4자리', '앱을 열 때마다 물어봐요'],
+    off: ['지금 비밀번호를 눌러 주세요', '맞으면 잠금이 꺼져요'],
+    change: ['지금 비밀번호를 눌러 주세요', '다음에 새 비밀번호를 정해요']
+  }[mode];
+  $('#lockTitle').textContent = T[0]; $('#lockSub').textContent = T[1];
+  $('#lockCancel').classList.toggle('gone', mode === 'unlock');
+  $('#lockForgot').classList.toggle('hidden', mode === 'set');
+  $('#lockLogo').src = (document.querySelector('link[rel="apple-touch-icon"]') || {}).href || '';
+  $('#lock').classList.remove('hidden');
+  padDraw();
+}
+function padHide() { $('#lock').classList.add('hidden'); PAD.mode = null; }
+function padWrong(msg) {
+  const d = $('#lockDots'); d.classList.remove('shake'); void d.offsetWidth; d.classList.add('shake');
+  if (navigator.vibrate) navigator.vibrate(120);
+  $('#lockSub').textContent = msg; PAD.buf = ''; setTimeout(padDraw, 250);
+}
+async function padDone() {
+  const pin = PAD.buf, info = pinInfo();
+  if (PAD.mode === 'set') {
+    if (!PAD.first) { PAD.first = pin; PAD.buf = ''; $('#lockTitle').textContent = '한 번 더 눌러 주세요'; $('#lockSub').textContent = '확인용이에요'; return padDraw(); }
+    if (pin !== PAD.first) { PAD.first = ''; $('#lockTitle').textContent = '새 비밀번호 4자리'; return padWrong('두 번이 서로 달라요. 처음부터 다시 눌러 주세요'); }
+    const salt = Math.random().toString(36).slice(2) + Date.now().toString(36);
+    ls.set(PIN_KEY, { salt, h: await pinHash(pin, salt) });
+    padHide(); lockBtn(); return toast('비밀번호를 걸었어요');
+  }
+  if (!info || (await pinHash(pin, info.salt)) !== info.h) return padWrong('비밀번호가 틀렸어요');
+  if (PAD.mode === 'unlock') return padHide();
+  if (PAD.mode === 'off') { ls.del(PIN_KEY); padHide(); lockBtn(); return toast('잠금을 껐어요'); }
+  if (PAD.mode === 'change') return padShow('set');
+}
+$('#lockPad').addEventListener('click', e => {
+  const b = e.target.closest('button'); if (!b || !PAD.mode) return;
+  const k = b.dataset.k;
+  if (k === 'x') return padHide();
+  if (k === 'b') { PAD.buf = PAD.buf.slice(0, -1); return padDraw(); }
+  if (PAD.buf.length >= 4) return;
+  PAD.buf += b.textContent.trim(); padDraw();
+  if (PAD.buf.length === 4) setTimeout(padDone, 120);
+});
+document.addEventListener('keydown', e => {
+  if (!PAD.mode) return;
+  e.stopImmediatePropagation();
+  if (/^[0-9]$/.test(e.key) && PAD.buf.length < 4) { PAD.buf += e.key; padDraw(); if (PAD.buf.length === 4) setTimeout(padDone, 120); }
+  else if (e.key === 'Backspace') { PAD.buf = PAD.buf.slice(0, -1); padDraw(); }
+  else if (e.key === 'Escape' && PAD.mode !== 'unlock') padHide();
+}, true);
+$('#lockForgot').onclick = async () => {
+  if (!confirm('비밀번호는 되찾을 수 없어요.\n앱을 초기화하면 서재에 넣은 책과 읽던 기록이 모두 지워지고 잠금도 풀려요.\n초기화할까요?')) return;
+  if (!confirm('정말 모두 지울까요? 되돌릴 수 없어요.')) return;
+  try { if (DB.db) DB.db.close(); } catch {}
+  await new Promise(r => { const q = indexedDB.deleteDatabase('neomgim'); q.onsuccess = q.onerror = q.onblocked = r; });
+  try { Object.keys(localStorage).filter(k => k.startsWith(LS)).forEach(k => localStorage.removeItem(k)); } catch {}
+  location.reload();
+};
+function lockBtn() { $('#btnLock').classList.toggle('on', !!pinInfo()); }
+$('#btnLock').onclick = e => { e.stopPropagation(); if (pinInfo()) $('#lockMenu').classList.remove('hidden'); else padShow('set'); };
+$('#lockMenu').onclick = e => {
+  const b = e.target.closest('button');
+  if (!b && e.target !== $('#lockMenu')) return;
+  $('#lockMenu').classList.add('hidden');
+  if (b && b.dataset.m === 'change') padShow('change');
+  if (b && b.dataset.m === 'off') padShow('off');
+};
+/* 앱을 나가는 순간 잠금 화면을 덮어서, 앱 전환 화면에도 만화가 안 보이게 */
+document.addEventListener('visibilitychange', () => { if (document.hidden && pinInfo() && PAD.mode !== 'set') padShow('unlock'); });
+addEventListener('pagehide', () => { if (pinInfo() && PAD.mode !== 'set') padShow('unlock'); });
+lockBtn();
+if (pinInfo()) padShow('unlock');
 
 applySettings();
 (async () => {
