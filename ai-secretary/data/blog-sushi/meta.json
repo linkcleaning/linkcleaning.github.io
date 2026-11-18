@@ -42,5 +42,28 @@
  ],
  "date": "2026-11-18",
  "status": "draft",
- "app": "https://linkcleaning.github.io/sushi/"
+ "app": "https://linkcleaning.github.io/sushi/",
+ "han0829": {
+  "blog": "https://han0829.blogspot.com/",
+  "file": "google-han0829.html",
+  "title": "마운자로 반복 반입하면 통관 보류? 11월 18일 식약처 안내까지 정리 (스시자로 12펜)",
+  "description": "스시자로(일본 마운자로) 한국 반입은 11월 12일부터 본인 휴대 3개월분, 주 1회 기준 12펜까지. 직구·우편 금지, 반복 반입 주의, 서류·냉장 귀국 요령까지 정리. 2026.11.18 현재 정보.",
+  "labels": [
+   "마운자로반복반입",
+   "마운자로일본어",
+   "마운자로기내반입",
+   "마운자로영문처방전",
+   "스시자로"
+  ],
+  "images": [
+   "promo/00_cover.png",
+   "promo/01_rule.png",
+   "card-rules.png",
+   "promo/02_clinic.png",
+   "promo/03_calc.png",
+   "card-cold.png",
+   "promo/04_phrase.png"
+  ],
+  "status": "ready (not posted)"
+ }
 }
