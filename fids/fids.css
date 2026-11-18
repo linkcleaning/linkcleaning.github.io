@@ -32,3 +32,9 @@ a.fids-row:hover,a.fids-row:active{background:#262A36}
 @media (max-width:719px){.fids-title b{font-size:16px}.fids-clock .d{display:none}.fids-clock .t{font-size:24px}.fids-plane{width:28px;height:28px;font-size:16px}}
 .fids-row .to.wrap{white-space:normal;line-height:1.2}
 .fids-title>span:last-child{min-width:0;overflow:hidden}
+/* 글씨 잘림 없이: 긴 이름·설명은 줄바꿈 (대표님 11/18) */
+.fids-row .to{white-space:normal;overflow:visible;text-overflow:clip;word-break:keep-all;line-height:1.15}
+.fids-row .sub{white-space:normal;overflow:visible;text-overflow:clip;word-break:keep-all;line-height:1.35;margin-top:3px}
+.fids-title b,.fids-title small{white-space:normal;overflow:visible;text-overflow:clip;word-break:keep-all}
+.fids-title>span:last-child{overflow:visible}
+@media (max-width:719px){.fids-row{font-size:16px;padding-top:9px;padding-bottom:9px}.fids-cols,.fids-row{padding-left:10px;padding-right:10px;gap:0 6px}.fids-st{font-size:15px}.fids-st small{font-size:8px;letter-spacing:.08em}}

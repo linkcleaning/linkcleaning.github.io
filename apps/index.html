@@ -101,7 +101,7 @@ body.boardview h1 span { color: #FF6B4A; }
 body.boardview .views button[aria-pressed="true"] { background: #2CC4A8; color: #0B0D14; border-color: #2CC4A8; }
 #fids .fids-row { cursor: pointer; }
 </style>
-<script src="/v.js" data-v="v15" defer></script>
+<script src="/v.js" data-v="v16" defer></script>
 </head>
 <body>
 <div class="wrap">
@@ -240,6 +240,8 @@ try { view = localStorage.getItem("apps-view") || "board"; } catch {}
 function setView(v){ view = v; try { localStorage.setItem("apps-view", v); } catch {} document.querySelectorAll(".views button").forEach(b => b.setAttribute("aria-pressed", String(b.dataset.v === v))); document.body.classList.toggle("boardview", v === "board"); document.querySelector('meta[name="theme-color"]').content = v === "board" ? "#0E0F11" : "#0d4f57"; render(); }
 document.querySelectorAll(".views button").forEach(b => b.onclick = () => setView(b.dataset.v));
 let fidsDrawn = "";
+// 안내판에선 설명 첫 마디만 (말줄임 없이)
+function shortD(d){ return d.split(/ — | \(|, | · |·/)[0].trim(); }
 function renderFids(list){
   const box = document.getElementById("fidsRows");
   const sig = list.map(a => a.name).join("|"); if (sig === fidsDrawn) return; fidsDrawn = sig;
@@ -253,7 +255,7 @@ function renderFids(list){
     const r = document.createElement(link ? "a" : "div"); r.className = "fids-row" + (a.s === "merged" ? " dim" : "");
     if (link) { r.href = link[1]; r.target = "_blank"; r.rel = "noopener"; }
     else r.onclick = () => { document.getElementById("q").value = a.name; setView("list"); };
-    r.innerHTML = `<span class="tm"></span><span class="to"><span></span><span class="sub">${esc(a.d)}</span></span><span class="fids-gate${a.s==="merged"||a.s==="plan"?" off":""}">${c[1]}${String(n[c[0]]).padStart(2,"0")}</span><span class="fids-st ${st[2]}"><span></span><small>${st[1]}</small></span>`;
+    r.innerHTML = `<span class="tm"></span><span class="to"><span></span><span class="sub">${esc(shortD(a.d))}</span></span><span class="fids-gate${a.s==="merged"||a.s==="plan"?" off":""}">${c[1]}${String(n[c[0]]).padStart(2,"0")}</span><span class="fids-st ${st[2]}"><span></span><small>${st[1]}</small></span>`;
     box.appendChild(r);
     const d = Math.min(i, 14) * 55;
     FIDS.flap(r.querySelector(".tm"), flight, d);
