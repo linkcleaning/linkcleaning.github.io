@@ -59,6 +59,16 @@
    "note": "연동",
    "detail": "연동 입주청소·이사청소 페이지 (낮 근무 때 홈페이지 권한 문제로 못 해서 다시 처리)",
    "url": "https://www.linkclean.co.kr/yeon-dong/"
+  },
+  "coupang": {
+   "done": true,
+   "at": "19:15",
+   "note": "저녁1·아침1·쿠팡1·릴스"
+  },
+  "dayreport": {
+   "done": true,
+   "at": "19:20",
+   "note": "12건 중 11건 처리"
   }
  }
 }
