@@ -87,7 +87,17 @@ h2 em { font-style: normal; font-family: var(--font-body); font-size: 12px; colo
 footer { color: var(--muted); font-size: 12px; }
 @media (max-width: 420px) { .tiles { grid-template-columns: repeat(2, 1fr); } }
 </style>
-<script src="/v.js" data-v="v12" defer></script>
+<link rel="stylesheet" href="/fids/fids.css">
+<style>
+.views { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; margin: 10px 0 2px; }
+.views button { font: inherit; font-weight: 700; font-size: 14px; padding: 10px; border-radius: 12px; border: 1.5px solid var(--line); background: var(--card); color: var(--ink); cursor: pointer; }
+.views button[aria-pressed="true"] { background: #141826; color: #F4E3B1; border-color: #141826; }
+#fids .fids-cols, #fids .fids-row { grid-template-columns: 4.1rem minmax(0,1fr) 2.6rem 5.6rem; }
+@media (min-width: 720px) { #fids .fids-cols, #fids .fids-row { grid-template-columns: 5.5rem minmax(0,1fr) 4rem 9rem; } }
+#fids { margin-top: 10px; }
+#fids .fids-row { cursor: pointer; }
+</style>
+<script src="/v.js" data-v="v13" defer></script>
 </head>
 <body>
 <div class="wrap">
@@ -99,11 +109,23 @@ footer { color: var(--muted); font-size: 12px; }
   <div class="tiles" id="tiles"></div>
   <label for="q" class="sub" style="display:none">앱 이름 검색</label>
   <input id="q" class="search" type="search" placeholder="앱 이름으로 찾기 (예: 영수증, 화장실)">
+  <div class="views" role="group" aria-label="보기 방식"><button type="button" data-v="board">✈ 출발 안내판</button><button type="button" data-v="list">📋 목록·주소</button></div>
+  <div id="fids" class="fids" hidden>
+    <div class="fids-head">
+      <div class="fids-title"><span class="fids-plane">✈</span><span><b>링크 앱 출발 안내</b><small>LINK APPS · DEPARTURES</small></span></div>
+      <div class="fids-clock"><span class="d" id="cd"></span><span class="t" id="ct"></span></div>
+    </div>
+    <div class="fids-table">
+      <div class="fids-cols"><span>편명<small>FLIGHT</small></span><span>앱<small>TO</small></span><span style="text-align:center">게이트<small>GATE</small></span><span>상태<small>REMARKS</small></span></div>
+      <div id="fidsRows"></div>
+    </div>
+  </div>
   <main id="list" style="display:grid; gap:22px;"></main>
 
   <footer>PWA는 주소를 눌러 열고, 사파리 공유 → 홈 화면에 추가로 설치해요. 스토어 앱은 주황색 버튼으로 열려요. 상태가 바뀌면 Claude에게 “현황판 업데이트해줘”라고 말해 주세요.</footer>
 </div>
 
+<script src="/fids/fids.js"></script>
 <script>
 const S = {
   live:   { label: "사용 중",   c: "var(--green)" },
@@ -206,8 +228,51 @@ function card(a){
   </div>`;
 }
 
+// 출발 안내판 보기 (대표님 11/18: 공항 출발 안내판 화면)
+const CODE = { "링크클린 업무용": ["LC", "A"], "세무": ["TX", "B"], "출시·공개용 앱": ["RL", "C"], "개인용 도구": ["MY", "D"], "게임": ["GM", "E"], "크리머스": ["CR", "F"], "외부 의뢰": ["EX", "G"] };
+const FST = { live: ["운항 중", "IN SERVICE", "ok"], store: ["스토어 출시", "CODE SHARE", "board"], dev: ["준비 중", "BOARDING", "late"], plan: ["예정", "SCHEDULED", "wait"], merged: ["통합", "MERGED", "off"] };
+let view = "board";
+try { view = localStorage.getItem("apps-view") || "board"; } catch {}
+function setView(v){ view = v; try { localStorage.setItem("apps-view", v); } catch {} document.querySelectorAll(".views button").forEach(b => b.setAttribute("aria-pressed", String(b.dataset.v === v))); render(); }
+document.querySelectorAll(".views button").forEach(b => b.onclick = () => setView(b.dataset.v));
+let fidsDrawn = "";
+function renderFids(list){
+  const box = document.getElementById("fidsRows");
+  const sig = list.map(a => a.name).join("|"); if (sig === fidsDrawn) return; fidsDrawn = sig;
+  box.innerHTML = "";
+  const n = {};
+  list.forEach((a, i) => {
+    const c = CODE[a.cat] || ["AP", "Z"]; n[c[0]] = (n[c[0]] || 0) + 1;
+    const flight = c[0] + String(100 + n[c[0]]).slice(-3);
+    const st = FST[a.s];
+    const link = (a.l || []).find(x => x[0] !== "text");
+    const r = document.createElement(link ? "a" : "div"); r.className = "fids-row" + (a.s === "merged" ? " dim" : "");
+    if (link) { r.href = link[1]; r.target = "_blank"; r.rel = "noopener"; }
+    else r.onclick = () => { document.getElementById("q").value = a.name; setView("list"); };
+    r.innerHTML = `<span class="tm"></span><span class="to"><span></span><span class="sub">${esc(a.d)}</span></span><span class="fids-gate${a.s==="merged"||a.s==="plan"?" off":""}">${c[1]}${String(n[c[0]]).padStart(2,"0")}</span><span class="fids-st ${st[2]}"><span></span><small>${st[1]}</small></span>`;
+    box.appendChild(r);
+    const d = Math.min(i, 14) * 55;
+    FIDS.flap(r.querySelector(".tm"), flight, d);
+    FIDS.flap(r.querySelector(".to > span"), a.name, d + 30);
+    FIDS.flap(r.querySelector(".fids-st > span"), st[0], d + 60);
+  });
+  if (!list.length) box.innerHTML = '<div class="fids-row"><span></span><span class="to">찾는 앱이 없어요</span></div>';
+}
+FIDS.clock(document.getElementById("cd"), document.getElementById("ct"));
+
 function render(){
   const q = document.getElementById("q").value.trim().toLowerCase();
+  const isBoard = view === "board";
+  document.getElementById("fids").hidden = !isBoard;
+  document.getElementById("list").hidden = isBoard;
+  if (isBoard) {
+    const all = cats.flatMap(c => apps.filter(a => a.cat === c)
+      .filter(a => !filter || a.s === filter)
+      .filter(a => !q || (a.name + a.d + (a.n||"")).toLowerCase().includes(q))
+      .sort((x, y) => order.indexOf(x.s) - order.indexOf(y.s)));
+    renderFids(all);
+    return;
+  }
   const html = cats.map(c => {
     const list = apps.filter(a => a.cat === c)
       .filter(a => !filter || a.s === filter)
@@ -234,7 +299,7 @@ document.getElementById("list").addEventListener("click", async (e) => {
   if (ok) { b.textContent = "복사됨"; b.classList.add("done"); toast("주소를 복사했어요. 카톡에 붙여넣으세요"); setTimeout(() => { b.textContent = "복사"; b.classList.remove("done"); }, 1500); }
   else toast("복사가 안 됐어요. 주소를 길게 눌러 복사해 주세요");
 });
-tiles(); render();
+tiles(); setView(view);
 </script>
 </body>
 </html>
