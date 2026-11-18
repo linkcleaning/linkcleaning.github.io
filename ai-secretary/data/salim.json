@@ -21,7 +21,23 @@
   "file": "data/salim/2026-11-18.mp4",
   "caption": "(광고) 이 포스팅은 쿠팡 파트너스 활동의 일환으로, 이에 따른 일정액의 수수료를 제공받습니다.\n보일러 틀어도 으슬으슬하다면, 범인은 창틀 '틈'일 수 있어요 🥶\n01 휴지 한 장으로 바람길 찾기\n02 창틀은 투명 방풍비닐로 통째로 한 겹\n03 현관 문 아래 틈엔 문풍지 한 줄\n제품은 스레드 댓글에 남겨뒀어요. 저장해두세요 📌\n#겨울살림 #외풍차단 #난방비 #살림팁 #살림기록소"
  },
- "posted": {},
+ "posted": {
+  "threads1": {
+   "at": "20:49",
+   "url": "https://www.threads.com/@linkdole2026/post/Df4b6Jen3xS"
+  },
+  "coupang": {
+   "at": "21:31",
+   "url": "https://www.threads.com/@linkdole2026/post/Df4g6XHn-ig",
+   "link": "https://link.coupang.com/a/iMon6YxYCi",
+   "product": "열수축 방풍비닐 창문 우풍방지 외풍차단 비닐 대형(로켓)",
+   "images": false
+  },
+  "kakao": null,
+  "reel": false,
+  "neighbors": 4,
+  "at": "21:35"
+ },
  "history": [
   {
    "date": "2026-11-18",
@@ -63,7 +79,61 @@
    }
   }
  ],
- "stats": {},
+ "stats": {
+  "2026-11-11": {
+   "click": 0,
+   "buy": 0
+  },
+  "2026-11-12": {
+   "click": 1,
+   "buy": 0
+  },
+  "2026-11-13": {
+   "click": 0,
+   "buy": 0
+  },
+  "2026-11-14": {
+   "click": 0,
+   "buy": 0
+  },
+  "2026-11-15": {
+   "click": 0,
+   "buy": 0
+  },
+  "2026-11-16": {
+   "click": 0,
+   "buy": 0
+  },
+  "2026-11-17": {
+   "click": 0,
+   "buy": 0
+  },
+  "threads": {
+   "2026-11-18": [
+    {
+     "topic": "집들이 선물 기준",
+     "views": 53,
+     "likes": 0,
+     "replies": 0,
+     "link": false
+    },
+    {
+     "topic": "겨울 창문 물방울",
+     "views": 10,
+     "likes": 0,
+     "replies": 0,
+     "link": false
+    },
+    {
+     "topic": "욕실 실리콘 곰팡이 젤(쿠팡)",
+     "views": 15,
+     "likes": 1,
+     "replies": 1,
+     "link": true
+    }
+   ]
+  }
+ },
  "morning": {
   "for": "2026-11-19",
   "text": "김장김치 덜 시게 오래 먹는 보관법 3가지 🥬\n1) 큰 통 하나 말고 작은 통 여러 개로 나눠 담기\n2) 김치 윗면은 국물로 덮고 비닐 한 장 꾹 눌러 공기 차단\n3) 꺼낼 땐 젖은 손 말고 마른 집게로 🧄\n여러분은 신김치파예요, 생김치파예요?",
