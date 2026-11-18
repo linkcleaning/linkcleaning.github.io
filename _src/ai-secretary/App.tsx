@@ -44,6 +44,7 @@ import {
   LayoutGrid,
   Play,
   Download,
+  TrendingUp,
   ArrowLeft,
   type LucideIcon,
 } from 'lucide-react';
@@ -1887,6 +1888,7 @@ function KeywordTab(props: {
     else toast(`${list.length - fail}개 기록, ${fail}개 실패 (${lastErr})`);
   };
   const [editMode, setEditMode] = useState(false);
+  const [showRank, setShowRank] = useState(false);
   const [sheet, setSheet] = useState<{ kwId: string; field: RankField } | null>(null);
   // 네이버 검색을 열고 앱으로 돌아오면 그 키워드의 순위 입력창을 자동으로 띄움
   const pending = useRef<{ kwId: string; field: RankField } | null>(null);
@@ -2091,9 +2093,9 @@ function KeywordTab(props: {
       <section className={card}>
         <SectionTitle
           icon={KeyRound}
-          title="네이버 순위 체크"
+          title="네이버 순위 (가끔만)"
           right={
-            <button
+            showRank && <button
               onClick={() => setEditMode((v) => !v)}
               className={`${btnGhost} ${editMode ? 'border-cw/60 text-amber-200' : ''}`}
             >
@@ -2101,6 +2103,12 @@ function KeywordTab(props: {
             </button>
           }
         />
+        {!showRank ? (
+          <>
+            <p className="text-[13px] leading-relaxed text-slate-400">매일 볼 필요 없어요. 월요일 주간 키워드 리포트와 순위 하락 회의는 비서실이 알아서 해요. 궁금할 때만 열어 보세요.</p>
+            <button onClick={() => setShowRank(true)} className={`${btnGhost} mt-2 w-full text-xs`}>순위 기록 열기 ▾</button>
+          </>
+        ) : (<>
         {autoReady ? (
           <>
             <button
@@ -2211,6 +2219,8 @@ function KeywordTab(props: {
             <Plus className="h-5 w-5" />
           </button>
         </div>
+        <button onClick={() => setShowRank(false)} className="mt-3 w-full py-1 text-xs font-bold text-slate-400">접기 ▴</button>
+        </>)}
       </section>
 
       {sheet && sheetKw && (
@@ -3177,11 +3187,19 @@ const TAX_DATES = [
   { md: '05-31', label: '종합소득세 신고·납부 (지난해 소득)' },
   { md: '07-25', label: '부가세 확정신고·납부 (1~6월분)' },
   { md: '10-25', label: '부가세 예정고지 납부 (7~9월분, 고지서 금액)' },
+  { md: '11-30', label: '종합소득세 중간예납 납부 (고지서 금액)' },
 ];
-function nextTaxDates(today: string) {
+function nextTaxDates(today: string, withholding = false) {
   const y = Number(today.slice(0, 4));
   const all = [y, y + 1].flatMap((yy) => TAX_DATES.map((t) => ({ date: `${yy}-${t.md}`, label: t.label })));
-  return all.filter((t) => t.date >= today).slice(0, 3);
+  if (withholding) {
+    // 인건비를 준 달의 다음 달 10일: 원천세 신고·납부 (반기납부 승인받았으면 1·7월 10일)
+    for (let i = 0; i < 3; i++) {
+      const d = new Date(y, Number(today.slice(5, 7)) - 1 + i, 10);
+      all.push({ date: `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-10`, label: '원천세 신고·납부 (지난달 인건비분 · 반기납부면 1·7월만)' });
+    }
+  }
+  return all.filter((t) => t.date >= today).sort((a, b) => a.date.localeCompare(b.date)).slice(0, 4);
 }
 
 function HubNeedPin({ what, onOpen }: { what: string; onOpen: () => void }) {
@@ -3195,8 +3213,174 @@ function HubNeedPin({ what, onOpen }: { what: string; onOpen: () => void }) {
   );
 }
 
-function MoneyTab({ hub, hasPin, today, onOpenSettings }: { hub: HubData | null; hasPin: boolean; today: string; onOpenSettings: () => void }) {
-  if (!hasPin) return <HubNeedPin what="세무장부 매출·세금" onOpen={onOpenSettings} />;
+
+/* 📈 네이버 순위 대신 보는 숫자 (대표님 11/19: "순위 체크도 어렵고 권외면 가슴 아프다")
+ *  - 문의 전화: 자동(허브)  - 리뷰 수: 일주일에 한 번 숫자만  - 플레이스 소식: 올릴 때 +1 */
+const PLACES3: { k: 'jeju' | 'seogwipo' | 'ek'; name: string; goal: number }[] = [
+  { k: 'jeju', name: '링크클린 제주시점', goal: 3 },
+  { k: 'seogwipo', name: '링크클린 서귀포점', goal: 2 },
+  { k: 'ek', name: '이케이클린', goal: 2 },
+];
+type ReviewLog = { date: string; c: Partial<Record<'jeju' | 'seogwipo' | 'ek', number>> }[];
+function GrowthCard({ hub, today }: { hub: HubData | null; today: string }) {
+  const wd = (new Date(today + 'T00:00:00').getDay() + 6) % 7; // 월=0
+  const mon = addDays(today, -wd);
+  const [posts, setPosts] = useLocal<{ week: string; c: Record<string, number> }>('placeWeek', { week: mon, c: {} });
+  const [revs, setRevs] = useLocal<ReviewLog>('reviewLog', []);
+  const [editRev, setEditRev] = useState(false);
+  const [draft, setDraft] = useState<Record<string, string>>({});
+  const pc = posts.week === mon ? posts.c : {};
+  const bump = (k: string, d: number) => setPosts({ week: mon, c: { ...pc, [k]: Math.max(0, (pc[k] || 0) + d) } });
+  // 문의 전화: 이번 주(월~오늘) vs 지난주 같은 기간, 번호 기준
+  const t0 = hubTime(`${mon} 00:00`), tPrev = hubTime(`${addDays(mon, -7)} 00:00`);
+  const span = Date.now() - t0;
+  const inc = (hub?.calls?.events ?? []).filter((c) => c.k !== '발신');
+  const uniq = (a: HubCall[]) => new Set(a.map((c) => phoneDigits(c.n) || c.n)).size;
+  const thisW = uniq(inc.filter((c) => hubTime(c.t) >= t0));
+  const lastW = uniq(inc.filter((c) => hubTime(c.t) >= tPrev && hubTime(c.t) < tPrev + span));
+  const hasCalls = !!hub?.calls;
+  const last = revs[revs.length - 1];
+  const base = revs.find((r) => daysBetween(r.date, today) <= 31) || revs[0];
+  const saveRev = () => {
+    const c: ReviewLog[number]['c'] = {};
+    PLACES3.forEach(({ k }) => { const n = Number((draft[k] || '').replace(/\D/g, '')); if (draft[k] && Number.isFinite(n)) c[k] = n; else if (last?.c[k] !== undefined) c[k] = last.c[k]; });
+    setRevs((p) => [...p.filter((r) => r.date !== today), { date: today, c }].slice(-30));
+    setEditRev(false);
+  };
+  const totalGoal = PLACES3.reduce((a, p) => a + p.goal, 0);
+  const totalDone = PLACES3.reduce((a, p) => a + Math.min(p.goal, pc[p.k] || 0), 0);
+  return (
+    <section className={`${card} border-cw/40`}>
+      <SectionTitle icon={TrendingUp} title="손님이 늘고 있나 · 순위 대신 이것만" />
+      <p className="mb-3 text-[12px] leading-snug text-slate-400">순위는 매일 흔들리고 광고 자리에 밀려요. 아래 숫자는 <b className="text-slate-200">하는 만큼 올라가는 것</b>들이에요 — 전화가 늘면 그게 결과예요.</p>
+
+      <div className="rounded-2xl bg-[#F2F3F5] p-3">
+        <p className="text-[12px] font-bold text-slate-300">📞 이번 주 문의 전화 (번호 기준, 자동)</p>
+        {hasCalls ? (
+          <p className="mt-1 flex items-end gap-2">
+            <span className="font-num text-[30px] leading-none">{thisW}</span>
+            <span className="pb-0.5 text-[12px] text-slate-400">명 · 지난주 같은 때 {lastW}명</span>
+            {thisW !== lastW && <span className={`pb-0.5 text-[12px] font-extrabold ${thisW > lastW ? 'text-emerald-300' : 'text-slate-400'}`}>{thisW > lastW ? `▲${thisW - lastW}` : `▼${lastW - thisW}`}</span>}
+          </p>
+        ) : (
+          <p className="mt-1 text-[12px] text-slate-400">설정에서 허브 비밀번호를 넣으면 자동으로 세요.</p>
+        )}
+      </div>
+
+      <div className="mt-2 rounded-2xl bg-[#F2F3F5] p-3">
+        <div className="flex items-center justify-between">
+          <p className="text-[12px] font-bold text-slate-300">📝 이번 주 플레이스 소식 {totalDone}/{totalGoal}</p>
+          <span className="text-[10px] text-slate-500">올리고 나서 +1</span>
+        </div>
+        <div className="mt-1.5 h-2 overflow-hidden rounded-full bg-white"><div className="h-full rounded-full bg-cw" style={{ width: `${(totalDone / totalGoal) * 100}%` }} /></div>
+        <ul className="mt-2 space-y-1.5">
+          {PLACES3.map((pl) => {
+            const n = pc[pl.k] || 0;
+            return (
+              <li key={pl.k} className="flex items-center justify-between gap-2 rounded-xl bg-white px-3 py-2">
+                <span className="text-[13px] text-slate-200">{pl.name} <b className={n >= pl.goal ? 'text-emerald-300' : 'text-amber-300'}>{n}/{pl.goal}{n >= pl.goal ? ' ✓' : ''}</b></span>
+                <span className="flex shrink-0 gap-1">
+                  {n > 0 && <button onClick={() => bump(pl.k, -1)} className="rounded-full bg-[#F2F3F5] px-2.5 py-1 text-[12px] font-bold text-slate-400">−</button>}
+                  <button onClick={() => bump(pl.k, 1)} className="rounded-full bg-cw px-3 py-1 text-[12px] font-extrabold text-[#191919] active:scale-95">+1 올렸어요</button>
+                </span>
+              </li>
+            );
+          })}
+        </ul>
+      </div>
+
+      <div className="mt-2 rounded-2xl bg-[#F2F3F5] p-3">
+        <div className="flex items-center justify-between">
+          <p className="text-[12px] font-bold text-slate-300">⭐ 방문자 리뷰 수 (일주일에 한 번)</p>
+          <button onClick={() => { setDraft({}); setEditRev((v) => !v); }} className="text-[12px] font-bold text-[#1A73E8]">{editRev ? '닫기' : last ? '새로 적기' : '처음 적기'}</button>
+        </div>
+        {last && !editRev && (
+          <ul className="mt-1.5 space-y-1">
+            {PLACES3.map((pl) => {
+              const n = last.c[pl.k];
+              const b = base && base !== last ? base.c[pl.k] : undefined;
+              return n === undefined ? null : (
+                <li key={pl.k} className="flex justify-between text-[13px]">
+                  <span className="text-slate-300">{pl.name}</span>
+                  <span><b className="font-num">{n}</b>{b !== undefined && n - b > 0 && <b className="ml-1.5 text-emerald-300">+{n - b}</b>}{b !== undefined && <span className="ml-1 text-[10px] text-slate-500">({Number(base!.date.slice(5, 7))}/{Number(base!.date.slice(8))}부터)</span>}</span>
+                </li>
+              );
+            })}
+            <li className="text-[10px] text-slate-500">{Number(last.date.slice(5, 7))}/{Number(last.date.slice(8))} 기록 · 스마트플레이스 앱 첫 화면의 리뷰 수를 그대로 적으면 돼요</li>
+          </ul>
+        )}
+        {editRev && (
+          <div className="mt-2 space-y-1.5">
+            {PLACES3.map((pl) => (
+              <label key={pl.k} className="flex items-center justify-between gap-2 text-[13px] text-slate-300">
+                {pl.name}
+                <input className={`${input} w-28 text-right`} inputMode="numeric" placeholder={last?.c[pl.k] !== undefined ? String(last.c[pl.k]) : '리뷰 수'} value={draft[pl.k] || ''} onChange={(e) => setDraft({ ...draft, [pl.k]: e.target.value })} />
+              </label>
+            ))}
+            <button onClick={saveRev} className="w-full rounded-xl bg-cw py-2.5 font-bold text-[#191919] active:scale-95">저장</button>
+          </div>
+        )}
+        {!last && !editRev && <p className="mt-1 text-[12px] text-slate-400">리뷰가 늘수록 플레이스에 유리해요. 후기부스터로 받은 만큼 숫자가 올라가요.</p>}
+      </div>
+    </section>
+  );
+}
+
+interface SalimStats { stats?: Record<string, { click?: number; buy?: number } | unknown> }
+function MoneyTab({ hub, hasPin, today, onOpenSettings, stats, grants, salim, goBrief }: { hub: HubData | null; hasPin: boolean; today: string; onOpenSettings: () => void; stats: SalesStats; grants: BidsData | null; salim: SalimStats | null; goBrief: () => void }) {
+  const grantItems = (grants?.items || []).filter((g) => !g.deadline || g.deadline >= today).slice(0, 4);
+  const week = Object.entries(salim?.stats || {})
+    .filter(([k]) => /^\d{4}-\d{2}-\d{2}$/.test(k) && daysBetween(k, today) < 7)
+    .reduce((a, [, v]) => { const x = v as { click?: number; buy?: number }; return { click: a.click + (x.click || 0), buy: a.buy + (x.buy || 0) }; }, { click: 0, buy: 0 });
+  const extras = (
+    <>
+      <section className={card}>
+        <SectionTitle icon={TrendingUp} title={`${Number(today.slice(5, 7))}월 계약 매출 · 목표`} />
+        <div className="flex items-end justify-between">
+          <p className="font-num text-[28px]">{fmtSales(stats.revenue)}</p>
+          <p className="text-right text-xs text-slate-400">{stats.target > 0 ? <>목표 {fmtSales(stats.target)}<br /><b className="text-lg text-amber-300">{stats.pct}%</b></> : '목표 없음'}</p>
+        </div>
+        {stats.target > 0 && <div className="mt-2"><ProgressBar pct={stats.pct} /></div>}
+        {stats.target > 0 && stats.revenue < stats.target && (
+          <p className="mt-2 text-[12px] text-slate-400">
+            남은 {fmtSales(stats.target - stats.revenue)} · 이달 남은 날 {daysBetween(today, `${today.slice(0, 7)}-${new Date(Number(today.slice(0, 4)), Number(today.slice(5, 7)), 0).getDate()}`) + 1}일
+          </p>
+        )}
+        <button onClick={goBrief} className="mt-2 text-[12px] font-bold text-[#1A73E8]">계약 금액 넣기 (브리핑 › 경영 현황) ›</button>
+      </section>
+      <section className={card}>
+        <SectionTitle icon={Sparkles} title="받을 수 있는 돈 · 지원사업" right={grants?.date ? <span className="text-[11px] text-slate-400">{Number(grants.date.slice(5, 7))}/{Number(grants.date.slice(8))} 확인</span> : undefined} />
+        {grantItems.length === 0 ? (
+          <p className="text-sm text-slate-400">지금 신청할 만한 제주 소상공인 지원사업이 없어요. 월·목 아침에 비서실이 새로 찾아 여기에 올려요.</p>
+        ) : (
+          <ul className="space-y-1.5">
+            {grantItems.map((g) => (
+              <li key={g.title}>
+                <a href={g.url} target="_blank" rel="noreferrer" className="block rounded-xl bg-[#F2F3F5] p-2.5">
+                  <p className="flex items-center gap-1.5 text-[11px] font-bold text-slate-400">
+                    {g.deadline && <span className={`rounded-full px-2 py-0.5 font-extrabold ${daysBetween(today, g.deadline) <= 14 ? 'bg-[#F04438] text-white' : 'bg-[#191919] text-cw'}`}>D-{daysBetween(today, g.deadline)}</span>}
+                    {g.for === 'ek' ? '이케이클린' : g.for === 'both' ? '두 회사' : '링크클린'} · {g.kind || '지원'}
+                  </p>
+                  <p className="mt-0.5 text-sm font-bold text-slate-100">{g.title}</p>
+                  {(g.amount || g.why) && <p className="text-[12px] text-slate-400">{[g.amount, g.why].filter(Boolean).join(' · ')}</p>}
+                </a>
+              </li>
+            ))}
+          </ul>
+        )}
+        <p className="mt-2 text-[11px] text-slate-500">신청·서류는 대표님이 직접 하세요. 비서실은 찾아서 알려 드리기만 해요.</p>
+      </section>
+      <section className={card}>
+        <SectionTitle icon={Wallet} title="부수입 · 살림기록소(쿠팡)" />
+        <div className="grid grid-cols-2 gap-2 text-center">
+          <div className="rounded-2xl bg-[#F2F3F5] p-3"><p className="font-num text-[22px]">{week.click}</p><p className="text-[11px] text-slate-400">최근 7일 클릭</p></div>
+          <div className="rounded-2xl bg-[#F2F3F5] p-3"><p className={`font-num text-[22px] ${week.buy ? 'text-emerald-300' : ''}`}>{week.buy}</p><p className="text-[11px] text-slate-400">최근 7일 구매</p></div>
+        </div>
+        <p className="mt-2 text-[11px] text-slate-500">수익 금액은 저녁 홍보 보고에서만 알려 드려요(공개 저장소라 앱엔 안 적어요).</p>
+      </section>
+    </>
+  );
+  if (!hasPin) return <div className="space-y-3"><HubNeedPin what="세무장부 매출·세금" onOpen={onOpenSettings} />{extras}</div>;
   const L = hub?.ledger?.data;
   const ym = today.slice(0, 7);
   const y = Number(today.slice(0, 4)), m = Number(today.slice(5, 7));
@@ -3208,7 +3392,9 @@ function MoneyTab({ hub, hasPin, today, onOpenSettings }: { hub: HubData | null;
     return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
   });
   const v = (k: string, bz: string): HubLedgerBiz | undefined => L?.months?.[k]?.[bz];
-  const due = nextTaxDates(today);
+  const prevYm = months6[4];
+  const anyLabor = bizList.some((b) => (v(prevYm, b.id)?.labor || 0) > 0 || (v(ym, b.id)?.labor || 0) > 0);
+  const due = nextTaxDates(today, anyLabor);
   return (
     <div className="space-y-3">
       <section className={card}>
@@ -3226,7 +3412,7 @@ function MoneyTab({ hub, hasPin, today, onOpenSettings }: { hub: HubData | null;
             );
           })}
         </ul>
-        <p className="mt-2 text-[11px] leading-snug text-slate-500">마감일이 주말·공휴일이면 다음 평일까지예요. 예정고지는 국세청 고지서 금액을 내면 돼요.</p>
+        <p className="mt-2 text-[11px] leading-snug text-slate-500">마감일이 주말·공휴일이면 다음 평일까지예요. 예정고지·중간예납은 국세청 고지서 금액을 내면 돼요.</p>
       </section>
 
       {!L ? (
@@ -3241,6 +3427,11 @@ function MoneyTab({ hub, hasPin, today, onOpenSettings }: { hub: HubData | null;
           const cur = v(ym, b.id);
           const vatHalf = halfMonths.reduce((acc, k) => acc + ((v(k, b.id)?.salesVat || 0) - (v(k, b.id)?.purchaseVat || 0)), 0);
           const max = Math.max(1, ...months6.map((k) => v(k, b.id)?.sales || 0));
+          const prev = v(prevYm, b.id);
+          const profit = (cur?.sales || 0) - (cur?.purchase || 0) - (cur?.labor || 0);
+          const mom = prev?.sales ? Math.round((((cur?.sales || 0) - prev.sales) / prev.sales) * 100) : null;
+          const ytd = months6.filter((k) => k.slice(0, 4) === ym.slice(0, 4));
+          const avg = Math.round(months6.slice(0, 5).reduce((a, k) => a + (v(k, b.id)?.sales || 0), 0) / 5);
           return (
             <section key={b.id} className={card}>
               <SectionTitle icon={Wallet} title={b.name} right={hub?.ledger?.updatedAt ? <span className="text-[11px] text-slate-400">{agoText(hub.ledger.updatedAt)} 갱신</span> : undefined} />
@@ -3257,6 +3448,17 @@ function MoneyTab({ hub, hasPin, today, onOpenSettings }: { hub: HubData | null;
                 <div className="rounded-2xl bg-[#F2F3F5] p-3">
                   <p className="text-[11px] text-slate-400">{m}월 인건비</p>
                   <p className="mt-0.5 font-num text-[17px]">{fmtWon(cur?.labor || 0)}</p>
+                </div>
+              </div>
+              <div className="mt-2 grid grid-cols-2 gap-2">
+                <div className="rounded-2xl bg-[#F2F3F5] p-3">
+                  <p className="text-[11px] text-slate-400">{m}월 남는 돈 (매출−매입−인건비)</p>
+                  <p className={`mt-0.5 font-num text-[18px] ${profit < 0 ? 'text-rose-300' : ''}`}>{fmtWon(profit)}</p>
+                </div>
+                <div className="rounded-2xl bg-[#F2F3F5] p-3">
+                  <p className="text-[11px] text-slate-400">지난달보다 매출</p>
+                  <p className={`mt-0.5 font-num text-[18px] ${mom === null ? '' : mom >= 0 ? 'text-emerald-300' : 'text-rose-300'}`}>{mom === null ? '—' : `${mom >= 0 ? '▲' : '▼'} ${Math.abs(mom)}%`}</p>
+                  <p className="text-[10px] text-slate-500">지난 5달 평균 {fmtWon(avg)}{ytd.length ? '' : ''}</p>
                 </div>
               </div>
               <div className="mt-3 rounded-2xl border-2 border-cw bg-cw-soft p-3">
@@ -3287,6 +3489,7 @@ function MoneyTab({ hub, hasPin, today, onOpenSettings }: { hub: HubData | null;
       <a href="https://linkcleaning.github.io/ledger/" className="block rounded-full bg-[#191919] py-3.5 text-center text-sm font-extrabold text-cw">
         세무장부 열기 (영수증·매입 입력) ›
       </a>
+      {extras}
     </div>
   );
 }
@@ -4998,6 +5201,7 @@ export default function App() {
   const [agentStatus, setAgentStatus] = useLocal<AgentStatus | null>('agentStatus', null);
   const [bids, setBids] = useLocal<BidsData | null>('bids', null);
   const [grants, setGrants] = useLocal<BidsData | null>('grants', null);
+  const [salim, setSalim] = useLocal<SalimStats | null>('salimStats', null);
   const [dayRep, setDayRep] = useLocal<DayReport | null>('dayrep', null);
   const [gRank, setGRank] = useLocal<GoogleData | null>('gRank', null);
   const [placeNews, setPlaceNews] = useLocal<PlaceNewsData | null>('placeNews', null);
@@ -5212,6 +5416,7 @@ export default function App() {
         fetchAgentJson<PlaceNewsData>('place-news.json'),
       ]);
       fetchAgentJson<BidsData>('grants.json').then((x) => x && x.date && setGrants(x));
+      fetchAgentJson<SalimStats>('salim.json').then((x) => x && setSalim({ stats: x.stats }));
       fetchAgentJson<EkData>('ek.json').then((x) => x && x.date && setEkData(x));
       fetchAgentJson<DayReport>('day-report.json').then((x) => x && x.date && setDayRep(x));
       if (d && d.date) setAgent(d);
@@ -5752,8 +5957,9 @@ export default function App() {
             }
           />
         )}
-        {tab === 'routine' && <MoneyTab hub={hub} hasPin={!!hubPin} today={today} onOpenSettings={() => setShowSettings(true)} />}
+        {tab === 'routine' && <MoneyTab hub={hub} hasPin={!!hubPin} today={today} onOpenSettings={() => setShowSettings(true)} stats={salesStats} grants={grants} salim={salim} goBrief={() => setTab('brief')} />}
         {tab === 'sales' && <CallsTab hub={hub} hasPin={!!hubPin} toast={toast} onOpenSettings={() => setShowSettings(true)} />}
+        {tab === 'keyword' && <GrowthCard hub={hub} today={today} />}
         {tab === 'keyword' && <GoogleCard g={gRank} />}
         {tab === 'keyword' && (
           <KeywordTab
