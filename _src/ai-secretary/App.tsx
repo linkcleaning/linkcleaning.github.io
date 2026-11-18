@@ -3054,8 +3054,9 @@ function GoogleCard({ g }: { g: GoogleData | null }) {
   );
 }
 
-/* 플레이스 소식·짧은 영상 — 홍보수석 한정민 (월·수·금) data/place-news.json */
-interface PlaceNews { date: string; title: string; body: string; keyword?: string; clip?: string; photos?: number | string[] }
+/* 플레이스 소식·짧은 영상 — 홍보수석 한정민 (평일, 월·수·금 제주시점 / 화·목 서귀포점) data/place-news.json */
+interface PlaceNews { date: string; place?: 'jeju' | 'seogwipo'; title: string; body: string; keyword?: string; clip?: string; photos?: number | string[] }
+const PLACE_NAME: Record<string, string> = { jeju: '링크클린 제주시점', seogwipo: '링크클린 서귀포점' };
 interface PlaceNewsData { updatedAt?: string; items?: PlaceNews[] }
 
 interface EkData { date?: string; blog?: { keyword?: string; title: string; body: string }; place?: { title: string; body: string }; insta?: string; areaPage?: string }
@@ -3083,7 +3084,7 @@ function EkCard({ data, toast, today }: { data: EkData | null; toast: (m: string
       ) : (
         <div className="space-y-2">
           {data?.blog && <Block id="b" label={`블로그${data.blog.keyword ? ` · #${data.blog.keyword}` : ''}`} title={data.blog.title} body={data.blog.body} />}
-          {data?.place && <Block id="p" label="플레이스 소식" title={data.place.title} body={data.place.body} />}
+          {data?.place && <Block id="p" label="📍 이케이클린 플레이스 소식" title={data.place.title} body={data.place.body} />}
           {data?.insta && <Block id="i" label="인스타 캡션" body={data.insta} />}
           {data?.areaPage && (
             <a href={data.areaPage} target="_blank" rel="noreferrer" className="block rounded-full bg-[#191919] py-3 text-center text-sm font-extrabold text-cw">새 동네 페이지 보기 ›</a>
@@ -3130,11 +3131,14 @@ function PlaceNewsCard({ data, toast }: { data: PlaceNewsData | null; toast: (m:
       />
       {!n ? (
         <p className="text-sm leading-relaxed text-slate-400">
-          월·수·금 오후에 현장 사진으로 <b className="text-slate-200">플레이스 소식 글</b>과 <b className="text-slate-200">짧은 세로 영상</b>을 만들어 둡니다. 스마트플레이스 앱에 붙여넣고 올리기만 하세요.
+          평일 오후에 현장 사진으로 <b className="text-slate-200">플레이스 소식 글</b>과 <b className="text-slate-200">짧은 세로 영상</b>을 만들어 둡니다. 월·수·금은 <b className="text-slate-200">제주시점</b>, 화·목은 <b className="text-slate-200">서귀포점</b> 글이에요. 스마트플레이스 앱에서 그 지점을 골라 붙여넣고 올리기만 하세요.
         </p>
       ) : (
         <>
-          {n.keyword && <p className="mb-1 text-[11px] font-bold text-sky-300">#{n.keyword}</p>}
+          <p className="mb-1.5 flex flex-wrap items-center gap-1.5">
+            <span className="rounded-full bg-[#191919] px-2.5 py-0.5 text-[11px] font-extrabold text-cw">📍 {PLACE_NAME[n.place || ''] || '링크클린 (지점 확인)'}</span>
+            {n.keyword && <span className="text-[11px] font-bold text-sky-300">#{n.keyword}</span>}
+          </p>
           <p className="font-bold leading-snug text-slate-50">{n.title}</p>
           <p className={`mt-2 whitespace-pre-line text-sm leading-relaxed text-slate-300 ${open ? '' : 'line-clamp-3'}`}>{n.body}</p>
           <div className="mt-3 grid grid-cols-3 gap-2">
