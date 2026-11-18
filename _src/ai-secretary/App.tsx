@@ -3078,9 +3078,9 @@ function EkCard({ data, toast, today }: { data: EkData | null; toast: (m: string
   );
   return (
     <section className={card}>
-      <SectionTitle icon={Sparkles} title="이케이클린 · 서귀포 여성기업" right={data?.date ? <span className="text-[11px] text-slate-400">{Number(data.date.slice(5, 7))}/{Number(data.date.slice(8))} 준비</span> : undefined} />
+      <SectionTitle icon={Sparkles} title="이케이클린 · 제주 전역 여성기업" right={data?.date ? <span className="text-[11px] text-slate-400">{Number(data.date.slice(5, 7))}/{Number(data.date.slice(8))} 준비</span> : undefined} />
       {!fresh ? (
-        <p className="text-sm leading-relaxed text-slate-400">화·목 오후에 이케이클린 블로그·플레이스 소식·인스타 글을 링크클린과 다른 주제·말투로 준비해요. 목요일엔 홈페이지에 서귀포 동네 페이지도 하나씩 늘려요.</p>
+        <p className="text-sm leading-relaxed text-slate-400">화·목 오후에 이케이클린 블로그·플레이스 소식·인스타 글을 링크클린과 다른 주제·말투로 준비해요. 제주도 전역을 다루고, 목요일엔 홈페이지에 동네 페이지도 하나씩 늘려요.</p>
       ) : (
         <div className="space-y-2">
           {data?.blog && <Block id="b" label={`블로그${data.blog.keyword ? ` · #${data.blog.keyword}` : ''}`} title={data.blog.title} body={data.blog.body} />}
