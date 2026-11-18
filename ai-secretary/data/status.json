@@ -54,10 +54,11 @@
    "detail": "[청소팁] 신발장 냄새·곰팡이 — 작업 id d251909d-aad4-494f-ad12-4b5b71441d83, 오늘 저녁 8시 47분 6곳 자동 게시 예정.\n제목: 제주 겨울 신발장 냄새·곰팡이, 이렇게 막아요\n홈페이지 Q&A(shoe-cabinet-mold-smell)는 만들었지만 linkclean-web 저장소 권한이 이번 낮 근무에 없어 push 못 함."
   },
   "areapage": {
-   "done": false,
-   "at": "13:58",
-   "note": "못 함: linkclean-web 저장소 권한 없음",
-   "detail": "낮 근무 세션에 linkclean-web 저장소가 연결돼 있지 않아 push 거부(403). 다음 차례 동네: 연동(집중 키워드 우선). 대표님이 claude.ai 새 대화에서 낮 근무 예약 작업에 linkcleaning.github.io·linkclean-web·ekclean 세 저장소를 모두 붙여 다시 만들어야 해결됩니다."
+   "done": true,
+   "at": "16:35",
+   "note": "연동",
+   "detail": "연동 입주청소·이사청소 페이지 (낮 근무 때 홈페이지 권한 문제로 못 해서 다시 처리)",
+   "url": "https://www.linkclean.co.kr/yeon-dong/"
   }
  }
 }
