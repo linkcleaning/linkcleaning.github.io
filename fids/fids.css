@@ -1,6 +1,6 @@
 /* 링크 공항 출발 안내판(FIDS) 공용 스타일 — ai-secretary/board.html, apps/ 가 같이 씀 */
-:root{--fids-bg:#0B0D14;--fids-frame:#2A2F3A;--fids-head:#22262F;--fids-row:#141826;--fids-row2:#1A1F30;--fids-text:#F4E3B1;--fids-dim:#8A8F9E;--fids-label:#C9CEDB;--fids-green:#3EE0A0;--fids-amber:#FFB547;--fids-yellow:#F5D547;--fids-red:#FF6B4A;--fids-teal:#2CC4A8}
-.fids{background:var(--fids-bg);border:6px solid var(--fids-frame);border-radius:20px;padding:10px;font-family:"Do Hyeon","Pretendard",sans-serif;color:var(--fids-text)}
+:root{--fids-bg:#101114;--fids-frame:#2B2D31;--fids-head:#1C1E22;--fids-row:#16181F;--fids-row2:#1C1F29;--fids-text:#F4E3B1;--fids-dim:#8A8F9E;--fids-label:#C9CEDB;--fids-green:#3EE0A0;--fids-amber:#FFB547;--fids-yellow:#F5D547;--fids-red:#FF6B4A;--fids-teal:#2CC4A8}
+.fids{background:var(--fids-bg);border:6px solid var(--fids-frame);border-radius:20px;box-shadow:0 10px 30px rgba(0,0,0,.35),inset 0 1px 0 rgba(255,255,255,.06);padding:10px;font-family:"Do Hyeon","Pretendard",sans-serif;color:var(--fids-text)}
 .fids-head{display:flex;align-items:center;justify-content:space-between;gap:8px;background:var(--fids-head);border-radius:10px 10px 0 0;padding:9px 12px}
 .fids-title{display:flex;align-items:center;gap:9px;min-width:0}
 .fids-plane{width:32px;height:32px;flex:none;display:grid;place-items:center;border-radius:5px;background:var(--fids-teal);color:var(--fids-bg);font-size:19px;line-height:1}
@@ -14,12 +14,12 @@
 .fids-cols small,.fids-st small{display:block;font-family:"Pretendard",sans-serif;font-weight:700;font-size:8.5px;letter-spacing:.14em;opacity:.8}
 .fids-row{border-top:1px solid rgba(0,0,0,.45);padding-top:7px;padding-bottom:7px;font-size:17px;text-decoration:none;color:inherit;min-height:46px}
 .fids-row:nth-child(even){background:var(--fids-row2)}
-a.fids-row:hover,a.fids-row:active{background:#25304A}
+a.fids-row:hover,a.fids-row:active{background:#262A36}
 .fids-row .tm{font-variant-numeric:tabular-nums}
 .fids-row .to{min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .fids-row .sub{display:block;font-family:"Pretendard",sans-serif;font-size:10.5px;color:var(--fids-dim);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-top:1px}
 .fids-gate{justify-self:center;min-width:34px;padding:0 5px;border-radius:2px;background:var(--fids-text);color:var(--fids-row);text-align:center;line-height:24px;font-size:15px}
-.fids-gate.off{background:#3A3F4C;color:var(--fids-dim)}
+.fids-gate.off{background:#33363D;color:var(--fids-dim)}
 .fids-st{line-height:1.1}
 .fids-st.ok{color:var(--fids-green)}.fids-st.wait{color:var(--fids-text)}.fids-st.board{color:var(--fids-yellow)}.fids-st.late{color:var(--fids-amber)}.fids-st.bad{color:var(--fids-red)}.fids-st.off{color:var(--fids-dim)}
 .fids-row.dim{color:var(--fids-dim)}
