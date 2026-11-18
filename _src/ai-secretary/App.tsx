@@ -3816,18 +3816,46 @@ function ExecBrief({
   stats,
   moves,
   goTab,
+  deals,
+  setDeals,
+  setTarget,
+  today,
+  toast,
 }: {
   stats: SalesStats;
   moves: RankMove[];
   goTab: (t: Tab) => void;
+  deals: Deal[];
+  setDeals: (f: (p: Deal[]) => Deal[]) => void;
+  setTarget: (won: number) => void;
+  today: string;
+  toast: (m: string) => void;
 }) {
+  // 금액을 누르면 이번 달 계약 매출을 바로 입력 (대표님 11/18)
+  const [edit, setEdit] = useState(false);
+  const [man, setMan] = useState('');
+  const [memo, setMemo] = useState('');
+  const [day, setDay] = useState(today);
+  const [tgt, setTgt] = useState('');
+  const monthWon = deals
+    .filter((d) => (d.stage === 'won' || d.stage === 'done') && (d.wonAt ?? d.date).startsWith(stats.month) && (d.amount ?? 0) > 0)
+    .sort((a, b) => (b.wonAt ?? b.date).localeCompare(a.wonAt ?? a.date));
+  const add = () => {
+    const n = Number(man.replace(/[,\s]/g, ''));
+    if (!Number.isFinite(n) || n <= 0) { toast('금액을 만원 단위 숫자로 넣어 주세요. 예: 35'); return; }
+    const won = Math.round((n * 10000) / SALES_X);
+    const d = day || today;
+    setDeals((prev) => [{ id: uid(), createdAt: Date.now(), date: d, name: memo.trim() || '계약', service: '', channel: '기타', stage: 'won', stageAt: d, wonAt: d, amount: won, note: '경영 현황에서 입력' }, ...prev]);
+    setMan(''); setMemo('');
+    toast(`${fmtSales(won)} 매출에 넣었어요.`);
+  };
   const ups = moves.filter((m) => m.diff > 0).slice(0, 3);
   const downs = moves.filter((m) => m.diff < 0).slice(-3).reverse();
   const todo = stats.followUps.length + stats.reviewAsks.length;
   return (
     <section className={`${card} border-emerald-400/25`}>
       <SectionTitle icon={Flame} title="영업수석실 · 경영 현황" />
-      <button onClick={() => goTab('sales')} className="w-full text-left">
+      <button onClick={() => { setEdit((v) => !v); setTgt(stats.target > 0 ? String(Math.round((stats.target * SALES_X) / 10000)) : ''); }} className="w-full text-left">
         <div className="flex items-end justify-between">
           <div>
             <p className="text-xs text-slate-400">{Number(stats.month.slice(5))}월 계약 매출</p>
@@ -3850,7 +3878,49 @@ function ExecBrief({
             <ProgressBar pct={stats.pct} />
           </div>
         )}
+        {!edit && <p className="mt-1.5 text-[11px] font-bold text-[#1A73E8]">눌러서 계약 금액 넣기 ›</p>}
       </button>
+      {edit && (
+        <div className="mt-3 space-y-2 rounded-2xl bg-[#F2F3F5] p-3">
+          <p className="text-xs font-extrabold text-slate-300">계약 매출 넣기</p>
+          <div className="grid grid-cols-2 gap-2">
+            <input className={input} value={man} onChange={(e) => setMan(e.target.value)} inputMode="decimal" placeholder="금액(만원) 예: 35" />
+            <input className={input} type="date" value={day} onChange={(e) => setDay(e.target.value)} />
+          </div>
+          <input className={input} value={memo} onChange={(e) => setMemo(e.target.value)} placeholder="메모(선택) 예: 노형동 입주청소" />
+          <button onClick={add} className="w-full rounded-xl bg-cw py-3 font-bold text-[#191919] active:scale-95">매출에 넣기</button>
+          {monthWon.length > 0 && (
+            <ul className="space-y-1 pt-1">
+              {monthWon.map((d) => (
+                <li key={d.id} className="flex items-center justify-between gap-2 rounded-xl bg-white px-3 py-2 text-[13px]">
+                  <span className="min-w-0 truncate text-slate-200">
+                    {Number((d.wonAt ?? d.date).slice(5, 7))}/{Number((d.wonAt ?? d.date).slice(8))} · {d.name || '계약'}
+                  </span>
+                  <span className="flex shrink-0 items-center gap-2">
+                    <b className="tabular-nums text-slate-50">{fmtSales(d.amount ?? 0)}</b>
+                    <button
+                      onClick={() => { if (window.confirm(`${fmtSales(d.amount ?? 0)} 기록을 지울까요?`)) setDeals((prev) => prev.filter((x) => x.id !== d.id)); }}
+                      className="rounded-full bg-[#F2F3F5] px-2 py-0.5 text-[11px] font-bold text-slate-400"
+                    >
+                      지우기
+                    </button>
+                  </span>
+                </li>
+              ))}
+            </ul>
+          )}
+          <div className="flex gap-2 pt-1">
+            <input className={`${input} flex-1`} value={tgt} onChange={(e) => setTgt(e.target.value)} inputMode="decimal" placeholder="이번 달 목표(만원)" />
+            <button
+              onClick={() => { const t = Number(tgt.replace(/[,\s]/g, '')); setTarget(Number.isFinite(t) && t > 0 ? Math.round((t * 10000) / SALES_X) : 0); toast('목표를 저장했어요.'); }}
+              className={`${btnGhost} shrink-0 text-xs`}
+            >
+              목표 저장
+            </button>
+          </div>
+          <button onClick={() => setEdit(false)} className="w-full py-1 text-xs font-bold text-slate-400">닫기</button>
+        </div>
+      )}
 
       <div className="mt-4 grid grid-cols-3 gap-2 text-center">
         <button onClick={() => goTab('sales')} className="rounded-2xl bg-[#F2F3F5] p-3 active:scale-95">
@@ -5604,7 +5674,7 @@ export default function App() {
                 />
                 <PlaceNewsCard data={placeNews} toast={toast} />
                 <EkCard data={ekData} toast={toast} today={today} />
-                <ExecBrief stats={salesStats} moves={rankMoves} goTab={setTab} />
+                <ExecBrief stats={salesStats} moves={rankMoves} goTab={setTab} deals={deals} setDeals={setDeals} setTarget={(w) => setSettings((p) => ({ ...p, monthlyTarget: w }))} today={today} toast={toast} />
                 <BidsCard bids={bids} today={today} />
                 <BidsCard
                   bids={grants}
