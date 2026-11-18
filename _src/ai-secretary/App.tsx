@@ -3837,6 +3837,7 @@ function ExecBrief({
   const [memo, setMemo] = useState('');
   const [day, setDay] = useState(today);
   const [tgt, setTgt] = useState('');
+  const [open, setOpen] = useState<string | null>(null);
   const monthWon = deals
     .filter((d) => (d.stage === 'won' || d.stage === 'done') && (d.wonAt ?? d.date).startsWith(stats.month) && (d.amount ?? 0) > 0)
     .sort((a, b) => (b.wonAt ?? b.date).localeCompare(a.wonAt ?? a.date));
@@ -3923,19 +3924,53 @@ function ExecBrief({
       )}
 
       <div className="mt-4 grid grid-cols-3 gap-2 text-center">
-        <button onClick={() => goTab('sales')} className="rounded-2xl bg-[#F2F3F5] p-3 active:scale-95">
-          <p className="text-2xl font-num font-normal text-slate-50">{stats.todayJobs.length}</p>
-          <p className="text-[11px] text-slate-400">오늘 작업</p>
-        </button>
-        <button onClick={() => goTab('sales')} className="rounded-2xl bg-[#F2F3F5] p-3 active:scale-95">
-          <p className="text-2xl font-num font-normal text-slate-50">{stats.tomorrowJobs.length}</p>
-          <p className="text-[11px] text-slate-400">내일 작업</p>
-        </button>
-        <button onClick={() => goTab('sales')} className={`rounded-2xl p-3 active:scale-95 ${todo ? 'bg-cw/15' : 'bg-[#F2F3F5]'}`}>
-          <p className={`text-2xl font-num font-normal ${todo ? 'text-amber-300' : 'text-slate-50'}`}>{todo}</p>
-          <p className="text-[11px] text-slate-400">연락할 고객</p>
-        </button>
+        {([
+          ['today', stats.todayJobs.length, '오늘 작업', false],
+          ['tomorrow', stats.tomorrowJobs.length, '내일 작업', false],
+          ['todo', todo, '연락할 고객', todo > 0],
+        ] as [string, number, string, boolean][]).map(([k, n, label, hot]) => (
+          <button
+            key={k}
+            onClick={() => setOpen((v) => (v === k ? null : k))}
+            className={`rounded-2xl p-3 active:scale-95 ${open === k ? 'ring-2 ring-cw' : ''} ${hot ? 'bg-cw/15' : 'bg-[#F2F3F5]'}`}
+          >
+            <p className={`text-2xl font-num font-normal ${hot ? 'text-amber-300' : 'text-slate-50'}`}>{n}</p>
+            <p className="text-[11px] text-slate-400">{label} {open === k ? '▴' : '▾'}</p>
+          </button>
+        ))}
       </div>
+      {open && (() => {
+        // 칸을 누르면 고객 탭으로 넘어가지 않고 여기서 바로 목록을 펼침 (대표님 11/19)
+        const rows: { d: Deal; tag: string }[] =
+          open === 'today' ? stats.todayJobs.map((d) => ({ d, tag: '작업' }))
+          : open === 'tomorrow' ? stats.tomorrowJobs.map((d) => ({ d, tag: '작업' }))
+          : [...stats.followUps.map((d) => ({ d, tag: '견적 후 연락' })), ...stats.reviewAsks.map((d) => ({ d, tag: '후기 요청' }))];
+        return (
+          <div className="mt-2 rounded-2xl bg-[#F2F3F5] p-3">
+            {rows.length === 0 ? (
+              <p className="text-[13px] text-slate-400">
+                {open === 'todo' ? '지금 연락할 고객이 없어요.' : `${open === 'today' ? '오늘' : '내일'} 앱에 넣은 작업이 없어요.`}
+                <br />
+                <span className="text-[11px]">견적·현장 일정은 아이폰 캘린더에 있고, 아침 보고에서 알려 드려요.</span>
+              </p>
+            ) : (
+              <ul className="space-y-1">
+                {rows.map(({ d, tag }) => (
+                  <li key={tag + d.id} className="flex items-center justify-between gap-2 rounded-xl bg-white px-3 py-2 text-[13px]">
+                    <span className="min-w-0 truncate text-slate-200">
+                      <b className="mr-1 text-[11px] text-amber-300">{tag}</b>
+                      {d.name || '고객'}{d.service ? ` · ${d.service}` : ''}{d.note ? ` · ${d.note}` : ''}
+                    </span>
+                    {d.phone && (
+                      <a href={`tel:${d.phone}`} className="shrink-0 rounded-full bg-cw px-2.5 py-1 text-[11px] font-bold text-[#191919]">전화</a>
+                    )}
+                  </li>
+                ))}
+              </ul>
+            )}
+          </div>
+        );
+      })()}
 
       {(ups.length > 0 || downs.length > 0) && (
         <button onClick={() => goTab('keyword')} className="mt-4 w-full rounded-2xl bg-[#F2F3F5] p-3 text-left">
