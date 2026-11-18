@@ -288,7 +288,7 @@ function mini(label,n,unit,sub){return `<div class="rounded-2xl bg-card p-3"><di
  <div class="text-[11px] text-muted mt-1">${sub}</div></div>`}
 function li(color,html){return `<li class="flex gap-2"><span class="dot bg-${color} mt-[7px]"></span><span>${html}</span></li>`}
 function step(n,t,b){return `<div class="rounded-2xl bg-card p-4"><div class="flex items-center gap-2 mb-2"><span class="num w-7 h-7 rounded-full bg-deep text-white grid place-items-center text-[14px]">${n}</span><b class="text-[15.5px]">${t}</b></div><div class="text-[13.5px] leading-relaxed">${b}</div></div>`}
-function disclaimer(){return `<div class="rounded-2xl bg-card px-4 py-3 text-[12px] text-muted leading-relaxed"><b class="text-ink">참고용 정보</b> · 본 앱은 2026년 11월 기준 공개된 의료기관 안내 및 식약처·관세청 기준을 정리한 참고용 정보이며, 실제 처방 여부와 용량은 현지 의사의 진료 판단에 따릅니다.</div>`}
+function disclaimer(){return `<div class="rounded-2xl bg-card px-4 py-3 text-[12px] text-muted leading-relaxed"><b class="text-danger">⚠️ 2026년 11월 18일 현재 정보예요. 규정·가격·병원 운영은 수시로 바뀌니, 가기 전에 관세청(125)과 병원에 꼭 재확인하세요.</b><br>본 앱은 2026년 11월 기준 공개된 의료기관 안내 및 식약처·관세청 기준을 정리한 참고용 정보이며, 실제 처방 여부와 용량은 현지 의사의 진료 판단에 따릅니다.</div>`}
 
 /* ═══════════════  탭 1: 가이드  ═══════════════ */
 function vGuide(){
@@ -514,6 +514,6 @@ document.querySelectorAll('.tab').forEach(b=>b.onclick=()=>go(b.dataset.tab));
 render();
 if('serviceWorker' in navigator&&location.protocol==='https:')navigator.serviceWorker.register('sw.js').catch(()=>{});
 </script>
-<script src="/v.js" data-v="v3" defer></script>
+<script src="/v.js" data-v="v4" defer></script>
 </body>
 </html>

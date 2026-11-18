@@ -1,5 +1,5 @@
 /* 스시자로 길잡이 서비스워커 */
-const CACHE = 'sushi-v3';
+const CACHE = 'sushi-v4';
 const CORE = ['./', './index.html', './manifest.webmanifest', './icon-180.png', './icon-192.png', './icon-512.png', '/v.js'];
 const CDN = [
   'https://cdn.tailwindcss.com/3.4.17',
