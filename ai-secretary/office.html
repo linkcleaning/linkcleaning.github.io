@@ -11,7 +11,7 @@
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700;800;900&display=swap">
-<script src="/v.js" data-v="v40" defer></script>
+<script src="/v.js" data-v="v38" defer></script>
 <style>
   /* 비서실 화면 — 앱 안에서 열림 (Claude 앱으로 넘어가지 않음). 대화만 Claude에서. */
   :root {
@@ -94,7 +94,6 @@
   .brow[data-k="chief"] { --dc: #191919; } .brow[data-k="pr"] { --dc: #FF6B00; } .brow[data-k="sns"] { --dc: #1A73E8; } .brow[data-k="sales"] { --dc: #0E9F5A; }
   .brow[data-k="strategy"] { --dc: #7C3AED; } .brow[data-k="biz"] { --dc: #E0306B; }
   @media (max-width: 360px) { .suseok { grid-template-columns: repeat(2, 1fr); } }
-  .fidslink { display: block; width: 100%; margin-top: 8px; padding: 11px 14px; border-radius: 14px; background: #141826; color: #F4E3B1; font-weight: 800; font-size: 14px; text-decoration: none; text-align: center; border: 2px solid #191919; }
 </style>
 </head>
 <body>
@@ -130,7 +129,6 @@
   </section>
 </main>
 
-<script src="schedule.js"></script>
 <script>
 (function () {
   // 뒤로: 앱에서 들어왔으면 그대로 되돌아가기(스크롤 위치 유지), 아니면 브리핑으로
@@ -141,7 +139,55 @@
     ev.preventDefault(); document.getElementById('chat').scrollIntoView({ behavior: 'smooth' });
   });
 
-  var DEPTS = window.LINK_SCHEDULE.DEPTS, NOW = window.LINK_SCHEDULE.NOW;
+  var DEPTS = [
+    { key: 'chief', person: '한정호', name: '비서실장실', short: '실장실', duty: '아침 보고 총괄' },
+    { key: 'pr', person: '한정민', name: '홍보수석실', short: '홍보수석', duty: '6곳 게시·청소팁' },
+    { key: 'sns', person: '김기훈', name: '소통수석실', short: '소통수석', duty: '스레드·댓글' },
+    { key: 'sales', person: '안규태', name: '영업수석실', short: '영업수석', duty: '입찰·지원사업',
+      app: { title: '고객 팔로업·후기 요청', desc: '견적 후 연락 없는 고객, 작업 끝난 고객의 후기 요청 문자는 앱 \'영업\' 탭에서 바로 보냅니다. 비서실장 아침 보고에도 건수가 올라옵니다.', link: '앱 영업 탭 열기 ›' } },
+    { key: 'strategy', person: '최영길', name: '전략수석실', short: '전략수석', duty: '키워드·구글 순위' },
+    { key: 'office', name: '부속실', short: '부속실', duty: '루틴·건강·메모',
+      app: { title: '대표님 일정·건강 챙기기', desc: '출근 거울샷, 약 복용(아침·점심·저녁), 3초 메모는 앱 \'루틴\'·\'메모\' 탭에서 챙깁니다. 시리로 "약 먹었어", "비서 메모"라고 해도 됩니다.', link: '앱 루틴 탭 열기 ›' } },
+    { key: 'biz', person: '박시은', name: '제휴수석실', short: '제휴수석', duty: '살림기록소·부수입' }
+  ];
+  var ALL = [0,1,2,3,4,5,6], WK = [1,2,3,4,5];
+  // [맡은 사람, 제목, 설명, 정기, PC 필요, status.json 키, 하는 요일]
+  var NOW = {
+    chief: [
+      ['비서실장', '아침 보고서', '구글 캘린더 일정, 제주 날씨·소식, 황금키워드, 현장 메모를 정리해 앱에 올리고 아침 보고를 보냅니다.', '매일 07:17', 0, 'report', ALL],
+      ['비서실장', '저녁 하루 보고', '오늘 비서실이 한 일·내일 일정·승인하실 것을 정리해 보고합니다. "1번 해줘", "썰: …"로 답장하면 바로 처리해요.', '매일 18:57', 0, 'dayreport', ALL]
+    ],
+    pr: [
+      ['홍보수석', '네이버 블로그 초안', '월요일은 현장·지역 키워드 글, 목요일은 "청소 12년 차의 솔직 고백"(썰이 없으면 생활 꿀팁). 대표님은 복사해서 올리기만.', '월·목 07:17', 0, 'blog', [1,4]],
+      ['콘텐츠비서관', '청소팁 카드', '계절 청소팁 카드 3장과 6곳 글을 만들고 홈페이지 Q&A를 1개 추가합니다. 게시는 그날 저녁.', '평일 13:17', 1, 'tip', WK],
+      ['홍보수석', '플레이스 소식·영상', '집중 키워드를 넣은 플레이스 소식 글과 짧은 세로 영상을 앱에 올려 둡니다.', '평일 13:17', 1, 'placenews', WK],
+      ['이케이클린 담당', '이케이클린 글', '서귀포 여성기업 이케이클린의 블로그·소식·인스타 글과 동네 페이지를 만듭니다.', '화·목 13:17', 0, 'ekpromo', [2,4]],
+      ['블로그비서관', '개인 구글 블로그 글', '대표님 개인 블로그 「정보통」에 돈 되는 제도·사장님 생활·여행 정보 글을 번갈아 올립니다. 링크클린과 분리, 대표님 손 필요 없음.', '월·수 13:17', 1, 'pblog', [1,3]],
+      ['홍보수석', '저녁 6곳 홍보', '현장·청소팁 글을 인스타·스레드·구글·당근·카카오에 올리고 플레이스용 글·리뷰 답글 초안을 보냅니다.', '매일 20:47', 1, 'evening', ALL]
+    ],
+    sns: [
+      ['소통수석', '아침 스레드·이웃 댓글', '링크클린 스레드에 글을 올리고 제주 이웃 글 3개에 댓글을 답니다. 올린 글 전문은 앱 "내용 보기"에서 확인.', '매일 07:17', 1, 'threads', ALL],
+      ['소통수석', '스레드 댓글 답글', '내 글에 달린 댓글에 답글을 달고 누가 뭐라고 했는지 보고합니다. (주말은 20:47 저녁 홍보 때)', '평일 13:17', 1, 'replies', ALL]
+    ],
+    sales: [
+      ['입찰비서관', '청소 입찰·공고', '제주도청·제주시·서귀포시·나라장터에서 청소 관련 입찰과 견적 공고를 찾아 앱에 올립니다.', '평일 07:17', 1, 'bids', WK],
+      ['지원사업비서관', '소상공인 지원사업', '제주 소상공인 지원금·융자·교육·판로 지원을 찾아 입찰과 따로 알려 드립니다.', '월·목 07:17', 0, 'grants', [1,4]]
+    ],
+    strategy: [
+      ['전략수석', '구글 순위 확인', '키워드별 구글 지도·홈페이지·블로그 순위를 앱 키워드 탭에 적습니다.', '매일 07:17', 1, 'google', ALL],
+      ['전략수석', '순위 하락 회의', '구글·네이버 순위가 떨어지면 홍보수석·비서실장과 회의해 원인·다시 올릴 방법을 정하고 그날 바로 조치합니다.', '매일 07:17', 1, 'rankmeeting', ALL],
+      ['전략수석', '주간 키워드', '순위노트를 분석해 이번 주 집중 키워드 3개와 새 키워드를 추천합니다.', '매주 월 13:17', 1, 'keywords', [1]],
+      ['전략수석', '홈페이지 동네 페이지', '동네별 안내 페이지를 홈페이지에 추가해 동네 검색에 걸리게 합니다.', '수·금 13:17', 0, 'areapage', [3,5]],
+      ['전략수석', '홈페이지 특수 분야 칼럼', '특수청소·유품정리·고독사 현장 정리·쓰레기집 글을 홈페이지 현장 기록에 올려 구글 검색에 걸리게 합니다. 대표님 손 필요 없음.', '화·금 13:17', 0, 'column', [2,5]],
+      ['앱정비비서관', '앱 점검·정비', '홍보에 쓰는 앱을 점검해 고칠 건 고치고 제안을 올립니다.', '매주 목 13:17', 0, 'appcare', [4]],
+      ['전략수석', 'AI·검색 노출 점검', '"제주 입주청소" 등 6개 검색어에서 링크클린이 나오는지 표로 정리해 보냅니다.', '매월 1일', 0, '', []]
+    ],
+    biz: [
+      ['제휴수석', '살림기록소 글·릴스 준비', '살림 팩트체크 O/X, 공감 꿀팁 글, 월·수·금 쿠팡 글, 먼지씨 릴스를 준비합니다.', '매일 18:57', 0, 'coupang', ALL],
+      ['제휴수석', '살림기록소 게시·클릭 기록', '스레드·인스타에 올리고 쿠팡 링크를 달며, 살림 이웃 댓글과 클릭·구매 기록을 남깁니다.', '매일 20:47', 1, 'salim', ALL],
+      ['제휴수석', '부수입 리포트', '쿠팡파트너스처럼 부수입을 낼 수 있는 새 방법 2개를 찾아 보고합니다.', '매주 금 18:57', 0, 'sidejobs', [5]]
+    ]
+  };
 
   function el(tag, cls, text) { var e = document.createElement(tag); if (cls) e.className = cls; if (text != null) e.textContent = text; return e; }
   function ymdKST() { return new Date(Date.now() + 9 * 3600e3).toISOString().slice(0, 10); }
