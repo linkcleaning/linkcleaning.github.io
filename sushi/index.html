@@ -61,6 +61,12 @@ tailwind.config = {
   본 앱은 2026년 11월 기준 공개된 의료기관 안내 및 식약처·관세청 기준을 정리한 참고용 정보이며, 실제 처방 여부와 용량은 현지 의사의 진료 판단에 따릅니다. 특정 병원을 추천·광고하지 않으며, 가격·운영 정보는 예약 전 각 병원에서 다시 확인하세요.
 </footer>
 
+<button id="toTop" aria-label="맨 위로" onclick="window.scrollTo({top:0,behavior:'smooth'})"
+  class="fixed right-3 z-30 w-12 h-12 rounded-full bg-deep text-white shadow-lg grid place-items-center transition-opacity duration-200 opacity-0 pointer-events-none"
+  style="bottom:calc(84px + env(safe-area-inset-bottom))">
+  <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M6 15l6-6 6 6"/></svg>
+</button>
+
 <nav class="fixed bottom-0 inset-x-0 bg-card border-t border-line pb-[env(safe-area-inset-bottom)] z-40" role="tablist">
   <div class="grid grid-cols-4 max-w-xl mx-auto">
     <button class="tab py-2 text-muted flex flex-col items-center gap-0.5" role="tab" data-tab="guide">
@@ -502,11 +508,12 @@ function render(){
  if(st.tab==="clinic")renderList();
  if(st.tab==='calc')calcOut();
 }
-function go(t){st.tab=t;S.set('tab',t);render();window.scrollTo({top:0})}
+function go(t){if(st.tab===t){window.scrollTo({top:0,behavior:'smooth'});return}st.tab=t;S.set('tab',t);render();window.scrollTo({top:0})}
+(function(){const b=document.getElementById('toTop');const f=()=>{const on=window.scrollY>500;b.style.opacity=on?1:0;b.style.pointerEvents=on?'auto':'none'};addEventListener('scroll',f,{passive:true});f()})();
 document.querySelectorAll('.tab').forEach(b=>b.onclick=()=>go(b.dataset.tab));
 render();
 if('serviceWorker' in navigator&&location.protocol==='https:')navigator.serviceWorker.register('sw.js').catch(()=>{});
 </script>
-<script src="/v.js" data-v="v2" defer></script>
+<script src="/v.js" data-v="v3" defer></script>
 </body>
 </html>
