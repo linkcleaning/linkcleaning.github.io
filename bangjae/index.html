@@ -199,6 +199,8 @@ input[type=date]{font:inherit;border:1.5px solid var(--line);border-radius:10px;
 <script src="data-disaster.js"></script>
 <script src="data-lang.js"></script>
 <script src="data-more.js"></script>
+<script src="data-exam2.js"></script>
+<script src="data-ox2.js"></script>
 <script src="detail-safety.js"></script>
 <script src="detail-disaster.js"></script>
 <script src="detail-lang.js"></script>
@@ -353,14 +355,17 @@ function newExam(onlyWrong){
   const s=S(); const wr=LS.get('exw_'+s.id,[]);
   let all = onlyWrong ? wr.filter(i=>i<s.exam.length) : s.exam.map((q,i)=>i);
   if(!onlyWrong && st.exShuffle) shuffle(all);
+  if(!onlyWrong && st.exN!=='all') all = all.slice(0, st.exN);
   st.ex = {sid:s.id, list:all, i:0, right:0, pick:null, wrongMode:!!onlyWrong, perm:{}};
 }
 st.exShuffle = LS.get('exs', false);
+st.exN = LS.get('exn', 20);
 function exam(){
   const s=S();
   if(!st.ex || st.ex.sid!==s.id) newExam();
   const z=st.ex, wr=LS.get('exw_'+s.id,[]);
-  const bar = `<div class="tools" style="position:static"><button class="chip ${!z.wrongMode&&!st.exShuffle?'on':''}" onclick="st.exShuffle=false;LS.set('exs',false);newExam();render()">순서대로</button><button class="chip ${!z.wrongMode&&st.exShuffle?'on':''}" onclick="st.exShuffle=true;LS.set('exs',true);newExam();render()">섞어서</button><button class="chip ${z.wrongMode?'on':''}" onclick="newExam(true);render()">틀린 것만 ${wr.length}</button></div>`;
+  const bar = `<div class="tools" style="position:static"><button class="chip ${!z.wrongMode&&!st.exShuffle?'on':''}" onclick="st.exShuffle=false;LS.set('exs',false);newExam();render()">순서대로</button><button class="chip ${!z.wrongMode&&st.exShuffle?'on':''}" onclick="st.exShuffle=true;LS.set('exs',true);newExam();render()">섞어서</button><button class="chip ${z.wrongMode?'on':''}" onclick="newExam(true);render()">틀린 것만 ${wr.length}</button></div>
+  <div class="tools" style="position:static;padding-top:0">${[20,40,'all'].map(n=>`<button class="chip ${st.exN===n&&!z.wrongMode?'on':''}" onclick="st.exN=${n==='all'?"'all'":n};LS.set('exn',st.exN);newExam();render()">${n==='all'?'전체 '+s.exam.length:n+'문제'}</button>`).join('')}</div>`;
   const head = `<div class="lead">2024~2026 국가직·지방직에서 <b>반복해서 나온 주제</b>만 골라 실제 시험처럼 4지선다로 만든 다음 시험 대비 문제예요. 문제 아래 회색 꼬리표가 출제 근거예요.</div>`;
   if(!z.list.length) return bar+head+`<div class="empty">틀린 문제가 없어요. 잘하고 있어요!</div>`;
   if(z.i>=z.list.length){
@@ -404,7 +409,7 @@ function settings(){
   </div>
   <div class="set"><div class="row" style="display:block">
     <b>사용법</b>
-    <p class="note">· 과목 탭을 고르고 위에서 아래로 내리며 읽으세요.<br>· <span style="background:var(--mark);padding:1px 4px;border-radius:4px">★ 형광 줄</span>은 꼭 외울 핵심, <span class="hot">최빈출</span>은 거의 매년 나오는 주제예요.<br>· ‘★ 핵심만’을 켜면 형광 줄만 모아 볼 수 있고, ‘★ 가리고 외우기’를 켜면 형광 줄이 흐려져서 눌러야 보여요.<br>· <b>적중문제</b>는 2024~2026 기출에서 반복된 주제로 만든 4지선다 실전 문제, <b>OX 퀴즈</b>는 10·20·전체 문제와 틀린 것만 다시 풀기가 돼요.<br>· 카드 아래 <b>📖 교재 설명 자세히</b>는 학원 교재처럼 풀어 쓴 설명이에요. 길어서 부담되면 설정에서 ‘접어 두기’로 바꾸세요.<br>· 다 외운 카드는 오른쪽 ✓를 눌러 두면 과목 탭에 진도(%)가 올라가요.<br>· 아이폰은 사파리 공유 → 홈 화면에 추가, 갤럭시는 크롬 메뉴 → 홈 화면에 추가로 설치하면 인터넷 없이도 열려요.</p>
+    <p class="note">· 과목 탭을 고르고 위에서 아래로 내리며 읽으세요.<br>· <span style="background:var(--mark);padding:1px 4px;border-radius:4px">★ 형광 줄</span>은 꼭 외울 핵심, <span class="hot">최빈출</span>은 거의 매년 나오는 주제예요.<br>· ‘★ 핵심만’을 켜면 형광 줄만 모아 볼 수 있고, ‘★ 가리고 외우기’를 켜면 형광 줄이 흐려져서 눌러야 보여요.<br>· <b>적중문제</b>는 2024~2026 기출에서 반복된 주제로 만든 4지선다 실전 문제(20·40·전체, 섞어서·틀린 것만), <b>OX 퀴즈</b>는 10·20·전체 문제와 틀린 것만 다시 풀기가 돼요.<br>· 카드 아래 <b>📖 교재 설명 자세히</b>는 학원 교재처럼 풀어 쓴 설명이에요. 길어서 부담되면 설정에서 ‘접어 두기’로 바꾸세요.<br>· 다 외운 카드는 오른쪽 ✓를 눌러 두면 과목 탭에 진도(%)가 올라가요.<br>· 아이폰은 사파리 공유 → 홈 화면에 추가, 갤럭시는 크롬 메뉴 → 홈 화면에 추가로 설치하면 인터넷 없이도 열려요.</p>
   </div></div>
   <div class="set"><div class="row" style="display:block">
     <b>자료 출처·주의</b>
@@ -435,6 +440,6 @@ addEventListener('resize', setHeadVars);
 applyPrefs(); dday(); render();
 if('serviceWorker' in navigator){ addEventListener('load', ()=>navigator.serviceWorker.register('sw.js').catch(()=>{})); }
 </script>
-<script src="/v.js" data-v="v4" defer></script>
+<script src="/v.js" data-v="v5" defer></script>
 </body>
 </html>

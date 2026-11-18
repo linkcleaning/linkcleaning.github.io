@@ -1,5 +1,5 @@
-const CACHE = 'bangjae-v4';
-const ASSETS = ['./', './index.html', './data-safety.js', './data-disaster.js', './data-lang.js', './data-more.js','./detail-safety.js','./detail-disaster.js','./detail-lang.js', './icon-192.png', '/v.js'];
+const CACHE = 'bangjae-v5';
+const ASSETS = ['./', './index.html', './data-safety.js', './data-disaster.js', './data-lang.js', './data-more.js','./data-exam2.js','./data-ox2.js','./detail-safety.js','./detail-disaster.js','./detail-lang.js', './icon-192.png', '/v.js'];
 self.addEventListener('install', e => { e.waitUntil(caches.open(CACHE).then(c => c.addAll(ASSETS))); self.skipWaiting(); });
 self.addEventListener('activate', e => { e.waitUntil(caches.keys().then(ks => Promise.all(ks.filter(k => k !== CACHE).map(k => caches.delete(k))))); self.clients.claim(); });
 self.addEventListener('fetch', e => {
