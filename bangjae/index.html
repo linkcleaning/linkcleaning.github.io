@@ -87,6 +87,15 @@ html[data-theme=dark] .res.bad{background:#3E2220;color:#F4B3AA}
 .score{display:flex;gap:10px;margin:10px 0}
 .score div{flex:1;background:var(--card);border-radius:12px;padding:10px;text-align:center;font-size:13px;color:var(--sub);font-weight:700}
 .score b{display:block;font-size:22px;color:var(--ink)}
+/* exam */
+.ch4{display:grid;gap:8px}
+.ch4 button{text-align:left;padding:13px 14px;border-radius:12px;border:2px solid var(--line);background:var(--bg);font-weight:600;line-height:1.5;display:flex;gap:10px}
+.ch4 button i{font-style:normal;font-weight:900;color:var(--sub);flex:0 0 auto}
+.ch4 button.right{border-color:#2F8A6E;background:#E3F2EC;color:#1F5E4E}
+.ch4 button.wrong{border-color:#C2453A;background:#FBE7E4;color:#8A2F25}
+html[data-theme=dark] .ch4 button.right{background:#1E3A32;color:#9FE0C9}
+html[data-theme=dark] .ch4 button.wrong{background:#3E2220;color:#F4B3AA}
+.why{display:inline-block;margin-top:8px;font-size:12.5px;font-weight:700;color:var(--sub);background:var(--bg);border-radius:6px;padding:3px 8px}
 /* nums */
 .num{display:flex;justify-content:space-between;gap:12px;background:var(--card);border-radius:12px;padding:12px 14px;margin-bottom:8px;align-items:center}
 .num .k{font-weight:700;flex:1}
@@ -118,13 +127,15 @@ input[type=date]{font:inherit;border:1.5px solid var(--line);border-radius:10px;
 <nav class="bot" id="nav">
   <button data-v="study" onclick="go('study')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 5a2 2 0 0 1 2-2h13v16H6a2 2 0 0 0-2 2z"/><path d="M4 19V5"/><path d="M9 8h6"/></svg>공부</button>
   <button data-v="quiz" onclick="go('quiz')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="7.5" cy="12" r="4"/><path d="M14 8l6 8M20 8l-6 8"/></svg>OX 퀴즈</button>
-  <button data-v="nums" onclick="go('nums')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 9h16M4 15h16M10 3L8 21M16 3l-2 18"/></svg>숫자 암기</button>
+  <button data-v="exam" onclick="go('exam')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="5"/><circle cx="12" cy="12" r="1.5" fill="currentColor"/></svg>적중문제</button>
+  <button data-v="nums" onclick="go('nums')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 9h16M4 15h16M10 3L8 21M16 3l-2 18"/></svg>숫자</button>
   <button data-v="set" onclick="go('set')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.6 1.6 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.6 1.6 0 0 0-1.8-.3 1.6 1.6 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.6 1.6 0 0 0-1-1.5 1.6 1.6 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.6 1.6 0 0 0 .3-1.8 1.6 1.6 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.6 1.6 0 0 0 1.5-1 1.6 1.6 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.6 1.6 0 0 0 1.8.3H9a1.6 1.6 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.6 1.6 0 0 0 1 1.5 1.6 1.6 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.6 1.6 0 0 0-.3 1.8V9a1.6 1.6 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.6 1.6 0 0 0-1.5 1z"/></svg>설정</button>
 </nav>
 
 <script src="data-safety.js"></script>
 <script src="data-disaster.js"></script>
 <script src="data-lang.js"></script>
+<script src="data-more.js"></script>
 <script>
 /* ---------- 저장 ---------- */
 const LS = {
@@ -208,20 +219,28 @@ function toggleDone(id){
 }
 
 /* ---------- 퀴즈 ---------- */
-function newQuiz(){
-  const all = S().quiz.map((q,i)=>i);
-  for(let i=all.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[all[i],all[j]]=[all[j],all[i]];}
-  st.qs = {list: all.slice(0, Math.min(10, all.length)), i:0, right:0, ans:null};
+function shuffle(a){ for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];} return a; }
+st.qn = LS.get('qn',10);
+function newQuiz(onlyWrong){
+  const s=S(); const wr = LS.get('oxw_'+s.id,[]);
+  let all = onlyWrong ? wr.filter(i=>i<s.quiz.length) : s.quiz.map((q,i)=>i);
+  shuffle(all);
+  const n = st.qn==='all' ? all.length : Math.min(st.qn, all.length);
+  st.qs = {list: all.slice(0,n), i:0, right:0, ans:null, wrongMode:!!onlyWrong};
 }
+function setQn(n){ st.qn=n; LS.set('qn',n); newQuiz(); render(); }
 function quiz(){
   const s = S();
   if(!st.qs) newQuiz();
   const z = st.qs;
   const best = LS.get('best_'+s.id, null);
+  const wr = LS.get('oxw_'+s.id,[]);
+  const bar = `<div class="tools" style="position:static">${[10,20,'all'].map(n=>`<button class="chip ${st.qn===n?'on':''}" onclick="setQn(${n==='all'?"'all'":n})">${n==='all'?'전체 '+s.quiz.length:n+'문제'}</button>`).join('')}<button class="chip ${z.wrongMode?'on':''}" onclick="newQuiz(true);render()">틀린 것만 ${wr.length}</button></div>`;
+  if(!z.list.length) return bar+`<div class="empty">틀린 문제가 없어요. 잘하고 있어요!</div>`;
   if(z.i >= z.list.length){
     const sc = Math.round(z.right/z.list.length*100);
     if(best==null || sc>best) LS.set('best_'+s.id, sc);
-    return `<div class="qbox"><div class="qn">${s.name} OX 결과</div>
+    return bar+`<div class="qbox"><div class="qn">${s.name} OX 결과</div>
       <div class="qq">${z.list.length}문제 중 ${z.right}개 맞혔어요 (${sc}점)</div>
       <div class="note">${sc>=80?'좋아요! 틀린 문제의 해설만 다시 보세요.':'공부 탭의 ★ 표시 줄을 한 번 더 읽고 다시 풀어 보세요.'}</div>
       <button class="big" onclick="newQuiz();render()">다시 풀기</button></div>`;
@@ -233,13 +252,53 @@ function quiz(){
     res = `<div class="res ${good?'good':'bad'}">${good?'정답!':'아쉬워요'} 정답은 ${a?'O':'X'}${e?' — '+fmt(e):''}</div>
       <button class="big" onclick="st.qs.i++;st.qs.ans=null;render()">${z.i+1<z.list.length?'다음 문제':'결과 보기'}</button>`;
   }
-  return `<div class="score"><div>문제<b>${z.i+1}/${z.list.length}</b></div><div>맞힘<b>${z.right}</b></div><div>최고점<b>${best==null?'-':best}</b></div></div>
+  return bar+`<div class="score"><div>문제<b>${z.i+1}/${z.list.length}</b></div><div>맞힘<b>${z.right}</b></div><div>최고점<b>${best==null?'-':best}</b></div></div>
     <div class="qbox"><div class="qn">${s.name} · 맞으면 O, 틀리면 X</div>
     <div class="qq">${fmt(qq)}</div>
     <div class="ox"><button class="o" ${z.ans!=null?'disabled':''} onclick="answer(1)">O</button><button class="x" ${z.ans!=null?'disabled':''} onclick="answer(0)">X</button></div>
     ${res}</div>`;
 }
-function answer(v){ const z=st.qs; z.ans=v; if(v===S().quiz[z.list[z.i]][1]) z.right++; render(); }
+function answer(v){ const s=S(), z=st.qs, qi=z.list[z.i]; z.ans=v;
+  let wr = LS.get('oxw_'+s.id,[]);
+  if(v===s.quiz[qi][1]){ z.right++; wr = wr.filter(x=>x!==qi); } else if(!wr.includes(qi)) wr.push(qi);
+  LS.set('oxw_'+s.id, wr); render(); }
+
+/* ---------- 적중 예상문제 ---------- */
+function newExam(onlyWrong){
+  const s=S(); const wr=LS.get('exw_'+s.id,[]);
+  let all = onlyWrong ? wr.filter(i=>i<s.exam.length) : s.exam.map((q,i)=>i);
+  if(!onlyWrong && st.exShuffle) shuffle(all);
+  st.ex = {sid:s.id, list:all, i:0, right:0, pick:null, wrongMode:!!onlyWrong, perm:{}};
+}
+st.exShuffle = LS.get('exs', false);
+function exam(){
+  const s=S();
+  if(!st.ex || st.ex.sid!==s.id) newExam();
+  const z=st.ex, wr=LS.get('exw_'+s.id,[]);
+  const bar = `<div class="tools" style="position:static"><button class="chip ${!z.wrongMode&&!st.exShuffle?'on':''}" onclick="st.exShuffle=false;LS.set('exs',false);newExam();render()">순서대로</button><button class="chip ${!z.wrongMode&&st.exShuffle?'on':''}" onclick="st.exShuffle=true;LS.set('exs',true);newExam();render()">섞어서</button><button class="chip ${z.wrongMode?'on':''}" onclick="newExam(true);render()">틀린 것만 ${wr.length}</button></div>`;
+  const head = `<div class="lead">2024~2026 국가직·지방직에서 <b>반복해서 나온 주제</b>만 골라 실제 시험처럼 4지선다로 만든 다음 시험 대비 문제예요. 문제 아래 회색 꼬리표가 출제 근거예요.</div>`;
+  if(!z.list.length) return bar+head+`<div class="empty">틀린 문제가 없어요. 잘하고 있어요!</div>`;
+  if(z.i>=z.list.length){
+    const sc=Math.round(z.right/z.list.length*100);
+    const b=LS.get('exbest_'+s.id,null); if(!z.wrongMode && (b==null||sc>b)) LS.set('exbest_'+s.id,sc);
+    return bar+`<div class="qbox"><div class="qn">${s.name} 적중 예상문제 결과</div><div class="qq">${z.list.length}문제 중 ${z.right}개 (${sc}점)</div>
+      <div class="note">${sc>=80?'실전 감각 좋아요. 틀린 것만 다시 풀어 확실히 잡으세요.':'틀린 문제의 해설을 보고 공부 탭에서 해당 카드를 다시 읽어 보세요.'}</div>
+      <button class="big" onclick="newExam(true);render()">틀린 문제 다시 풀기</button>
+      <button class="big" style="background:var(--navy)" onclick="newExam();render()">처음부터 다시</button></div>`;
+  }
+  const qi=z.list[z.i], q=s.exam[qi], done=z.pick!=null;
+  const pm = z.perm[qi] || (z.perm[qi]=shuffle([0,1,2,3])), ans = pm.indexOf(q.a);
+  const nums=['①','②','③','④'];
+  return bar+(z.i===0&&!done?head:'')+`<div class="score"><div>문제<b>${z.i+1}/${z.list.length}</b></div><div>맞힘<b>${z.right}</b></div><div>최고점<b>${LS.get('exbest_'+s.id,null)??'-'}</b></div></div>
+    <div class="qbox"><div class="qn">${s.name} · 적중 예상</div><div class="qq">${fmt(q.q)}</div>
+    <div class="ch4">${pm.map((oi,ci)=>`<button class="${done?(ci===ans?'right':ci===z.pick?'wrong':''):''}" ${done?'disabled':''} onclick="pickEx(${ci})"><i>${nums[ci]}</i><span>${fmt(q.c[oi])}</span></button>`).join('')}</div>
+    ${done?`<div class="res ${z.pick===ans?'good':'bad'}">${z.pick===ans?'정답!':'오답'} 정답 ${nums[ans]} — ${fmt(q.e)}</div><span class="why">출제 근거: ${esc(q.w)}</span>
+    <button class="big" onclick="st.ex.i++;st.ex.pick=null;render();scrollTo(0,0)">${z.i+1<z.list.length?'다음 문제':'결과 보기'}</button>`:''}</div>`;
+}
+function pickEx(ci){ const s=S(), z=st.ex, qi=z.list[z.i]; z.pick=ci;
+  let wr=LS.get('exw_'+s.id,[]);
+  if(z.perm[qi][ci]===s.exam[qi].a){ z.right++; wr=wr.filter(x=>x!==qi); } else if(!wr.includes(qi)) wr.push(qi);
+  LS.set('exw_'+s.id,wr); render(); }
 
 /* ---------- 숫자 ---------- */
 function nums(){
@@ -259,7 +318,7 @@ function settings(){
   </div>
   <div class="set"><div class="row" style="display:block">
     <b>사용법</b>
-    <p class="note">· 과목 탭을 고르고 위에서 아래로 내리며 읽으세요.<br>· <span style="background:var(--mark);padding:1px 4px;border-radius:4px">★ 형광 줄</span>은 꼭 외울 핵심, <span class="hot">최빈출</span>은 거의 매년 나오는 주제예요.<br>· ‘★ 핵심만’을 켜면 형광 줄만 모아 볼 수 있고, ‘★ 가리고 외우기’를 켜면 형광 줄이 흐려져서 눌러야 보여요.<br>· 다 외운 카드는 오른쪽 ✓를 눌러 두면 과목 탭에 진도(%)가 올라가요.<br>· 아이폰은 사파리 공유 → 홈 화면에 추가, 갤럭시는 크롬 메뉴 → 홈 화면에 추가로 설치하면 인터넷 없이도 열려요.</p>
+    <p class="note">· 과목 탭을 고르고 위에서 아래로 내리며 읽으세요.<br>· <span style="background:var(--mark);padding:1px 4px;border-radius:4px">★ 형광 줄</span>은 꼭 외울 핵심, <span class="hot">최빈출</span>은 거의 매년 나오는 주제예요.<br>· ‘★ 핵심만’을 켜면 형광 줄만 모아 볼 수 있고, ‘★ 가리고 외우기’를 켜면 형광 줄이 흐려져서 눌러야 보여요.<br>· <b>적중문제</b>는 2024~2026 기출에서 반복된 주제로 만든 4지선다 실전 문제, <b>OX 퀴즈</b>는 10·20·전체 문제와 틀린 것만 다시 풀기가 돼요.<br>· 다 외운 카드는 오른쪽 ✓를 눌러 두면 과목 탭에 진도(%)가 올라가요.<br>· 아이폰은 사파리 공유 → 홈 화면에 추가, 갤럭시는 크롬 메뉴 → 홈 화면에 추가로 설치하면 인터넷 없이도 열려요.</p>
   </div></div>
   <div class="set"><div class="row" style="display:block">
     <b>자료 출처·주의</b>
@@ -275,7 +334,7 @@ function render(keepScroll){
   renderTabs();
   document.querySelectorAll('nav.bot button').forEach(b=>b.classList.toggle('on', b.dataset.v===st.view));
   const v = st.view;
-  $('#main').innerHTML = v==='quiz' ? quiz() : v==='nums' ? nums() : v==='set' ? settings() : study();
+  $('#main').innerHTML = v==='quiz' ? quiz() : v==='exam' ? exam() : v==='nums' ? nums() : v==='set' ? settings() : study();
   const sq = $('#sq');
   if(sq) sq.addEventListener('input', e=>{ st.q=e.target.value; clearTimeout(window._t); window._t=setTimeout(()=>{ render(); const n=$('#sq'); n.focus(); n.setSelectionRange(n.value.length,n.value.length); },250); });
   if(keepScroll) scrollTo(0,y);
@@ -285,6 +344,6 @@ addEventListener('resize', ()=>document.documentElement.style.setProperty('--hh'
 applyPrefs(); dday(); render();
 if('serviceWorker' in navigator){ addEventListener('load', ()=>navigator.serviceWorker.register('sw.js').catch(()=>{})); }
 </script>
-<script src="/v.js" data-v="v1" defer></script>
+<script src="/v.js" data-v="v2" defer></script>
 </body>
 </html>
