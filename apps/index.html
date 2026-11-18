@@ -95,9 +95,13 @@ footer { color: var(--muted); font-size: 12px; }
 #fids .fids-cols, #fids .fids-row { grid-template-columns: 4.1rem minmax(0,1fr) 2.6rem 5.6rem; }
 @media (min-width: 720px) { #fids .fids-cols, #fids .fids-row { grid-template-columns: 5.5rem minmax(0,1fr) 4rem 9rem; } }
 #fids { margin-top: 10px; }
+/* 안내판 보기일 땐 화면 전체를 안내판 바탕색으로 (대표님 11/18) */
+body.boardview { --bg: #0B0D14; --card: #141826; --ink: #F4E3B1; --muted: #9AA3B5; --line: #2A2F3A; --teal: #2CC4A8; --teal-soft: #1A1F30; color-scheme: dark; }
+body.boardview h1 span { color: #FF6B4A; }
+body.boardview .views button[aria-pressed="true"] { background: #2CC4A8; color: #0B0D14; border-color: #2CC4A8; }
 #fids .fids-row { cursor: pointer; }
 </style>
-<script src="/v.js" data-v="v13" defer></script>
+<script src="/v.js" data-v="v14" defer></script>
 </head>
 <body>
 <div class="wrap">
@@ -233,7 +237,7 @@ const CODE = { "링크클린 업무용": ["LC", "A"], "세무": ["TX", "B"], "�
 const FST = { live: ["운항 중", "IN SERVICE", "ok"], store: ["스토어 출시", "CODE SHARE", "board"], dev: ["준비 중", "BOARDING", "late"], plan: ["예정", "SCHEDULED", "wait"], merged: ["통합", "MERGED", "off"] };
 let view = "board";
 try { view = localStorage.getItem("apps-view") || "board"; } catch {}
-function setView(v){ view = v; try { localStorage.setItem("apps-view", v); } catch {} document.querySelectorAll(".views button").forEach(b => b.setAttribute("aria-pressed", String(b.dataset.v === v))); render(); }
+function setView(v){ view = v; try { localStorage.setItem("apps-view", v); } catch {} document.querySelectorAll(".views button").forEach(b => b.setAttribute("aria-pressed", String(b.dataset.v === v))); document.body.classList.toggle("boardview", v === "board"); document.querySelector('meta[name="theme-color"]').content = v === "board" ? "#0B0D14" : "#0d4f57"; render(); }
 document.querySelectorAll(".views button").forEach(b => b.onclick = () => setView(b.dataset.v));
 let fidsDrawn = "";
 function renderFids(list){
