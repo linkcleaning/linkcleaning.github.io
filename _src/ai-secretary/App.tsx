@@ -2891,9 +2891,9 @@ type SecGroup = 'write' | 'find' | 'report';
 const SEC_GROUP: Record<string, SecGroup> = { report: 'report', dayreport: 'report', google: 'find', bids: 'find', grants: 'find', keywords: 'find', rankmeeting: 'find', appcare: 'find', sidejobs: 'find' };
 const secGroupOf = (k: string): SecGroup => SEC_GROUP[k] ?? 'write';
 const SEC_GROUPS: { g: SecGroup; title: string }[] = [
+  { g: 'report', title: '📋 보고' },
   { g: 'write', title: '✍️ 글쓰기' },
   { g: 'find', title: '🔎 찾기·조사' },
-  { g: 'report', title: '📋 보고' },
 ];
 function secJobsFor(date: string): SecJob[] {
   const [y, m, d] = date.split('-').map(Number);
