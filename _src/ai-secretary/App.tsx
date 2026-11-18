@@ -2887,6 +2887,14 @@ interface AgentStatus {
   items?: Record<string, { done?: boolean; at?: string; note?: string; detail?: string; url?: string }>;
 }
 interface SecJob { key: string; label: string; who: string; when: string }
+type SecGroup = 'write' | 'find' | 'report';
+const SEC_GROUP: Record<string, SecGroup> = { report: 'report', dayreport: 'report', google: 'find', bids: 'find', grants: 'find', keywords: 'find', rankmeeting: 'find', appcare: 'find', sidejobs: 'find' };
+const secGroupOf = (k: string): SecGroup => SEC_GROUP[k] ?? 'write';
+const SEC_GROUPS: { g: SecGroup; title: string }[] = [
+  { g: 'write', title: '✍️ 글쓰기' },
+  { g: 'find', title: '🔎 찾기·조사' },
+  { g: 'report', title: '📋 보고' },
+];
 function secJobsFor(date: string): SecJob[] {
   const [y, m, d] = date.split('-').map(Number);
   const wd = new Date(y, m - 1, d).getDay(); // 0=일
@@ -2897,12 +2905,14 @@ function secJobsFor(date: string): SecJob[] {
   jobs.push({ key: 'neighbors', label: '스레드 이웃 댓글', who: '소통수석 김기훈', when: '07:17' });
   jobs.push({ key: 'replies', label: '스레드 댓글 답글', who: '소통수석 김기훈', when: wd >= 1 && wd <= 5 ? '13:17' : '20:47' });
   jobs.push({ key: 'google', label: '구글 순위 확인', who: '전략수석 최영길', when: '07:17' });
+  jobs.push({ key: 'rankmeeting', label: '순위 하락 회의', who: '전략수석 최영길', when: '07:17' });
   if (wd >= 1 && wd <= 5) jobs.push({ key: 'bids', label: '입찰·공고 찾기', who: '영업수석실 입찰비서관', when: '07:17' });
   if (wd === 1 || wd === 4) jobs.push({ key: 'grants', label: '소상공인 지원사업 찾기', who: '영업수석실 지원사업비서관', when: '07:17' });
   if (wd === 1) jobs.push({ key: 'keywords', label: '주간 키워드 리포트', who: '전략수석 최영길', when: '13:17' });
   if (wd >= 1 && wd <= 5) jobs.push({ key: 'placenews', label: '플레이스 소식·영상', who: '홍보수석 한정민', when: '13:17' });
   if (wd === 4) jobs.push({ key: 'appcare', label: '앱 점검·정비', who: '전략수석실 앱정비비서관', when: '13:17' });
   if (wd === 2 || wd === 4) jobs.push({ key: 'ekpromo', label: '이케이클린 글 준비', who: '홍보수석실 이케이클린 담당', when: '13:17' });
+  if (wd === 2 || wd === 5) jobs.push({ key: 'column', label: '홈페이지 특수 분야 칼럼', who: '전략수석 최영길', when: '13:17' });
   if (wd === 3 || wd === 5) jobs.push({ key: 'areapage', label: '홈페이지 동네 페이지', who: '전략수석 최영길', when: '13:17' });
   jobs.push({ key: 'coupang', label: '살림기록소 글·릴스 준비', who: '제휴수석 박시은', when: '18:57' });
   jobs.push({ key: 'dayreport', label: '저녁 하루 보고', who: '비서실장 한정호', when: '18:57' });
@@ -3513,8 +3523,18 @@ function SecretaryWork({ status, agent, today }: { status: AgentStatus | null; a
   const jobs = secJobsFor(today);
   const [open, setOpen] = useState<string | null>(null);
   return (
+    <div className="space-y-3">
+    {SEC_GROUPS.map(({ g, title }) => {
+      const list = jobs.filter((j) => secGroupOf(j.key) === g);
+      if (!list.length) return null;
+      const n = list.filter((j) => secJobState(j, status, agent, today) === 'done').length;
+      return (
+    <div key={g}>
+    <p className="mb-1 text-[12px] font-extrabold text-slate-300">
+      {title} <b className="text-emerald-300">{n}</b>/{list.length}
+    </p>
     <ul className="space-y-1.5">
-      {jobs.map((j) => {
+      {list.map((j) => {
         const st = secJobState(j, status, agent, today);
         const it = status && status.date === today ? status.items?.[j.key] : undefined;
         return (
@@ -3557,6 +3577,10 @@ function SecretaryWork({ status, agent, today }: { status: AgentStatus | null; a
         );
       })}
     </ul>
+    </div>
+      );
+    })}
+    </div>
   );
 }
 
