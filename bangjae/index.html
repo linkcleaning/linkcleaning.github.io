@@ -72,6 +72,24 @@ nav.bot button{flex:1;padding:9px 0 10px;font-size:12px;font-weight:700;color:va
 nav.bot button svg{width:23px;height:23px}
 nav.bot button.on{color:var(--navy)}
 html[data-theme=dark] nav.bot button.on{color:#fff}
+.det{margin:10px 0 4px;border-top:1.5px dashed var(--line);padding-top:8px}
+.det summary{list-style:none;cursor:pointer;font-size:14px;font-weight:800;color:var(--c);padding:6px 0;display:flex;align-items:center;gap:6px}
+.det summary::-webkit-details-marker{display:none}
+.det summary::after{content:"펼치기 ▾";margin-left:auto;font-size:12px;color:var(--sub);font-weight:700}
+.det[open] summary::after{content:"접기 ▴"}
+.det .dx{font-size:.97em;line-height:1.85;color:var(--ink)}
+.det .dx p{margin:8px 0}
+.det .dx h4{font-size:1em;font-weight:800;margin:16px 0 6px;padding-left:9px;border-left:3px solid var(--c)}
+.det .dx h4.h5{border:0;padding-left:0;margin:12px 0 4px;color:var(--c);font-size:.95em}
+.det .dx ul{margin:6px 0;padding-left:20px}
+.det .dx li{margin:3px 0}
+.det .dx .ex{background:var(--bg);border-radius:10px;padding:10px 12px}
+.det .dx .ex::before{content:"예시 ";font-weight:800;color:var(--c)}
+.det .dx .trap{background:#FBEDE4;color:#7A3A12;border-radius:10px;padding:10px 12px}
+html[data-theme=dark] .det .dx .trap{background:#3A2A20;color:#F4C9A8}
+.det .dx .trap::before{content:"⚠ 시험 함정 ";font-weight:800}
+.det .dx .key{background:var(--mark);border-left:4px solid var(--markbar);border-radius:8px;padding:8px 12px;font-weight:600}
+.det .dx .key::before{content:"★ ";color:var(--markbar)}
 /* quiz */
 .qbox{background:var(--card);border-radius:18px;padding:22px 18px;margin-top:6px}
 .qn{font-size:13px;font-weight:700;color:var(--sub)}
@@ -136,6 +154,9 @@ input[type=date]{font:inherit;border:1.5px solid var(--line);border-radius:10px;
 <script src="data-disaster.js"></script>
 <script src="data-lang.js"></script>
 <script src="data-more.js"></script>
+<script src="detail-safety.js"></script>
+<script src="detail-disaster.js"></script>
+<script src="detail-lang.js"></script>
 <script>
 /* ---------- 저장 ---------- */
 const LS = {
@@ -148,12 +169,29 @@ const st = {
   sub: LS.get('sub','safety'), view: LS.get('view','study'),
   coreOnly: false, cover: false, q: '',
   done: LS.get('done',{}), fs: LS.get('fs',16), theme: LS.get('theme','light'),
-  exam: LS.get('exam',''), qs: null
+  exam: LS.get('exam',''), qs: null, detOpen: LS.get('detOpen',true)
 };
 const $ = s => document.querySelector(s);
 const S = () => SUBJ.find(s=>s.id===st.sub) || SUBJ[0];
 const esc = t => String(t).replace(/[&<>"]/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
 const fmt = t => esc(t).replace(/\*\*(.+?)\*\*/g,'<b>$1</b>');
+window.DETAIL = window.DETAIL || {};
+function detHtml(arr){
+  const fmt = t => esc(t).replace(/\*\*(.+?)\*\*/g,'<b>$1</b>').replace(/&lt;br&gt;/g,'<br>');
+  let h='', inUl=false;
+  arr.forEach(x=>{
+    if(x.startsWith('- ')){ if(!inUl){h+='<ul>';inUl=true;} h+=`<li>${fmt(x.slice(2))}</li>`; return; }
+    if(inUl){h+='</ul>';inUl=false;}
+    if(x.startsWith('### ')) h+=`<h4 class="h5">${fmt(x.slice(4))}</h4>`;
+    else if(x.startsWith('## ')) h+=`<h4>${fmt(x.slice(3))}</h4>`;
+    else if(x.startsWith('예) ')) h+=`<p class="ex">${fmt(x.slice(3))}</p>`;
+    else if(x.startsWith('함정: ')) h+=`<p class="trap">${fmt(x.slice(4))}</p>`;
+    else if(x.startsWith('! ')) h+=`<p class="key">${fmt(x.slice(2))}</p>`;
+    else h+=`<p>${fmt(x)}</p>`;
+  });
+  if(inUl) h+='</ul>';
+  return h;
+}
 const key = (sid,ci,ki) => sid+'-'+ci+'-'+ki;
 
 function applyPrefs(){
@@ -195,7 +233,8 @@ function study(){
     let body = '';
     c.cards.forEach((k,ki)=>{
       const lines = k.b.map(x=>({core:x.startsWith('!'), t:x.replace(/^!/,'')}));
-      const hay = (k.t+' '+lines.map(l=>l.t).join(' ')).replace(/\*/g,'');
+      const det = (DETAIL[s.id]||{})[k.t];
+      const hay = (k.t+' '+lines.map(l=>l.t).join(' ')+' '+(det?det.join(' '):'')).replace(/\*/g,'');
       if(q && !hay.includes(q)) return;
       const shown = st.coreOnly ? lines.filter(l=>l.core) : lines;
       if(st.coreOnly && !shown.length) return;
@@ -206,6 +245,7 @@ function study(){
         <button class="cbtn ${done?'on':''}" aria-label="외웠어요" onclick="toggleDone('${id}')">✓</button></div>
         ${k.tag?`<div class="tags">${k.tag.split('·').map(t=>`<span>${esc(t.trim())} 기출</span>`).join('')}</div>`:''}
         <ul class="b">${shown.map(l=>`<li class="${l.core?'core':''}" ${l.core?'onclick="this.classList.toggle(\'peek\')"':''}><span class="tx">${fmt(l.t)}</span></li>`).join('')}</ul>
+        ${det && !st.coreOnly ? `<details class="det" ${st.detOpen||q?'open':''}><summary>📖 교재 설명 자세히</summary><div class="dx">${detHtml(det)}</div></details>`:''}
       </article>`;
     });
     if(body) html += `<h2 class="ch" id="ch${ci}">${esc(c.t)}</h2>`+body;
@@ -313,12 +353,13 @@ function settings(){
   return `<div class="set">
     <div class="row"><span>글자 크기</span><div class="seg">${[[15,'작게'],[16,'보통'],[18,'크게'],[20,'아주 크게']].map(([v,l])=>`<button class="${st.fs==v?'on':''}" onclick="st.fs=${v};LS.set('fs',${v});applyPrefs();render()">${l}</button>`).join('')}</div></div>
     <div class="row"><span>화면</span><div class="seg"><button class="${st.theme==='light'?'on':''}" onclick="setTheme('light')">밝게</button><button class="${st.theme==='dark'?'on':''}" onclick="setTheme('dark')">어둡게</button></div></div>
+    <div class="row"><span>교재 설명</span><div class="seg"><button class="${st.detOpen?'on':''}" onclick="st.detOpen=true;LS.set('detOpen',true);render()">펼쳐 두기</button><button class="${!st.detOpen?'on':''}" onclick="st.detOpen=false;LS.set('detOpen',false);render()">접어 두기</button></div></div>
     <div class="row"><span>시험일 (D-day)</span><input type="date" value="${st.exam}" onchange="st.exam=this.value;LS.set('exam',this.value);dday()"></div>
     <div class="row"><span>‘외웠어요’ 표시 지우기</span><button class="chip" onclick="if(confirmReset()){st.done={};LS.set('done',{});render()}">초기화</button></div>
   </div>
   <div class="set"><div class="row" style="display:block">
     <b>사용법</b>
-    <p class="note">· 과목 탭을 고르고 위에서 아래로 내리며 읽으세요.<br>· <span style="background:var(--mark);padding:1px 4px;border-radius:4px">★ 형광 줄</span>은 꼭 외울 핵심, <span class="hot">최빈출</span>은 거의 매년 나오는 주제예요.<br>· ‘★ 핵심만’을 켜면 형광 줄만 모아 볼 수 있고, ‘★ 가리고 외우기’를 켜면 형광 줄이 흐려져서 눌러야 보여요.<br>· <b>적중문제</b>는 2024~2026 기출에서 반복된 주제로 만든 4지선다 실전 문제, <b>OX 퀴즈</b>는 10·20·전체 문제와 틀린 것만 다시 풀기가 돼요.<br>· 다 외운 카드는 오른쪽 ✓를 눌러 두면 과목 탭에 진도(%)가 올라가요.<br>· 아이폰은 사파리 공유 → 홈 화면에 추가, 갤럭시는 크롬 메뉴 → 홈 화면에 추가로 설치하면 인터넷 없이도 열려요.</p>
+    <p class="note">· 과목 탭을 고르고 위에서 아래로 내리며 읽으세요.<br>· <span style="background:var(--mark);padding:1px 4px;border-radius:4px">★ 형광 줄</span>은 꼭 외울 핵심, <span class="hot">최빈출</span>은 거의 매년 나오는 주제예요.<br>· ‘★ 핵심만’을 켜면 형광 줄만 모아 볼 수 있고, ‘★ 가리고 외우기’를 켜면 형광 줄이 흐려져서 눌러야 보여요.<br>· <b>적중문제</b>는 2024~2026 기출에서 반복된 주제로 만든 4지선다 실전 문제, <b>OX 퀴즈</b>는 10·20·전체 문제와 틀린 것만 다시 풀기가 돼요.<br>· 카드 아래 <b>📖 교재 설명 자세히</b>는 학원 교재처럼 풀어 쓴 설명이에요. 길어서 부담되면 설정에서 ‘접어 두기’로 바꾸세요.<br>· 다 외운 카드는 오른쪽 ✓를 눌러 두면 과목 탭에 진도(%)가 올라가요.<br>· 아이폰은 사파리 공유 → 홈 화면에 추가, 갤럭시는 크롬 메뉴 → 홈 화면에 추가로 설치하면 인터넷 없이도 열려요.</p>
   </div></div>
   <div class="set"><div class="row" style="display:block">
     <b>자료 출처·주의</b>
@@ -344,6 +385,6 @@ addEventListener('resize', ()=>document.documentElement.style.setProperty('--hh'
 applyPrefs(); dday(); render();
 if('serviceWorker' in navigator){ addEventListener('load', ()=>navigator.serviceWorker.register('sw.js').catch(()=>{})); }
 </script>
-<script src="/v.js" data-v="v2" defer></script>
+<script src="/v.js" data-v="v3" defer></script>
 </body>
 </html>
