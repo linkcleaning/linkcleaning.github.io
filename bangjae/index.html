@@ -194,6 +194,27 @@ html[data-theme=dark] .ch4 button.wrong{background:#3E2220;color:#F4B3AA}
 .num .v{font-weight:800;color:var(--c);text-align:right;flex:1.1}
 .cover .num .v{filter:blur(6px)}
 .cover .num.peek .v{filter:none}
+/* 암기 쪽지 */
+.memo{--mp:#FFF3BF;--ml:#E9D98A;background:var(--mp);border-radius:4px 4px 14px 4px;padding:14px 14px 10px;margin:0 2px 16px;box-shadow:0 2px 0 rgba(0,0,0,.05),0 6px 14px rgba(60,40,0,.08);position:relative;color:#3a2f1c}
+.memo.p{--mp:#FFE3D6;--ml:#EFC0A8}.memo.o{--mp:#FFE9C7;--ml:#EDCB95}.memo.g{--mp:#EAF2D6;--ml:#C9D9A4}
+.memo:before{content:"";position:absolute;top:-7px;left:50%;width:64px;height:16px;margin-left:-32px;background:rgba(255,255,255,.55);border:1px solid rgba(0,0,0,.05);transform:rotate(-2deg)}
+.memo h4{margin:2px 0 8px;font-size:16.5px;display:flex;align-items:center;gap:8px}
+.memo h4 small{font-size:12px;font-weight:700;color:#8a6d3b;margin-left:auto}
+.memo .ml{display:flex;gap:10px;justify-content:space-between;align-items:baseline;padding:9px 0;border-top:1px dashed var(--ml);cursor:pointer}
+.memo .ml .k{font-size:14.5px;flex:1;line-height:1.4}
+.memo .ml .v{font-weight:800;font-size:15px;text-align:right;flex:1.15;line-height:1.4;color:#B4471A}
+.memo.hide .ml .v{color:transparent;background:repeating-linear-gradient(90deg,var(--ml) 0 6px,transparent 6px 9px) left 70%/100% 2px no-repeat}
+.memo.hide .ml.peek .v{color:#B4471A;background:none}
+.memo .mf{display:flex;gap:8px;margin-top:8px}
+.memo .mf button{flex:1;border:0;border-radius:10px;padding:9px;font-weight:800;font-size:13.5px;background:rgba(255,255,255,.6);color:#5b4a2a}
+.memo .mf button.on{background:#3a2f1c;color:#fff}
+.memo.done{opacity:.72}
+.memo .stamp{font-size:11.5px;font-weight:800;color:#fff;background:#C25A2B;border-radius:6px;padding:2px 7px}
+.mnav{display:flex;gap:8px;align-items:center;justify-content:space-between;margin:4px 2px 12px}
+.mnav button{border:0;border-radius:12px;padding:12px 16px;font-weight:800;background:var(--card);color:var(--ink,inherit)}
+.mnav b{font-size:15px}
+.one .memo{min-height:58vh}
+html[data-theme=dark] .memo{filter:brightness(.88)}
 /* settings */
 .set{background:var(--card);border-radius:16px;padding:6px 16px;margin-bottom:12px}
 .row{display:flex;justify-content:space-between;align-items:center;padding:14px 0;border-bottom:1px solid var(--line);gap:10px}
@@ -239,6 +260,7 @@ input[type=date]{font:inherit;border:1.5px solid var(--line);border-radius:10px;
 <script src="detail-lang.js"></script>
 <script src="data-study2.js"></script>
 <script src="data-study3.js"></script>
+<script src="data-nums2.js"></script>
 <script>
 /* ---------- 저장 ---------- */
 const LS = {
@@ -503,11 +525,24 @@ function pickRd(ri,qi,ci){
 
 /* ---------- 숫자 ---------- */
 function nums(){
-  const s = S();
-  return `<div class="tools"><button class="chip ${st.cover?'on':''}" onclick="st.cover=!st.cover;render()">답 가리기</button></div>
-  <div class="lead">${s.name}에서 숫자·주체로 나오는 보기 모음. ‘답 가리기’를 켜고 하나씩 눌러 확인하세요.</div>
+  const s = S(), N = window.NOTES && NOTES[s.id];
+  if(!N) return `<div class="tools"><button class="chip ${st.cover?'on':''}" onclick="st.cover=!st.cover;render()">답 가리기</button></div>
   <div class="${st.cover?'cover':''}">${s.nums.map(([k,v])=>`<div class="num" onclick="this.classList.toggle('peek')"><span class="k">${esc(k)}</span><span class="v">${esc(v)}</span></div>`).join('')}</div>`;
+  const mem = LS.get('nmem_'+s.id, []), hide = LS.get('nhide', true), one = LS.get('none', false);
+  const total = N.reduce((a,x)=>a+x.n.length,0);
+  if(st.nIdx==null || st.nIdx>=N.length) st.nIdx=0;
+  const memo = (x,i) => `<div class="memo ${x.c||''} ${hide?'hide':''} ${mem.includes(i)?'done':''}">
+    <h4>${esc(x.t)}${mem.includes(i)?'<span class="stamp">외움</span>':''}<small>${i+1}/${N.length}</small></h4>
+    ${x.n.map(([k,v])=>`<div class="ml" onclick="this.classList.toggle('peek')"><span class="k">${esc(k)}</span><span class="v">${esc(v)}</span></div>`).join('')}
+    <div class="mf"><button onclick="memoAll(this)">답 다 보기</button><button class="${mem.includes(i)?'on':''}" onclick="memoDone(${i})">${mem.includes(i)?'✓ 외웠어요':'외웠어요'}</button></div></div>`;
+  const bar = `<div class="tools"><button class="chip ${hide?'on':''}" onclick="LS.set('nhide',${!hide});render()">답 가리기</button><button class="chip ${one?'on':''}" onclick="LS.set('none',${!one});render()">한 장씩</button><button class="chip" onclick="LS.set('nmem_${s.id}',[]);render()">외움 초기화</button></div>
+  <div class="lead">${s.name} 숫자 암기 쪽지 <b>${N.length}장 · ${total}개</b> — 외운 쪽지 ${mem.length}장. 가려진 줄을 누르면 답이 보여요.</div>`;
+  if(one){ const i=st.nIdx;
+    return bar+`<div class="mnav"><button onclick="st.nIdx=(st.nIdx+${N.length-1})%${N.length};render()">‹ 이전</button><b>${i+1} / ${N.length}</b><button onclick="st.nIdx=(st.nIdx+1)%${N.length};render()">다음 ›</button></div><div class="one">${memo(N[i],i)}</div>`; }
+  return bar + N.map(memo).join('');
 }
+function memoAll(b){ const m=b.closest('.memo'); const ls=m.querySelectorAll('.ml'); const open=[...ls].every(x=>x.classList.contains('peek')); ls.forEach(x=>x.classList.toggle('peek',!open)); b.textContent=open?'답 다 보기':'다시 가리기'; }
+function memoDone(i){ const k='nmem_'+S().id; let m=LS.get(k,[]); m=m.includes(i)?m.filter(x=>x!==i):m.concat(i); LS.set(k,m); if(LS.get('none',false)&&m.includes(i)) st.nIdx=(i+1)%NOTES[S().id].length; render(); }
 
 /* ---------- 설정 ---------- */
 function settings(){
@@ -563,6 +598,6 @@ addEventListener('resize', setHeadVars);
 applyPrefs(); dday(); render();
 if('serviceWorker' in navigator){ addEventListener('load', ()=>navigator.serviceWorker.register('sw.js').catch(()=>{})); }
 </script>
-<script src="/v.js" data-v="v14" defer></script>
+<script src="/v.js" data-v="v15" defer></script>
 </body>
 </html>
