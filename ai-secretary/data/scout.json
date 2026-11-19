@@ -1,0 +1,65 @@
+{
+ "date": "2026-11-19",
+ "at": "21:11",
+ "note": "쓸만한 것 3개 (첫 정찰, 검색 10회·자세히 본 것 7개)",
+ "items": [
+  {
+   "title": "Claude 시트(Sheets) 베타 출시",
+   "source": "iTechPost (Anthropic 11/10 발표)",
+   "url": "https://www.itechpost.com/articles/237776/20261111/claude-gets-new-workplace-tools-anthropic-takes-aim-microsoft-office-google-workspace.htm",
+   "what": "말로 시키면 Claude가 수식·드롭다운 있는 표를 만들고 고쳐 주는 새 기능(11/10 발표, 유료 구독자 베타)",
+   "how": "Claude 안에서 표를 만들고, 비서실 근무가 표에 줄을 추가·갱신. 엑셀 파일로 내려받기 가능(추정: 이 계정에서도 표 종류가 보임)",
+   "use": "견적·고객 관리표(문의→견적→작업일→후기 요청), 지점별 일정표. 아내분·직원과 같이 보기",
+   "overlap": "세무장부 앱과 일부 겹침(세무는 앱 유지, 견적·고객 관리용으로만)",
+   "hands": "조금 — 처음에 관리할 항목만 알려주시면 됨",
+   "cost": "기존 유료 구독 안에서(별도 요금 기사에 없음)",
+   "risk": "베타라 기능 단순. 고객 정보는 공개 저장소 말고 시트에만",
+   "verdict": "시험해 볼 만함"
+  },
+  {
+   "title": "네이버 플레이스 플러스 — 무료 AI 리뷰 답글",
+   "source": "SBS Biz·리뷰온 블로그",
+   "url": "https://biz.sbs.co.kr/amp/article/20000303863",
+   "what": "스마트플레이스에서 새 리뷰마다 AI가 답글 초안을 써 주는 네이버 공식 무료 기능(베타, 신청·승인 필요)",
+   "how": "말투·길이만 정해 두면 새 리뷰에 초안 자동 작성 → 사장님이 '등록'만 누름. 부정 리뷰는 알림",
+   "use": "크리머스(4월 기사 기준 음식점 대상이라 케이크 가게가 맞을 가능성). 링크클린은 대상 업종인지 확인 필요",
+   "overlap": "비서실 리뷰 답글 초안과 겹치지만, 네이버 안에서 바로 되어 비서실이 못 들어가는 네이버 막힘을 피함",
+   "hands": "조금 — 신청 1번, 이후 등록 버튼",
+   "cost": "무료(베타)",
+   "risk": "AI 티 나는 답글은 신뢰 떨어질 수 있음 → 한 줄 직접 손보기 권장. 새 소식은 아님(4~9월)",
+   "verdict": "시험해 볼 만함"
+  },
+  {
+   "title": "Claude in Chrome로 홈택스 부가세 신고 끝낸 사례",
+   "source": "지피터스",
+   "url": "https://www.gpters.org/nocode/post/consultant-who-provides-management-0ShmbI0yKc8pflr",
+   "what": "Claude가 크롬 확장으로 홈택스 화면을 읽고 부가세 신고서·전자세금계산서 입력을 도운 실제 후기",
+   "how": "로그인·인증은 사람 → Claude가 화면 읽고 칸 채움 → '제출·발급'은 사람이 누름",
+   "use": "1월 부가세 2기 확정신고 때 대표님 옆에서 입력 도우미(이미 Claude in Chrome 쓰고 계심)",
+   "overlap": "세무장부 앱 자료를 그대로 넣는 용도라 겹치기보다 이어짐",
+   "hands": "조금 — 로그인·인증서·제출 버튼",
+   "cost": "무료(기존 도구)",
+   "risk": "느리고 중간에 멈출 수 있음, 윈도우 홈택스 보안모듈은 미검증. 제출은 반드시 대표님 확인. 7월 글이라 새 소식은 아님",
+   "verdict": "시험해 볼 만함"
+  }
+ ],
+ "seen": [
+  "https://www.itechpost.com/articles/237776/20261111/claude-gets-new-workplace-tools-anthropic-takes-aim-microsoft-office-google-workspace.htm",
+  "https://biz.sbs.co.kr/amp/article/20000303863",
+  "https://www.reviewon.ai/blog/reviewon-vs-naver-place-plus-2026",
+  "https://www.gpters.org/nocode/post/consultant-who-provides-management-0ShmbI0yKc8pflr",
+  "https://brunch.co.kr/@eunjongseong/256",
+  "https://ditoday.com/?p=133472",
+  "https://www.youtube.com/watch?v=rQ62oYOo2Ag"
+ ],
+ "history": [
+  {
+   "date": "2026-11-19",
+   "titles": [
+    "Claude 시트(Sheets) 베타 출시",
+    "네이버 플레이스 플러스 — 무료 AI 리뷰 답글",
+    "Claude in Chrome로 홈택스 부가세 신고 끝낸 사례"
+   ]
+  }
+ ]
+}
