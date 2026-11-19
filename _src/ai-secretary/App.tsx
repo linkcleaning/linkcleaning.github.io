@@ -52,7 +52,7 @@ import {
 /* =========================================================
  *  타입 정의
  * ========================================================= */
-type Tab = 'brief' | 'routine' | 'sales' | 'keyword' | 'memo' | 'siri';
+type Tab = 'brief' | 'routine' | 'sales' | 'keyword' | 'memo' | 'siri' | 'health';
 type CityKey = 'jeju' | 'seogwipo';
 type PlaceKey = CityKey | 'here'; // here = 휴대폰 현재 위치
 interface HerePos {
@@ -3548,6 +3548,7 @@ function CallsTab({ hub, hasPin, toast, onOpenSettings }: { hub: HubData | null;
 }
 
 const DRAWER_APPS: { name: string; url: string; ic: string; d: string }[] = [
+  { name: '부속실·건강', url: './?action=health', ic: '💊', d: '약 체크·걸음·혈압·한마디' },
   { name: '전략기획실', url: './office.html', ic: '🏛️', d: '비서실 지시·비서실장 대화' },
   { name: '현장홍보', url: 'https://linkclean-promo.han0829.workers.dev/', ic: '📸', d: '현장 사진 맡기기 → 6곳 홍보' },
   { name: '세무장부', url: 'https://linkcleaning.github.io/ledger/', ic: '📒', d: '매출·매입·홈택스 요약' },
@@ -3597,6 +3598,177 @@ function AppCareCard() {
         </div>
       )}
     </section>
+  );
+}
+
+/* =========================================================
+ *  부속실 · 대표님 건강 챙기기 (약 체크 + 아이폰 건강 기록 + 한마디)
+ *  건강 정보는 공개 저장소에 쓰지 않고, 비밀번호가 걸린 허브(/api/hub/health)에만 저장
+ * ========================================================= */
+interface HealthDay { steps?: number; bpSys?: number; bpDia?: number; hr?: number; sleepH?: number; weight?: number; exerciseMin?: number; med?: Record<string, string | null>; at?: string }
+interface HealthData { days?: Record<string, HealthDay>; medPlan?: string[]; updatedAt?: string }
+const MED_SLOTS = ['아침', '점심', '저녁'];
+const nowHM = () => { const k = new Date(Date.now() + 9 * 3600e3); return k.toISOString().slice(11, 16); };
+
+function healthAdvice(today: string, days: Record<string, HealthDay>, plan: string[]): string[] {
+  const out: string[] = [];
+  const d = (n: number) => days[addDays(today, n)] || {};
+  const t = d(0), y = d(-1);
+  const h = new Date(Date.now() + 9 * 3600e3).getUTCHours();
+  const missed = plan.filter((s) => !(t.med && t.med[s]) && ((s === '아침' && h >= 11) || (s === '점심' && h >= 15) || (s === '저녁' && h >= 22)));
+  if (missed.length) out.push(`💊 오늘 ${missed.join('·')} 약 체크가 아직 없어요. 드셨으면 위에서 눌러 주세요.`);
+  // 걸음: 최근 7일 평균과 비교
+  const last7 = [-1, -2, -3, -4, -5, -6, -7].map((n) => d(n).steps).filter((v): v is number => typeof v === 'number');
+  if (typeof y.steps === 'number') {
+    const avg = last7.length ? Math.round(last7.reduce((a, b) => a + b, 0) / last7.length) : 0;
+    const low3 = [-1, -2, -3].every((n) => typeof d(n).steps === 'number' && (d(n).steps as number) < 5000);
+    if (low3) out.push(`🚶 사흘째 5,000걸음이 안 돼요(어제 ${y.steps.toLocaleString()}걸음). 운동이 필요해요 — 오늘은 점심이나 저녁에 20~30분만 걸어 보세요.`);
+    else if (y.steps < 5000) out.push(`🚶 어제는 ${y.steps.toLocaleString()}걸음이었어요. 오늘 현장 끝나고 10분만 더 걸어 볼까요?`);
+    else if (avg && y.steps >= avg * 1.2) out.push(`👏 어제 ${y.steps.toLocaleString()}걸음 — 최근 평균보다 많이 걸으셨어요.`);
+  }
+  // 혈압: 가정혈압 기준 135/85 (대한고혈압학회 가정혈압 고혈압 기준)
+  const bps = [0, -1, -2, -3, -4, -5, -6].map((n) => d(n)).filter((x) => typeof x.bpSys === 'number' && typeof x.bpDia === 'number');
+  if (bps.length) {
+    const hi = bps.filter((x) => (x.bpSys as number) >= 135 || (x.bpDia as number) >= 85).length;
+    const last = bps[0];
+    if (hi >= 3) out.push(`🩺 최근 혈압이 가정혈압 기준(135/85)보다 높은 날이 ${hi}번이에요(최근 ${last.bpSys}/${last.bpDia}). 병원 갈 때 이 기록을 보여 드리고 상담받아 보세요.`);
+    else if (hi >= 1) out.push(`🩺 최근 혈압 ${last.bpSys}/${last.bpDia}. 높은 날이 한 번 있었어요 — 아침에 앉아서 5분 쉰 뒤 재 보시면 더 정확해요.`);
+    else out.push(`🩺 최근 혈압 ${last.bpSys}/${last.bpDia} — 안정적이에요.`);
+  }
+  if (typeof y.sleepH === 'number' && y.sleepH < 6) out.push(`😴 어젯밤 ${y.sleepH}시간 주무셨어요. 오늘은 무리한 현장 일정은 피하시고 일찍 쉬세요.`);
+  if (!out.length) out.push('아직 건강 기록이 없어요. 아래 "아이폰 건강 앱 연결"을 한 번 해 두시면 매일 아침 자동으로 들어와요.');
+  return out;
+}
+
+function HealthTab({ today, hubPin, toast, onOpenSettings }: { today: string; hubPin: string; toast: (s: string) => void; onOpenSettings: () => void }) {
+  const [data, setData] = useState<HealthData | null>(null);
+  const [err, setErr] = useState('');
+  const [plan, setPlan] = useLocal<string[]>('medPlan', ['아침']);
+  const [local, setLocal] = useLocal<{ date: string; med: Record<string, string> }>('medDay', { date: today, med: {} });
+  const [showGuide, setShowGuide] = useState(false);
+  const url = `${HUB_BASE}/health`;
+  const load = useCallback(async () => {
+    if (!hubPin) return;
+    try {
+      const r = await fetch(`${url}?t=${Date.now()}`, { headers: { 'X-Hub-Pin': hubPin }, cache: 'no-store' });
+      const j = await r.json();
+      if (!r.ok) throw new Error(j.error || r.status);
+      setData(j); setErr('');
+      if (Array.isArray(j.medPlan) && j.medPlan.length) setPlan(j.medPlan);
+    } catch (e) { setErr(String((e as Error).message || e)); }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [hubPin]);
+  useEffect(() => { load(); }, [load]);
+  const send = async (body: object) => {
+    if (!hubPin) return;
+    try {
+      const r = await fetch(url, { method: 'POST', headers: { 'Content-Type': 'application/json', 'X-Hub-Pin': hubPin }, body: JSON.stringify(body) });
+      if (r.ok) load();
+    } catch { /* 오프라인이면 폰에만 남음 */ }
+  };
+  const todayMed = { ...(local.date === today ? local.med : {}), ...Object.fromEntries(Object.entries(data?.days?.[today]?.med || {}).filter(([, v]) => v)) } as Record<string, string>;
+  const check = (slot: string) => {
+    const on = !todayMed[slot];
+    const v = on ? nowHM() : '';
+    setLocal({ date: today, med: { ...(local.date === today ? local.med : {}), [slot]: v } });
+    if (data?.days?.[today]?.med) data.days[today].med![slot] = on ? v : null;
+    send({ date: today, med: { [slot]: on ? v : '' }, medPlan: plan });
+    toast(on ? `💊 ${slot} 약 — 체크했어요 (${v})` : `${slot} 약 체크를 취소했어요`);
+  };
+  // 시리 '약 먹었어' 로 들어온 경우
+  useEffect(() => {
+    let want = '';
+    try { want = sessionStorage.getItem('medNow') ?? ''; sessionStorage.removeItem('medNow'); } catch { /* */ }
+    if (want === '') return;
+    const h = new Date(Date.now() + 9 * 3600e3).getUTCHours();
+    const slot = MED_SLOTS.includes(want) ? want : plan.find((s) => !todayMed[s]) || (h < 11 ? '아침' : h < 16 ? '점심' : '저녁');
+    if (!todayMed[slot]) check(slot);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+  const togglePlan = (s: string) => {
+    const next = plan.includes(s) ? plan.filter((x) => x !== s) : MED_SLOTS.filter((x) => plan.includes(x) || x === s);
+    if (!next.length) return;
+    setPlan(next);
+    send({ date: today, medPlan: next });
+  };
+  const days = data?.days || {};
+  const advice = healthAdvice(today, days, plan);
+  const rows = [0, -1, -2, -3, -4, -5, -6].map((n) => ({ date: addDays(today, n), d: days[addDays(today, n)] || {} }));
+  const hasRecord = rows.some((r) => r.d.steps || r.d.bpSys || r.d.sleepH || r.d.weight);
+  const btn = 'flex-1 rounded-2xl py-4 text-[17px] font-extrabold active:scale-95';
+  return (
+    <div className="space-y-3">
+      <section className={card}>
+        <p className="text-[12px] font-bold text-slate-400">부속실 · 대표님 건강 챙기기</p>
+        <h2 className="mt-0.5 text-[20px] font-extrabold">💊 오늘 약</h2>
+        <div className="mt-3 flex gap-2">
+          {plan.map((s) => (
+            <button key={s} onClick={() => check(s)} className={`${btn} ${todayMed[s] ? 'bg-emerald-400/15 text-emerald-200' : 'bg-cw text-[#191919]'}`}>
+              {todayMed[s] ? `✓ ${s} ${todayMed[s]}` : `${s} 약 먹었어요`}
+            </button>
+          ))}
+        </div>
+        <div className="mt-3 flex items-center gap-1.5 text-[12px] text-slate-400">
+          <span>먹는 때:</span>
+          {MED_SLOTS.map((s) => (
+            <button key={s} onClick={() => togglePlan(s)} className={`rounded-full px-2.5 py-1 font-bold ${plan.includes(s) ? 'bg-[#191919] text-white' : 'bg-[#F2F3F5] text-slate-400'}`}>{s}</button>
+          ))}
+        </div>
+        <p className="mt-2 text-[12px] leading-snug text-slate-400">저녁 약을 드시게 되면 '저녁'을 눌러 켜 두세요. 체크하면 비서실(Claude)도 알 수 있게 저장돼요. 시리로 "약 먹었어"라고 해도 체크돼요.</p>
+      </section>
+
+      <section className={card}>
+        <h2 className="text-[18px] font-extrabold">🧑‍⚕️ 부속실 한마디</h2>
+        <ul className="mt-2 space-y-2">
+          {advice.map((a, i) => <li key={i} className="rounded-xl bg-[#F2F3F5] p-3 text-[14px] leading-relaxed text-slate-200">{a}</li>)}
+        </ul>
+        <p className="mt-2 text-[11px] text-slate-500">건강 기록을 보고 드리는 생활 안내예요. 진단이 아니니, 걱정되는 수치가 이어지면 병원에서 상담받으세요.</p>
+      </section>
+
+      <section className={card}>
+        <h2 className="text-[18px] font-extrabold">📈 최근 7일</h2>
+        {!hubPin ? (
+          <button onClick={onOpenSettings} className="mt-2 text-[14px] font-bold text-[#1A73E8]">설정에서 허브 비밀번호를 넣어 주세요 ›</button>
+        ) : err ? (
+          <p className="mt-2 text-[13px] text-rose-300">불러오지 못했어요 ({err})</p>
+        ) : !hasRecord ? (
+          <p className="mt-2 text-[13px] text-slate-400">아직 아이폰 건강 기록이 안 들어왔어요.</p>
+        ) : (
+          <table className="mt-2 w-full text-[13px]">
+            <thead><tr className="text-left text-[11px] text-slate-400"><th className="py-1">날짜</th><th>걸음</th><th>혈압</th><th>수면</th><th>약</th></tr></thead>
+            <tbody>
+              {rows.map(({ date, d }) => (
+                <tr key={date} className="border-t border-slate-700/30">
+                  <td className="py-1.5 text-slate-400">{date.slice(5).replace('-', '/')}</td>
+                  <td>{d.steps ? d.steps.toLocaleString() : '-'}</td>
+                  <td className={d.bpSys && (d.bpSys >= 135 || (d.bpDia ?? 0) >= 85) ? 'font-bold text-rose-300' : ''}>{d.bpSys ? `${d.bpSys}/${d.bpDia ?? '-'}` : '-'}</td>
+                  <td>{d.sleepH ? `${d.sleepH}h` : '-'}</td>
+                  <td>{d.med ? Object.entries(d.med).filter(([, v]) => v).map(([k]) => k[0]).join('·') || '-' : '-'}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        )}
+      </section>
+
+      <section className={card}>
+        <button onClick={() => setShowGuide(!showGuide)} className="flex w-full items-center justify-between text-left">
+          <h2 className="text-[16px] font-extrabold">📲 아이폰 건강 앱 연결 (한 번만)</h2>
+          <span className="text-[13px] text-slate-400">{showGuide ? '접기' : '펼치기'}</span>
+        </button>
+        {showGuide && (
+          <ol className="mt-2 list-decimal space-y-1.5 pl-5 text-[13px] leading-relaxed text-slate-300">
+            <li>아이폰 <b>단축어</b> 앱 → 오른쪽 위 <b>+</b> → 이름 "건강 보내기".</li>
+            <li><b>건강 샘플 찾기</b> 추가 → 유형 <b>걸음</b>, 시작일 <b>어제</b>, 그룹화 <b>일</b> → 다음에 <b>통계 계산</b>(합계)을 붙여 "걸음"으로.</li>
+            <li>같은 방법으로 <b>혈압 수축기</b>·<b>혈압 이완기</b>(최근 1개), <b>수면 분석</b>(어젯밤 합계, 시간), 필요하면 <b>체중</b>.</li>
+            <li><b>URL의 콘텐츠 가져오기</b> 추가 → 주소 <span className="font-mono text-[12px]">{HUB_BASE}/health</span> · 방법 <b>POST</b> · 헤더 <b>X-Hub-Pin</b> = 허브 비밀번호 · 본문 <b>JSON</b>: steps, bpSys, bpDia, sleepH, weight 에 위 값을 넣기.</li>
+            <li>단축어 앱 아래 <b>자동화</b> → <b>특정 시간</b> 매일 오전 6:50 → "건강 보내기" 실행 → <b>즉시 실행</b> 켜기.</li>
+            <li>처음 실행할 때 건강 데이터 접근 허용을 묻으면 <b>허용</b>.</li>
+          </ol>
+        )}
+        <p className="mt-2 text-[11px] text-slate-500">건강 기록은 공개 저장소가 아니라 비밀번호가 걸린 링크 허브에만 저장돼요. 어려우시면 돌아오셔서 같이 만들어요.</p>
+      </section>
+    </div>
   );
 }
 
@@ -5754,22 +5926,10 @@ export default function App() {
       setTab('brief');
       setBriefPrompt(true);
     } else if (action === 'medicine') {
-      const r = findRoutine(routines, 'r2', ['약']);
-      if (!r) toast("'약 챙겨 먹기' 루틴을 찾지 못했습니다.");
-      else if (!r.subs.length) {
-        markDone(r.id);
-        toast(`💊 ${r.title} — 완료 처리했습니다.`);
-      } else {
-        const want = params.get('slot');
-        const h = new Date().getHours();
-        const bySlot = want && r.subs.includes(want) ? want : r.subs[Math.min(r.subs.length - 1, h < 11 ? 0 : h < 16 ? 1 : 2)];
-        const startIdx = r.subs.indexOf(bySlot);
-        // 해당 시간대가 이미 체크되어 있으면 다음 미체크 항목을 체크
-        const target = want ? bySlot : [...r.subs.slice(startIdx), ...r.subs.slice(0, startIdx)].find((s) => !checks[`${r.id}:${s}`]) ?? bySlot;
-        markDone(`${r.id}:${target}`);
-        toast(`💊 ${target} 약 복용을 체크했습니다.`);
-      }
-      setTab('routine');
+      try { sessionStorage.setItem('medNow', params.get('slot') || '*'); } catch { /* */ }
+      setTab('health');
+    } else if (action === 'health') {
+      setTab('health');
     } else if (action === 'mirror') {
       doneRoutine('r1', ['거울'], '출근 거울샷');
     } else if (action === 'blog') {
@@ -6084,6 +6244,7 @@ export default function App() {
           />
         )}
         {tab === 'memo' && <DrawerTab today={today} />}
+        {tab === 'health' && <HealthTab today={today} hubPin={hubPin} toast={toast} onOpenSettings={() => setShowSettings(true)} />}
         {tab === 'siri' && (
           <button onClick={() => setTab('brief')} className="mb-3 flex items-center gap-1.5 text-sm font-bold text-amber-200">
             <ArrowLeft className="h-4 w-4" /> 브리핑으로 돌아가기

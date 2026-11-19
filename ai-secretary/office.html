@@ -11,7 +11,7 @@
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700;800;900&display=swap">
-<script src="/v.js" data-v="v47" defer></script>
+<script src="/v.js" data-v="v48" defer></script>
 <style>
   /* 비서실 화면 — 앱 안에서 열림 (Claude 앱으로 넘어가지 않음). 대화만 Claude에서. */
   :root {
@@ -137,8 +137,8 @@
     { key: 'sales', person: '안규태', name: '영업수석실', short: '영업수석', duty: '입찰·지원사업',
       app: { title: '고객 팔로업·후기 요청', desc: '견적 후 연락 없는 고객, 작업 끝난 고객의 후기 요청 문자는 앱 \'영업\' 탭에서 바로 보냅니다. 비서실장 아침 보고에도 건수가 올라옵니다.', link: '앱 영업 탭 열기 ›' } },
     { key: 'strategy', person: '최영길', name: '전략수석실', short: '전략수석', duty: '키워드·구글 순위' },
-    { key: 'office', name: '부속실', short: '부속실', duty: '루틴·건강·메모',
-      app: { title: '대표님 일정·건강 챙기기', desc: '출근 거울샷, 약 복용(아침·점심·저녁), 3초 메모는 앱 \'루틴\'·\'메모\' 탭에서 챙깁니다. 시리로 "약 먹었어", "비서 메모"라고 해도 됩니다.', link: '앱 루틴 탭 열기 ›' } },
+    { key: 'office', name: '부속실', short: '부속실', duty: '건강·약·일정',
+      app: { title: '대표님 건강 챙기기', desc: '약을 먹으면 체크(아침, 저녁 약을 드시게 되면 저녁도 켜기) → 비서실도 알 수 있게 저장됩니다. 아이폰 건강 앱의 걸음·혈압·수면이 매일 들어오면 "운동이 필요해요" 같은 한마디를 드립니다. 시리로 "약 먹었어"라고 해도 체크돼요.', link: '💊 약 체크·건강 보기 ›', url: './?action=health' } },
     { key: 'biz', person: '박시은', name: '제휴수석실', short: '제휴수석', duty: '살림기록소·부수입' }
   ];
   var ALL = [0,1,2,3,4,5,6], WK = [1,2,3,4,5];
@@ -192,7 +192,7 @@
     sns: [['🧵', '오늘의 스레드', G + 'threads/', '스레드'], ['📷', '인스타 영업 비서', G + 'insta/']],
     sales: [['📞', '콜백문자', G + 'callback/', '콜백'], ['🧾', '영수증·견적서', G + 'receipt/'], ['⭐', '후기부스터', G + 'review/'], ['🏠', '통합 현장관리', G + 'field/']],
     strategy: [['📈', '순위노트', G + 'rank/', '순위'], ['🗂', '앱 현황판', G + 'apps/']],
-    office: [['🇯🇵', '박람회 포켓 가이드', G + 'expo/', '박람회'], ['⏰', '루틴·메모', './']],
+    office: [['💊', '약 체크·건강', './?action=health', '건강'], ['🇯🇵', '박람회 포켓 가이드', G + 'expo/', '박람회']],
     biz: [['🛒', '오늘의 스레드(쿠팡 글)', G + 'threads/', '쿠팡 글']]
   };
   var chips = [];
