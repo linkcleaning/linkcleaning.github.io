@@ -503,7 +503,19 @@ function nums(){
 
 /* ---------- 설정 ---------- */
 function settings(){
-  return `<div class="set">
+  return `<div class="set"><div class="row" style="display:block">
+    <b>📌 2027 합격 전략 (일타강사 체크리스트)</b>
+    <p class="note">
+    <b style="color:var(--accent)">① 한능검 3급 이상이 응시 필수</b> — 2027년부터 9급 한국사 과목이 한국사능력검정시험(심화) 3급 이상으로 바뀌어요. 국가직은 <b>필기 전날까지 발표된 등급만</b> 인정돼요. 2026년 마지막 회차(81회)는 접수가 끝났으니 <b>2027년 82회(시험 2월 13일, 접수 1월 12~19일, 발표 2월 26일)</b>가 국가직 전에 딸 수 있는 사실상 마지막 기회예요. 일정은 국사편찬위원회(historyexam.go.kr)에서 꼭 확인하세요.<br><br>
+    <b>② 2027 국가직 9급</b> — 원서접수 1월 25~29일, 필기 <b>3월 27일(토)</b>. 작년(4월 4일)보다 1주 빨라요. 지방직은 보통 6월.<br><br>
+    <b>③ 과목당 25문항</b> — 국어·영어·안전·재난 각 25문항, 총 100문항 110분. 전공 비중이 40→50문항으로 커져서 <b>전공 고득점이 당락을 가릅니다</b>. 이 앱의 기출 회차·적중문제로 전공에서 90점 이상을 목표로 하세요.<br><br>
+    <b>④ 가산점</b> — 방재기사 등 관련 기사 자격은 기술직 가산점(기사 5%) 대상이 될 수 있어요. 인정 자격증 목록은 해마다 공고 별표로 확인하세요(산업안전기사 등 포함 여부 확인).<br><br>
+    <b>⑤ 공부 순서</b> — 기출 회차 1회분(20문항)을 먼저 풀고 → 틀린 주제의 공부 카드·교재 설명 읽기 → OX로 함정 문장 다지기 → 다음 회차. 법령 숫자는 ‘숫자’ 탭을 매일.<br><br>
+    <b>⑥ 시험 3개월 전</b> — 국가법령정보센터(law.go.kr)에서 재난안전법·자연재해대책법·중대재해처벌법 등 최신 조문 확인(2025.10 정부조직 개편으로 부처명 변경).
+    </p>
+    <button class="chip" onclick="st.exam='2027-03-27';LS.set('exam',st.exam);dday();render()">D-day를 2027 국가직(3월 27일)으로 설정</button>
+  </div></div>
+  <div class="set">
     <div class="row"><span>글자 크기</span><div class="seg">${[[15,'작게'],[16,'보통'],[18,'크게'],[20,'아주 크게']].map(([v,l])=>`<button class="${st.fs==v?'on':''}" onclick="st.fs=${v};LS.set('fs',${v});applyPrefs();render()">${l}</button>`).join('')}</div></div>
     <div class="row"><span>화면</span><div class="seg"><button class="${st.theme==='light'?'on':''}" onclick="setTheme('light')">밝게</button><button class="${st.theme==='dark'?'on':''}" onclick="setTheme('dark')">어둡게</button></div></div>
     <div class="row"><span>교재 설명</span><div class="seg"><button class="${st.detOpen?'on':''}" onclick="st.detOpen=true;LS.set('detOpen',true);render()">펼쳐 두기</button><button class="${!st.detOpen?'on':''}" onclick="st.detOpen=false;LS.set('detOpen',false);render()">접어 두기</button></div></div>
@@ -543,6 +555,6 @@ addEventListener('resize', setHeadVars);
 applyPrefs(); dday(); render();
 if('serviceWorker' in navigator){ addEventListener('load', ()=>navigator.serviceWorker.register('sw.js').catch(()=>{})); }
 </script>
-<script src="/v.js" data-v="v8" defer></script>
+<script src="/v.js" data-v="v9" defer></script>
 </body>
 </html>
