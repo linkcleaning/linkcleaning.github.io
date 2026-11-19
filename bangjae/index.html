@@ -238,6 +238,7 @@ input[type=date]{font:inherit;border:1.5px solid var(--line);border-radius:10px;
 <script src="detail-disaster.js"></script>
 <script src="detail-lang.js"></script>
 <script src="data-study2.js"></script>
+<script src="data-study3.js"></script>
 <script>
 /* ---------- 저장 ---------- */
 const LS = {
@@ -324,7 +325,7 @@ function study(){
       body += `<article class="card ${done?'done':''}">
         <div class="ct"><h3>${k.hot?'<span class="hot">최빈출</span>':''}${fmt(k.t)}</h3>
         <button class="cbtn ${done?'on':''}" aria-label="외웠어요" onclick="toggleDone('${id}')">✓</button></div>
-        ${k.tag?`<div class="tags">${k.tag.split('·').map(t=>`<span>${esc(t.trim())} 기출</span>`).join('')}</div>`:''}
+        ${k.tag?`<div class="tags">${k.tag.split('·').map(t=>`<span>${esc(t.trim())}${/^[\d\s]+$|\d[국지]|[국지]\s*\d/.test(t.trim())?' 기출':''}</span>`).join('')}</div>`:''}
         <ul class="b">${shown.map(l=>`<li class="${l.core?'core':''}" ${l.core?'onclick="this.classList.toggle(\'peek\')"':''}><span class="tx">${fmt(l.t)}</span></li>`).join('')}</ul>
         ${det && !st.coreOnly ? `<details class="det" ${st.detOpen||q?'open':''}><summary>📖 교재 설명 자세히</summary><div class="dx">${detHtml(det)}</div></details>`:''}
       </article>`;
@@ -562,6 +563,6 @@ addEventListener('resize', setHeadVars);
 applyPrefs(); dday(); render();
 if('serviceWorker' in navigator){ addEventListener('load', ()=>navigator.serviceWorker.register('sw.js').catch(()=>{})); }
 </script>
-<script src="/v.js" data-v="v12" defer></script>
+<script src="/v.js" data-v="v13" defer></script>
 </body>
 </html>
