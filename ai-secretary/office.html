@@ -11,7 +11,7 @@
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700;800;900&display=swap">
-<script src="/v.js" data-v="v45" defer></script>
+<script src="/v.js" data-v="v46" defer></script>
 <style>
   /* 비서실 화면 — 앱 안에서 열림 (Claude 앱으로 넘어가지 않음). 대화만 Claude에서. */
   :root {
@@ -93,6 +93,10 @@
   .blegend { font-size: 10.5px; color: #6B6E76; text-align: right; }
   .brow[data-k="chief"] { --dc: #191919; } .brow[data-k="pr"] { --dc: #FF6B00; } .brow[data-k="sns"] { --dc: #1A73E8; } .brow[data-k="sales"] { --dc: #0E9F5A; }
   .brow[data-k="strategy"] { --dc: #7C3AED; } .brow[data-k="biz"] { --dc: #E0306B; }
+  .approw { display: flex; flex-wrap: wrap; gap: 6px; margin: 0 12px 4px; }
+  .appbtn { flex: 1 1 auto; text-align: center; text-decoration: none; border-radius: 999px; padding: 11px 12px; font-weight: 800; font-size: 14px; color: #191919; background: #F2F3F5; border: 1.5px solid #E2E4E9; white-space: nowrap; }
+  .appbtn.main { background: #191919; color: #FFD233; border-color: #191919; }
+  .bdept small { display: block; }
   @media (max-width: 360px) { .suseok { grid-template-columns: repeat(2, 1fr); } }
 </style>
 </head>
@@ -141,8 +145,7 @@
 
   var DEPTS = [
     { key: 'chief', person: '한정호', name: '비서실장실', short: '실장실', duty: '아침 보고 총괄' },
-    { key: 'pr', person: '한정민', name: '홍보수석실', short: '홍보수석', duty: '6곳 게시·청소팁', go: 'https://linkclean-blog-writer.vercel.app/',
-      app: { first: true, title: '📸 찰칵블로그로 블로그 바로 쓰기', desc: '현장 사진만 고르면 네이버 블로그 글을 바로 만들어요(링크클린·이케이클린 선택). 대표님 11/19: 홍보수석을 누르면 바로 찰칵블로그로.', link: '찰칵블로그 열기 ›', url: 'https://linkclean-blog-writer.vercel.app/' } },
+    { key: 'pr', person: '한정민', name: '홍보수석실', short: '홍보수석', duty: '6곳 게시·청소팁' },
     { key: 'sns', person: '김기훈', name: '소통수석실', short: '소통수석', duty: '스레드·댓글' },
     { key: 'sales', person: '안규태', name: '영업수석실', short: '영업수석', duty: '입찰·지원사업',
       app: { title: '고객 팔로업·후기 요청', desc: '견적 후 연락 없는 고객, 작업 끝난 고객의 후기 요청 문자는 앱 \'영업\' 탭에서 바로 보냅니다. 비서실장 아침 보고에도 건수가 올라옵니다.', link: '앱 영업 탭 열기 ›' } },
@@ -194,12 +197,28 @@
   function ymdKST() { return new Date(Date.now() + 9 * 3600e3).toISOString().slice(0, 10); }
   function dowKST() { return new Date(Date.now() + 9 * 3600e3).getUTCDay(); }
 
+  // 부서별 연결 앱 (대표님 11/19: 홍보수석 누르면 찰칵블로그처럼, 다른 수석실도 맞는 앱으로)
+  var G = 'https://linkcleaning.github.io/';
+  var APPS = {
+    chief: [['📊', '미래전략실 브리핑', './', '브리핑'], ['🧾', '세무장부', G + 'ledger/']],
+    pr: [['📸', '찰칵블로그', 'https://linkclean-blog-writer.vercel.app/', '블로그'], ['🧹', '현장홍보', 'https://linkclean-promo.han0829.workers.dev/']],
+    sns: [['🧵', '오늘의 스레드', G + 'threads/', '스레드'], ['📷', '인스타 영업 비서', G + 'insta/']],
+    sales: [['📞', '콜백문자', G + 'callback/', '콜백'], ['🧾', '영수증·견적서', G + 'receipt/'], ['⭐', '후기부스터', G + 'review/'], ['🏠', '통합 현장관리', G + 'field/']],
+    strategy: [['📈', '순위노트', G + 'rank/', '순위'], ['🗂', '앱 현황판', G + 'apps/']],
+    office: [['🇯🇵', '박람회 포켓 가이드', G + 'expo/', '박람회'], ['⏰', '루틴·메모', './']],
+    biz: [['🛒', '오늘의 스레드(쿠팡 글)', G + 'threads/', '쿠팡 글']]
+  };
   var chips = [];
   var root = document.getElementById('depts');
   DEPTS.forEach(function (d) {
     var sec = el('section', 'dept'); sec.id = d.key;
-    var head = el(d.go ? 'a' : 'div', 'dept-head'); if (d.go) { head.href = d.go; head.style.textDecoration = 'none'; head.style.display = 'flex'; } head.appendChild(el('h2', null, d.name)); head.appendChild(el('span', null, (d.person ? d.person + ' · ' : '') + d.duty));
+    var head = el('div', 'dept-head'); head.appendChild(el('h2', null, d.name)); head.appendChild(el('span', null, (d.person ? d.person + ' · ' : '') + d.duty));
     sec.appendChild(head);
+    if (APPS[d.key]) {
+      var ar = el('div', 'approw');
+      APPS[d.key].forEach(function (x, i) { var a = el('a', 'appbtn' + (i === 0 ? ' main' : ''), x[0] + ' ' + x[1]); a.href = x[2]; ar.appendChild(a); });
+      sec.appendChild(ar);
+    }
     (NOW[d.key] || []).forEach(function (t) {
       var card = el('article', 'task');
       var th = el('div', 'task-head');
@@ -219,7 +238,7 @@
       var l2 = el('div'); l2.appendChild(el('div', 'who', d.short)); l2.appendChild(el('h3', null, d.app.title)); c.appendChild(l2);
       c.appendChild(el('p', null, d.app.desc));
       var a = el('a', 'applink', d.app.link); a.href = d.app.url || './'; c.appendChild(a);
-      if (d.app.first) sec.insertBefore(c, head.nextSibling); else sec.appendChild(c);
+      sec.appendChild(c);
     }
     root.appendChild(sec);
   });
@@ -230,7 +249,8 @@
     var list = NOW[d.key] || []; if (!list.length) return;
     var row = el('div', 'brow'); row.setAttribute('data-k', d.key);
     var dl = el('a', 'bdept', d.short); dl.href = '#' + d.key; if (d.person) dl.appendChild(el('small', null, d.person));
-    if (d.go) { dl.href = d.go; dl.appendChild(el('small', null, '📸 블로그')); }
+    var A0 = APPS[d.key] && APPS[d.key][0];
+    if (A0) { dl.href = A0[2]; dl.appendChild(el('small', null, A0[0] + ' ' + (A0[3] || A0[1]))); }
     else dl.addEventListener('click', function (ev) { ev.preventDefault(); document.getElementById(d.key).scrollIntoView({ behavior: 'smooth', block: 'start' }); });
     row.appendChild(dl);
     var ps = el('div', 'pills');
