@@ -62,6 +62,13 @@
    "note": "주방 후드 필터 기름때 · 카드 게시 대기(4fe6ae14) · Q&A 홈페이지 대기열 저장",
    "detail": "[제주시점 플레이스] 제주시 주방 후드 필터 기름때, 집에서 빼는 순서\n저녁 8시 47분 6곳 자동 게시 예정. 홈페이지 Q&A(range-hood-filter-grease)는 linkclean-web 권한 없음 → web-queue/2026-11-19-tip.json",
    "at": "13:22"
+  },
+  "placenews": {
+   "done": true,
+   "note": "서귀포점·법환동 유리창 해풍 소금 얼룩(계절 팁, 새 현장 없음) · 영상 13초",
+   "detail": "서귀포 법환동 유리창, 해풍 소금 얼룩 닦는 순서",
+   "url": "https://linkclean-promo.han0829.workers.dev/api/clip/b20b46c4-98c.mp4",
+   "at": "13:22"
   }
  }
 }
