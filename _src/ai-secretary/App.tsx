@@ -1469,47 +1469,6 @@ function BriefingTab(props: {
         )}
       </section>
 
-      {/* 오늘의 이슈 */}
-      <section className={card}>
-        <SectionTitle icon={Newspaper} title="오늘의 제주·시즌 이슈" />
-        <ul className="space-y-3">
-          {issues.map((it, i) => (
-            <li key={i} className={`rounded-2xl p-4 ${it.warn ? 'bg-rose-500/10' : 'bg-[#F2F3F5]'}`}>
-              <span className="rounded-full border border-cw/30 px-2 py-0.5 text-[11px] text-amber-200">{it.tag}</span>
-              <p className="mt-2 font-bold text-slate-50">{it.title}</p>
-              <p className="mt-1 text-sm leading-relaxed text-slate-300">{it.desc}</p>
-            </li>
-          ))}
-        </ul>
-      </section>
-
-      {/* 요약 */}
-      <section className={card}>
-        <SectionTitle icon={ClipboardList} title="비서실 요약" />
-        <button onClick={() => goTab('routine')} className="w-full text-left">
-          <div className="mb-2 flex items-center justify-between text-sm">
-            <span className="text-slate-300">
-              데일리 루틴 {progress.done}/{progress.total}
-            </span>
-            <span className="flex items-center gap-1 font-bold text-amber-300">
-              <Flame className="h-4 w-4" /> {streak}일 연속
-            </span>
-          </div>
-          <ProgressBar pct={pct} />
-        </button>
-        {golden && (
-          <button onClick={() => goTab('keyword')} className="mt-4 w-full text-left">
-            <p className="mb-2 text-sm text-slate-300">오늘의 황금키워드</p>
-            <div className="flex flex-wrap gap-2">
-              {golden.keywords.map((k) => (
-                <span key={k.kw} className="rounded-full bg-cw/15 px-3 py-1.5 text-sm font-semibold text-amber-200">
-                  #{k.kw}
-                </span>
-              ))}
-            </div>
-          </button>
-        )}
-      </section>
       {bottom}
     </div>
   );
@@ -3693,6 +3652,123 @@ function DrawerTab({ today }: { today: string }) {
 }
 
 interface DayReport { date?: string; at?: string; headline?: string; done?: string[]; tomorrow?: string[]; approvals?: string[] }
+
+/* =========================================================
+ *  🔔 알림함 · 📣 오늘 나간 홍보 (대표님 11/19: "여기서 모든 정보·회사 홍보·소식 알림을")
+ * ========================================================= */
+const goCard = (id: string) => { const e = document.getElementById(id); if (e) e.scrollIntoView({ behavior: 'smooth', block: 'start' }); };
+function Section({ id, label, children }: { id: string; label: string; children: ReactNode }) {
+  return (
+    <div id={id} className="scroll-mt-3 space-y-4">
+      <p className="px-1 pt-2 text-[13px] font-extrabold tracking-tight text-[#6B6E76]">{label}</p>
+      {children}
+    </div>
+  );
+}
+const SEC_LABEL: Record<string, string> = {
+  report: '아침 보고서', blog: '네이버 블로그 초안', threads: '아침 스레드', neighbors: '스레드 이웃 댓글', replies: '스레드 댓글 답글', tip: '청소팁 카드',
+  placenews: '플레이스 소식', ekpromo: '이케이클린 글', evening: '저녁 6곳 홍보', salim: '살림기록소 게시', salimmorning: '살림기록소 아침 글', coupang: '살림기록소 글 준비',
+  google: '구글 순위', bids: '입찰·공고', grants: '지원사업', keywords: '주간 키워드', rankmeeting: '순위 하락 회의', areapage: '홈페이지 동네 페이지', column: '홈페이지 칼럼', pblog: '개인 블로그', appcare: '앱 정비', dayreport: '저녁 보고', sidejobs: '부수입 리포트',
+};
+function InboxCard({ status, bids, grants, dayRep, agent, placeNews, ek, today }: {
+  status: AgentStatus | null; bids: BidsData | null; grants: BidsData | null; dayRep: DayReport | null; agent: AgentDaily | null; placeNews: PlaceNewsData | null; ek: EkData | null; today: string;
+}) {
+  const rows: { icon: string; text: string; sub?: string; go: string; hot?: boolean }[] = [];
+  const st = status?.date === today ? status.items || {} : {};
+  Object.entries(st).forEach(([k, v]) => { if (v && v.done === false) rows.push({ icon: '⚠️', text: (SEC_LABEL[k] || k) + ' 못 함', sub: v.note, go: 'sec-work', hot: true }); });
+  const naver: string[] = [];
+  if (agent?.date === today && agent.blog?.title) naver.push('블로그 초안');
+  const pn = placeNews?.items?.[0]; if (pn && pn.date === today) naver.push('플레이스 소식');
+  if (ek?.date === today && (ek.blog || ek.place)) naver.push('이케이클린 블로그·소식');
+  if (naver.length) rows.push({ icon: '📲', text: '네이버에 올릴 것 ' + naver.length + '개', sub: naver.join(' · '), go: 'sec-naver' });
+  const ap = dayRep?.date === today ? dayRep.approvals || [] : [];
+  if (ap.length) rows.push({ icon: '✅', text: '승인하실 것 ' + ap.length + '건', sub: '저녁 보고 알림에 "1번 해줘"로 답장', go: 'sec-top' });
+  const nb = (bids?.items || []).filter((b) => b.new && (!b.deadline || b.deadline >= today));
+  if (nb.length) rows.push({ icon: '📋', text: '새 입찰·공고 ' + nb.length + '건', sub: nb[0].title, go: 'sec-money' });
+  (grants?.items || []).filter((g) => g.deadline && /^\d{4}-/.test(g.deadline) && g.deadline >= today && daysBetween(today, g.deadline) <= 14).slice(0, 2)
+    .forEach((g) => rows.push({ icon: '💰', text: '지원사업 마감 D-' + daysBetween(today, g.deadline!), sub: g.title, go: 'sec-money', hot: true }));
+  const ng = (grants?.items || []).filter((g) => g.new);
+  if (ng.length) rows.push({ icon: '💰', text: '새 지원사업 ' + ng.length + '건', sub: ng[0].title, go: 'sec-money' });
+  (bids?.items || []).filter((b) => b.deadline && /^\d{4}-/.test(b.deadline) && b.deadline >= today && daysBetween(today, b.deadline) <= 7).slice(0, 2)
+    .forEach((b) => rows.push({ icon: '⏰', text: '공고 마감 D-' + daysBetween(today, b.deadline!), sub: b.title, go: 'sec-money', hot: true }));
+  return (
+    <section className={`${card} border-cw/40`}>
+      <SectionTitle icon={ClipboardList} title="🔔 오늘 알림" right={<span className="text-[11px] font-bold text-slate-400">{rows.length ? rows.length + '건' : ''}</span>} />
+      {rows.length === 0 ? (
+        <p className="text-sm text-slate-400">새 알림이 없어요. 비서실이 다 잘 돌고 있어요 👍</p>
+      ) : (
+        <ul className="space-y-1.5">
+          {rows.map((r, i) => (
+            <li key={i}>
+              <button onClick={() => goCard(r.go)} className={`flex w-full items-start gap-2.5 rounded-2xl p-3 text-left active:scale-[0.99] ${r.hot ? 'bg-[#FDECEA]' : 'bg-[#F2F3F5]'}`}>
+                <span className="text-lg leading-none">{r.icon}</span>
+                <span className="min-w-0 flex-1">
+                  <span className={`block text-[14px] font-extrabold ${r.hot ? 'text-[#C0362C]' : 'text-slate-50'}`}>{r.text}</span>
+                  {r.sub && <span className="block truncate text-[12px] text-slate-400">{r.sub}</span>}
+                </span>
+                <span className="text-slate-400">›</span>
+              </button>
+            </li>
+          ))}
+        </ul>
+      )}
+    </section>
+  );
+}
+
+const FEED: { k: string; icon: string; ch: string }[] = [
+  { k: 'threads', icon: '🧵', ch: '링크클린 스레드' },
+  { k: 'evening', icon: '📣', ch: '6곳 게시(인스타·스레드·구글·당근·카카오)' },
+  { k: 'placenews', icon: '📍', ch: '네이버 플레이스 소식(준비)' },
+  { k: 'tip', icon: '🧽', ch: '청소팁 카드' },
+  { k: 'ekpromo', icon: '🌸', ch: '이케이클린' },
+  { k: 'column', icon: '🌐', ch: '홈페이지 칼럼' },
+  { k: 'areapage', icon: '🏘', ch: '홈페이지 동네 페이지' },
+  { k: 'blog', icon: '📝', ch: '네이버 블로그 초안' },
+  { k: 'pblog', icon: '✍️', ch: '개인 블로그 정보통' },
+  { k: 'neighbors', icon: '💬', ch: '스레드 이웃 댓글' },
+  { k: 'replies', icon: '↩️', ch: '스레드 댓글 답글' },
+  { k: 'salimmorning', icon: '🏠', ch: '살림기록소 아침 글' },
+  { k: 'salim', icon: '🏠', ch: '살림기록소 저녁 게시' },
+];
+function PromoFeedCard({ status, today }: { status: AgentStatus | null; today: string }) {
+  const [open, setOpen] = useState<string | null>(null);
+  const st = status?.date === today ? status.items || {} : {};
+  const done = FEED.filter((f) => st[f.k]?.done);
+  const due = new Set(secJobsFor(today).map((j) => j.key));
+  const wait = FEED.filter((f) => !st[f.k] && due.has(f.k));
+  return (
+    <section className={card}>
+      <SectionTitle icon={Newspaper} title="📣 오늘 나간 홍보" right={<span className="text-[11px] font-bold text-slate-400">{done.length}건</span>} />
+      {done.length === 0 ? (
+        <p className="text-sm text-slate-400">아직 오늘 나간 홍보가 없어요. 아침 07:17·낮 13:17·저녁 20:47에 올라가요.</p>
+      ) : (
+        <ul className="space-y-1.5">
+          {done.map((f) => {
+            const it = st[f.k]!; const first = (it.detail || it.note || '').split('\n').find((x) => x.trim()) || '';
+            const isOpen = open === f.k;
+            return (
+              <li key={f.k} className="rounded-2xl bg-[#F2F3F5] p-3">
+                <button onClick={() => setOpen(isOpen ? null : f.k)} className="flex w-full items-start gap-2.5 text-left">
+                  <span className="text-lg leading-none">{f.icon}</span>
+                  <span className="min-w-0 flex-1">
+                    <span className="flex items-center gap-1.5 text-[12px] font-bold text-slate-400">{f.ch}<span className="text-[11px] text-emerald-300">{it.at}</span></span>
+                    <span className={`block text-[14px] font-semibold leading-snug text-slate-50 ${isOpen ? 'whitespace-pre-line' : 'truncate'}`}>{isOpen ? (it.detail || it.note) : first}</span>
+                  </span>
+                </button>
+                {it.url && (
+                  <a href={it.url} target="_blank" rel="noreferrer" className="mt-2 inline-block rounded-full bg-[#191919] px-3 py-1.5 text-[12px] font-extrabold text-cw">열어 보기 ›</a>
+                )}
+              </li>
+            );
+          })}
+        </ul>
+      )}
+      {wait.length > 0 && <p className="mt-2 text-[11px] leading-snug text-slate-500">오늘 남은 것: {wait.map((f) => f.ch.replace(/\(.*\)/, '')).join(' · ')}</p>}
+    </section>
+  );
+}
+
 function DayReportCard({ rep, today }: { rep: DayReport | null; today: string }) {
   if (!rep || rep.date !== today) return null;
   return (
@@ -5898,31 +5974,44 @@ export default function App() {
             goTab={setTab}
             top={
               <>
-                <DayReportCard rep={dayRep} today={today} />
-                <AgentCard
-                  agent={agent}
-                  status={agentStatus}
-                  today={today}
-                  toast={toast}
-                  doneTodos={agentDone.date === agent?.date ? agentDone.idx : []}
-                  onDoneTodo={(i) =>
-                    setAgentDone((p) => {
-                      const base = p.date === agent?.date ? p.idx : [];
-                      return { date: agent?.date ?? '', idx: base.includes(i) ? base.filter((x) => x !== i) : [...base, i] };
-                    })
-                  }
-                />
-                <PlaceNewsCard data={placeNews} toast={toast} />
-                <EkCard data={ekData} toast={toast} today={today} />
-                <ExecBrief stats={salesStats} moves={rankMoves} goTab={setTab} deals={deals} setDeals={setDeals} setTarget={(w) => setSettings((p) => ({ ...p, monthlyTarget: w }))} today={today} toast={toast} />
-                <BidsCard bids={bids} today={today} />
-                <BidsCard
-                  bids={grants}
-                  today={today}
-                  title="소상공인 지원사업"
-                  intro={<>월·목 아침에 제주도·경제통상진흥원·소상공인시장진흥공단·기업마당에서 <b className="text-slate-200">제주 소상공인 지원금·융자·교육·판로 지원</b>을 찾아 올려 둡니다.</>}
-                  empty="지금 신청할 수 있는 지원사업이 없어요."
-                />
+                <div id="sec-top" className="space-y-4">
+                  <InboxCard status={agentStatus} bids={bids} grants={grants} dayRep={dayRep} agent={agent} placeNews={placeNews} ek={ekData} today={today} />
+                  <DayReportCard rep={dayRep} today={today} />
+                </div>
+                <Section id="sec-work" label="📋 오늘 비서실 보고">
+                  <AgentCard
+                    agent={agent}
+                    status={agentStatus}
+                    today={today}
+                    toast={toast}
+                    doneTodos={agentDone.date === agent?.date ? agentDone.idx : []}
+                    onDoneTodo={(i) =>
+                      setAgentDone((p) => {
+                        const base = p.date === agent?.date ? p.idx : [];
+                        return { date: agent?.date ?? '', idx: base.includes(i) ? base.filter((x) => x !== i) : [...base, i] };
+                      })
+                    }
+                  />
+                </Section>
+                <Section id="sec-promo" label="📣 홍보">
+                  <PromoFeedCard status={agentStatus} today={today} />
+                </Section>
+                <Section id="sec-naver" label="📲 네이버에 대표님이 올릴 것">
+                  <PlaceNewsCard data={placeNews} toast={toast} />
+                  <EkCard data={ekData} toast={toast} today={today} />
+                </Section>
+                <Section id="sec-money" label="💼 영업·돈·공고">
+                  <ExecBrief stats={salesStats} moves={rankMoves} goTab={setTab} deals={deals} setDeals={setDeals} setTarget={(w) => setSettings((p) => ({ ...p, monthlyTarget: w }))} today={today} toast={toast} />
+                  <BidsCard bids={bids} today={today} />
+                  <BidsCard
+                    bids={grants}
+                    today={today}
+                    title="소상공인 지원사업"
+                    intro={<>월·목 아침에 제주도·경제통상진흥원·소상공인시장진흥공단·기업마당에서 <b className="text-slate-200">제주 소상공인 지원금·융자·교육·판로 지원</b>을 찾아 올려 둡니다.</>}
+                    empty="지금 신청할 수 있는 지원사업이 없어요."
+                  />
+                </Section>
+                <Section id="sec-etc" label="🌤 현장·연결">
                 <HubCard
                   hub={hub}
                   hasPin={!!hubPin}
@@ -5941,9 +6030,10 @@ export default function App() {
                     toast('영업 탭 문의 목록에 등록했습니다. 고객명·서비스만 채워주세요.');
                   }}
                 />
+                </Section>
               </>
             }
-            bottom={
+            bottom={null && (
               <WeeklyReport
                 today={today}
                 history={history}
@@ -5954,7 +6044,7 @@ export default function App() {
                 settings={settings}
                 toast={toast}
               />
-            }
+            )}
           />
         )}
         {tab === 'routine' && <MoneyTab hub={hub} hasPin={!!hubPin} today={today} onOpenSettings={() => setShowSettings(true)} stats={salesStats} grants={grants} salim={salim} goBrief={() => setTab('brief')} />}
