@@ -76,6 +76,12 @@
    "detail": "블로그: 애월 입주청소, 타운하우스·단독주택 이사 전 챙길 것\n소식: 애월 타운하우스 입주청소, 계단·다락까지 꼼꼼하게",
    "url": "https://www.ekclean.co.kr/area/seoho-dong.html",
    "at": "13:23"
+  },
+  "appcare": {
+   "done": true,
+   "note": "14개 점검 · 1건 추가",
+   "detail": "추가: card 명함 공유하기 버튼(v2)\n고친 것 없음(오류·깨진 링크·번호 문제 없음)\n제안: linkclean-web 저장소 권한 연결",
+   "at": "13:25"
   }
  }
 }
