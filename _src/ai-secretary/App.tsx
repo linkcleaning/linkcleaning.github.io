@@ -2890,6 +2890,19 @@ function secJobsFor(date: string): SecJob[] {
   jobs.push({ key: 'salim', label: '살림기록소 게시·이웃 댓글', who: '제휴수석 박시은', when: '20:47' });
   return jobs.sort((x, y) => x.when.localeCompare(y.when));
 }
+// 예약 시간이 지났는데 아직 보고가 없으면 '진행 중'(일하는 중), 1시간 반 넘으면 '늦어짐'
+function runLabel(when: string, today: string): string {
+  const m = /^(\d{1,2}):(\d{2})$/.exec(when || '');
+  if (!m) return `${when} 예정`;
+  const k = new Date(Date.now() + 9 * 3600e3);
+  if (k.toISOString().slice(0, 10) !== today) return `${when} 예정`;
+  const nowMin = k.getUTCHours() * 60 + k.getUTCMinutes();
+  const at = Number(m[1]) * 60 + Number(m[2]);
+  if (nowMin < at) return `${when} 예정`;
+  if (nowMin - at > 90) return '늦어짐 · 확인 중';
+  return '진행 중…';
+}
+
 function secJobState(job: SecJob, status: AgentStatus | null, agent: AgentDaily | null, today: string): 'done' | 'fail' | 'wait' {
   const it = status && status.date === today ? status.items?.[job.key] : undefined;
   if (it) return it.done ? 'done' : 'fail';
@@ -3841,10 +3854,10 @@ function SecretaryWork({ status, agent, today }: { status: AgentStatus | null; a
             </div>
             <span
               className={`shrink-0 rounded-full px-2 py-0.5 text-[11px] font-bold ${
-                st === 'done' ? 'bg-emerald-400/15 text-emerald-200' : st === 'fail' ? 'bg-rose-400/15 text-rose-300' : 'bg-white text-slate-400'
+                st === 'done' ? 'bg-emerald-400/15 text-emerald-200' : st === 'fail' ? 'bg-rose-400/15 text-rose-300' : runLabel(j.when, today).includes('예정') || j.when === '버튼' ? 'bg-white text-slate-400' : 'bg-amber-300/20 text-amber-300'
               }`}
             >
-              {st === 'done' ? `${it?.at || ''} 완료`.trim() : st === 'fail' ? '못 함' : j.when === '버튼' ? '버튼 대기' : `${j.when} 예정`}
+              {st === 'done' ? `${it?.at || ''} 완료`.trim() : st === 'fail' ? '못 함' : j.when === '버튼' ? '버튼 대기' : runLabel(j.when, today)}
             </span>
            </button>
            {open === j.key && (
