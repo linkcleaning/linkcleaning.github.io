@@ -120,6 +120,8 @@ html[data-theme=dark] .det .dx .trap{background:#3A2A20;color:#F4C9A8}
   .det .dx .ex,.det .dx .trap{padding:9px 11px;border-radius:9px}
   .det .dx .key{padding:7px 10px}
   .qbox{padding:18px 14px}
+  .rpass{font-size:.97em;line-height:1.68;padding:12px}
+  .rbox{padding:16px 12px}
   .qq{font-size:1.08em;margin:8px 0 16px}
   .ox button{font-size:26px;padding:13px 0}
   .ch4 button{padding:11px 12px}
@@ -159,6 +161,26 @@ html[data-theme=dark] .res.bad{background:#3E2220;color:#F4B3AA}
 html[data-theme=dark] .ch4 button.right{background:#1E3A32;color:#9FE0C9}
 html[data-theme=dark] .ch4 button.wrong{background:#3E2220;color:#F4B3AA}
 .why{display:inline-block;margin-top:8px;font-size:12.5px;font-weight:700;color:var(--sub);background:var(--bg);border-radius:6px;padding:3px 8px}
+/* reading */
+.seg2{display:flex;gap:6px;margin:2px 0 8px}
+.seg2 button{flex:1;padding:9px 6px;border-radius:12px;border:1.5px solid var(--line);background:var(--card);font-weight:800;font-size:14px;color:var(--sub);line-height:1.3}
+.seg2 button small{display:block;font-size:11px;font-weight:600;opacity:.8}
+.seg2 button.on{background:var(--c);border-color:var(--c);color:#fff}
+.rhead{display:flex;justify-content:space-between;align-items:center;gap:8px;margin-bottom:10px}
+.rpass{font-family:Georgia,"Times New Roman",serif;font-size:1.02em;line-height:1.75;border:1.5px solid var(--line);border-radius:12px;padding:14px 14px;background:var(--bg);margin-bottom:6px;text-align:left;word-break:normal;overflow-wrap:break-word}
+.rpass .rs.rblk{display:block;margin:6px 0}
+.rpass .rs.rev{background:var(--mark);border-radius:3px;-webkit-box-decoration-break:clone;box-decoration-break:clone}
+.rpass .rko{display:block;font-family:"SUIT Variable",sans-serif;font-size:.86em;color:var(--sub);line-height:1.6;margin:2px 0 8px;padding-left:8px;border-left:2px solid var(--line);word-break:keep-all}
+.rpass .rmk{font-family:"SUIT Variable",sans-serif;font-weight:800;color:var(--c)}
+.rpass u{text-decoration-thickness:2px;text-underline-offset:3px}
+.rq{margin-top:16px}
+.rq .qq{font-size:1.02em;margin:0 0 10px}
+.rq .hot{background:var(--c)}
+.rvoc{margin-top:14px;background:var(--bg);border-radius:12px;padding:10px 12px}
+.rvoc b{display:block;margin-bottom:4px}
+.rvoc div{display:flex;justify-content:space-between;gap:10px;padding:5px 0;border-top:1px solid var(--line);font-size:14px}
+.rvoc span{font-weight:700;font-family:Georgia,serif}
+.rvoc em{font-style:normal;color:var(--sub);text-align:right}
 /* nums */
 .num{display:flex;justify-content:space-between;gap:12px;background:var(--card);border-radius:12px;padding:12px 14px;margin-bottom:8px;align-items:center}
 .num .k{font-weight:700;flex:1}
@@ -201,6 +223,7 @@ input[type=date]{font:inherit;border:1.5px solid var(--line);border-radius:10px;
 <script src="data-more.js"></script>
 <script src="data-exam2.js"></script>
 <script src="data-ox2.js"></script>
+<script src="data-read-en.js"></script>
 <script src="detail-safety.js"></script>
 <script src="detail-disaster.js"></script>
 <script src="detail-lang.js"></script>
@@ -360,8 +383,15 @@ function newExam(onlyWrong){
 }
 st.exShuffle = LS.get('exs', false);
 st.exN = LS.get('exn', 20);
+st.rdMode = LS.get('rdm', true);
+function modeBar(s){
+  if(s.id!=='english' || !window.READ) return '';
+  const nq = READ.reduce((a,r)=>a+r.qs.length,0);
+  return `<div class="seg2"><button class="${st.rdMode?'on':''}" onclick="st.rdMode=true;LS.set('rdm',true);render()">📖 독해 실전 <small>지문 ${READ.length} · ${nq}문제</small></button><button class="${!st.rdMode?'on':''}" onclick="st.rdMode=false;LS.set('rdm',false);render()">단문 문제 <small>어법·어휘 ${s.exam.length}</small></button></div>`;
+}
 function exam(){
   const s=S();
+  if(s.id==='english' && window.READ && st.rdMode) return modeBar(s)+reading();
   if(!st.ex || st.ex.sid!==s.id) newExam();
   const z=st.ex, wr=LS.get('exw_'+s.id,[]);
   const bar = `<div class="tools" style="position:static"><button class="chip ${!z.wrongMode&&!st.exShuffle?'on':''}" onclick="st.exShuffle=false;LS.set('exs',false);newExam();render()">순서대로</button><button class="chip ${!z.wrongMode&&st.exShuffle?'on':''}" onclick="st.exShuffle=true;LS.set('exs',true);newExam();render()">섞어서</button><button class="chip ${z.wrongMode?'on':''}" onclick="newExam(true);render()">틀린 것만 ${wr.length}</button></div>
@@ -379,7 +409,7 @@ function exam(){
   const qi=z.list[z.i], q=s.exam[qi], done=z.pick!=null;
   const pm = z.perm[qi] || (z.perm[qi]=shuffle([0,1,2,3])), ans = pm.indexOf(q.a);
   const nums=['①','②','③','④'];
-  return bar+(z.i===0&&!done?head:'')+`<div class="score"><div>문제<b>${z.i+1}/${z.list.length}</b></div><div>맞힘<b>${z.right}</b></div><div>최고점<b>${LS.get('exbest_'+s.id,null)??'-'}</b></div></div>
+  return modeBar(s)+bar+(z.i===0&&!done?head:'')+`<div class="score"><div>문제<b>${z.i+1}/${z.list.length}</b></div><div>맞힘<b>${z.right}</b></div><div>최고점<b>${LS.get('exbest_'+s.id,null)??'-'}</b></div></div>
     <div class="qbox"><div class="qn">${s.name} · 적중 예상</div><div class="qq">${fmt(q.q)}</div>
     <div class="ch4">${pm.map((oi,ci)=>`<button class="${done?(ci===ans?'right':ci===z.pick?'wrong':''):''}" ${done?'disabled':''} onclick="pickEx(${ci})"><i>${nums[ci]}</i><span>${fmt(q.c[oi])}</span></button>`).join('')}</div>
     ${done?`<div class="res ${z.pick===ans?'good':'bad'}">${z.pick===ans?'정답!':'오답'} 정답 ${nums[ans]} — ${fmt(q.e)}</div><span class="why">출제 근거: ${esc(q.w)}</span>
@@ -389,6 +419,62 @@ function pickEx(ci){ const s=S(), z=st.ex, qi=z.list[z.i]; z.pick=ci;
   let wr=LS.get('exw_'+s.id,[]);
   if(z.perm[qi][ci]===s.exam[qi].a){ z.right++; wr=wr.filter(x=>x!==qi); } else if(!wr.includes(qi)) wr.push(qi);
   LS.set('exw_'+s.id,wr); render(); }
+
+/* ---------- 영어 독해 실전 ---------- */
+function newRead(onlyWrong){
+  const wr=LS.get('rdw',[]);
+  let all = onlyWrong ? wr.filter(i=>i<READ.length) : READ.map((r,i)=>i);
+  if(!onlyWrong && st.rdShuffle) shuffle(all);
+  st.rd = {list:all, i:0, pick:{}, ko:false, right:0, total:0, wrongMode:!!onlyWrong};
+}
+st.rdShuffle = LS.get('rds', false);
+const rfmt = t => fmt(t).replace(/__(.+?)__/g,'<u>$1</u>');
+function reading(){
+  if(!st.rd) newRead();
+  const z=st.rd, wr=LS.get('rdw',[]), nums=['①','②','③','④'];
+  const bar = `<div class="tools" style="position:static"><button class="chip ${!z.wrongMode&&!st.rdShuffle?'on':''}" onclick="st.rdShuffle=false;LS.set('rds',false);newRead();render()">순서대로</button><button class="chip ${!z.wrongMode&&st.rdShuffle?'on':''}" onclick="st.rdShuffle=true;LS.set('rds',true);newRead();render()">섞어서</button><button class="chip ${z.wrongMode?'on':''}" onclick="newRead(true);render()">틀린 지문만 ${wr.length}</button></div>`;
+  if(!z.list.length) return bar+`<div class="empty">틀린 지문이 없어요. 잘하고 있어요!</div>`;
+  if(z.i>=z.list.length){
+    const sc = z.total? Math.round(z.right/z.total*100):0;
+    return bar+`<div class="qbox"><div class="qn">영어 독해 실전 결과</div><div class="qq">${z.total}문제 중 ${z.right}개 (${sc}점)</div>
+      <div class="note">틀린 지문은 ‘해석 보기’를 켜고 근거 문장(형광)을 다시 읽어 보세요.</div>
+      <button class="big" onclick="newRead(true);render()">틀린 지문 다시 풀기</button>
+      <button class="big" style="background:var(--navy)" onclick="newRead();render()">처음부터 다시</button></div>`;
+  }
+  const ri=z.list[z.i], r=READ[ri], pk=z.pick[ri]||{};
+  const allDone = r.qs.every((q,qi)=>pk[qi]!=null);
+  const evs = new Set(); r.qs.forEach((q,qi)=>{ if(pk[qi]!=null) (q.ev||[]).forEach(e=>evs.add(e)); });
+  const showKo = z.ko || allDone && z.koAfter;
+  const passage = r.p.map((t,i)=>{
+    const isMark = /^\( [①②③④] \)$/.test(t);
+    if(isMark) return `<span class="rmk">${t}</span> `;
+    const lab = /^\([A-C]\) /.test(t) || i===0 && /^Given:/.test(t);
+    const cls = (evs.has(i)?'rev':'') + (lab?' rblk':'');
+    const body = /^Given:/.test(t) ? `<b>[주어진 문장]</b> ${rfmt(t.replace(/^Given:\s*/,''))}` : rfmt(t);
+    return `<span class="rs ${cls}">${body}${z.ko && r.ko[i] ? `<span class="rko">${esc(r.ko[i])}</span>`:''}</span> `;
+  }).join('');
+  return bar+`<div class="score"><div>지문<b>${z.i+1}/${z.list.length}</b></div><div>맞힘<b>${z.right}/${z.total}</b></div><div>유형<b style="font-size:15px;line-height:1.9">${esc(r.tag.split(' (')[0])}</b></div></div>
+  <div class="qbox rbox">
+    <div class="rhead"><span class="qn">${esc(r.tag)}</span><button class="chip ${z.ko?'on':''}" onclick="st.rd.ko=!st.rd.ko;render()">${z.ko?'해석 숨기기':'해석 보기'}</button></div>
+    <div class="rpass">${passage}</div>
+    ${r.qs.map((q,qi)=>{ const d=pk[qi]!=null; return `<div class="rq"><div class="qq">${r.qs.length>1?`<span class="hot">${qi+1}</span>`:''}${fmt(q.q)}</div>
+      <div class="ch4">${q.c.map((c,ci)=>`<button class="${d?(ci===q.a?'right':ci===pk[qi]?'wrong':''):''}" ${d?'disabled':''} onclick="pickRd(${ri},${qi},${ci})"><i>${nums[ci]}</i><span>${rfmt(c)}</span></button>`).join('')}</div>
+      ${d?`<div class="res ${pk[qi]===q.a?'good':'bad'}">${pk[qi]===q.a?'정답!':'오답'} 정답 ${nums[q.a]} — ${fmt(q.e)}</div>`:''}</div>`; }).join('')}
+    ${allDone?`<span class="why">출제 유형: ${esc(r.w)} · 형광 문장 = 정답 근거</span>
+      <div class="rvoc"><b>핵심 어휘</b>${r.v.map(([w,m])=>`<div><span>${esc(w)}</span><em>${esc(m)}</em></div>`).join('')}</div>
+      ${!z.ko?`<button class="big" style="background:var(--navy)" onclick="st.rd.ko=true;render()">전체 해석 보기</button>`:''}
+      <button class="big" onclick="st.rd.i++;st.rd.ko=false;render();scrollTo(0,0)">${z.i+1<z.list.length?'다음 지문':'결과 보기'}</button>`:''}
+  </div>`;
+}
+function pickRd(ri,qi,ci){
+  const z=st.rd; z.pick[ri]=z.pick[ri]||{}; if(z.pick[ri][qi]!=null) return;
+  z.pick[ri][qi]=ci; z.total++;
+  const r=READ[ri]; let wr=LS.get('rdw',[]);
+  if(ci===r.qs[qi].a) z.right++;
+  const done = r.qs.every((q,k)=>z.pick[ri][k]!=null);
+  if(done){ const ok = r.qs.every((q,k)=>z.pick[ri][k]===q.a); wr = ok ? wr.filter(x=>x!==ri) : (wr.includes(ri)?wr:wr.concat(ri)); LS.set('rdw',wr); }
+  render();
+}
 
 /* ---------- 숫자 ---------- */
 function nums(){
@@ -409,7 +495,7 @@ function settings(){
   </div>
   <div class="set"><div class="row" style="display:block">
     <b>사용법</b>
-    <p class="note">· 과목 탭을 고르고 위에서 아래로 내리며 읽으세요.<br>· <span style="background:var(--mark);padding:1px 4px;border-radius:4px">★ 형광 줄</span>은 꼭 외울 핵심, <span class="hot">최빈출</span>은 거의 매년 나오는 주제예요.<br>· ‘★ 핵심만’을 켜면 형광 줄만 모아 볼 수 있고, ‘★ 가리고 외우기’를 켜면 형광 줄이 흐려져서 눌러야 보여요.<br>· <b>적중문제</b>는 2024~2026 기출에서 반복된 주제로 만든 4지선다 실전 문제(20·40·전체, 섞어서·틀린 것만), <b>OX 퀴즈</b>는 10·20·전체 문제와 틀린 것만 다시 풀기가 돼요.<br>· 카드 아래 <b>📖 교재 설명 자세히</b>는 학원 교재처럼 풀어 쓴 설명이에요. 길어서 부담되면 설정에서 ‘접어 두기’로 바꾸세요.<br>· 다 외운 카드는 오른쪽 ✓를 눌러 두면 과목 탭에 진도(%)가 올라가요.<br>· 아이폰은 사파리 공유 → 홈 화면에 추가, 갤럭시는 크롬 메뉴 → 홈 화면에 추가로 설치하면 인터넷 없이도 열려요.</p>
+    <p class="note">· 과목 탭을 고르고 위에서 아래로 내리며 읽으세요.<br>· <span style="background:var(--mark);padding:1px 4px;border-radius:4px">★ 형광 줄</span>은 꼭 외울 핵심, <span class="hot">최빈출</span>은 거의 매년 나오는 주제예요.<br>· ‘★ 핵심만’을 켜면 형광 줄만 모아 볼 수 있고, ‘★ 가리고 외우기’를 켜면 형광 줄이 흐려져서 눌러야 보여요.<br>· <b>적중문제</b>는 2024~2026 기출에서 반복된 주제로 만든 4지선다 실전 문제(20·40·전체, 섞어서·틀린 것만), <b>OX 퀴즈</b>는 10·20·전체 문제와 틀린 것만 다시 풀기가 돼요.<br>· 영어 <b>적중문제</b>에는 <b>📖 독해 실전</b>이 있어요. 지문을 읽고 풀면 정답 근거 문장이 형광으로 표시되고, ‘해석 보기’로 한 문장씩 해석을 볼 수 있어요.<br>· 카드 아래 <b>📖 교재 설명 자세히</b>는 학원 교재처럼 풀어 쓴 설명이에요. 길어서 부담되면 설정에서 ‘접어 두기’로 바꾸세요.<br>· 다 외운 카드는 오른쪽 ✓를 눌러 두면 과목 탭에 진도(%)가 올라가요.<br>· 아이폰은 사파리 공유 → 홈 화면에 추가, 갤럭시는 크롬 메뉴 → 홈 화면에 추가로 설치하면 인터넷 없이도 열려요.</p>
   </div></div>
   <div class="set"><div class="row" style="display:block">
     <b>자료 출처·주의</b>
@@ -440,6 +526,6 @@ addEventListener('resize', setHeadVars);
 applyPrefs(); dday(); render();
 if('serviceWorker' in navigator){ addEventListener('load', ()=>navigator.serviceWorker.register('sw.js').catch(()=>{})); }
 </script>
-<script src="/v.js" data-v="v5" defer></script>
+<script src="/v.js" data-v="v6" defer></script>
 </body>
 </html>
