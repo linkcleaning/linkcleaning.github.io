@@ -83,6 +83,13 @@
     </a>
   </div>
 
+  <button type="button" id="shareCard" style="display:block;width:100%;margin:14px 0 0;min-height:52px;border:2px dashed #93c5fd;border-radius:18px;background:#fff;color:#0369a1;font-weight:800;font-size:16px;cursor:pointer">🔗 이 명함 공유하기</button>
+  <script>
+  document.getElementById('shareCard').addEventListener('click',async()=>{const b=document.getElementById('shareCard');const url=location.href.split('#')[0];const data={title:'링크클린 · 제주 청소 전문',text:'제주 청소 링크클린 명함이에요. 064-763-4545',url};
+    try{if(navigator.share){await navigator.share(data);return;}await navigator.clipboard.writeText(url);b.textContent='✅ 주소를 복사했어요';}catch(e){if(e&&e.name==='AbortError')return;b.textContent='주소: '+url;}
+    setTimeout(()=>{b.textContent='🔗 이 명함 공유하기'},2500);});
+  </script>
+
   <section>
     <h2>🧹 서비스 안내</h2>
     <div class="svc">
@@ -99,7 +106,7 @@
     </div>
   </section>
 
-  <footer>언제나 고객 만족 100%를 약속드립니다 · 링크클린</footer>
+  <footer>언제나 고객 만족 100%를 약속드립니다 · 링크클린 <span style="opacity:.5;font-size:11px">v2</span></footer>
 </div>
 </body>
 </html>
