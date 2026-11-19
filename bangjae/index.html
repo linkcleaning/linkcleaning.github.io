@@ -161,6 +161,12 @@ html[data-theme=dark] .res.bad{background:#3E2220;color:#F4B3AA}
 html[data-theme=dark] .ch4 button.right{background:#1E3A32;color:#9FE0C9}
 html[data-theme=dark] .ch4 button.wrong{background:#3E2220;color:#F4B3AA}
 .why{display:inline-block;margin-top:8px;font-size:12.5px;font-weight:700;color:var(--sub);background:var(--bg);border-radius:6px;padding:3px 8px}
+/* 기출 회차 선택 */
+.srcbar{display:flex;gap:6px;overflow-x:auto;padding:2px 0 8px;scrollbar-width:none;margin:0 -2px}
+.srcbar::-webkit-scrollbar{display:none}
+.srcbar button{flex:0 0 auto;padding:8px 12px;border-radius:12px;border:1.5px solid var(--line);background:var(--card);font-weight:800;font-size:13.5px;color:var(--sub);line-height:1.3;text-align:left}
+.srcbar button small{display:block;font-size:11px;font-weight:600;opacity:.85}
+.srcbar button.on{background:var(--c);border-color:var(--c);color:#fff}
 /* reading */
 .seg2{display:flex;gap:6px;margin:2px 0 8px}
 .seg2 button{flex:1;padding:9px 6px;border-radius:12px;border:1.5px solid var(--line);background:var(--card);font-weight:800;font-size:14px;color:var(--sub);line-height:1.3}
@@ -225,6 +231,7 @@ input[type=date]{font:inherit;border:1.5px solid var(--line);border-radius:10px;
 <script src="data-exam3.js"></script>
 <script src="data-ox2.js"></script>
 <script src="data-read-en.js"></script>
+<script src="data-gichul.js"></script>
 <script src="detail-safety.js"></script>
 <script src="detail-disaster.js"></script>
 <script src="detail-lang.js"></script>
@@ -375,17 +382,26 @@ function answer(v){ const s=S(), z=st.qs, qi=z.list[z.i]; z.ans=v;
   LS.set('oxw_'+s.id, wr); render(); }
 
 /* ---------- 적중 예상문제 ---------- */
+st.exSrc = LS.get('exsrc',{});
+const isG = s => { const k=st.exSrc[s.id]; return k!=null && k!=='pred' && window.GICHUL && GICHUL[s.id] && GICHUL[s.id][k]; };
+const pool = s => isG(s) ? GICHUL[s.id][st.exSrc[s.id]].qs : s.exam;
+const srcKey = s => isG(s) ? s.id+'_g'+st.exSrc[s.id] : s.id;
+function setSrc(k){ st.exSrc[S().id]=k; LS.set('exsrc',st.exSrc); newExam(); render(); scrollTo(0,0); try{ document.querySelector('.srcbar .on').scrollIntoView({inline:'center',block:'nearest'}); }catch(e){} }
 function newExam(onlyWrong){
-  const s=S(); const wr=LS.get('exw_'+s.id,[]);
-  let all = onlyWrong ? wr.filter(i=>i<s.exam.length) : s.exam.map((q,i)=>i);
+  const s=S(), P=pool(s), key=srcKey(s); const wr=LS.get('exw_'+key,[]);
+  let all = onlyWrong ? wr.filter(i=>i<P.length) : P.map((q,i)=>i);
   if(!onlyWrong && st.exShuffle) shuffle(all);
-  if(!onlyWrong && st.exN!=='all') all = all.slice(0, st.exN);
-  st.ex = {sid:s.id, list:all, i:0, right:0, pick:null, wrongMode:!!onlyWrong, perm:{}};
+  if(!onlyWrong && !isG(s) && st.exN!=='all') all = all.slice(0, st.exN);
+  st.ex = {sid:key, list:all, i:0, right:0, pick:null, wrongMode:!!onlyWrong, perm:{}};
 }
 st.exShuffle = LS.get('exs', false);
 st.exN = LS.get('exn', 20);
 st.rdMode = LS.get('rdm', true);
 function modeBar(s){
+  if(window.GICHUL && GICHUL[s.id]){
+    const k = st.exSrc[s.id]; const cur = (k==null||k==='pred') ? 'pred' : k;
+    return `<div class="srcbar"><button class="${cur==='pred'?'on':''}" onclick="setSrc('pred')">🎯 적중 예상<small>${s.exam.length}문제</small></button>${GICHUL[s.id].map((g,i)=>{ const b=LS.get('exbest_'+s.id+'_g'+i,null); return `<button class="${cur===i?'on':''}" onclick="setSrc(${i})">📝 ${esc(g.name)}<small>기출 ${g.qs.length}${b!=null?' · '+b+'점':''}</small></button>`; }).join('')}</div>`;
+  }
   if(s.id!=='english' || !window.READ) return '';
   const nq = READ.reduce((a,r)=>a+r.qs.length,0);
   return `<div class="seg2"><button class="${st.rdMode?'on':''}" onclick="st.rdMode=true;LS.set('rdm',true);render()">📖 독해 실전 <small>지문 ${READ.length} · ${nq}문제</small></button><button class="${!st.rdMode?'on':''}" onclick="st.rdMode=false;LS.set('rdm',false);render()">단문 문제 <small>어법·어휘 ${s.exam.length}</small></button></div>`;
@@ -393,33 +409,33 @@ function modeBar(s){
 function exam(){
   const s=S();
   if(s.id==='english' && window.READ && st.rdMode) return modeBar(s)+reading();
-  if(!st.ex || st.ex.sid!==s.id) newExam();
-  const z=st.ex, wr=LS.get('exw_'+s.id,[]);
+  if(!st.ex || st.ex.sid!==srcKey(s)) newExam();
+  const z=st.ex, key=srcKey(s), P=pool(s), G=isG(s), wr=LS.get('exw_'+key,[]);
   const bar = `<div class="tools" style="position:static"><button class="chip ${!z.wrongMode&&!st.exShuffle?'on':''}" onclick="st.exShuffle=false;LS.set('exs',false);newExam();render()">순서대로</button><button class="chip ${!z.wrongMode&&st.exShuffle?'on':''}" onclick="st.exShuffle=true;LS.set('exs',true);newExam();render()">섞어서</button><button class="chip ${z.wrongMode?'on':''}" onclick="newExam(true);render()">틀린 것만 ${wr.length}</button></div>
-  <div class="tools" style="position:static;padding-top:0">${[20,40,'all'].map(n=>`<button class="chip ${st.exN===n&&!z.wrongMode?'on':''}" onclick="st.exN=${n==='all'?"'all'":n};LS.set('exn',st.exN);newExam();render()">${n==='all'?'전체 '+s.exam.length:n+'문제'}</button>`).join('')}</div>`;
-  const head = `<div class="lead">2024~2026 국가직·지방직에서 <b>반복해서 나온 주제</b>만 골라 실제 시험처럼 4지선다로 만든 다음 시험 대비 문제예요. 문제 아래 회색 꼬리표가 출제 근거예요.</div>`;
+  ${G?'':`<div class="tools" style="position:static;padding-top:0">${[20,40,'all'].map(n=>`<button class="chip ${st.exN===n&&!z.wrongMode?'on':''}" onclick="st.exN=${n==='all'?"'all'":n};LS.set('exn',st.exN);newExam();render()">${n==='all'?'전체 '+s.exam.length:n+'문제'}</button>`).join('')}</div>`}`;
+  const head = G ? `<div class="lead"><b>${esc(GICHUL[s.id][st.exSrc[s.id]].name)} ${s.name}</b> 20문항을 같은 출제 포인트·정답으로 다시 쓴 <b>기출 복원 문제</b>예요. 원문 그대로가 아니고 최신 법령에 맞췄어요(‘복원 변형’ 표시 문항은 원 문항의 핵심만 살린 것). 원본 시험지는 사이버국가고시센터(gosi.kr)에서 볼 수 있어요.</div>` : `<div class="lead">2024~2026 국가직·지방직에서 <b>반복해서 나온 주제</b>만 골라 실제 시험처럼 4지선다로 만든 다음 시험 대비 문제예요. 문제 아래 회색 꼬리표가 출제 근거예요.</div>`;
   if(!z.list.length) return bar+head+`<div class="empty">틀린 문제가 없어요. 잘하고 있어요!</div>`;
   if(z.i>=z.list.length){
     const sc=Math.round(z.right/z.list.length*100);
-    const b=LS.get('exbest_'+s.id,null); if(!z.wrongMode && (b==null||sc>b)) LS.set('exbest_'+s.id,sc);
-    return bar+`<div class="qbox"><div class="qn">${s.name} 적중 예상문제 결과</div><div class="qq">${z.list.length}문제 중 ${z.right}개 (${sc}점)</div>
+    const b=LS.get('exbest_'+key,null); if(!z.wrongMode && (b==null||sc>b)) LS.set('exbest_'+key,sc);
+    return modeBar(s)+bar+`<div class="qbox"><div class="qn">${s.name} ${G?esc(GICHUL[s.id][st.exSrc[s.id]].name)+' 기출':'적중 예상문제'} 결과</div><div class="qq">${z.list.length}문제 중 ${z.right}개 (${sc}점)</div>
       <div class="note">${sc>=80?'실전 감각 좋아요. 틀린 것만 다시 풀어 확실히 잡으세요.':'틀린 문제의 해설을 보고 공부 탭에서 해당 카드를 다시 읽어 보세요.'}</div>
       <button class="big" onclick="newExam(true);render()">틀린 문제 다시 풀기</button>
       <button class="big" style="background:var(--navy)" onclick="newExam();render()">처음부터 다시</button></div>`;
   }
-  const qi=z.list[z.i], q=s.exam[qi], done=z.pick!=null;
+  const qi=z.list[z.i], q=P[qi], done=z.pick!=null;
   const pm = z.perm[qi] || (z.perm[qi]=shuffle([0,1,2,3])), ans = pm.indexOf(q.a);
   const nums=['①','②','③','④'];
-  return modeBar(s)+bar+(z.i===0&&!done?head:'')+`<div class="score"><div>문제<b>${z.i+1}/${z.list.length}</b></div><div>맞힘<b>${z.right}</b></div><div>최고점<b>${LS.get('exbest_'+s.id,null)??'-'}</b></div></div>
-    <div class="qbox"><div class="qn">${s.name} · 적중 예상</div><div class="qq">${fmt(q.q)}</div>
+  return modeBar(s)+bar+(z.i===0&&!done?head:'')+`<div class="score"><div>문제<b>${z.i+1}/${z.list.length}</b></div><div>맞힘<b>${z.right}</b></div><div>최고점<b>${LS.get('exbest_'+key,null)??'-'}</b></div></div>
+    <div class="qbox"><div class="qn">${s.name} · ${G?esc(GICHUL[s.id][st.exSrc[s.id]].name)+' '+(qi+1)+'번':'적중 예상'}</div><div class="qq">${fmt(q.q)}</div>
     <div class="ch4">${pm.map((oi,ci)=>`<button class="${done?(ci===ans?'right':ci===z.pick?'wrong':''):''}" ${done?'disabled':''} onclick="pickEx(${ci})"><i>${nums[ci]}</i><span>${fmt(q.c[oi])}</span></button>`).join('')}</div>
-    ${done?`<div class="res ${z.pick===ans?'good':'bad'}">${z.pick===ans?'정답!':'오답'} 정답 ${nums[ans]} — ${fmt(q.e)}</div><span class="why">출제 근거: ${esc(q.w)}</span>
+    ${done?`<div class="res ${z.pick===ans?'good':'bad'}">${z.pick===ans?'정답!':'오답'} 정답 ${nums[ans]} — ${fmt(q.e)}</div>${q.w?`<span class="why">출제 근거: ${esc(q.w)}</span>`:''}
     <button class="big" onclick="st.ex.i++;st.ex.pick=null;render();scrollTo(0,0)">${z.i+1<z.list.length?'다음 문제':'결과 보기'}</button>`:''}</div>`;
 }
-function pickEx(ci){ const s=S(), z=st.ex, qi=z.list[z.i]; z.pick=ci;
-  let wr=LS.get('exw_'+s.id,[]);
-  if(z.perm[qi][ci]===s.exam[qi].a){ z.right++; wr=wr.filter(x=>x!==qi); } else if(!wr.includes(qi)) wr.push(qi);
-  LS.set('exw_'+s.id,wr); render(); }
+function pickEx(ci){ const s=S(), z=st.ex, qi=z.list[z.i], key=srcKey(s); z.pick=ci;
+  let wr=LS.get('exw_'+key,[]);
+  if(z.perm[qi][ci]===pool(s)[qi].a){ z.right++; wr=wr.filter(x=>x!==qi); } else if(!wr.includes(qi)) wr.push(qi);
+  LS.set('exw_'+key,wr); render(); }
 
 /* ---------- 영어 독해 실전 ---------- */
 function newRead(onlyWrong){
@@ -496,7 +512,7 @@ function settings(){
   </div>
   <div class="set"><div class="row" style="display:block">
     <b>사용법</b>
-    <p class="note">· 과목 탭을 고르고 위에서 아래로 내리며 읽으세요.<br>· <span style="background:var(--mark);padding:1px 4px;border-radius:4px">★ 형광 줄</span>은 꼭 외울 핵심, <span class="hot">최빈출</span>은 거의 매년 나오는 주제예요.<br>· ‘★ 핵심만’을 켜면 형광 줄만 모아 볼 수 있고, ‘★ 가리고 외우기’를 켜면 형광 줄이 흐려져서 눌러야 보여요.<br>· <b>적중문제</b>는 2024~2026 기출에서 반복된 주제로 만든 4지선다 실전 문제(20·40·전체, 섞어서·틀린 것만), <b>OX 퀴즈</b>는 10·20·전체 문제와 틀린 것만 다시 풀기가 돼요.<br>· 영어 <b>적중문제</b>에는 <b>📖 독해 실전</b>이 있어요. 지문을 읽고 풀면 정답 근거 문장이 형광으로 표시되고, ‘해석 보기’로 한 문장씩 해석을 볼 수 있어요.<br>· 카드 아래 <b>📖 교재 설명 자세히</b>는 학원 교재처럼 풀어 쓴 설명이에요. 길어서 부담되면 설정에서 ‘접어 두기’로 바꾸세요.<br>· 다 외운 카드는 오른쪽 ✓를 눌러 두면 과목 탭에 진도(%)가 올라가요.<br>· 아이폰은 사파리 공유 → 홈 화면에 추가, 갤럭시는 크롬 메뉴 → 홈 화면에 추가로 설치하면 인터넷 없이도 열려요.</p>
+    <p class="note">· 과목 탭을 고르고 위에서 아래로 내리며 읽으세요.<br>· <span style="background:var(--mark);padding:1px 4px;border-radius:4px">★ 형광 줄</span>은 꼭 외울 핵심, <span class="hot">최빈출</span>은 거의 매년 나오는 주제예요.<br>· ‘★ 핵심만’을 켜면 형광 줄만 모아 볼 수 있고, ‘★ 가리고 외우기’를 켜면 형광 줄이 흐려져서 눌러야 보여요.<br>· <b>적중문제</b>는 2024~2026 기출에서 반복된 주제로 만든 4지선다 실전 문제(20·40·전체, 섞어서·틀린 것만), <b>OX 퀴즈</b>는 10·20·전체 문제와 틀린 것만 다시 풀기가 돼요.<br>· 안전·재난 <b>적중문제</b> 위쪽에서 <b>📝 2024~2026 국가직·지방직 기출 회차</b>를 골라 20문항씩 풀 수 있어요.<br>· 영어 <b>적중문제</b>에는 <b>📖 독해 실전</b>이 있어요. 지문을 읽고 풀면 정답 근거 문장이 형광으로 표시되고, ‘해석 보기’로 한 문장씩 해석을 볼 수 있어요.<br>· 카드 아래 <b>📖 교재 설명 자세히</b>는 학원 교재처럼 풀어 쓴 설명이에요. 길어서 부담되면 설정에서 ‘접어 두기’로 바꾸세요.<br>· 다 외운 카드는 오른쪽 ✓를 눌러 두면 과목 탭에 진도(%)가 올라가요.<br>· 아이폰은 사파리 공유 → 홈 화면에 추가, 갤럭시는 크롬 메뉴 → 홈 화면에 추가로 설치하면 인터넷 없이도 열려요.</p>
   </div></div>
   <div class="set"><div class="row" style="display:block">
     <b>자료 출처·주의</b>
@@ -527,6 +543,6 @@ addEventListener('resize', setHeadVars);
 applyPrefs(); dday(); render();
 if('serviceWorker' in navigator){ addEventListener('load', ()=>navigator.serviceWorker.register('sw.js').catch(()=>{})); }
 </script>
-<script src="/v.js" data-v="v7" defer></script>
+<script src="/v.js" data-v="v8" defer></script>
 </body>
 </html>
