@@ -15,7 +15,18 @@
   "file": "data/salim/2026-11-19.mp4",
   "caption": "문고리 잡을 때 '따닥' ⚡ 범인은 건조한 공기예요\n01 문고리 잡기 전 벽 먼저 짚기\n02 핸드크림으로 손 촉촉하게\n03 젖은 빨래는 거실에 널어 두기\n저장해두세요 📌\n#겨울살림 #정전기 #살림팁 #생활꿀팁 #살림기록소"
  },
- "posted": {},
+ "posted": {
+  "threads1": {
+   "at": "20:53",
+   "url": "https://www.threads.com/@linkdole2026/post/Df7A6ySHweM",
+   "images": true
+  },
+  "coupang": null,
+  "kakao": null,
+  "reel": false,
+  "neighbors": 3,
+  "at": "21:08"
+ },
  "history": [
   {
    "date": "2026-11-19",
@@ -144,7 +155,34 @@
      "replies": 1,
      "link": true
     }
+   ],
+   "2026-11-19": [
+    {
+     "topic": "김장김치 보관(아침)",
+     "views": 62,
+     "likes": 0,
+     "replies": 0,
+     "link": false
+    },
+    {
+     "topic": "외풍 바람길",
+     "views": 17,
+     "likes": 0,
+     "replies": 0,
+     "link": false
+    },
+    {
+     "topic": "방풍비닐(쿠팡)",
+     "views": 14,
+     "likes": 1,
+     "replies": 1,
+     "link": true
+    }
    ]
+  },
+  "2026-11-18": {
+   "click": 4,
+   "buy": 0
   }
  },
  "morning": {
