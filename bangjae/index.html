@@ -342,7 +342,7 @@ function toggleDone(id){
 
 /* ---------- 퀴즈 ---------- */
 function shuffle(a){ for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];} return a; }
-st.qn = LS.get('qn',10);
+st.qn = 'all';
 function newQuiz(onlyWrong){
   const s=S(); const wr = LS.get('oxw_'+s.id,[]);
   let all = onlyWrong ? wr.filter(i=>i<s.quiz.length) : s.quiz.map((q,i)=>i);
@@ -357,7 +357,7 @@ function quiz(){
   const z = st.qs;
   const best = LS.get('best_'+s.id, null);
   const wr = LS.get('oxw_'+s.id,[]);
-  const bar = `<div class="tools" style="position:static">${[10,20,'all'].map(n=>`<button class="chip ${st.qn===n?'on':''}" onclick="setQn(${n==='all'?"'all'":n})">${n==='all'?'전체 '+s.quiz.length:n+'문제'}</button>`).join('')}<button class="chip ${z.wrongMode?'on':''}" onclick="newQuiz(true);render()">틀린 것만 ${wr.length}</button></div>`;
+  const bar = `<div class="tools" style="position:static">${['all'].map(n=>`<button class="chip ${st.qn===n?'on':''}" onclick="setQn(${n==='all'?"'all'":n})">${n==='all'?'전체 '+s.quiz.length+'문제':n+'문제'}</button>`).join('')}<button class="chip ${z.wrongMode?'on':''}" onclick="newQuiz(true);render()">틀린 것만 ${wr.length}</button></div>`;
   if(!z.list.length) return bar+`<div class="empty">틀린 문제가 없어요. 잘하고 있어요!</div>`;
   if(z.i >= z.list.length){
     const sc = Math.round(z.right/z.list.length*100);
@@ -402,7 +402,7 @@ function newExam(onlyWrong){
   st.ex = {sid:key, list:all, i:0, right:0, pick:null, wrongMode:!!onlyWrong, perm:{}};
 }
 st.exShuffle = LS.get('exs', false);
-st.exN = LS.get('exn', 20);
+st.exN = 'all';
 st.rdMode = LS.get('rdm', true);
 function modeBar(s){
   if(window.GICHUL && GICHUL[s.id]){
@@ -420,7 +420,7 @@ function exam(){
   if(!st.ex || st.ex.sid!==srcKey(s)) newExam();
   const z=st.ex, key=srcKey(s), P=pool(s), G=isG(s), wr=LS.get('exw_'+key,[]);
   const bar = `<div class="tools" style="position:static"><button class="chip ${!z.wrongMode&&!st.exShuffle?'on':''}" onclick="st.exShuffle=false;LS.set('exs',false);newExam();render()">순서대로</button><button class="chip ${!z.wrongMode&&st.exShuffle?'on':''}" onclick="st.exShuffle=true;LS.set('exs',true);newExam();render()">섞어서</button><button class="chip ${z.wrongMode?'on':''}" onclick="newExam(true);render()">틀린 것만 ${wr.length}</button></div>
-  <div class="tools" style="position:static;padding-top:0">${[20,40,'all'].map(n=>`<button class="chip ${st.exN===n&&!z.wrongMode?'on':''}" onclick="st.exN=${n==='all'?"'all'":n};LS.set('exn',st.exN);newExam();render()">${n==='all'?'전체 '+P.length:n+'문제'}</button>`).join('')}</div>`;
+  `;
   const head = G ? `<div class="lead">2024~2026 국가직·지방직 ${s.name} 기출 ${gAll(s.id).length}문항을 <b>한데 모은 기출 복원 문제</b>예요. 같은 출제 포인트·정답으로 문장을 다시 쓰고 최신 법령에 맞췄어요. 문제 아래 꼬리표가 원래 회차·번호예요. <b>섞어서</b>를 켜면 연도 구분 없이 나와요.</div>` : `<div class="lead">2024~2026 국가직·지방직에서 <b>반복해서 나온 주제</b>만 골라 실제 시험처럼 4지선다로 만든 다음 시험 대비 문제예요. 문제 아래 회색 꼬리표가 출제 근거예요.</div>`;
   if(!z.list.length) return bar+head+`<div class="empty">틀린 문제가 없어요. 잘하고 있어요!</div>`;
   if(z.i>=z.list.length){
@@ -563,6 +563,6 @@ addEventListener('resize', setHeadVars);
 applyPrefs(); dday(); render();
 if('serviceWorker' in navigator){ addEventListener('load', ()=>navigator.serviceWorker.register('sw.js').catch(()=>{})); }
 </script>
-<script src="/v.js" data-v="v13" defer></script>
+<script src="/v.js" data-v="v14" defer></script>
 </body>
 </html>
