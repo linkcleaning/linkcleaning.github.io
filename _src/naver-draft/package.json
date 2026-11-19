@@ -1,0 +1,7 @@
+{
+  "name": "naver-draft",
+  "private": true,
+  "type": "module",
+  "description": "링크클린 네이버 블로그 임시저장 도우미 (대표님 PC 전용, 발행 안 함)",
+  "dependencies": { "playwright": "1.56.1" }
+}
