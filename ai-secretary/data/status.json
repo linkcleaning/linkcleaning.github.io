@@ -70,6 +70,13 @@
    "note": "제주시점·연동 이사청소 냉장고 정리(계절 팁, 새 현장 사진 없음)",
    "detail": "연동 이사청소 전, 냉장고 비우고 닦는 순서 · 영상 13초(글 카드) https://linkclean-promo.han0829.workers.dev/api/clip/482eab7e-47b.mp4",
    "at": "13:23"
+  },
+  "areapage": {
+   "done": false,
+   "note": "홈페이지 대기열 저장",
+   "detail": "노형동 입주청소·이사청소 (/nohyeong-dong/) — linkclean-web 쓰기 권한이 없어 web-queue/2026-11-20-areapage.json 에 저장",
+   "url": "https://www.linkclean.co.kr/nohyeong-dong/",
+   "at": "13:24"
   }
  }
 }
