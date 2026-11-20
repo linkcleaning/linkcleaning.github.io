@@ -6035,9 +6035,11 @@ export default function App() {
 
       {/* 헤더 — 노란 바탕 + 오늘 업무 링 */}
       <header className={`relative overflow-hidden lux-head rounded-b-[32px] bg-cw px-4 ${tab === 'brief' ? 'pb-6' : 'pb-4'} pt-[calc(env(safe-area-inset-top)+12px)] text-[#191919]`}>
-        <div className="mx-auto max-w-md">
+        <img src="assets/logo-256.png" alt="" aria-hidden="true" className="lux-mark" />
+        <div className="relative mx-auto max-w-md">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
+              <img src="assets/logo-96.png" alt="링크클린" className="lux-logo" width={30} height={30} />
               <span className="lux-chip rounded-full bg-[#191919] px-2.5 py-1 text-[11px] font-extrabold tracking-tight text-cw">링크 미래전략실</span>
               <span className="text-[15px] font-extrabold tracking-tight">
                 {mm}.{dd} ({weekday})
@@ -6311,6 +6313,15 @@ export default function App() {
             iconStyle={iconStyle}
             onIconStyle={(s) => setSettings((prev) => ({ ...prev, iconStyle: s }))}
           />
+        )}
+        {tab === 'brief' && (
+          <footer className="lux-seal">
+            <img src="assets/logo-96.png" alt="링크클린 로고" width={44} height={44} />
+            <div>
+              <p className="lux-seal-name">LINKCLEAN · 링크클린</p>
+              <p className="lux-seal-sub">링크 미래전략실 · 064-763-4545</p>
+            </div>
+          </footer>
         )}
       </main>
 

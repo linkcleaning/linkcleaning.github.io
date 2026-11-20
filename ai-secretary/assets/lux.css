@@ -25,3 +25,10 @@ section.bg-\[\#191919\] { background: linear-gradient(165deg, #14202B, #1E3142) 
 section.bg-\[\#191919\] .text-amber-200 { color: #E6CC95 !important; }
 header.lux-head .bg-cw-soft { color: #14202B; }
 header.lux-head button.bg-white { color: #14202B; }
+/* 링크클린 로고 (대표님 11/20) */
+header.lux-head .lux-logo { width: 30px; height: 30px; border-radius: 50%; background: #fff; box-shadow: 0 0 0 1.5px #B8955C, 0 2px 8px rgba(0,0,0,.35); flex: none; }
+header.lux-head .lux-mark { position: absolute; right: -46px; top: 54px; width: 230px; height: 230px; opacity: .1; filter: grayscale(1) invert(1); mix-blend-mode: screen; pointer-events: none; }
+.lux-seal { display: flex; align-items: center; justify-content: center; gap: 12px; margin: 26px 0 6px; padding: 16px 0 4px; border-top: 1px solid #E2DCCF; }
+.lux-seal img { width: 44px; height: 44px; border-radius: 50%; background: #fff; box-shadow: 0 0 0 1.5px #B8955C; }
+.lux-seal-name { margin: 0; font-family: "Noto Serif KR", serif; font-weight: 700; font-size: 13px; letter-spacing: .14em; color: #14202B; }
+.lux-seal-sub { margin: 2px 0 0; font-size: 11px; color: #8A8173; letter-spacing: .04em; }

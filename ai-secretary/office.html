@@ -11,7 +11,7 @@
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700;800;900&family=Noto+Serif+KR:wght@600;700;900&display=swap">
-<script src="/v.js" data-v="v51" defer></script>
+<script src="/v.js" data-v="v52" defer></script>
 <style>
   /* 비서실 화면 — 앱 안에서 열림 (Claude 앱으로 넘어가지 않음). 대화만 Claude에서. */
   :root {
@@ -152,13 +152,20 @@
   .appbtn.main { background: var(--navy); color: var(--gold-soft); border-color: var(--navy); }
   .pill { border-radius: 4px; } .pill.ok { background: var(--ok); } .pill.bad { background: var(--bad); }
   @media (max-width: 360px) { .suseok { grid-template-columns: repeat(2, 1fr); } }
+
+/* 링크클린 로고 (11/20) */
+header.top{position:relative;overflow:hidden}
+header.top .in{position:relative}
+.eyebrow{display:inline-flex;align-items:center;gap:7px}
+.lglogo{width:22px;height:22px;border-radius:50%;background:#fff;box-shadow:0 0 0 1.5px #B8955C}
+.lgmark{position:absolute;right:-40px;top:20px;width:210px;height:210px;opacity:.1;filter:grayscale(1) invert(1);mix-blend-mode:screen;pointer-events:none}
 </style>
 </head>
 <body>
-<header class="top"><div class="in">
+<header class="top"><img class="lgmark" src="assets/logo-256.png" alt="" aria-hidden="true"><div class="in">
   <div class="bar-top">
     <a class="back" href="./" id="back" aria-label="브리핑으로 돌아가기">‹ 브리핑</a>
-    <span class="eyebrow">링크 미래전략실</span>
+    <span class="eyebrow"><img class="lglogo" src="assets/logo-96.png" alt="링크클린" width="22" height="22">링크 미래전략실</span>
   </div>
   <h1>비서실</h1>
   <p class="lead" id="statusText">오늘 업무 기록 확인 중…</p>
