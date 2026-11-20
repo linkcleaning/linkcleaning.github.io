@@ -3697,7 +3697,7 @@ function HealthTab({ today, hubPin, toast, onOpenSettings, onBack }: { today: st
   const days = data?.days || {};
   const advice = healthAdvice(today, days, plan);
   const rows = [0, -1, -2, -3, -4, -5, -6].map((n) => ({ date: addDays(today, n), d: days[addDays(today, n)] || {} }));
-  const hasRecord = rows.some((r) => r.d.steps || r.d.bpSys || r.d.sleepH || r.d.weight);
+  const hasRecord = Object.values(days).some((d) => d && (d.steps || d.bpSys || d.sleepH || d.weight));
   const btn = 'flex-1 rounded-2xl py-4 text-[17px] font-extrabold active:scale-95';
   return (
     <div className="space-y-3">
@@ -3755,7 +3755,7 @@ function HealthTab({ today, hubPin, toast, onOpenSettings, onBack }: { today: st
         )}
       </section>
 
-      <section className={card}>
+      {!hasRecord && <section className={card}>
         <button onClick={() => setShowGuide(!showGuide)} className="flex w-full items-center justify-between text-left">
           <h2 className="text-[16px] font-extrabold">📲 아이폰 건강 앱 연결 (한 번만)</h2>
           <span className="text-[13px] text-slate-400">{showGuide ? '접기' : '펼치기'}</span>
@@ -3771,7 +3771,7 @@ function HealthTab({ today, hubPin, toast, onOpenSettings, onBack }: { today: st
           </ol>
         )}
         <p className="mt-2 text-[11px] text-slate-500">건강 기록은 공개 저장소가 아니라 비밀번호가 걸린 링크 허브에만 저장돼요. 어려우시면 돌아오셔서 같이 만들어요.</p>
-      </section>
+      </section>}
     </div>
   );
 }
