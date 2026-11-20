@@ -6034,18 +6034,18 @@ export default function App() {
       `}</style>
 
       {/* 헤더 — 노란 바탕 + 오늘 업무 링 */}
-      <header className={`relative overflow-hidden rounded-b-[32px] bg-cw px-4 ${tab === 'brief' ? 'pb-6' : 'pb-4'} pt-[calc(env(safe-area-inset-top)+12px)] text-[#191919]`}>
+      <header className={`relative overflow-hidden lux-head rounded-b-[32px] bg-cw px-4 ${tab === 'brief' ? 'pb-6' : 'pb-4'} pt-[calc(env(safe-area-inset-top)+12px)] text-[#191919]`}>
         <div className="mx-auto max-w-md">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
-              <span className="rounded-full bg-[#191919] px-2.5 py-1 text-[11px] font-extrabold tracking-tight text-cw">링크 미래전략실</span>
+              <span className="lux-chip rounded-full bg-[#191919] px-2.5 py-1 text-[11px] font-extrabold tracking-tight text-cw">링크 미래전략실</span>
               <span className="text-[15px] font-extrabold tracking-tight">
                 {mm}.{dd} ({weekday})
               </span>
             </div>
             <div className="flex items-center gap-1.5">
               {weather && (
-                <button onClick={() => setTab('brief')} className="flex items-center gap-1 rounded-full bg-white/70 px-2.5 py-1.5 text-[13px] font-extrabold">
+                <button onClick={() => setTab('brief')} className="flex items-center gap-1 lux-btn rounded-full bg-white/70 px-2.5 py-1.5 text-[13px] font-extrabold">
                   {(() => {
                     const { Icon } = weatherInfo(weather.code);
                     return <Icon className="h-4 w-4" />;
@@ -6053,7 +6053,7 @@ export default function App() {
                   {Math.round(weather.temp)}°
                 </button>
               )}
-              <button onClick={() => setShowSettings(true)} className="rounded-full bg-white/70 p-2 active:scale-95" aria-label="설정">
+              <button onClick={() => setShowSettings(true)} className="lux-btn rounded-full bg-white/70 p-2 active:scale-95" aria-label="설정">
                 <Settings className="h-5 w-5" />
               </button>
             </div>
@@ -6064,14 +6064,14 @@ export default function App() {
           {/* 링 */}
           <div className="relative mx-auto mt-3 h-[212px] w-[212px]">
             <svg viewBox="0 0 212 212" className="h-full w-full -rotate-90">
-              <circle cx="106" cy="106" r="92" fill="#FFFFFF" />
-              <circle cx="106" cy="106" r="92" fill="none" stroke="#F2F3F5" strokeWidth="14" />
+              <circle cx="106" cy="106" r="92" fill="#FFFDF8" />
+              <circle cx="106" cy="106" r="92" fill="none" stroke="#ECE4D3" strokeWidth="14" />
               <circle
                 cx="106"
                 cy="106"
                 r="92"
                 fill="none"
-                stroke="#191919"
+                stroke="#B8955C"
                 strokeWidth="14"
                 strokeLinecap="round"
                 strokeDasharray={2 * Math.PI * 92}
@@ -6081,7 +6081,7 @@ export default function App() {
             </svg>
             <button onClick={() => window.scrollTo({ top: 520, behavior: 'smooth' })} className="absolute inset-0 flex flex-col items-center justify-center">
               <span className="text-[13px] font-bold text-[#6B6E76]">비서실 오늘 업무</span>
-              <span className="font-num text-[56px] font-black leading-[60px] tracking-tighter tabular-nums">
+              <span className="lux-ink font-num text-[56px] font-black leading-[60px] tracking-tighter tabular-nums">
                 {secDone}
                 <span className="text-[26px] text-[#B0B3BA]">/{secJobs.length}</span>
               </span>
@@ -6128,7 +6128,7 @@ export default function App() {
           </div>
 
           {/* 3칸 숫자 */}
-          <div className="mt-4 grid grid-cols-3 divide-x divide-[#191919]/10 rounded-[20px] bg-white/60 py-3 text-center">
+          <div className="mt-4 grid grid-cols-3 divide-x divide-[#191919]/10 lux-stat rounded-[20px] bg-white/60 py-3 text-center">
             <button onClick={() => setTab('routine')}>
               <p className="text-[11px] font-bold text-[#6B6E76]">{mm}월 매출</p>
               <p className="mt-0.5 text-[16px] font-black tracking-tight">{hubMonthSales == null ? '-' : fmtWon(hubMonthSales)}</p>

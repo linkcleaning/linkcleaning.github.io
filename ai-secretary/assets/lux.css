@@ -1,0 +1,27 @@
+/* 고급 테마 덧칠 (대표님 11/20: "메인 페이지 색도 고급스럽게") — 짙은 남색 머리 + 앤티크 금색 + 아이보리 */
+html, body { background: #F4F1EA !important; }
+header.lux-head {
+  background: linear-gradient(168deg, #0E1A24 0%, #172634 62%, #1E3142 100%) !important;
+  color: #F3EDE0 !important;
+  box-shadow: 0 10px 30px rgba(14, 26, 36, .28);
+}
+header.lux-head::after {
+  content: ""; position: absolute; left: 24px; right: 24px; bottom: 0; height: 2px;
+  background: linear-gradient(90deg, transparent, #B8955C, transparent);
+}
+header.lux-head .lux-chip { background: transparent !important; color: #D8BE8C !important; border: 1px solid #B8955C; border-radius: 4px !important; letter-spacing: .12em; font-weight: 700 !important; }
+header.lux-head .lux-btn { background: rgba(255, 255, 255, .07) !important; color: #F3EDE0 !important; border: 1px solid rgba(255, 255, 255, .16); }
+header.lux-head .lux-ink { color: #14202B; }
+header.lux-head .lux-stat { background: #FFFDF8 !important; color: #14202B; border: 1px solid rgba(184, 149, 92, .45); border-radius: 14px !important; }
+header.lux-head .lux-stat p { color: inherit; }
+header.lux-head .lux-stat p:first-child { color: #6E6A61; }
+/* 카드: 아이보리 종이 느낌 + 얇은 테두리 */
+.bg-white { background-color: #FFFDF8 !important; }
+section.rounded-\[22px\], section.rounded-\[28px\] { box-shadow: 0 1px 2px rgba(20,32,43,.04), 0 8px 22px rgba(20,32,43,.05) !important; }
+/* 아래 탭 */
+nav.fixed { background: rgba(255, 253, 248, .96) !important; border-top: 1px solid #E2DCCF; }
+header.lux-head .bg-\[\#191919\] { background: #1E3142 !important; border: 1px solid rgba(184,149,92,.6); }
+section.bg-\[\#191919\] { background: linear-gradient(165deg, #14202B, #1E3142) !important; border: 1px solid rgba(184,149,92,.35); }
+section.bg-\[\#191919\] .text-amber-200 { color: #E6CC95 !important; }
+header.lux-head .bg-cw-soft { color: #14202B; }
+header.lux-head button.bg-white { color: #14202B; }
