@@ -7,7 +7,7 @@
 //   node naver-draft.mjs today "D:\블로그사진\오늘"     ← 비서실 오늘 초안(today.json) + 그 폴더 사진으로 임시저장
 //   node naver-draft.mjs file draft.json             ← draft.json 내용으로 임시저장
 //
-// draft.json 모양: { "blogId":"linkclean", "title":"…", "body":"…[사진: 설명]…", "tags":["제주 입주청소"], "photos":["D:\\사진\\1.jpg"] }
+// draft.json 모양: { "blogId":"linkcleaning", "title":"…", "body":"…[사진: 설명]…", "tags":["제주 입주청소"], "photos":["D:\\사진\\1.jpg"] }
 // 본문의 [사진: …] 자리마다 사진을 순서대로 하나씩 넣습니다. 남는 사진은 글 끝에 넣습니다.
 import { chromium } from 'playwright';
 import fs from 'node:fs';
@@ -45,7 +45,7 @@ async function loadToday(photoDir) {
   const photos = photoDir && fs.existsSync(photoDir)
     ? fs.readdirSync(photoDir).filter((f) => PHOTO_EXT.test(f)).sort().map((f) => path.join(photoDir, f))
     : [];
-  return { blogId: 'linkclean', title: t.blog.title, body: t.blog.body, tags: t.blog.keyword ? [t.blog.keyword] : [], photos };
+  return { blogId: 'linkcleaning', title: t.blog.title, body: t.blog.body, tags: t.blog.keyword ? [t.blog.keyword] : [], photos };
 }
 
 // 글쓰기 화면은 mainFrame 안에 있을 때가 있어 두 곳 다 찾는다
@@ -78,7 +78,7 @@ async function writeDraft(d) {
   if (!d.title) throw new Error('제목이 비었어요');
   const ctx = await openBrowser();
   const page = ctx.pages()[0] || (await ctx.newPage());
-  await page.goto(`https://blog.naver.com/${d.blogId || 'linkclean'}/postwrite`, { waitUntil: 'domcontentloaded' });
+  await page.goto(`https://blog.naver.com/${d.blogId || 'linkcleaning'}/postwrite`, { waitUntil: 'domcontentloaded' });
   if (page.url().includes('nidlogin')) throw new Error('네이버 로그인이 풀렸어요 → node naver-draft.mjs login');
   const f = await editorFrame(page);
   await sleep(2000);

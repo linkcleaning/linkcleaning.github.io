@@ -107,7 +107,7 @@
     <div id="history" class="card" style="font-size:14px">불러오는 중…</div>
   </details>
 </main>
-<div class="ver">v3</div>
+<div class="ver">v4</div>
 <script>
 const API = 'https://linkclean-promo.han0829.workers.dev/api/hub/aside';
 let T = null;
@@ -143,8 +143,8 @@ async function load() {
     ${[1,2,3].map((r) => `<table style="margin-bottom:8px"><tbody><tr><th colspan="2">${r}위 글</th></tr>${F.map(([id, lab]) => `<tr><td style="width:34%">${lab}</td><td><input type="text" id="b-${k}-${r}-${id}" aria-label="${esc(kw)} ${r}위 ${lab}"></td></tr>`).join('')}</tbody></table>`).join('')}`).join('');
   const d = T.drafts || [];
   $('draftBox').innerHTML = !d.length ? '오늘은 임시저장할 글이 <b>없습니다.</b> 이 단계는 건너뜁니다.' :
-    '<ol><li><code>' + esc((T.ourBlogs || [])[0] || 'blog.naver.com/linkclean') + '</code> 에서 <b>글쓰기</b>를 엽니다.</li><li>아래 제목과 본문을 그대로 붙여 넣고, 태그를 넣습니다.</li><li><b>임시저장</b>만 누르고 발행은 누르지 않습니다.</li><li>끝나면 아래 「저장함」을 체크합니다.</li></ol>' +
-    d.map((x, i) => `<div class="draft"><h3 style="font-size:16px;margin:16px 0 4px">글 ${i + 1}. ${esc(x.title)}</h3>
+    '<ol><li>글마다 적힌 블로그(기본 <code>' + esc((T.ourBlogs || [])[0] || 'blog.naver.com/linkcleaning') + '</code>)에서 <b>글쓰기</b>를 엽니다. 지금 로그인된 계정의 블로그가 아니면 그 글은 건너뛰고 메모에 적습니다.</li><li>아래 제목과 본문을 그대로 붙여 넣고, 태그를 넣습니다. 본문의 <b>[사진: …]</b> 줄은 지우지 말고 글자 그대로 둡니다(대표님이 그 자리에 현장 사진을 넣습니다).</li><li>오른쪽 위 <b>저장</b>(임시저장)만 누르고 <b>발행은 절대 누르지 않습니다.</b></li><li>끝나면 아래 「저장함」을 체크합니다.</li></ol>' +
+    d.map((x, i) => `<div class="draft"><h3 style="font-size:16px;margin:16px 0 4px">글 ${i + 1}. ${esc(x.title)}</h3>${x.blog ? '<div>블로그: <code>' + esc(x.blog) + '</code></div>' : ''}
       <pre>${esc(x.body)}</pre>${x.tags ? '<div>태그: ' + esc(x.tags) + '</div>' : ''}
       <label><input type="checkbox" id="draft-${i}"> 저장함</label></div>`).join('');
 }
