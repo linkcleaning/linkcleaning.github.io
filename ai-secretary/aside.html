@@ -42,7 +42,8 @@
   <div class="card rule">
     <b>꼭 지킬 것</b>
     <ul>
-      <li>네이버 블로그에 <b>발행(공개)하지 않습니다.</b> 글은 <b>임시저장</b>까지만 합니다.</li>
+      <li>네이버 블로그에 <b>발행(공개)하지 않습니다.</b> 블로그 글은 <b>임시저장</b>까지만 합니다.</li>
+      <li>공개로 올리는 것은 <b>5번 플레이스 소식 중 이 페이지에 적힌 글(대표님이 승인한 글)</b>만입니다. 그 밖에는 아무것도 올리지 않습니다.</li>
       <li>댓글·공감·이웃추가·쪽지는 하지 않습니다.</li>
       <li>로그인 화면이 나오면 멈추고 메모 칸에 "로그인 필요"라고 적습니다. 비밀번호를 입력하지 않습니다.</li>
       <li>광고(파워링크·'광고' 표시 글)는 <b>빼고</b> 셉니다.</li>
@@ -93,7 +94,10 @@
   <h2>4. 블로그 글 임시저장</h2>
   <div class="card" id="draftBox"></div>
 
-  <h2>5. 보고 보내기</h2>
+  <h2>5. 플레이스 소식 올리기 (대표님 승인한 글만)</h2>
+  <div class="card" id="placeBox">불러오는 중…</div>
+
+  <h2>6. 보고 보내기</h2>
   <div class="card">
     <label for="memo">메모 (막힌 것, 이상한 것이 있으면)</label>
     <textarea id="memo" placeholder="예: 로그인 필요 / 검색 결과가 이상함"></textarea>
@@ -107,10 +111,24 @@
     <div id="history" class="card" style="font-size:14px">불러오는 중…</div>
   </details>
 </main>
-<div class="ver">v4</div>
+<div class="ver">v5</div>
 <script>
 const API = 'https://linkclean-promo.han0829.workers.dev/api/hub/aside';
+const PLACE_API = 'https://linkclean-promo.han0829.workers.dev/api/hub/placeok';
+const PLACE_NAME = { jeju: '링크클린 — 주소가 제주시인 곳(제주시점)', seogwipo: '링크클린 — 주소가 서귀포시인 곳(서귀포점)', ek: '이케이클린' };
 let T = null;
+let P = [];
+async function loadPlaces() {
+  try {
+    const j = await (await fetch(PLACE_API + '?t=' + Date.now(), { cache: 'no-store' })).json();
+    P = (j.items || []).filter((x) => x.status === 'approved').slice(0, 3);
+  } catch { P = []; }
+  $('placeBox').innerHTML = !P.length ? '오늘은 올릴 플레이스 소식이 <b>없습니다.</b> 이 단계는 건너뜁니다.' :
+    '<ol><li><code>new.smartplace.naver.com</code> 을 열고, 글마다 적힌 <b>업체</b>를 고릅니다(링크클린이 2개 — 주소로 구분).</li><li>왼쪽 메뉴 <b>소식</b> → <b>새 소식(소식 쓰기)</b>를 누릅니다.</li><li>아래 제목과 본문을 그대로 붙여 넣습니다. 사진 주소가 있으면 사진을 열어 다운로드한 뒤 <b>사진 추가</b>로 올립니다(순서대로, 최대 5장). 사진이 꼭 필요하다고 나오는데 사진 주소가 없으면 올리지 말고 메모에 적습니다.</li><li><b>등록</b>을 누르고, 올라간 소식이 목록에 보이는지 확인합니다.</li><li>끝나면 「올림」을 체크합니다. 못 올렸으면 이유를 옆 칸에 적습니다.</li><li>이 목록에 없는 글은 절대 올리지 않습니다. 같은 제목 소식이 이미 있으면 다시 올리지 말고 「올림」만 체크합니다.</li></ol>' +
+    P.map((x, i) => `<div class="draft"><h3 style="font-size:16px;margin:16px 0 4px">소식 ${i + 1}. ${esc(x.title)}</h3><div>업체: <b>${esc(PLACE_NAME[x.place] || x.place)}</b></div>
+      <pre>${esc(x.body)}</pre>${(x.photos || []).length ? '<div>사진: ' + x.photos.map((u, k) => `<a target="_blank" rel="noopener" href="${esc(u)}">사진 ${k + 1}</a>`).join(' · ') + '</div>' : '<div>사진 주소 없음</div>'}
+      <label><input type="checkbox" id="place-${i}"> 올림</label> <input type="text" id="placenote-${i}" placeholder="못 올렸으면 이유" aria-label="소식 ${i + 1} 메모"></div>`).join('');
+}
 const $ = (id) => document.getElementById(id);
 const esc = (s) => String(s ?? '').replace(/[&<>"]/g, (c) => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
 const today = () => new Date(Date.now() + 9 * 3600e3).toISOString().slice(0, 10);
@@ -159,7 +177,8 @@ $('send').onclick = async () => {
     const g = (id) => (($('b-' + k + '-' + r + '-' + id) || {}).value || '').trim();
     if (g('title') || g('photos') || g('chars')) bench.push({ kw, rank: String(r), blog: g('blog'), title: g('title'), date: g('date'), chars: g('chars'), photos: g('photos'), videos: g('videos'), heads: g('heads'), map: g('map'), note: g('note') });
   }));
-  const body = { date: today(), task: T.date, ranks, ai, bench, drafts, memo: $('memo').value.trim() };
+  const places = P.map((x, i) => ({ id: x.id, title: x.title, done: !!($('place-' + i) || {}).checked, note: (($('placenote-' + i) || {}).value || '').trim() }));
+  const body = { date: today(), task: T.date, ranks, ai, bench, drafts, places, memo: $('memo').value.trim() };
   $('send').disabled = true; $('sent').textContent = '보내는 중…';
   try {
     const r = await fetch(API, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
@@ -181,7 +200,7 @@ async function history() {
       `<div style="margin-bottom:10px"><b>${esc(r.at)}</b><br>${r.ranks.filter((x) => x.rank).map((x) => esc(x.kw) + ' ' + esc(x.rank)).join(' · ') || '순위 기록 없음'}${r.memo ? '<br>메모: ' + esc(r.memo) : ''}</div>`).join('');
   } catch { $('history').textContent = '불러오지 못했습니다.'; }
 }
-load(); history();
+load(); loadPlaces(); history();
 </script>
 </body>
 </html>

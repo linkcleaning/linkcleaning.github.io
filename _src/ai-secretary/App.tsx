@@ -3076,7 +3076,7 @@ const PLACE_NAME: Record<string, string> = { jeju: '링크클린 제주시점', 
 interface PlaceNewsData { updatedAt?: string; items?: PlaceNews[] }
 
 interface EkData { date?: string; blog?: { keyword?: string; title: string; body: string }; place?: { title: string; body: string }; insta?: string; areaPage?: string }
-function EkCard({ data, toast, today }: { data: EkData | null; toast: (m: string) => void; today: string }) {
+function EkCard({ data, toast, today, hubPin }: { data: EkData | null; toast: (m: string) => void; today: string; hubPin: string }) {
   const [open, setOpen] = useState<string | null>(null);
   const copy = async (t: string, m: string) => toast((await copyText(t)) ? m : '복사에 실패했습니다.');
   const fresh = data?.date && daysBetween(data.date, today) <= 6;
@@ -3101,6 +3101,7 @@ function EkCard({ data, toast, today }: { data: EkData | null; toast: (m: string
         <div className="space-y-2">
           {data?.blog && <Block id="b" label={`블로그${data.blog.keyword ? ` · #${data.blog.keyword}` : ''}`} title={data.blog.title} body={data.blog.body} />}
           {data?.place && <Block id="p" label="📍 이케이클린 플레이스 소식" title={data.place.title} body={data.place.body} />}
+          {data?.place && <PlaceApprove id={`ek-${data.date}`} place="ek" title={data.place.title} body={data.place.body} hubPin={hubPin} toast={toast} />}
           {data?.insta && <Block id="i" label="인스타 캡션" body={data.insta} />}
           {data?.areaPage && (
             <a href={data.areaPage} target="_blank" rel="noreferrer" className="block rounded-full bg-[#191919] py-3 text-center text-sm font-extrabold text-cw">새 동네 페이지 보기 ›</a>
@@ -3112,7 +3113,44 @@ function EkCard({ data, toast, today }: { data: EkData | null; toast: (m: string
   );
 }
 
-function PlaceNewsCard({ data, toast }: { data: PlaceNewsData | null; toast: (m: string) => void }) {
+/* 플레이스 소식 '확인 후 올리기' (대표님 11/20: 2번) — 앱에서 승인하면 다음 날 아침 08:00 어사이드가 스마트플레이스에 올림 */
+interface PlaceOkItem { id: string; status: string; approvedAt?: string; postedAt?: string; note?: string; tries?: number }
+function PlaceApprove({ id, place, title, body, photos, hubPin, toast }: { id: string; place: 'jeju' | 'seogwipo' | 'ek'; title: string; body: string; photos?: string[]; hubPin: string; toast: (m: string) => void }) {
+  const [st, setSt] = useState<PlaceOkItem | null>(null);
+  const [busy, setBusy] = useState(false);
+  const api = `${HUB_BASE}/placeok`;
+  useEffect(() => {
+    let off = false;
+    fetch(`${api}?t=${Date.now()}`, { cache: 'no-store' }).then((r) => r.json()).then((j) => { if (!off) setSt((j.items || []).find((x: PlaceOkItem) => x.id === id) || null); }).catch(() => {});
+    return () => { off = true; };
+  }, [id]);
+  const send = async (payload: unknown) => {
+    if (!hubPin) { toast('설정에서 허브 비밀번호를 먼저 넣어 주세요.'); return; }
+    setBusy(true);
+    try {
+      const r = await fetch(api, { method: 'POST', headers: { 'Content-Type': 'application/json', 'X-Hub-Pin': hubPin }, body: JSON.stringify(payload) });
+      const j = await r.json();
+      if (!r.ok || !j.ok) throw new Error(j.error || String(r.status));
+      setSt((j.items || []).find((x: PlaceOkItem) => x.id === id) || null);
+      return true;
+    } catch (e) { toast('보내지 못했어요: ' + String((e as Error).message || e)); return false; } finally { setBusy(false); }
+  };
+  if (st?.status === 'posted') return <p className="mt-2 rounded-full bg-emerald-400/15 py-2.5 text-center text-xs font-extrabold text-emerald-200">✓ 어사이드가 올렸어요{st.postedAt ? ` · ${st.postedAt.slice(5, 16)}` : ''}</p>;
+  if (st?.status === 'approved')
+    return (
+      <div className="mt-2 rounded-2xl bg-cw-soft p-2.5 text-center text-xs leading-snug text-slate-200">
+        <b>✅ 승인됨</b> — 내일 아침 8시에 어사이드가 올려요{st.note ? ` (지난번: ${st.note})` : ''}
+        <button disabled={busy} onClick={async () => { if (await send({ cancel: id })) toast('올리기를 취소했어요.'); }} className="ml-2 font-bold text-rose-400 underline">취소</button>
+      </div>
+    );
+  return (
+    <button disabled={busy} onClick={async () => { if (await send({ approve: { id, place, title, body, photos: photos || [] } })) toast('승인했어요. 내일 아침 8시에 어사이드가 스마트플레이스에 올려요.'); }} className="mt-2 w-full rounded-full bg-[#191919] py-3 text-sm font-extrabold text-cw active:scale-[0.98]">
+      {busy ? '보내는 중…' : '✅ 이 글 올려 (어사이드가 내일 아침 8시에)'}
+    </button>
+  );
+}
+
+function PlaceNewsCard({ data, toast, hubPin }: { data: PlaceNewsData | null; toast: (m: string) => void; hubPin: string }) {
   const [open, setOpen] = useState(false);
   const n = data?.items?.[0];
   const copy = async (t: string, m: string) => toast((await copyText(t)) ? m : '복사에 실패했습니다.');
@@ -3168,6 +3206,7 @@ function PlaceNewsCard({ data, toast }: { data: PlaceNewsData | null; toast: (m:
               본문 복사
             </button>
           </div>
+          <PlaceApprove id={`pn-${n.date}-${n.place || 'jeju'}`} place={n.place === 'seogwipo' ? 'seogwipo' : 'jeju'} title={n.title} body={n.body} photos={Array.isArray(n.photos) ? n.photos : []} hubPin={hubPin} toast={toast} />
           {n.clip && (
             <>
               <button onClick={() => saveClip(n.clip!)} disabled={saving} className="mt-2 flex w-full items-center justify-center gap-2 rounded-full bg-[#191919] py-3 text-sm font-extrabold text-cw active:scale-[0.98]">
@@ -6271,8 +6310,8 @@ export default function App() {
                   <PromoFeedCard status={agentStatus} today={today} />
                 </Section>
                 <Section id="sec-naver" label="📲 네이버에 대표님이 올릴 것">
-                  <PlaceNewsCard data={placeNews} toast={toast} />
-                  <EkCard data={ekData} toast={toast} today={today} />
+                  <PlaceNewsCard data={placeNews} toast={toast} hubPin={hubPin} />
+                  <EkCard data={ekData} toast={toast} today={today} hubPin={hubPin} />
                 </Section>
                 <Section id="sec-money" label="💼 영업·돈·공고">
                   <ExecBrief stats={salesStats} moves={rankMoves} goTab={setTab} deals={deals} setDeals={setDeals} setTarget={(w) => setSettings((p) => ({ ...p, monthlyTarget: w }))} today={today} toast={toast} />
