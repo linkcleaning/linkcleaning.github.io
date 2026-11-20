@@ -1,0 +1,724 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#1E3A8A">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="청주한씨 족보">
+<title>나의 청주한씨 족보</title>
+<link rel="icon" id="favicon" href="">
+<link rel="apple-touch-icon" id="appleIcon" href="">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700&family=Noto+Serif+KR:wght@500;700;900&display=swap" rel="stylesheet">
+<script src="https://cdn.tailwindcss.com"></script>
+<script>
+tailwind.config={theme:{extend:{colors:{hanji:'#FAF8F5',ink:'#1F2937',jjok:'#1E3A8A',seal:'#B91C1C',paper:'#F3EEE6',line:'#E5DDD0',muk:'#6B6358'},fontFamily:{serif:['"Noto Serif KR"','"Nanum Myeongjo"','serif'],sans:['"Noto Sans KR"','system-ui','-apple-system','sans-serif']}}}};
+</script>
+<style>
+  html{font-size:16px;-webkit-text-size-adjust:100%}
+  body{background:#FAF8F5;color:#1F2937;font-family:"Noto Sans KR",system-ui,-apple-system,sans-serif;
+    background-image:radial-gradient(rgba(140,120,90,.05) 1px,transparent 1px);background-size:4px 4px}
+  .font-serif{font-family:"Noto Serif KR","Nanum Myeongjo",serif}
+  .safe-b{padding-bottom:env(safe-area-inset-bottom)}
+  .safe-t{padding-top:env(safe-area-inset-top)}
+  .hy{color:#B91C1C;font-weight:900;border-bottom:2px solid rgba(185,28,28,.35)}
+  .seal{display:inline-flex;align-items:center;justify-content:center;background:#B91C1C;color:#fff;
+    font-family:"Noto Serif KR",serif;font-weight:700;border-radius:6px;box-shadow:inset 0 0 0 2px rgba(255,255,255,.25)}
+  .card{background:#fff;border:1px solid #E5DDD0;border-radius:14px;box-shadow:0 1px 0 rgba(80,60,30,.04),0 4px 14px -8px rgba(80,60,30,.18)}
+  .badge{display:inline-block;font-size:.72rem;line-height:1;padding:.32rem .5rem;border-radius:999px;font-weight:700}
+  .b-br{background:#E8EDF8;color:#1E3A8A}
+  .b-me{background:#B91C1C;color:#fff}
+  .b-dl{background:#F3EEE6;color:#6B6358;border:1px solid #E5DDD0}
+  .tl-line{position:absolute;left:1.55rem;top:0;bottom:0;width:2px;background:linear-gradient(#1E3A8A33,#1E3A8A33)}
+  .btn{display:inline-flex;align-items:center;justify-content:center;gap:.35rem;border-radius:10px;padding:.6rem .9rem;font-weight:700;font-size:.92rem;transition:.15s}
+  .btn:active{transform:scale(.97)}
+  .btn-p{background:#1E3A8A;color:#fff}
+  .btn-s{background:#fff;color:#1E3A8A;border:1.5px solid #1E3A8A33}
+  .btn-r{background:#fff;color:#B91C1C;border:1.5px solid #B91C1C44}
+  .inp{width:100%;background:#fff;border:1.5px solid #E5DDD0;border-radius:10px;padding:.6rem .75rem;font-size:1rem;outline:none}
+  .inp:focus{border-color:#1E3A8A}
+  .lbl{font-size:.8rem;font-weight:700;color:#6B6358;margin-bottom:.25rem;display:block}
+  /* 가로 계보도 */
+  .otree{display:inline-block;min-width:100%;padding:18px 18px 40px}
+  .otree ul{display:flex;justify-content:center;padding-top:22px;position:relative;margin:0}
+  .otree li{list-style:none;position:relative;padding:22px 5px 0;display:flex;flex-direction:column;align-items:center}
+  .otree li::before,.otree li::after{content:'';position:absolute;top:0;right:50%;width:50%;height:22px;border-top:2px solid #C9BBA5}
+  .otree li::after{right:auto;left:50%;border-left:2px solid #C9BBA5}
+  .otree li:only-child::before,.otree li:only-child::after{display:none}
+  .otree li:only-child{padding-top:0}
+  .otree li:first-child::before,.otree li:last-child::after{border:0 none}
+  .otree li:last-child::before{border-right:2px solid #C9BBA5;border-radius:0 8px 0 0}
+  .otree li:first-child::after{border-radius:8px 0 0 0}
+  .otree ul ul::before{content:'';position:absolute;top:0;left:50%;border-left:2px solid #C9BBA5;height:22px}
+  .otree>ul{padding-top:0}.otree>ul>li{padding-top:0}.otree>ul>li::before,.otree>ul>li::after{display:none}
+  .node{display:flex;flex-direction:column;align-items:center}
+  .ncard{background:#fff;border:1.5px solid #E5DDD0;border-radius:12px;padding:.45rem .6rem .5rem;min-width:5.6rem;text-align:center;display:flex;flex-direction:column;align-items:center;gap:1px;box-shadow:0 3px 10px -6px rgba(80,60,30,.3)}
+  .ncard.dl{border-color:#1E3A8A;background:#F5F7FD}
+  .ncard.me{border-color:#B91C1C;box-shadow:0 0 0 3px #B91C1C22}
+  .ncard.flash{animation:flash 1.4s ease 2}
+  @keyframes flash{50%{box-shadow:0 0 0 7px #B91C1C55}}
+  .ngen{font-size:.68rem;font-weight:700;color:#fff;background:#1E3A8A;border-radius:999px;padding:.1rem .45rem}
+  .ncard.me .ngen{background:#B91C1C}
+  .nname{font-family:"Noto Serif KR",serif;font-weight:700;font-size:1.02rem;white-space:nowrap}
+  .nhanja{font-family:"Noto Serif KR",serif;font-size:.74rem;color:#6B6358;white-space:nowrap}
+  .nbr{font-size:.62rem;color:#1E3A8A;font-weight:700}
+  .ngap{font-size:.6rem;color:#B91C1C;font-weight:700}
+  .ntog{margin-top:4px;min-width:1.6rem;height:1.4rem;border-radius:999px;background:#FAF8F5;border:1.5px solid #C9BBA5;color:#6B6358;font-size:.72rem;font-weight:700;padding:0 .35rem;position:relative;z-index:1}
+  /* 세로 계보도 */
+  .itree ul{margin-left:.9rem;border-left:2px solid #E5DDD0;padding-left:.7rem}
+  .itree li{list-style:none;margin:.35rem 0}
+  .itree>ul{margin-left:0;border:0;padding-left:0}
+  .irow{display:flex;align-items:center;gap:.4rem}
+  .itog{width:1.7rem;height:1.7rem;flex:none;border-radius:8px;border:1.5px solid #E5DDD0;background:#fff;color:#6B6358;font-weight:700;font-size:.8rem}
+  .icard{flex:1;display:flex;align-items:center;gap:.5rem;background:#fff;border:1.5px solid #E5DDD0;border-radius:10px;padding:.45rem .6rem;text-align:left}
+  .icard.dl{border-color:#1E3A8A55;background:#F5F7FD}.icard.me{border-color:#B91C1C}
+  .icard.flash{animation:flash 1.4s ease 2}
+  .navbtn{flex:1;display:flex;flex-direction:column;align-items:center;gap:2px;padding:.5rem 0 .45rem;color:#8A8174;font-size:.74rem;font-weight:700}
+  .navbtn.on{color:#1E3A8A}
+  .navbtn.on svg{stroke:#1E3A8A}
+  .navbtn svg{width:1.5rem;height:1.5rem;stroke:#A89F92}
+  .fbtn{width:2.1rem;height:2.1rem;border-radius:9px;border:1.5px solid #E5DDD0;background:#fff;font-family:"Noto Serif KR",serif;font-weight:700;color:#6B6358;line-height:1}
+  .fbtn.on{background:#1E3A8A;color:#fff;border-color:#1E3A8A}
+  .sheet{animation:up .22s ease}
+  @keyframes up{from{transform:translateY(24px);opacity:0}}
+  .tab{display:none}.tab.on{display:block}
+  pre.memo{white-space:pre-wrap;font-family:inherit}
+  ::-webkit-scrollbar{height:8px;width:8px}::-webkit-scrollbar-thumb{background:#D8CDBB;border-radius:9px}
+</style>
+</head>
+<body class="min-h-screen">
+
+<!-- 헤더 -->
+<header class="sticky top-0 z-30 bg-hanji/95 backdrop-blur border-b border-line safe-t">
+  <div class="max-w-3xl mx-auto px-4 py-2.5 flex items-center gap-3">
+    <div class="seal w-10 h-10 text-xl flex-none">韓</div>
+    <div class="flex-1 min-w-0">
+      <h1 class="font-serif font-black text-lg leading-tight text-ink truncate">나의 청주한씨 족보</h1>
+      <p class="text-xs text-muk truncate" id="hdrSub">淸州韓氏 · 시조 태위공 한란</p>
+    </div>
+    <div class="flex items-center gap-1" aria-label="글자 크기">
+      <button class="fbtn text-[13px]" data-fs="0" title="보통">가</button>
+      <button class="fbtn text-[16px]" data-fs="1" title="크게">가</button>
+      <button class="fbtn text-[19px]" data-fs="2" title="아주 크게">가</button>
+    </div>
+  </div>
+  <span class="absolute right-1 bottom-0 text-[8px] text-gray-300 select-none">v1</span>
+</header>
+
+<main class="max-w-3xl mx-auto px-4 pt-4 pb-32">
+
+  <!-- ① 나의 직계 -->
+  <section id="tab-line" class="tab on">
+    <div class="card p-4 mb-4 flex items-center gap-4">
+      <div class="flex-1">
+        <div class="text-xs font-bold text-muk">나의 직계 혈통</div>
+        <div class="font-serif text-xl font-bold mt-0.5" id="lineTitle">-</div>
+        <div class="text-sm text-muk mt-1" id="lineStat">-</div>
+      </div>
+      <button class="btn btn-s text-sm" onclick="openEdit(null)">+ 인물</button>
+    </div>
+    <div id="lineList" class="relative"></div>
+  </section>
+
+  <!-- ② 전체 계보도 -->
+  <section id="tab-tree" class="tab">
+    <div class="flex flex-wrap items-center gap-2 mb-3">
+      <div class="inline-flex rounded-xl border border-line bg-white p-1">
+        <button id="modeH" class="px-3 py-1.5 rounded-lg text-sm font-bold" onclick="setTreeMode('h')">가로 트리</button>
+        <button id="modeV" class="px-3 py-1.5 rounded-lg text-sm font-bold" onclick="setTreeMode('v')">세로 목록</button>
+      </div>
+      <button class="btn btn-s !py-1.5 text-sm" onclick="expandAll()">모두 펼치기</button>
+      <button class="btn btn-s !py-1.5 text-sm" onclick="onlyDirect()">직계만</button>
+      <button class="btn btn-s !py-1.5 text-sm" onclick="focusPerson(S.meId)">나 찾기</button>
+      <div id="zoomBox" class="ml-auto inline-flex items-center gap-1">
+        <button class="fbtn" onclick="zoom(-1)">−</button>
+        <span id="zoomVal" class="text-xs font-bold text-muk w-10 text-center">100%</span>
+        <button class="fbtn" onclick="zoom(1)">＋</button>
+      </div>
+    </div>
+    <p class="text-xs text-muk mb-2">인물을 누르면 상세 정보·수정·자손 추가를 할 수 있습니다. <span class="text-seal font-bold">붉은 글자</span>는 항렬자입니다.</p>
+    <div id="treeWrap" class="card overflow-auto" style="max-height:calc(100vh - 230px)">
+      <div id="treeBox"></div>
+    </div>
+  </section>
+
+  <!-- ③ 검색 & 촌수 -->
+  <section id="tab-search" class="tab">
+    <div class="card p-4 mb-4">
+      <h2 class="font-serif font-bold text-lg mb-2">족보 검색</h2>
+      <input id="q" class="inp" placeholder="이름 · 한자 · 세수(예: 31세) · 묘소/행적 키워드" oninput="renderSearch()">
+      <div id="qInfo" class="text-xs text-muk mt-2"></div>
+      <div id="qList" class="mt-2 space-y-2"></div>
+    </div>
+
+    <div class="card p-4">
+      <h2 class="font-serif font-bold text-lg">촌수 계산기</h2>
+      <p class="text-xs text-muk mb-3">두 사람을 고르면 공통 조상을 찾아 촌수와 호칭을 알려 드립니다.</p>
+      <div class="grid grid-cols-[1fr_auto_1fr] gap-2 items-end">
+        <div><span class="lbl">기준 (A)</span><select id="selA" class="inp" onchange="renderChon()"></select></div>
+        <button class="fbtn mb-1" onclick="swapAB()" title="바꾸기">⇄</button>
+        <div><span class="lbl">상대 (B)</span><select id="selB" class="inp" onchange="renderChon()"></select></div>
+      </div>
+      <div id="chonOut" class="mt-4"></div>
+    </div>
+  </section>
+
+  <!-- ④ 데이터 관리 -->
+  <section id="tab-data" class="tab space-y-4">
+    <div class="card p-4">
+      <h2 class="font-serif font-bold text-lg">백업 · 복원</h2>
+      <p class="text-sm text-muk mt-1 mb-3">입력한 내용은 이 기기 브라우저에 자동 저장됩니다. 기기를 바꾸거나 브라우저 기록을 지우기 전에는 꼭 백업 파일을 받아 두세요.</p>
+      <div class="text-xs text-muk mb-3" id="saveInfo"></div>
+      <div class="flex flex-wrap gap-2">
+        <button class="btn btn-p" onclick="exportJSON()">⬇ 백업 파일 내보내기</button>
+        <label class="btn btn-s cursor-pointer">⬆ 백업 파일 불러오기<input type="file" accept=".json,application/json" class="hidden" onchange="importFile(this)"></label>
+      </div>
+    </div>
+
+    <div class="card p-4">
+      <h2 class="font-serif font-bold text-lg">일괄 가져오기</h2>
+      <p class="text-sm text-muk mt-1">종친회 인터넷 족보에서 조회한 내용을 한 줄에 한 사람씩 옮겨 적고 붙여 넣으세요.</p>
+      <div class="flex gap-2 my-3">
+        <label class="flex items-center gap-1 text-sm font-bold"><input type="radio" name="impType" value="text" checked onchange="impHint()"> 텍스트</label>
+        <label class="flex items-center gap-1 text-sm font-bold"><input type="radio" name="impType" value="json" onchange="impHint()"> JSON</label>
+        <select id="impMode" class="inp !w-auto !py-1 ml-auto text-sm"><option value="merge">기존에 추가</option><option value="replace">전체 바꾸기</option></select>
+      </div>
+      <div id="impHintBox" class="text-xs bg-paper border border-line rounded-lg p-3 mb-2 leading-relaxed"></div>
+      <textarea id="impText" rows="7" class="inp font-mono text-sm" placeholder="여기에 붙여 넣기"></textarea>
+      <div class="flex gap-2 mt-2">
+        <button class="btn btn-s" onclick="previewImport()">미리 보기</button>
+        <button class="btn btn-p" onclick="applyImport()">가져오기 적용</button>
+      </div>
+      <div id="impPrev" class="mt-3"></div>
+    </div>
+
+    <div class="card p-4">
+      <h2 class="font-serif font-bold text-lg">인터넷 족보 옮겨 적기 안내</h2>
+      <ol class="list-decimal pl-5 text-sm leading-7 mt-2">
+        <li>청주한씨 중앙종친회 홈페이지(cheongjuhan.net)의 <b>인터넷 족보</b> 메뉴에 들어갑니다.</li>
+        <li>내 이름이나 아버지·할아버지 이름, <b>세수·파명</b>으로 조회합니다.</li>
+        <li>조회된 계보를 <b>위 세대부터 아래로</b> 한 줄씩 「세수 | 이름 | 한자 | 파명 | 부모 이름 | 생년 | 배우자 | 행적·묘소 | 항렬자」 순서로 적습니다.</li>
+        <li>부모 이름 칸에는 「31세 한재민」처럼 세수를 함께 적으면 동명이인이 있어도 정확히 연결됩니다.</li>
+        <li>중간 세대를 다 모르면 아는 세대만 적어도 됩니다. 촌수는 <b>세수 차이</b>로 계산합니다.</li>
+        <li>다 넣은 뒤 내 카드에서 <b>「나로 지정」</b>을 누르면 직계 탭이 자동으로 정리됩니다.</li>
+      </ol>
+      <p class="text-xs text-muk mt-3">※ 처음 들어 있는 자료는 사용법을 보여 드리기 위한 <b>예시</b>입니다(시조 외 인물은 가상). 실제 족보로 바꿔 쓰세요.</p>
+    </div>
+
+    <div class="card p-4">
+      <h2 class="font-serif font-bold text-lg">앱 설치 · 오프라인</h2>
+      <p class="text-sm mt-2" id="swStatus">확인 중…</p>
+      <ul class="text-sm text-muk list-disc pl-5 mt-2 leading-7">
+        <li>아이폰: 사파리 공유 버튼 → <b>홈 화면에 추가</b></li>
+        <li>안드로이드·PC: 크롬 메뉴 → <b>앱 설치</b> 또는 <b>홈 화면에 추가</b></li>
+      </ul>
+      <button class="btn btn-s mt-3 text-sm" onclick="downloadSW()">sw.js 파일 받기 (완전 오프라인용)</button>
+    </div>
+
+    <div class="card p-4">
+      <h2 class="font-serif font-bold text-lg text-seal">초기화</h2>
+      <p class="text-sm text-muk mt-1 mb-3">모든 자료를 지우고 처음 예시 자료로 되돌립니다.</p>
+      <button class="btn btn-r" onclick="resetSample()">예시 자료로 초기화</button>
+    </div>
+  </section>
+</main>
+
+<!-- 하단 내비게이션 -->
+<nav class="fixed bottom-0 inset-x-0 z-30 bg-white/95 backdrop-blur border-t border-line safe-b">
+  <div class="max-w-3xl mx-auto flex">
+    <button class="navbtn on" data-tab="line"><svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="4.5" r="2"/><circle cx="12" cy="12" r="2"/><circle cx="12" cy="19.5" r="2"/><path d="M12 6.5v3.5M12 14v3.5"/></svg>나의 직계</button>
+    <button class="navbtn" data-tab="tree"><svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round"><rect x="9" y="2.5" width="6" height="4.5" rx="1"/><rect x="2.5" y="16.5" width="6" height="4.5" rx="1"/><rect x="15.5" y="16.5" width="6" height="4.5" rx="1"/><path d="M12 7v4.5M5.5 16.5v-5h13v5"/></svg>전체 계보도</button>
+    <button class="navbtn" data-tab="search"><svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round"><circle cx="10.5" cy="10.5" r="6.5"/><path d="M15.5 15.5l5 5"/></svg>검색·촌수</button>
+    <button class="navbtn" data-tab="data"><svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round"><ellipse cx="12" cy="5.5" rx="7.5" ry="3"/><path d="M4.5 5.5v6c0 1.7 3.4 3 7.5 3s7.5-1.3 7.5-3v-6M4.5 11.5v6c0 1.7 3.4 3 7.5 3s7.5-1.3 7.5-3v-6"/></svg>데이터 관리</button>
+  </div>
+</nav>
+
+<!-- 모달 -->
+<div id="modal" class="fixed inset-0 z-50 hidden">
+  <div class="absolute inset-0 bg-black/40" onclick="closeModal()"></div>
+  <div class="absolute inset-x-0 bottom-0 sm:inset-0 sm:flex sm:items-center sm:justify-center pointer-events-none">
+    <div id="modalBody" class="sheet pointer-events-auto bg-hanji w-full sm:max-w-lg rounded-t-2xl sm:rounded-2xl max-h-[88vh] overflow-y-auto p-5 safe-b shadow-2xl"></div>
+  </div>
+</div>
+<div id="toast" class="fixed left-1/2 -translate-x-1/2 bottom-24 z-[60] bg-ink text-white text-sm font-bold px-4 py-2.5 rounded-full opacity-0 pointer-events-none transition-opacity"></div>
+
+<script>
+/* ================= 기본 설정 ================= */
+const KEY='cjhan-jokbo-v1', PREF='cjhan-jokbo-pref';
+const $=s=>document.querySelector(s);
+const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const uid=()=>'p'+Date.now().toString(36)+Math.random().toString(36).slice(2,6);
+const cleanId=v=>v==null||v===''?null:String(v).replace(/[^\w-]/g,'_');
+
+/* ================= 예시 데이터 =================
+   시조 한란 외 인물은 사용법 안내용 가상 인물입니다. */
+const SAMPLE=[
+ {id:'p1',generation:1,branch:'시조',name:'한란',hanja:'韓蘭',courtesyName:'시호 태위공(太尉公)',birthYear:'고려 초',gender:'M',spouses:[],memo:'청주한씨 시조. 고려 태조를 도운 개국공신, 삼중대광 태위(太尉).\n세부 행적·묘소는 종친회 자료로 확인해 적어 주세요.',parentId:null,hangryeol:''},
+ {id:'p2',generation:2,branch:'시조',name:'한영',hanja:'韓穎',courtesyName:'',birthYear:'',gender:'M',spouses:[],memo:'[예시] 2세. 실제 족보로 바꿔 적으세요.',parentId:'p1',hangryeol:''},
+ {id:'p3',generation:12,branch:'문정공파',name:'한광윤',hanja:'韓光胤',courtesyName:'',birthYear:'',gender:'M',spouses:[],memo:'[예시] 문정공파 파조(가상). 3~11세는 생략된 예시입니다.',parentId:'p2',hangryeol:''},
+ {id:'p4',generation:12,branch:'충성공파',name:'한충경',hanja:'韓忠敬',courtesyName:'',birthYear:'',gender:'M',spouses:[],memo:'[예시] 충성공파 파조(가상).',parentId:'p2',hangryeol:''},
+ {id:'p19',generation:13,branch:'충성공파',name:'한윤수',hanja:'韓允洙',courtesyName:'',birthYear:'',gender:'M',spouses:[],memo:'[예시]',parentId:'p4',hangryeol:''},
+ {id:'p5',generation:28,branch:'문정공파',name:'한경일',hanja:'韓慶一',courtesyName:'호 송암(松菴)',birthYear:'1880 경진',gender:'M',spouses:['밀양박씨'],memo:'[예시] 묘소: 충북 청주시 선영',parentId:'p3',hangryeol:'경'},
+ {id:'p6',generation:29,branch:'문정공파',name:'한명호',hanja:'韓明浩',courtesyName:'',birthYear:'1905 을사',gender:'M',spouses:['전주이씨'],memo:'[예시]',parentId:'p5',hangryeol:'명'},
+ {id:'p7',generation:29,branch:'문정공파',name:'한명진',hanja:'韓明鎭',courtesyName:'',birthYear:'1910 경술',gender:'M',spouses:['경주김씨'],memo:'[예시]',parentId:'p5',hangryeol:'명'},
+ {id:'p8',generation:30,branch:'문정공파',name:'한상철',hanja:'韓相哲',courtesyName:'',birthYear:'1932 임신',gender:'M',spouses:['김해김씨'],memo:'[예시] 할아버지',parentId:'p6',hangryeol:'상'},
+ {id:'p9',generation:30,branch:'문정공파',name:'한상훈',hanja:'韓相勳',courtesyName:'',birthYear:'1936 병자',gender:'M',spouses:['남평문씨'],memo:'[예시]',parentId:'p6',hangryeol:'상'},
+ {id:'p10',generation:30,branch:'문정공파',name:'한상규',hanja:'韓相奎',courtesyName:'',birthYear:'1938 무인',gender:'M',spouses:[],memo:'[예시]',parentId:'p7',hangryeol:'상'},
+ {id:'p11',generation:31,branch:'문정공파',name:'한재민',hanja:'韓載珉',courtesyName:'',birthYear:'1958 무술',gender:'M',spouses:['진주강씨'],memo:'[예시] 아버지',parentId:'p8',hangryeol:'재'},
+ {id:'p12',generation:31,branch:'문정공파',name:'한재석',hanja:'韓載錫',courtesyName:'',birthYear:'1962 임인',gender:'M',spouses:[],memo:'[예시]',parentId:'p9',hangryeol:'재'},
+ {id:'p13',generation:31,branch:'문정공파',name:'한재영',hanja:'韓載英',courtesyName:'',birthYear:'1965 을사',gender:'M',spouses:[],memo:'[예시]',parentId:'p10',hangryeol:'재'},
+ {id:'p14',generation:32,branch:'문정공파',name:'한지훈',hanja:'韓志勳',courtesyName:'',birthYear:'1985 을축',gender:'M',spouses:['광산김씨'],memo:'[예시] 나(본인). 이 카드를 내 정보로 고쳐 쓰세요.',parentId:'p11',hangryeol:'지'},
+ {id:'p15',generation:32,branch:'문정공파',name:'한지원',hanja:'韓志媛',courtesyName:'',birthYear:'1988 무진',gender:'F',spouses:[],memo:'[예시] 여동생',parentId:'p11',hangryeol:'지'},
+ {id:'p16',generation:32,branch:'문정공파',name:'한지호',hanja:'韓志浩',courtesyName:'',birthYear:'1984 갑자',gender:'M',spouses:[],memo:'[예시]',parentId:'p12',hangryeol:'지'},
+ {id:'p17',generation:33,branch:'문정공파',name:'한도윤',hanja:'韓道允',courtesyName:'',birthYear:'2014 갑오',gender:'M',spouses:[],memo:'[예시] 아들',parentId:'p14',hangryeol:'도'},
+ {id:'p18',generation:33,branch:'문정공파',name:'한도연',hanja:'韓道姸',courtesyName:'',birthYear:'2017 정유',gender:'F',spouses:[],memo:'[예시] 딸',parentId:'p14',hangryeol:'도'}
+];
+
+let S={people:[],meId:null,updated:null};
+let collapsed=new Set(), treeMode='h', zoomLv=1;
+
+/* ================= 저장/불러오기 ================= */
+function norm(p){
+  return {id:cleanId(p.id)||uid(),generation:parseInt(p.generation)||0,branch:String(p.branch||''),name:String(p.name||'(이름 없음)'),
+    hanja:String(p.hanja||''),courtesyName:String(p.courtesyName||''),birthYear:String(p.birthYear||''),
+    gender:p.gender==='F'?'F':'M',spouses:Array.isArray(p.spouses)?p.spouses.map(String):(p.spouses?String(p.spouses).split(/[,，、]/).map(s=>s.trim()).filter(Boolean):[]),
+    memo:String(p.memo||''),parentId:cleanId(p.parentId),isMyDirectLine:!!p.isMyDirectLine,hangryeol:String(p.hangryeol||'')};
+}
+function load(){
+  try{const d=JSON.parse(localStorage.getItem(KEY)); if(d&&Array.isArray(d.people)&&d.people.length){S={people:d.people.map(norm),meId:cleanId(d.meId),updated:d.updated};return;}}catch(e){}
+  useSample();
+}
+function useSample(){S={people:SAMPLE.map(p=>norm(p)),meId:'p14',updated:null};recomputeDirect();save(true);}
+function save(silent){
+  S.updated=new Date().toISOString();
+  try{localStorage.setItem(KEY,JSON.stringify(S));}catch(e){toast('저장 공간이 부족합니다. 백업을 받아 두세요.');}
+  if(!silent)toast('자동 저장되었습니다');
+}
+const P=id=>S.people.find(p=>p.id===id);
+const birthNum=p=>{const m=String(p.birthYear).match(/\d{4}/);return m?+m[0]:9999};
+const childrenOf=id=>S.people.filter(p=>p.parentId===id).sort((a,b)=>a.generation-b.generation||birthNum(a)-birthNum(b)||a.name.localeCompare(b.name));
+const roots=()=>S.people.filter(p=>!p.parentId||!P(p.parentId)).sort((a,b)=>a.generation-b.generation);
+function ancestors(id){const out=[];let c=P(id),guard=0;while(c&&c.parentId&&guard++<500){const pa=P(c.parentId);if(!pa)break;out.push(pa);c=pa;}return out;}
+function descendants(id){const out=[];const st=[id];while(st.length){const x=st.pop();childrenOf(x).forEach(k=>{out.push(k);st.push(k.id);});}return out;}
+function recomputeDirect(){
+  if(!S.meId||!P(S.meId))return;
+  const set=new Set([S.meId,...ancestors(S.meId).map(p=>p.id),...descendants(S.meId).map(p=>p.id)]);
+  S.people.forEach(p=>p.isMyDirectLine=set.has(p.id));
+}
+function nameHTML(p){
+  const h=p.hangryeol; if(!h)return esc(p.name);
+  let done=false;
+  return [...p.name].map((ch,i)=>{if(!done&&i>0&&ch===h){done=true;return `<span class="hy">${esc(ch)}</span>`}return esc(ch)}).join('');
+}
+function toast(m){const t=$('#toast');t.textContent=m;t.style.opacity=1;clearTimeout(t._t);t._t=setTimeout(()=>t.style.opacity=0,1600);}
+
+/* ================= 글자 크기 ================= */
+const FS=[16,19,22];
+function setFont(i){document.documentElement.style.fontSize=FS[i]+'px';document.querySelectorAll('[data-fs]').forEach(b=>b.classList.toggle('on',+b.dataset.fs===i));savePref({fs:i});}
+function getPref(){try{return JSON.parse(localStorage.getItem(PREF))||{}}catch(e){return{}}}
+function savePref(o){try{localStorage.setItem(PREF,JSON.stringify({...getPref(),...o}))}catch(e){}}
+document.querySelectorAll('[data-fs]').forEach(b=>b.onclick=()=>setFont(+b.dataset.fs));
+
+/* ================= 탭 ================= */
+let curTab='line';
+function showTab(t){
+  curTab=t;
+  document.querySelectorAll('.tab').forEach(s=>s.classList.toggle('on',s.id==='tab-'+t));
+  document.querySelectorAll('.navbtn').forEach(b=>b.classList.toggle('on',b.dataset.tab===t));
+  window.scrollTo({top:0});
+  renderAll();
+}
+document.querySelectorAll('.navbtn').forEach(b=>b.onclick=()=>showTab(b.dataset.tab));
+
+function renderAll(){
+  const me=P(S.meId);
+  $('#hdrSub').textContent=me?`淸州韓氏 · ${me.branch||''} ${me.generation}세 ${me.name}`:'淸州韓氏 · 시조 태위공 한란';
+  if(curTab==='line')renderLine();
+  if(curTab==='tree')renderTree();
+  if(curTab==='search'){renderSearch();fillSelects();renderChon();}
+  if(curTab==='data')renderData();
+}
+
+/* ================= ① 나의 직계 ================= */
+function renderLine(){
+  const me=P(S.meId);
+  const list=S.people.filter(p=>p.isMyDirectLine).sort((a,b)=>a.generation-b.generation||birthNum(a)-birthNum(b));
+  $('#lineTitle').innerHTML=me?`${esc(me.branch)} <span class="text-seal">${me.generation}세</span> ${nameHTML(me)}`:'"나"를 지정해 주세요';
+  const gens=[...new Set(list.map(p=>p.generation))];
+  $('#lineStat').textContent=list.length?`시조부터 ${gens.length}개 세대 · ${list.length}명 기록 · 전체 ${S.people.length}명`:'계보도에서 내 카드를 눌러 「나로 지정」을 하면 직계가 정리됩니다.';
+  if(!list.length){$('#lineList').innerHTML='';return;}
+  let html='<div class="tl-line"></div>',prev=null;
+  gens.forEach(g=>{
+    if(prev!==null&&g-prev>1)html+=`<div class="relative pl-14 py-1"><div class="text-xs text-muk bg-paper border border-dashed border-line rounded-lg px-3 py-2">⋮ ${prev+1}세 ~ ${g-1}세 (${g-prev-1}대) 기록 없음 — 계보도에서 채워 넣을 수 있습니다</div></div>`;
+    const ps=list.filter(p=>p.generation===g);
+    html+=`<div class="relative pl-14 pb-3">
+      <div class="absolute left-0 top-2 w-[3.1rem] flex justify-center"><div class="seal w-11 h-11 text-[.8rem] leading-tight text-center ${ps.some(p=>p.id===S.meId)?'':'!bg-jjok'}">${g}<br>世</div></div>
+      <div class="grid gap-2 ${ps.length>1?'sm:grid-cols-2':''}">${ps.map(lineCard).join('')}</div></div>`;
+    prev=g;
+  });
+  $('#lineList').innerHTML=html;
+}
+function lineCard(p){
+  const isMe=p.id===S.meId, kid=S.meId&&p.parentId===S.meId;
+  return `<button class="card text-left p-3.5 w-full ${isMe?'!border-seal ring-2 ring-seal/15':''}" onclick="openPerson('${p.id}')">
+    <div class="flex items-center gap-2 flex-wrap">
+      <span class="font-serif text-xl font-bold">${nameHTML(p)}</span>
+      <span class="font-serif text-muk">${esc(p.hanja)}</span>
+      ${isMe?'<span class="badge b-me">나</span>':''}${kid?'<span class="badge b-dl">자녀</span>':''}
+    </div>
+    <div class="flex items-center gap-1.5 mt-1.5 flex-wrap">
+      ${p.branch?`<span class="badge b-br">${esc(p.branch)}</span>`:''}
+      ${p.hangryeol?`<span class="badge b-dl">항렬 <b class="text-seal">${esc(p.hangryeol)}</b></span>`:''}
+      ${p.birthYear?`<span class="text-xs text-muk">${esc(p.birthYear)}</span>`:''}
+      ${p.courtesyName?`<span class="text-xs text-muk">· ${esc(p.courtesyName)}</span>`:''}
+    </div>
+    ${p.memo?`<div class="text-sm text-muk mt-1.5 line-clamp-2">${esc(p.memo.split('\n')[0])}</div>`:''}
+  </button>`;
+}
+
+/* ================= ② 전체 계보도 ================= */
+function setTreeMode(m){treeMode=m;savePref({tm:m});renderTree();}
+function toggleNode(id){collapsed.has(id)?collapsed.delete(id):collapsed.add(id);renderTree();}
+function expandAll(){collapsed.clear();renderTree();}
+function onlyDirect(){collapsed.clear();S.people.forEach(p=>{if(!p.isMyDirectLine&&childrenOf(p.id).length)collapsed.add(p.id)});renderTree();}
+function zoom(d){zoomLv=Math.min(1.6,Math.max(.4,+(zoomLv+d*.15).toFixed(2)));applyZoom();}
+function applyZoom(){const b=$('#treeBox');b.style.zoom=treeMode==='h'?zoomLv:1;$('#zoomVal').textContent=Math.round(zoomLv*100)+'%';}
+function nodeCls(p){return (p.isMyDirectLine?' dl':'')+(p.id===S.meId?' me':'')}
+function gapLabel(p){const pa=P(p.parentId);if(pa&&p.generation-pa.generation>1)return `<span class="ngap">⋮ ${p.generation-pa.generation-1}대 생략</span>`;return ''}
+function oNode(p){
+  const kids=childrenOf(p.id),col=collapsed.has(p.id);
+  return `<li><div class="node">
+    ${gapLabel(p)}
+    <button class="ncard${nodeCls(p)}" id="n-${p.id}" onclick="openPerson('${p.id}')">
+      <span class="ngen">${p.generation}세</span>
+      <span class="nname">${nameHTML(p)}</span>
+      ${p.hanja?`<span class="nhanja">${esc(p.hanja)}</span>`:''}
+      ${p.branch?`<span class="nbr">${esc(p.branch)}</span>`:''}
+    </button>
+    ${kids.length?`<button class="ntog" onclick="toggleNode('${p.id}')">${col?'＋'+kids.length:'−'}</button>`:''}
+  </div>${kids.length&&!col?`<ul>${kids.map(oNode).join('')}</ul>`:''}</li>`;
+}
+function iNode(p){
+  const kids=childrenOf(p.id),col=collapsed.has(p.id);
+  const pa=P(p.parentId),gap=pa&&p.generation-pa.generation>1?`<div class="ngap ml-9">⋮ ${p.generation-pa.generation-1}대 생략</div>`:'';
+  return `<li>${gap}<div class="irow">
+    ${kids.length?`<button class="itog" onclick="toggleNode('${p.id}')">${col?'▸':'▾'}</button>`:'<span class="w-[1.7rem] flex-none"></span>'}
+    <button class="icard${nodeCls(p)}" id="n-${p.id}" onclick="openPerson('${p.id}')">
+      <span class="ngen flex-none">${p.generation}세</span>
+      <span class="font-serif font-bold">${nameHTML(p)}</span>
+      <span class="font-serif text-sm text-muk">${esc(p.hanja)}</span>
+      <span class="ml-auto text-xs text-jjok font-bold">${esc(p.branch)}${col&&kids.length?` · 자손 ${kids.length}`:''}</span>
+    </button></div>
+    ${kids.length&&!col?`<ul>${kids.map(iNode).join('')}</ul>`:''}</li>`;
+}
+function renderTree(){
+  $('#modeH').className='px-3 py-1.5 rounded-lg text-sm font-bold '+(treeMode==='h'?'bg-jjok text-white':'text-muk');
+  $('#modeV').className='px-3 py-1.5 rounded-lg text-sm font-bold '+(treeMode==='v'?'bg-jjok text-white':'text-muk');
+  $('#zoomBox').style.visibility=treeMode==='h'?'visible':'hidden';
+  const rs=roots();
+  $('#treeBox').innerHTML=!rs.length?'<p class="p-6 text-center text-muk">인물이 없습니다.</p>':
+    treeMode==='h'?`<div class="otree"><ul>${rs.map(oNode).join('')}</ul></div>`:`<div class="itree p-3"><ul>${rs.map(iNode).join('')}</ul></div>`;
+  applyZoom();
+}
+function focusPerson(id){
+  if(!id||!P(id)){toast('먼저 「나로 지정」을 해 주세요');return;}
+  ancestors(id).forEach(a=>collapsed.delete(a.id));
+  closeModal(); if(curTab!=='tree')showTab('tree'); else renderTree();
+  setTimeout(()=>{const el=document.getElementById('n-'+id);if(el){el.scrollIntoView({behavior:'smooth',block:'center',inline:'center'});el.classList.add('flash');setTimeout(()=>el.classList.remove('flash'),3000);}},80);
+}
+
+/* ================= 상세 / 수정 모달 ================= */
+function modal(html){$('#modalBody').innerHTML=html;$('#modal').classList.remove('hidden');document.body.style.overflow='hidden';}
+function closeModal(){$('#modal').classList.add('hidden');document.body.style.overflow='';}
+document.addEventListener('keydown',e=>{if(e.key==='Escape')closeModal()});
+function row(k,v){return v?`<div class="flex gap-3 py-2 border-b border-line last:border-0"><dt class="w-20 flex-none text-sm font-bold text-muk">${k}</dt><dd class="flex-1 text-[.95rem]">${v}</dd></div>`:''}
+function openPerson(id){
+  const p=P(id);if(!p)return;
+  const pa=P(p.parentId),kids=childrenOf(id),isMe=id===S.meId;
+  modal(`
+    <div class="flex items-start gap-3">
+      <div class="seal w-14 h-14 text-sm leading-tight text-center flex-none ${isMe?'':'!bg-jjok'}">${p.generation}<br>世</div>
+      <div class="flex-1 min-w-0">
+        <div class="font-serif text-2xl font-bold">${nameHTML(p)} <span class="text-lg text-muk">${esc(p.hanja)}</span></div>
+        <div class="flex gap-1.5 flex-wrap mt-1.5">
+          ${p.branch?`<span class="badge b-br">${esc(p.branch)}</span>`:''}${isMe?'<span class="badge b-me">나</span>':''}${p.isMyDirectLine&&!isMe?'<span class="badge b-dl">나의 직계</span>':''}
+        </div>
+      </div>
+      <button class="fbtn flex-none" onclick="closeModal()">✕</button>
+    </div>
+    <dl class="mt-4 card px-4 py-1">
+      ${row('자 · 호',esc(p.courtesyName))}
+      ${row('생년',esc(p.birthYear))}
+      ${row('성별',p.gender==='F'?'여':'남')}
+      ${row('항렬자',p.hangryeol?`<b class="text-seal font-serif text-lg">${esc(p.hangryeol)}</b>`:'')}
+      ${row('배우자',esc(p.spouses.join(', ')))}
+      ${row('부(父)',pa?`<a class="text-jjok font-bold underline" href="#" onclick="openPerson('${pa.id}');return false">${pa.generation}세 ${esc(pa.name)}</a>`:'<span class="text-muk">(최상위)</span>')}
+      ${row('자녀',kids.length?kids.map(k=>`<a class="text-jjok font-bold underline mr-2" href="#" onclick="openPerson('${k.id}');return false">${esc(k.name)}</a>`).join(''):'')}
+      ${row('행적·묘소',p.memo?`<pre class="memo">${esc(p.memo)}</pre>`:'')}
+    </dl>
+    <div class="grid grid-cols-2 gap-2 mt-4">
+      <button class="btn btn-p" onclick="openEdit('${id}')">✎ 수정</button>
+      <button class="btn btn-p" onclick="openEdit(null,'${id}')">＋ 자손 추가</button>
+      <button class="btn btn-s" onclick="focusPerson('${id}')">계보도에서 보기</button>
+      <button class="btn btn-s" onclick="chonWithMe('${id}')">나와의 촌수</button>
+      ${isMe?'<span></span>':`<button class="btn btn-s" onclick="setMe('${id}')">나로 지정</button>`}
+      <button class="btn btn-r" onclick="delPerson('${id}')">삭제</button>
+    </div>`);
+}
+function setMe(id){S.meId=id;recomputeDirect();save();closeModal();renderAll();toast('"나"로 지정하고 직계를 정리했습니다');}
+function chonWithMe(id){if(!S.meId){toast('먼저 「나로 지정」을 해 주세요');return;}closeModal();showTab('search');$('#selA').value=S.meId;$('#selB').value=id;renderChon();setTimeout(()=>$('#chonOut').scrollIntoView({behavior:'smooth',block:'center'}),60);}
+function delPerson(id){
+  const p=P(id),ds=descendants(id);
+  if(!confirm(`${p.generation}세 ${p.name}을(를) 삭제할까요?${ds.length?`\n아래 자손 ${ds.length}명도 함께 삭제됩니다.`:''}`))return;
+  const rm=new Set([id,...ds.map(d=>d.id)]);
+  S.people=S.people.filter(x=>!rm.has(x.id));
+  if(rm.has(S.meId))S.meId=null;
+  save();closeModal();renderAll();
+}
+function openEdit(id,parentId){
+  const isNew=!id, p=isNew?null:P(id), pa=P(isNew?parentId:p.parentId);
+  const d=p||{generation:pa?pa.generation+1:1,branch:pa?pa.branch:'',name:'한',hanja:'韓',courtesyName:'',birthYear:'',gender:'M',spouses:[],memo:'',parentId:pa?pa.id:null,hangryeol:'',isMyDirectLine:false};
+  const banned=new Set(isNew?[]:[id,...descendants(id).map(x=>x.id)]);
+  const opts=S.people.filter(x=>!banned.has(x.id)).sort((a,b)=>a.generation-b.generation).map(x=>`<option value="${x.id}" ${x.id===d.parentId?'selected':''}>${x.generation}세 ${esc(x.name)} ${esc(x.branch)}</option>`).join('');
+  modal(`
+    <div class="flex items-center mb-3"><h3 class="font-serif text-xl font-bold flex-1">${isNew?(pa?`${esc(pa.name)}의 자손 추가`:'새 인물 추가'):'인물 수정'}</h3><button class="fbtn" onclick="${isNew&&pa?`openPerson('${pa.id}')`:(isNew?'closeModal()':`openPerson('${id}')`)}">✕</button></div>
+    <form id="ef" class="grid grid-cols-2 gap-3" onsubmit="submitEdit(event,${isNew?'null':`'${id}'`})">
+      <div><span class="lbl">세수 *</span><input name="generation" type="number" min="1" class="inp" value="${d.generation}" required></div>
+      <div><span class="lbl">파명</span><input name="branch" class="inp" value="${esc(d.branch)}" placeholder="예: 문정공파"></div>
+      <div><span class="lbl">한글 성명 *</span><input name="name" class="inp" value="${esc(d.name)}" required></div>
+      <div><span class="lbl">한자 성명</span><input name="hanja" class="inp font-serif" value="${esc(d.hanja)}"></div>
+      <div><span class="lbl">항렬자 (1글자)</span><input name="hangryeol" maxlength="1" class="inp" value="${esc(d.hangryeol)}" placeholder="예: 재"></div>
+      <div><span class="lbl">성별</span><select name="gender" class="inp"><option value="M" ${d.gender!=='F'?'selected':''}>남</option><option value="F" ${d.gender==='F'?'selected':''}>여</option></select></div>
+      <div><span class="lbl">자 · 호</span><input name="courtesyName" class="inp" value="${esc(d.courtesyName)}"></div>
+      <div><span class="lbl">생년 / 간지</span><input name="birthYear" class="inp" value="${esc(d.birthYear)}" placeholder="예: 1958 무술"></div>
+      <div class="col-span-2"><span class="lbl">배우자 (본관·성씨, 쉼표로 구분)</span><input name="spouses" class="inp" value="${esc(d.spouses.join(', '))}" placeholder="예: 밀양박씨"></div>
+      <div class="col-span-2"><span class="lbl">부(父)</span><select name="parentId" class="inp"><option value="">(최상위 · 부모 없음)</option>${opts}</select></div>
+      <div class="col-span-2"><span class="lbl">행적 · 관직 · 묘소</span><textarea name="memo" rows="4" class="inp">${esc(d.memo)}</textarea></div>
+      <label class="col-span-2 flex items-center gap-2 text-sm font-bold"><input type="checkbox" name="isMyDirectLine" ${d.isMyDirectLine?'checked':''}> 나의 직계 조상·자손으로 표시</label>
+      <button class="btn btn-p col-span-2 !py-3 text-base">${isNew?'추가하기':'저장하기'}</button>
+    </form>`);
+}
+function submitEdit(e,id){
+  e.preventDefault();
+  const f=new FormData(e.target),o=Object.fromEntries(f.entries());
+  o.isMyDirectLine=f.has('isMyDirectLine');
+  const data=norm({...o,id:id||uid()});
+  if(!data.name.trim()){toast('이름을 입력해 주세요');return;}
+  if(id){const i=S.people.findIndex(p=>p.id===id);S.people[i]=data;}
+  else{
+    const pa=P(data.parentId);
+    if(pa&&S.meId&&(pa.id===S.meId||ancestors(pa.id).some(a=>a.id===S.meId)))data.isMyDirectLine=true;
+    S.people.push(data);
+    if(pa)collapsed.delete(pa.id);
+  }
+  save();openPerson(data.id);renderAll();
+}
+
+/* ================= ③ 검색 ================= */
+function renderSearch(){
+  const q=$('#q').value.trim();
+  if(!q){$('#qInfo').textContent=`전체 ${S.people.length}명 · 이름, 한자, 세수, 파명, 묘소·행적으로 찾을 수 있습니다.`;$('#qList').innerHTML='';return;}
+  const gm=q.match(/^(\d+)\s*세?$/);
+  const res=S.people.filter(p=>gm?p.generation===+gm[1]:[p.name,p.hanja,p.branch,p.memo,p.courtesyName,p.birthYear,p.spouses.join(' '),p.generation+'세'].join(' ').toLowerCase().includes(q.toLowerCase()))
+    .sort((a,b)=>a.generation-b.generation);
+  $('#qInfo').textContent=`검색 결과 ${res.length}명`;
+  $('#qList').innerHTML=res.slice(0,100).map(p=>`
+    <div class="flex items-center gap-2 border border-line rounded-xl p-2.5 bg-hanji">
+      <button class="flex-1 text-left min-w-0" onclick="openPerson('${p.id}')">
+        <div class="flex items-center gap-1.5 flex-wrap"><span class="ngen">${p.generation}세</span><b class="font-serif text-lg">${nameHTML(p)}</b><span class="font-serif text-sm text-muk">${esc(p.hanja)}</span>${p.id===S.meId?'<span class="badge b-me">나</span>':''}</div>
+        <div class="text-xs text-muk truncate mt-0.5">${esc(p.branch)} ${p.memo?'· '+esc(p.memo.split('\n')[0]):''}</div>
+      </button>
+      <button class="fbtn !w-auto px-2 text-xs" onclick="pickAB('A','${p.id}')">A</button>
+      <button class="fbtn !w-auto px-2 text-xs" onclick="pickAB('B','${p.id}')">B</button>
+    </div>`).join('');
+}
+function fillSelects(){
+  const a=$('#selA').value,b=$('#selB').value;
+  const o=S.people.slice().sort((x,y)=>x.generation-y.generation||birthNum(x)-birthNum(y)).map(p=>`<option value="${p.id}">${p.generation}세 ${esc(p.name)}${p.id===S.meId?' (나)':''} · ${esc(p.branch)}</option>`).join('');
+  $('#selA').innerHTML=o;$('#selB').innerHTML=o;
+  $('#selA').value=P(a)?a:(S.meId||S.people[0]?.id||'');
+  $('#selB').value=P(b)?b:(S.people.find(p=>p.id==='p12')?.id||S.people[1]?.id||'');
+}
+function pickAB(w,id){$('#sel'+w).value=id;renderChon();toast(`${P(id).name} → ${w} 선택`);}
+function swapAB(){const a=$('#selA').value;$('#selA').value=$('#selB').value;$('#selB').value=a;renderChon();}
+
+/* ================= 촌수 계산 ================= */
+function lca(aId,bId){
+  const chainA=[P(aId),...ancestors(aId)],idx=new Map(chainA.map((p,i)=>[p.id,i]));
+  const chainB=[P(bId),...ancestors(bId)];
+  for(let j=0;j<chainB.length;j++){if(idx.has(chainB[j].id))return {anc:chainB[j],stepA:idx.get(chainB[j].id),stepB:j,chainA,chainB};}
+  return null;
+}
+function relTitle(a,b,B,A){
+  const F=B.gender==='F';
+  if(a===0&&b===0)return '본인';
+  if(a===0){const m={1:F?'딸':'아들',2:F?'손녀':'손자',3:F?'증손녀':'증손자',4:'현손(고손)'};return m[b]||`${b}대손`;}
+  if(b===0){const m={1:F?'어머니':'아버지',2:F?'할머니':'할아버지',3:F?'증조할머니':'증조할아버지',4:F?'고조할머니':'고조할아버지'};return m[a]||`${a}대조`;}
+  const k=a+','+b;
+  if(k==='1,1'){const ab=birthNum(A),bb=birthNum(B);if(ab===9999||bb===9999||ab===bb)return F?'자매·남매':'형제';
+    const older=bb<ab;return F?(older?'누나(언니)':'여동생'):(older?'형(오빠)':'남동생');}
+  const T={'2,1':F?'고모':'삼촌 (백부·숙부)','1,2':F?'조카딸(질녀)':'조카(질)','2,2':F?'사촌 자매(종자매)':'사촌 형제(종형제)',
+    '3,1':F?'대고모(왕고모)':'종조부 (큰·작은할아버지)','1,3':F?'종손녀':'종손','3,2':F?'당고모':'당숙 (종숙·5촌 아저씨)','2,3':F?'당질녀':'당질 (종질·5촌 조카)',
+    '3,3':F?'재종자매 (6촌)':'재종형제 (6촌)','4,1':F?'증대고모':'증종조부','1,4':'증종손','4,2':F?'재종대고모':'재종조부','2,4':'재종손',
+    '4,3':F?'재종고모':'재종숙 (7촌 아저씨)','3,4':'재종질 (7촌 조카)','4,4':'삼종형제 (8촌)','5,4':'삼종숙 (9촌)','4,5':'삼종질 (9촌)','5,5':'사종형제 (10촌)'};
+  if(T[k])return T[k];
+  if(a===b)return `같은 항렬 ${a+b}촌 형제뻘`;
+  return a>b?`${a-b}대 위 항렬 (아저씨·할아버지뻘)`:`${b-a}대 아래 항렬 (조카·손주뻘)`;
+}
+function renderChon(){
+  const aId=$('#selA').value,bId=$('#selB').value,A=P(aId),B=P(bId),out=$('#chonOut');
+  if(!A||!B){out.innerHTML='';return;}
+  if(aId===bId){out.innerHTML='<div class="text-center text-muk py-3">같은 사람을 골랐습니다.</div>';return;}
+  const r=lca(aId,bId);
+  if(!r){out.innerHTML='<div class="bg-paper rounded-xl p-4 text-sm">두 사람의 공통 조상이 기록되어 있지 않습니다. 부모 연결을 확인해 주세요.</div>';return;}
+  const L=r.anc;
+  const okGen=A.generation&&B.generation&&L.generation;
+  let a=okGen?A.generation-L.generation:r.stepA, b=okGen?B.generation-L.generation:r.stepB;
+  if(a<0||b<0){a=r.stepA;b=r.stepB;}
+  const chon=a===0||b===0?Math.max(a,b):a+b;
+  const title=relTitle(a,b,B,A);
+  const lineal=a===0||b===0;
+  const pathA=r.chainA.slice(0,r.stepA+1).reverse(), pathB=r.chainB.slice(0,r.stepB);
+  const chip=p=>`<span class="inline-block bg-white border border-line rounded-lg px-2 py-1 text-sm"><b class="text-jjok">${p.generation}세</b> ${esc(p.name)}</span>`;
+  out.innerHTML=`
+   <div class="rounded-2xl p-5 text-center text-white" style="background:linear-gradient(135deg,#1E3A8A,#162c6b)">
+     <div class="text-sm opacity-80">${esc(B.name)}은(는) ${esc(A.name)}의</div>
+     <div class="font-serif font-black text-3xl mt-1">${chon}촌${lineal?' (직계)':''}</div>
+     <div class="font-serif text-xl mt-1"><span class="bg-seal px-2.5 py-0.5 rounded-md">${esc(title)}</span></div>
+   </div>
+   <div class="mt-3 text-sm bg-paper border border-line rounded-xl p-3 leading-7">
+     <div><b>공통 조상:</b> ${L.generation}세 ${esc(L.name)} ${esc(L.hanja)} ${L.branch?`(${esc(L.branch)})`:''}</div>
+     <div><b>계산:</b> A는 공통 조상에서 ${a}대 아래, B는 ${b}대 아래 → ${lineal?`직계 ${chon}촌`:`${a} + ${b} = ${chon}촌`}</div>
+     <div class="mt-2 flex flex-wrap items-center gap-1">${pathA.map(chip).join(' <span class="text-muk">→</span> ')}<span class="text-xs text-muk w-full">↑ A쪽 계보</span></div>
+     ${pathB.length?`<div class="mt-1 flex flex-wrap items-center gap-1">${chip(L)} <span class="text-muk">→</span> ${pathB.slice().reverse().map(chip).join(' <span class="text-muk">→</span> ')}<span class="text-xs text-muk w-full">↑ B쪽 계보</span></div>`:''}
+     ${okGen&&(a!==r.stepA||b!==r.stepB)?'<div class="text-xs text-seal mt-1">※ 중간 세대 기록이 생략되어 있어 세수 차이로 계산했습니다.</div>':''}
+   </div>`;
+}
+
+/* ================= ④ 데이터 관리 ================= */
+function renderData(){
+  $('#saveInfo').textContent=`현재 ${S.people.length}명 저장됨 · 마지막 저장 ${S.updated?new Date(S.updated).toLocaleString('ko-KR'):'-'}`;
+  impHint();swStatusText();
+}
+function exportJSON(){
+  const blob=new Blob([JSON.stringify({app:'나의 청주한씨 족보',version:1,exportedAt:new Date().toISOString(),meId:S.meId,people:S.people},null,2)],{type:'application/json'});
+  const a=document.createElement('a');a.href=URL.createObjectURL(blob);
+  const d=new Date();a.download=`청주한씨족보_백업_${d.getFullYear()}${String(d.getMonth()+1).padStart(2,'0')}${String(d.getDate()).padStart(2,'0')}.json`;
+  document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(a.href),2000);toast('백업 파일을 내려받았습니다');
+}
+function importFile(inp){
+  const f=inp.files[0];if(!f)return;
+  const r=new FileReader();
+  r.onload=()=>{try{const d=JSON.parse(r.result);const arr=Array.isArray(d)?d:d.people;if(!Array.isArray(arr)||!arr.length)throw 0;
+    if(!confirm(`백업 파일의 ${arr.length}명으로 현재 자료를 바꿀까요?`))return;
+    S.people=arr.map(norm);S.meId=cleanId(d.meId)&&P(cleanId(d.meId))?cleanId(d.meId):null;collapsed.clear();save();renderAll();toast('복원했습니다');
+  }catch(e){alert('올바른 백업 파일이 아닙니다.');}inp.value='';};
+  r.readAsText(f);
+}
+const impType=()=>document.querySelector('input[name=impType]:checked').value;
+function impHint(){
+  $('#impHintBox').innerHTML=impType()==='text'?
+   `<b>형식</b> (구분은 <code>|</code> 또는 탭, 위 세대부터):<br><code>세수 | 이름 | 한자 | 파명 | 부모 | 생년 | 배우자 | 행적·묘소 | 항렬자</code><br><br><b>예시</b><br><code>31 | 한재민 | 韓載珉 | 문정공파 | 30세 한상철 | 1958 무술 | 진주강씨 | 묘소: 청주 선영 | 재</code><br><code>32 | 한지훈 | 韓志勳 | 문정공파 | 한재민 | 1985 | | | 지</code><br><span class="text-muk"># 으로 시작하는 줄은 무시합니다. 부모 칸이 비면 최상위로 들어갑니다.</span>`:
+   `<b>JSON 배열</b>을 붙여 넣으세요. 백업 파일 내용 그대로도 됩니다.<br><code>[{"id":"a1","generation":31,"name":"한재민","hanja":"韓載珉","branch":"문정공파","parentId":"p8"}]</code>`;
+}
+function parseText(txt){
+  const lines=txt.split(/\r?\n/).map(l=>l.trim()).filter(l=>l&&!l.startsWith('#'));
+  const rows=lines.map((l,i)=>{const c=l.split(/\s*[|\t]\s*/);return {line:i+1,generation:parseInt(c[0]),name:(c[1]||'').trim(),hanja:c[2]||'',branch:c[3]||'',parentText:(c[4]||'').trim(),birthYear:c[5]||'',spouses:c[6]||'',memo:c[7]||'',hangryeol:(c[8]||'').trim().slice(0,1)}}).filter(r=>r.name);
+  rows.sort((a,b)=>(a.generation||0)-(b.generation||0));
+  const pool=$('#impMode').value==='merge'?S.people.slice():[];
+  const out=[];
+  rows.forEach(r=>{
+    let parentId=null,status='최상위';
+    if(r.parentText){
+      const m=r.parentText.match(/^(\d+)\s*세\s*(.+)$/);const pName=(m?m[2]:r.parentText).trim(),pGen=m?+m[1]:null;
+      let cands=pool.filter(p=>p.name===pName&&(pGen?p.generation===pGen:true));
+      if(!pGen&&r.generation)cands=cands.filter(p=>p.generation<r.generation).sort((a,b)=>Math.abs(r.generation-1-a.generation)-Math.abs(r.generation-1-b.generation));
+      if(cands.length){parentId=cands[cands.length&&!pGen?0:cands.length-1].id;status='연결';}else status='부모 못 찾음';
+    }
+    const p=norm({...r,id:uid()+out.length,parentId});
+    pool.push(p);out.push({p,status,parentText:r.parentText});
+  });
+  return out;
+}
+function parseJSON(txt){const d=JSON.parse(txt);const arr=Array.isArray(d)?d:d.people;if(!Array.isArray(arr))throw new Error('배열이 아닙니다');return arr.map(x=>({p:norm(x),status:x.parentId?'연결':'최상위'}));}
+let impCache=null;
+function previewImport(){
+  const t=$('#impText').value.trim();if(!t){toast('내용을 붙여 넣어 주세요');return null;}
+  try{impCache=impType()==='text'?parseText(t):parseJSON(t);}catch(e){$('#impPrev').innerHTML=`<div class="text-seal text-sm">읽을 수 없습니다: ${esc(e.message)}</div>`;return null;}
+  const bad=impCache.filter(x=>x.status==='부모 못 찾음').length;
+  $('#impPrev').innerHTML=`<div class="text-sm font-bold mb-2">${impCache.length}명 인식 ${bad?`<span class="text-seal">· 부모 못 찾음 ${bad}명 (최상위로 들어감)</span>`:''}</div>
+   <div class="max-h-60 overflow-auto border border-line rounded-xl bg-white"><table class="w-full text-sm"><thead class="bg-paper sticky top-0"><tr><th class="p-2 text-left">세수</th><th class="p-2 text-left">이름</th><th class="p-2 text-left">부모</th><th class="p-2 text-left">상태</th></tr></thead><tbody>
+   ${impCache.map(x=>`<tr class="border-t border-line"><td class="p-2">${x.p.generation}세</td><td class="p-2 font-serif font-bold">${esc(x.p.name)} <span class="text-muk font-normal">${esc(x.p.hanja)}</span></td><td class="p-2">${esc(x.parentText??x.p.parentId??'')}</td><td class="p-2 ${x.status==='부모 못 찾음'?'text-seal font-bold':'text-jjok'}">${x.status}</td></tr>`).join('')}
+   </tbody></table></div>`;
+  return impCache;
+}
+function applyImport(){
+  const res=previewImport();if(!res||!res.length)return;
+  const mode=$('#impMode').value;
+  if(!confirm(mode==='replace'?`현재 자료를 모두 지우고 ${res.length}명으로 바꿀까요?`:`${res.length}명을 추가할까요?`))return;
+  if(mode==='replace'){S.people=res.map(x=>x.p);if(!P(S.meId))S.meId=null;}
+  else res.forEach(x=>{const i=S.people.findIndex(p=>p.id===x.p.id);i>=0?S.people[i]=x.p:S.people.push(x.p);});
+  recomputeDirect();save();collapsed.clear();$('#impText').value='';$('#impPrev').innerHTML='';impCache=null;renderAll();toast(`${res.length}명을 가져왔습니다`);
+}
+function resetSample(){if(!confirm('모든 자료를 지우고 예시 자료로 되돌릴까요?\n(먼저 백업 파일을 받아 두시길 권합니다)'))return;collapsed.clear();useSample();renderAll();toast('예시 자료로 초기화했습니다');}
+
+/* ================= PWA: 아이콘 · manifest · Service Worker ================= */
+const SW_CODE=`const CACHE='cjhan-jokbo-v1';
+self.addEventListener('install',e=>{self.skipWaiting();e.waitUntil(caches.open(CACHE).then(c=>c.addAll([self.registration.scope]).catch(()=>{})));});
+self.addEventListener('activate',e=>{e.waitUntil(caches.keys().then(ks=>Promise.all(ks.filter(k=>k!==CACHE).map(k=>caches.delete(k)))).then(()=>self.clients.claim()));});
+self.addEventListener('fetch',e=>{const r=e.request;if(r.method!=='GET')return;
+ if(r.mode==='navigate'){e.respondWith(fetch(r).then(res=>{const cp=res.clone();caches.open(CACHE).then(c=>c.put(r,cp));return res;}).catch(()=>caches.match(r).then(m=>m||caches.match(self.registration.scope))));return;}
+ e.respondWith(caches.match(r).then(m=>m||fetch(r).then(res=>{const cp=res.clone();caches.open(CACHE).then(c=>c.put(r,cp));return res;}).catch(()=>m)));});`;
+let swState='확인 중';
+function makeIcon(size){
+  const c=document.createElement('canvas');c.width=c.height=size;const x=c.getContext('2d'),s=size/512;
+  x.fillStyle='#1E3A8A';x.fillRect(0,0,size,size);
+  x.fillStyle='#FAF8F5';x.fillRect(40*s,40*s,432*s,432*s);
+  x.fillStyle='#B91C1C';const r=24*s,X=106*s,Y=106*s,W=300*s;
+  x.beginPath();x.moveTo(X+r,Y);x.arcTo(X+W,Y,X+W,Y+W,r);x.arcTo(X+W,Y+W,X,Y+W,r);x.arcTo(X,Y+W,X,Y,r);x.arcTo(X,Y,X+W,Y,r);x.fill();
+  x.fillStyle='#fff';x.font=`900 ${200*s}px "Noto Serif KR", serif`;x.textAlign='center';x.textBaseline='middle';x.fillText('韓',256*s,262*s);
+  return c.toDataURL('image/png');
+}
+function setupPWA(){
+  const svg=`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><rect width="100" height="100" rx="22" fill="#1E3A8A"/><rect x="20" y="20" width="60" height="60" rx="6" fill="#B91C1C"/><text x="50" y="65" font-size="40" text-anchor="middle" fill="#fff" font-family="serif" font-weight="900">韓</text></svg>`;
+  const svgURI='data:image/svg+xml;charset=utf-8,'+encodeURIComponent(svg);
+  $('#favicon').href=svgURI;
+  let png192=svgURI,png512=svgURI;
+  try{png192=makeIcon(192);png512=makeIcon(512);$('#appleIcon').href=makeIcon(180);}catch(e){}
+  const base=location.href.split('#')[0].split('?')[0];
+  const manifest={name:'나의 청주한씨 족보',short_name:'청주한씨 족보',description:'청주한씨 개인 가계도 · 직계 · 촌수 계산',
+    start_url:base,scope:base.replace(/[^/]*$/,''),display:'standalone',orientation:'portrait',background_color:'#FAF8F5',theme_color:'#1E3A8A',lang:'ko',
+    icons:[{src:png192,sizes:'192x192',type:'image/png',purpose:'any maskable'},{src:png512,sizes:'512x512',type:'image/png',purpose:'any maskable'},{src:svgURI,sizes:'any',type:'image/svg+xml'}]};
+  const link=document.createElement('link');link.rel='manifest';
+  link.href=URL.createObjectURL(new Blob([JSON.stringify(manifest)],{type:'application/manifest+json'}));
+  document.head.appendChild(link);
+  registerSW();
+}
+async function registerSW(){
+  if(!('serviceWorker' in navigator)){swState='이 브라우저는 오프라인 기능을 지원하지 않습니다.';return;}
+  if(location.protocol==='file:'){swState='파일로 직접 열면 오프라인 기능이 꺼집니다. 웹 주소(https)로 열어 주세요. 저장은 정상 작동합니다.';return;}
+  // 1순위: 같은 폴더의 sw.js (있으면 완전 오프라인)
+  try{const h=await fetch('sw.js',{method:'HEAD',cache:'no-store'});
+    if(h.ok&&/javascript/.test(h.headers.get('content-type')||'')){await navigator.serviceWorker.register('sw.js');swState='켜짐 ✅ 인터넷 없이도 열립니다.';swStatusText();return;}}catch(e){}
+  // 2순위: Blob URL 방식 (일부 브라우저는 보안 정책으로 막음)
+  try{const u=URL.createObjectURL(new Blob([SW_CODE],{type:'text/javascript'}));await navigator.serviceWorker.register(u);swState='켜짐 ✅ (내장 방식)';}
+  catch(e){swState='홈 화면 설치·자동 저장은 정상입니다. 브라우저 보안 정책상 내장 오프라인 기능이 막혀 있어, 완전 오프라인이 필요하면 아래 sw.js 파일을 index.html과 같은 폴더에 올려 주세요.';}
+  swStatusText();
+}
+function swStatusText(){const el=$('#swStatus');if(el)el.textContent='오프라인 기능: '+swState;}
+function downloadSW(){const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([SW_CODE],{type:'text/javascript'}));a.download='sw.js';document.body.appendChild(a);a.click();a.remove();}
+
+/* ================= 시작 ================= */
+load();
+const pref=getPref();
+setFont(Number.isInteger(pref.fs)?pref.fs:0);
+treeMode=pref.tm==='v'?'v':'h';
+renderAll();
+setupPWA();
+</script>
+</body>
+</html>
