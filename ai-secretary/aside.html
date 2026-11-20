@@ -79,10 +79,21 @@
     </table>
   </div>
 
-  <h2>3. 블로그 글 임시저장</h2>
+  <h2>3. 타지역 상위 블로그 분석</h2>
+  <div class="card">
+    <ol>
+      <li>아래 키워드를 누르면 네이버 <b>블로그 탭</b>이 열립니다. (제주가 아닌 다른 지역 — 잘하는 업체 글을 배우기 위한 것)</li>
+      <li>광고를 빼고 <b>1·2·3위 글</b>을 하나씩 열어 봅니다.</li>
+      <li>글마다 적습니다: 블로그 이름, 제목, 작성일, 글자 수(대략, 예: 1500), <b>사진 수</b>, 동영상 수, 소제목 수, 지도·명함·전화번호가 있는지, 눈에 띄는 특징(예: 첫 줄에 가격표, 전후 비교 사진, 체크리스트, 후기 인용, 키워드를 몇 번 썼는지).</li>
+      <li>댓글·공감·이웃추가는 하지 않습니다. 보기만 합니다.</li>
+    </ol>
+    <div id="benchBox"></div>
+  </div>
+
+  <h2>4. 블로그 글 임시저장</h2>
   <div class="card" id="draftBox"></div>
 
-  <h2>4. 보고 보내기</h2>
+  <h2>5. 보고 보내기</h2>
   <div class="card">
     <label for="memo">메모 (막힌 것, 이상한 것이 있으면)</label>
     <textarea id="memo" placeholder="예: 로그인 필요 / 검색 결과가 이상함"></textarea>
@@ -96,7 +107,7 @@
     <div id="history" class="card" style="font-size:14px">불러오는 중…</div>
   </details>
 </main>
-<div class="ver">v2</div>
+<div class="ver">v3</div>
 <script>
 const API = 'https://linkclean-promo.han0829.workers.dev/api/hub/aside';
 let T = null;
@@ -125,6 +136,11 @@ async function load() {
       <td><input type="text" class="rank" id="aimen-${i}" aria-label="${esc(q)} 우리 언급" placeholder="없음"></td>
       <td><input type="text" id="aiwho-${i}" aria-label="${esc(q)} 대신 나온 곳" placeholder="업체·블로그 이름"></td>
     </tr>`).join('');
+  const bk = T.benchKeywords || [];
+  const F = [['blog','블로그 이름'],['title','제목'],['date','작성일'],['chars','글자 수'],['photos','사진 수'],['videos','동영상 수'],['heads','소제목 수'],['map','지도·명함·전화'],['note','특징']];
+  $('benchBox').innerHTML = !bk.length ? '오늘은 분석할 키워드가 없습니다.' : bk.map((kw, k) => `
+    <h3 style="font-size:16px;margin:14px 0 6px"><a class="kw" target="_blank" rel="noopener" href="https://search.naver.com/search.naver?ssc=tab.blog.all&query=${encodeURIComponent(kw)}">${esc(kw)}</a></h3>
+    ${[1,2,3].map((r) => `<table style="margin-bottom:8px"><tbody><tr><th colspan="2">${r}위 글</th></tr>${F.map(([id, lab]) => `<tr><td style="width:34%">${lab}</td><td><input type="text" id="b-${k}-${r}-${id}" aria-label="${esc(kw)} ${r}위 ${lab}"></td></tr>`).join('')}</tbody></table>`).join('')}`).join('');
   const d = T.drafts || [];
   $('draftBox').innerHTML = !d.length ? '오늘은 임시저장할 글이 <b>없습니다.</b> 이 단계는 건너뜁니다.' :
     '<ol><li><code>' + esc((T.ourBlogs || [])[0] || 'blog.naver.com/linkclean') + '</code> 에서 <b>글쓰기</b>를 엽니다.</li><li>아래 제목과 본문을 그대로 붙여 넣고, 태그를 넣습니다.</li><li><b>임시저장</b>만 누르고 발행은 누르지 않습니다.</li><li>끝나면 아래 「저장함」을 체크합니다.</li></ol>' +
@@ -138,7 +154,12 @@ $('send').onclick = async () => {
   const ranks = (T.ranks || []).map((kw, i) => ({ kw, rank: $('rank-' + i).value.trim(), title: $('title-' + i).value.trim() }));
   const drafts = (T.drafts || []).map((x, i) => ({ title: x.title, done: !!($('draft-' + i) || {}).checked }));
   const ai = (T.aiQuestions || []).map((q, i) => ({ q, has: $('aihas-' + i).value.trim(), mentioned: $('aimen-' + i).value.trim(), who: $('aiwho-' + i).value.trim() }));
-  const body = { date: today(), task: T.date, ranks, ai, drafts, memo: $('memo').value.trim() };
+  const bench = [];
+  (T.benchKeywords || []).forEach((kw, k) => [1,2,3].forEach((r) => {
+    const g = (id) => (($('b-' + k + '-' + r + '-' + id) || {}).value || '').trim();
+    if (g('title') || g('photos') || g('chars')) bench.push({ kw, rank: String(r), blog: g('blog'), title: g('title'), date: g('date'), chars: g('chars'), photos: g('photos'), videos: g('videos'), heads: g('heads'), map: g('map'), note: g('note') });
+  }));
+  const body = { date: today(), task: T.date, ranks, ai, bench, drafts, memo: $('memo').value.trim() };
   $('send').disabled = true; $('sent').textContent = '보내는 중…';
   try {
     const r = await fetch(API, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
