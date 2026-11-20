@@ -3638,11 +3638,12 @@ function healthAdvice(today: string, days: Record<string, HealthDay>, plan: stri
     else out.push(`🩺 최근 혈압 ${last.bpSys}/${last.bpDia} — 안정적이에요.`);
   }
   if (typeof y.sleepH === 'number' && y.sleepH < 6) out.push(`😴 어젯밤 ${y.sleepH}시간 주무셨어요. 오늘은 무리한 현장 일정은 피하시고 일찍 쉬세요.`);
-  if (!out.length) out.push('아직 건강 기록이 없어요. 아래 "아이폰 건강 앱 연결"을 한 번 해 두시면 매일 아침 자동으로 들어와요.');
+  const anyRec = Object.values(days).some((x) => x && (x.steps || x.bpSys || x.sleepH));
+  if (!out.length) out.push(anyRec ? '아이폰 연결은 잘 됐어요 ✓ 매일 밤 11시 50분에 그날 걸음이 들어오고, 다음 날부터 어제와 비교해 한마디 드릴게요.' : '아직 건강 기록이 없어요. 아래 "아이폰 건강 앱 연결"을 한 번 해 두시면 매일 밤 자동으로 들어와요.');
   return out;
 }
 
-function HealthTab({ today, hubPin, toast, onOpenSettings }: { today: string; hubPin: string; toast: (s: string) => void; onOpenSettings: () => void }) {
+function HealthTab({ today, hubPin, toast, onOpenSettings, onBack }: { today: string; hubPin: string; toast: (s: string) => void; onOpenSettings: () => void; onBack: () => void }) {
   const [data, setData] = useState<HealthData | null>(null);
   const [err, setErr] = useState('');
   const [plan, setPlan] = useLocal<string[]>('medPlan', ['아침']);
@@ -3700,6 +3701,7 @@ function HealthTab({ today, hubPin, toast, onOpenSettings }: { today: string; hu
   const btn = 'flex-1 rounded-2xl py-4 text-[17px] font-extrabold active:scale-95';
   return (
     <div className="space-y-3">
+      <button onClick={onBack} className="flex items-center gap-1.5 text-sm font-bold text-amber-200">‹ 브리핑으로 돌아가기</button>
       <section className={card}>
         <p className="text-[12px] font-bold text-slate-400">부속실 · 대표님 건강 챙기기</p>
         <h2 className="mt-0.5 text-[20px] font-extrabold">💊 오늘 약</h2>
@@ -6246,7 +6248,7 @@ export default function App() {
           />
         )}
         {tab === 'memo' && <DrawerTab today={today} />}
-        {tab === 'health' && <HealthTab today={today} hubPin={hubPin} toast={toast} onOpenSettings={() => setShowSettings(true)} />}
+        {tab === 'health' && <HealthTab today={today} hubPin={hubPin} toast={toast} onOpenSettings={() => setShowSettings(true)} onBack={() => setTab('brief')} />}
         {tab === 'siri' && (
           <button onClick={() => setTab('brief')} className="mb-3 flex items-center gap-1.5 text-sm font-bold text-amber-200">
             <ArrowLeft className="h-4 w-4" /> 브리핑으로 돌아가기
