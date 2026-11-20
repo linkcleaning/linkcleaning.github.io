@@ -90,6 +90,21 @@
    "note": "할 일 없음",
    "detail": "ai-visibility.json 파일이 아직 없어 건너뜀 (오늘 칼럼이 집중 키워드 \"제주 부모님 집 정리\"를 다룸)",
    "at": "13:25"
+  },
+  "coupang": {
+   "done": true,
+   "at": "19:22",
+   "note": "저녁1·아침1·쿠팡1·릴스"
+  },
+  "sidejobs": {
+   "done": true,
+   "at": "19:22",
+   "note": "새 기회 2개"
+  },
+  "dayreport": {
+   "done": true,
+   "at": "19:22",
+   "note": "19건 중 15건 처리"
   }
  }
 }
