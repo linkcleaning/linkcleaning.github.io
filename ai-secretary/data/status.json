@@ -77,6 +77,19 @@
    "detail": "노형동 입주청소·이사청소 (/nohyeong-dong/) — linkclean-web 쓰기 권한이 없어 web-queue/2026-11-20-areapage.json 에 저장",
    "url": "https://www.linkclean.co.kr/nohyeong-dong/",
    "at": "13:24"
+  },
+  "column": {
+   "done": false,
+   "note": "홈페이지 대기열 저장",
+   "detail": "[유품정리] 제주 유품정리, 부모님 집 정리는 언제부터 시작하나요? — linkclean-web 쓰기 권한이 없어 web-queue/2026-11-20-column.json 에 저장(렌더링 확인함)",
+   "url": "https://www.linkclean.co.kr/stories/jeju-parents-house-memorial-cleanup/",
+   "at": "13:25"
+  },
+  "aitodo": {
+   "done": true,
+   "note": "할 일 없음",
+   "detail": "ai-visibility.json 파일이 아직 없어 건너뜀 (오늘 칼럼이 집중 키워드 \"제주 부모님 집 정리\"를 다룸)",
+   "at": "13:25"
   }
  }
 }
