@@ -32,3 +32,11 @@ header.lux-head .lux-mark { position: absolute; right: -46px; top: 54px; width: 
 .lux-seal img { width: 44px; height: 44px; border-radius: 50%; background: #fff; box-shadow: 0 0 0 1.5px #B8955C; }
 .lux-seal-name { margin: 0; font-family: "Noto Serif KR", serif; font-weight: 700; font-size: 13px; letter-spacing: .14em; color: #14202B; }
 .lux-seal-sub { margin: 2px 0 0; font-size: 11px; color: #8A8173; letter-spacing: .04em; }
+/* 못 한 일 설명 (11/20) */
+.fail-box { margin-top: 8px; padding: 10px 11px; border-radius: 10px; background: #FFFDF8; border: 1px solid #EBC9C2; font-size: 12.5px; line-height: 1.5; color: #2B2C30; }
+.fail-box p + p { margin-top: 4px; }
+.fb-why { color: #B3362C; } .fb-act { color: #2F6B4A; } .fb-you { color: #9A6B1E; } .fb-none { color: #8A8173; }
+.fail-sum { padding: 12px; border-radius: 12px; background: #FFFDF8; border: 1px solid #EBC9C2; font-size: 13px; line-height: 1.5; color: #2B2C30; }
+.fs-head { font-weight: 800; color: #B3362C; }
+.fs-list { margin-top: 6px; } .fs-list li + li { margin-top: 4px; }
+.fs-none { margin-top: 4px; color: #8A8173; }

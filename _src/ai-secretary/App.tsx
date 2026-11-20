@@ -2853,7 +2853,37 @@ const normKw = (s: string) => s.replace(/\s+/g, '');
 /* 비서실 업무 현황 — 각 예약 작업이 끝날 때 data/status.json 에 기록 */
 interface AgentStatus {
   date?: string;
-  items?: Record<string, { done?: boolean; at?: string; note?: string; detail?: string; url?: string }>;
+  items?: Record<string, { done?: boolean; at?: string; note?: string; detail?: string; url?: string; fix?: FailFix }>;
+}
+// 못 한 일 설명 (대표님 11/20: "못함·어디 저장만 남기니 무슨 말인지 모르겠다 — 조치와 내가 할 일을 알려 달라")
+interface FailFix { why?: string; act?: string; you?: string }
+const GH_FIX = '깃허브 권한 추가(2분): github.com → 오른쪽 위 프로필 → Settings → Applications → Claude 옆 Configure → Repository access 에 linkclean-web·ekclean 추가 → Save';
+function explainFail(it: { note?: string; detail?: string; fix?: FailFix } | undefined): Required<FailFix> {
+  const f = it?.fix || {};
+  const t = `${it?.note || ''} ${it?.detail || ''}`;
+  let d: Required<FailFix>;
+  if (/대기열|권한/.test(t))
+    d = { why: '비서가 글은 다 만들었는데, 홈페이지에 직접 올릴 권한이 없어 보관함에 넣어 뒀어요.', act: '비서실장이 오늘 안에 대신 홈페이지에 올려요(올리면 ✓로 바뀌어요).', you: `(선택) 꼭 안 하셔도 돼요. 매번 비서실장이 대신 올리지 않게 하려면 ${GH_FIX}` };
+  else if (/PC|컴퓨터|꺼짐/.test(t))
+    d = { why: '대표님 PC가 꺼져 있거나 Claude 앱이 닫혀 있어서 크롬 작업을 못 했어요.', act: '다음 근무 때 다시 해요.', you: 'PC를 켜 두고 Claude 데스크톱 앱을 열어 두세요.' };
+  else if (/로그인|계정/.test(t))
+    d = { why: '그 사이트에 로그인이 풀려 있거나 다른 계정으로 들어가 있었어요.', act: '비밀번호는 비서가 넣지 않아 여기서 멈췄어요.', you: '크롬에서 그 사이트에 링크클린 계정으로 로그인만 해 두세요.' };
+  else if (/쉼|대기 중|없음/.test(t))
+    d = { why: it?.note || '오늘은 할 거리가 없어 쉬었어요.', act: '다음 근무 때 다시 확인해요.', you: '없어요.' };
+  else
+    d = { why: it?.note || '이유가 기록되지 않았어요.', act: '저녁 보고(18:57) 때 비서실장이 다시 확인해 처리해요.', you: '없어요. 필요하면 저녁 보고에서 알려 드려요.' };
+  return { why: f.why || d.why, act: f.act || d.act, you: f.you || d.you };
+}
+function FailBox({ it }: { it: { note?: string; detail?: string; fix?: FailFix } | undefined }) {
+  const e = explainFail(it);
+  const none = /^없어요/.test(e.you);
+  return (
+    <div className="fail-box">
+      <p><b className="fb-why">왜 못 했나</b> · {e.why}</p>
+      <p><b className="fb-act">비서실 조치</b> · {e.act}</p>
+      <p><b className={none ? 'fb-none' : 'fb-you'}>대표님 할 일</b> · {e.you}</p>
+    </div>
+  );
 }
 interface SecJob { key: string; label: string; who: string; when: string }
 type SecGroup = 'write' | 'find' | 'report';
@@ -4046,8 +4076,20 @@ function DayReportCard({ rep, today }: { rep: DayReport | null; today: string })
 function SecretaryWork({ status, agent, today }: { status: AgentStatus | null; agent: AgentDaily | null; today: string }) {
   const jobs = secJobsFor(today);
   const [open, setOpen] = useState<string | null>(null);
+  const fails = jobs.filter((j) => secJobState(j, status, agent, today) === 'fail');
+  const yours = Array.from(new Set(fails.map((j) => explainFail(status?.items?.[j.key]).you).filter((y) => !/^없어요/.test(y))));
   return (
     <div className="space-y-3">
+    {fails.length > 0 && (
+      <div className="fail-sum">
+        <p className="fs-head">⚠️ 오늘 못 한 일 {fails.length}개 — 아래 빨간 칸에 이유와 조치가 있어요</p>
+        {yours.length > 0 ? (
+          <ul className="fs-list">{yours.map((y, i) => <li key={i}>🙋 <b>{y.startsWith('(선택)') ? '해 두면 좋은 일' : '대표님 할 일'}</b> · {y.replace('(선택) ', '')}</li>)}</ul>
+        ) : (
+          <p className="fs-none">대표님이 하실 일은 없어요. 비서실이 처리해요.</p>
+        )}
+      </div>
+    )}
     {SEC_GROUPS.map(({ g, title }) => {
       const list = jobs.filter((j) => secGroupOf(j.key) === g);
       if (!list.length) return null;
@@ -4084,9 +4126,10 @@ function SecretaryWork({ status, agent, today }: { status: AgentStatus | null; a
                 st === 'done' ? 'bg-emerald-400/15 text-emerald-200' : st === 'fail' ? 'bg-rose-400/15 text-rose-300' : runLabel(j.when, today).includes('예정') || j.when === '버튼' ? 'bg-white text-slate-400' : 'bg-amber-300/20 text-amber-300'
               }`}
             >
-              {st === 'done' ? `${it?.at || ''} 완료`.trim() : st === 'fail' ? '못 함' : j.when === '버튼' ? '버튼 대기' : runLabel(j.when, today)}
+              {st === 'done' ? `${it?.at || ''} 완료`.trim() : st === 'fail' ? '못 함 · 조치 중' : j.when === '버튼' ? '버튼 대기' : runLabel(j.when, today)}
             </span>
            </button>
+           {st === 'fail' && <FailBox it={it} />}
            {open === j.key && (
              <div className="mt-2 rounded-lg bg-white p-2.5 text-[13px] leading-relaxed text-slate-200">
                {it?.detail && <p className="whitespace-pre-line">{it.detail}</p>}
