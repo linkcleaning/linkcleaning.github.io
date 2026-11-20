@@ -64,6 +64,12 @@
    "detail": "[청소팁] 겨울 매트리스 먼지·얼룩 정리 — 카드 3장·글 7종 저녁 게시 대기열(id b01182e5-2d73-466c-baf3-c14de16857aa, 플레이스 글은 서귀포점용). 홈페이지 Q&A \"매트리스 청소, 집에서는 어떻게 하나요?\"는 linkclean-web 쓰기 권한이 없어 web-queue/2026-11-20-tip.json 에 저장",
    "id": "b01182e5-2d73-466c-baf3-c14de16857aa",
    "at": "13:23"
+  },
+  "placenews": {
+   "done": true,
+   "note": "제주시점·연동 이사청소 냉장고 정리(계절 팁, 새 현장 사진 없음)",
+   "detail": "연동 이사청소 전, 냉장고 비우고 닦는 순서 · 영상 13초(글 카드) https://linkclean-promo.han0829.workers.dev/api/clip/482eab7e-47b.mp4",
+   "at": "13:23"
   }
  }
 }
