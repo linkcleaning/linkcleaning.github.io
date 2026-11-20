@@ -3960,6 +3960,55 @@ function PromoFeedCard({ status, today }: { status: AgentStatus | null; today: s
   );
 }
 
+
+/* 비서진 회의록 — 대표님이 요청한 회의 + 정기 회의(순위 하락·AI 노출) 결론 */
+interface MeetingItem { id?: string; date: string; at?: string; title: string; kind?: string; request?: string; attendees?: string[]; discussion?: string[]; conclusion?: string; actions?: { who?: string; what: string; when?: string; status?: string }[]; approvals?: string[] }
+function MeetingCard({ today }: { today: string }) {
+  const [list, setList] = useState<MeetingItem[]>([]);
+  const [open, setOpen] = useState<number | null>(0);
+  const [more, setMore] = useState(false);
+  useEffect(() => {
+    fetchAgentJson<{ items?: MeetingItem[] }>('meetings.json').then((d) => d && Array.isArray(d.items) && setList(d.items.slice(0, 10)));
+  }, [today]);
+  if (!list.length) return null;
+  const shown = more ? list : list.slice(0, 3);
+  return (
+    <section className="rounded-[28px] bg-[#191919] p-5 text-white shadow-[0_6px_18px_rgba(0,0,0,0.18)]">
+      <div className="flex items-center justify-between">
+        <span className="rounded-full bg-cw px-2.5 py-1 text-[11px] font-extrabold text-[#191919]">🗂 비서진 회의 결과</span>
+        <span className="text-[11px] text-white/50">비서실장 정리</span>
+      </div>
+      <ul className="mt-3 space-y-2">
+        {shown.map((m, i) => (
+          <li key={m.id || i} className="rounded-2xl bg-white/10 p-3">
+            <button className="w-full text-left" onClick={() => setOpen(open === i ? null : i)}>
+              <p className="text-[11px] text-white/50">{m.date.slice(5).replace('-', '/')} {m.at || ''} · {m.kind === 'request' ? '대표님 요청' : '정기 회의'}</p>
+              <p className="mt-0.5 text-[15px] font-bold leading-snug">{m.title}</p>
+              {m.conclusion && <p className="mt-1 text-[13px] leading-snug text-amber-200">결론: {m.conclusion}</p>}
+            </button>
+            {open === i && (
+              <div className="mt-2 space-y-2 text-[13px] leading-relaxed text-white/85">
+                {m.request && <p><b className="text-white">요청</b> · {m.request}</p>}
+                {m.attendees && m.attendees.length > 0 && <p><b className="text-white">참석</b> · {m.attendees.join(', ')}</p>}
+                {m.discussion && m.discussion.length > 0 && (
+                  <div><b className="text-white">논의</b><ul className="mt-1 space-y-1">{m.discussion.map((d, k) => <li key={k}>· {d}</li>)}</ul></div>
+                )}
+                {m.actions && m.actions.length > 0 && (
+                  <div><b className="text-white">할 일</b><ul className="mt-1 space-y-1">{m.actions.map((a, k) => <li key={k}>{a.status && a.status.startsWith('완료') ? '✓' : '○'} {a.who ? a.who + ' — ' : ''}{a.what}{a.when ? ' (' + a.when + ')' : ''}{a.status ? ' · ' + a.status : ''}</li>)}</ul></div>
+                )}
+                {m.approvals && m.approvals.length > 0 && (
+                  <div><b className="text-amber-200">대표님 확인 필요</b><ul className="mt-1 space-y-1">{m.approvals.map((a, k) => <li key={k}>{k + 1}. {a}</li>)}</ul></div>
+                )}
+              </div>
+            )}
+          </li>
+        ))}
+      </ul>
+      {list.length > 3 && <button onClick={() => setMore(!more)} className="mt-2 text-[12px] font-bold text-white/60">{more ? '접기' : `지난 회의 ${list.length - 3}개 더 보기`}</button>}
+    </section>
+  );
+}
+
 function DayReportCard({ rep, today }: { rep: DayReport | null; today: string }) {
   if (!rep || rep.date !== today) return null;
   return (
@@ -6156,6 +6205,7 @@ export default function App() {
                 <div id="sec-top" className="space-y-4">
                   <InboxCard status={agentStatus} bids={bids} grants={grants} dayRep={dayRep} agent={agent} placeNews={placeNews} ek={ekData} today={today} />
                   <DayReportCard rep={dayRep} today={today} />
+                  <MeetingCard today={today} />
                 </div>
                 <Section id="sec-work" label="📋 오늘 비서실 보고">
                   <AgentCard

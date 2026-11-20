@@ -64,3 +64,7 @@ status.json items.appcare 로 '비서들이 한 일'에 표시. 공개 저장소
 - 아침 근무가 구글 순위(google.json)를 적은 뒤, 어제보다 web·map이 떨어진 키워드와 순위노트(허브 rank.data)의 네이버 플레이스 하락을 찾아 회의한다: ① 원인(증거로 확인한 것만, 아니면 '추정') ② 다시 올릴 방법 1~3개 ③ 조치(그날 바로: today.json golden·threads, keywords.json focus 맨 앞에 그 키워드 → 낮 근무 청소팁·소식·동네 페이지·칼럼이 사용 / 대표님 손 필요한 것은 승인 항목).
 - 형식: {"date","at","note","items":[{engine(google|naver),kw,what,from,to,cause:[],actions:[{who,what,when,status}]}]}. 전날 '예정' 조치는 다음 날 회복 여부를 적는다. status 키: rankmeeting.
 - 보고: 아침 근무 SendUserMessage에 "📉 순위 하락 회의" 묶음, 저녁 하루 보고에 한 줄.
+
+## 🗂 비서진 회의록 (대표님 요청 11/20: "회의를 요청하면 비서실장 보고 칸에 회의 내용·결론을 따로")
+- ai-secretary/data/meetings.json = {"updatedAt","items":[{id,date,at,kind:"request"(대표님 요청)|"regular"(정기),title,request,attendees:[],discussion:[],conclusion(한두 문장 — 무엇을 하기로 했는지),actions:[{who,what,when,status}],approvals:[대표님 확인 필요한 것]}]} 최근 30개, 최신이 맨 앞. 앱 브리핑 맨 위 '🗂 비서진 회의 결과' 카드에 그대로 뜬다.
+- **모든 회의는 끝나면 여기에 회의록을 남긴다**: 순위 하락 회의(아침), AI 노출 점검·회의(월·목), 어사이드 네이버 회의, 대표님이 대화에서 "회의해 줘"라고 요청한 회의(kind "request", request 에 대표님 말씀 그대로). 같은 날 같은 회의는 한 항목으로 갱신. 회의할 거리가 없던 정기 회의는 남기지 않는다. 고객 정보·전화번호·매출·건강 정보 금지(공개 저장소).
