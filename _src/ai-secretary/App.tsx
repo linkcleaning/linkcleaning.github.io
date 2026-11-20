@@ -2857,7 +2857,7 @@ interface AgentStatus {
 }
 interface SecJob { key: string; label: string; who: string; when: string }
 type SecGroup = 'write' | 'find' | 'report';
-const SEC_GROUP: Record<string, SecGroup> = { report: 'report', dayreport: 'report', google: 'find', bids: 'find', grants: 'find', keywords: 'find', rankmeeting: 'find', appcare: 'find', sidejobs: 'find', aside: 'find', scout: 'find' };
+const SEC_GROUP: Record<string, SecGroup> = { report: 'report', dayreport: 'report', google: 'find', bids: 'find', grants: 'find', keywords: 'find', rankmeeting: 'find', appcare: 'find', sidejobs: 'find', aside: 'find', scout: 'find', aivis: 'find', aitodo: 'write' };
 const secGroupOf = (k: string): SecGroup => SEC_GROUP[k] ?? 'write';
 const SEC_GROUPS: { g: SecGroup; title: string }[] = [
   { g: 'report', title: '📋 보고' },
@@ -2879,6 +2879,8 @@ function secJobsFor(date: string): SecJob[] {
   if (wd === 1 || wd === 4) jobs.push({ key: 'grants', label: '소상공인 지원사업 찾기', who: '영업수석실 지원사업비서관', when: '07:17' });
   if (wd === 1) jobs.push({ key: 'keywords', label: '주간 키워드 리포트', who: '전략수석 최영길', when: '13:17' });
   if (wd >= 1 && wd <= 5) jobs.push({ key: 'placenews', label: '플레이스 소식·영상', who: '홍보수석 한정민', when: '13:17' });
+  if (wd === 1 || wd === 4 || date === '2026-11-20') jobs.push({ key: 'aivis', label: 'AI 추천 노출 점검·회의', who: '전략수석 최영길', when: '09:47' });
+  if (wd >= 1 && wd <= 5) jobs.push({ key: 'aitodo', label: 'AI 노출 할 일', who: '전략수석 최영길', when: '13:17' });
   if (date >= '2026-11-20') jobs.push({ key: 'aside', label: '네이버 블로그 순위 (어사이드)', who: '홍보수석실 블로그 순위 담당', when: '07:43' });
   if (((wd === 1 || wd === 4) && date >= '2026-11-23') || date === '2026-11-19') jobs.push({ key: 'scout', label: 'AI 도구·자동화 정찰', who: '전략수석실 정보비서관', when: '10:43' });
   if (wd === 4) jobs.push({ key: 'appcare', label: '앱 점검·정비', who: '전략수석실 앱정비비서관', when: '13:17' });
