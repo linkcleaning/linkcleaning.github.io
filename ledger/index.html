@@ -297,6 +297,15 @@
       <b id="htPeriodTitle">기간</b><br>
       <span class="text-xs">초록색 숫자를 누르면 복사돼요. 홈택스 입력칸에 그대로 붙여넣으세요.</span>
     </div>
+    <div class="bg-white border-2 border-orange-300 rounded-2xl p-3">
+      <div class="text-sm font-extrabold">📥 홈택스에서 가져오기 <span class="text-xs font-bold text-slate-500">(지금 고른 사업자)</span></div>
+      <div class="text-xs text-slate-500 mt-1">비서실(어사이드)이 홈택스에서 읽어 둔 달별 합계(카드·현금영수증·세금계산서 매출, 사업용카드·현금영수증·세금계산서 매입)를 이 사업자 장부에 넣어요. 같은 달은 다시 가져오면 덮어써요.</div>
+      <div class="flex gap-2 mt-2">
+        <input id="htPin" type="password" inputmode="numeric" placeholder="허브 비밀번호" class="flex-1 border border-slate-300 rounded-xl px-3 py-2 text-sm">
+        <button id="htPullBtn" class="rounded-xl bg-orange-500 text-white font-extrabold px-4 text-sm">가져오기</button>
+      </div>
+      <div id="htPullMsg" class="text-xs mt-2 text-slate-600"></div>
+    </div>
     <div id="hometaxBody" class="space-y-4"></div>
   </section>
 
@@ -492,6 +501,40 @@ function persist() {
   hubPush();
 }
 
+
+// ---------- 📥 홈택스에서 가져오기 (어사이드가 읽은 월별 합계 → 장부) ----------
+function htBizKey() {
+  var b = meta.bizList.filter(function (x) { return x.id === meta.curBiz; })[0] || {};
+  var n = String(b.name || '');
+  if (/이케이|ek/i.test(n)) return 'ek';
+  if (/크림|creamus/i.test(n)) return 'creamus';
+  if (/링크/.test(n)) return 'linkclean';
+  return '';
+}
+function htLastDay(ym) { var p = ym.split('-'); var d = new Date(+p[0], +p[1], 0); return ym + '-' + String(d.getDate()).padStart(2, '0'); }
+function htImport(data) {
+  var key = htBizKey(); if (!key) return { n: 0, msg: '지금 고른 사업자 이름에 "이케이클린"이 들어가야 해요(설정에서 사업자 이름 확인).' };
+  var months = (data.biz && data.biz[key]) || {}; var n = 0, ms = [];
+  Object.keys(months).sort().forEach(function (ym) {
+    var d = months[ym], date = htLastDay(ym);
+    var put = function (src, e) {
+      var id = 'ht-' + key + '-' + ym + '-' + src;
+      txs = txs.filter(function (t) { return t.id !== id; });
+      if (!e.total) return;
+      e.id = id; e.biz = meta.curBiz; e.date = date; e.createdAt = Date.now(); e.hometax = true; e.auto = true;
+      var sv = splitVat(e.total); e.supply = sv.supply; e.vat = sv.vat;
+      txs.push(e); n++;
+    };
+    put('cardSale', { type: 'sale', total: d.cardSale || 0, category: '기타', pay: 'card', vatIncluded: true, memo: '홈택스 ' + ym + ' 카드 매출 합계' });
+    put('cashSale', { type: 'sale', total: d.cashSale || 0, category: '기타', pay: 'cashReceipt', vatIncluded: true, memo: '홈택스 ' + ym + ' 현금영수증 매출 합계' });
+    put('invoiceSale', { type: 'sale', total: d.invoiceSale || 0, category: '기타', pay: 'invoice', vatIncluded: true, memo: '홈택스 ' + ym + ' 세금계산서 매출 합계' });
+    put('cardBuy', { type: 'purchase', total: d.cardBuy || 0, item: 'supplies', evid: 'bizCard', light: 'green', memo: '홈택스 ' + ym + ' 사업용카드 매입 합계 (항목은 내역에서 나눠 고치면 종소세가 더 정확해요)' });
+    put('cashBuy', { type: 'purchase', total: d.cashBuy || 0, item: 'supplies', evid: 'cashReceipt', light: 'green', memo: '홈택스 ' + ym + ' 현금영수증 매입 합계' });
+    put('invoiceBuy', { type: 'purchase', total: d.invoiceBuy || 0, item: 'outsource', evid: 'invoice', light: 'green', memo: '홈택스 ' + ym + ' 세금계산서 매입 합계' });
+    ms.push(ym.slice(5) + '월');
+  });
+  return { n: n, msg: n ? ms.join('·') + ' 홈택스 합계 ' + n + '건을 넣었어요. 매출 내역을 따로도 적었다면 겹치지 않게 확인해 주세요.' : '아직 이 사업자의 홈택스 자료가 없어요.' };
+}
 // ---------- 🔗 링크 허브: 월별 합계만 AI 비서실로 보냄 (거래 메모·이름은 보내지 않음) ----------
 var HUB_URL = 'https://linkclean-promo.han0829.workers.dev/api/hub/ledger';
 var hubTimer = null;
@@ -1740,6 +1783,18 @@ $('photoDel').onclick = function () { photoState.data = null; photoState.changed
 $('photoModal').onclick = function () { $('photoModal').classList.add('hidden-x'); };
 $('asideDoBtn').onclick = function () { addBank({ type: 'in', date: todayStr(), amount: asideAmount }); hideAside(); toast('💰 세금통장에 ' + won(asideAmount) + ' 넣었어요'); renderAll(); };
 $('asideCloseBtn').onclick = hideAside;
+try { $('htPin').value = localStorage.getItem('ledger_hubpin') || ''; } catch (e) {}
+$('htPullBtn').onclick = function () {
+  var pin = $('htPin').value.replace(/[^0-9]/g, '');
+  if (!pin) { toast('허브 비밀번호를 넣어 주세요'); return; }
+  try { localStorage.setItem('ledger_hubpin', pin); } catch (e) {}
+  $('htPullMsg').textContent = '가져오는 중…';
+  fetch('https://linkclean-promo.han0829.workers.dev/api/hub/tax?t=' + Date.now(), { headers: { 'X-Hub-Pin': pin }, cache: 'no-store' })
+    .then(function (r) { return r.json().then(function (j) { if (!r.ok) throw new Error(j.error || r.status); return j; }); })
+    .then(function (j) { var r = htImport(j); if (r.n) { persist(); renderAll(); } $('htPullMsg').textContent = r.msg; toast(r.n ? '홈택스 합계를 넣었어요' : r.msg); })
+    .catch(function (e) { $('htPullMsg').textContent = '가져오지 못했어요 (' + (e.message || e) + ')'; });
+};
+
 document.querySelectorAll('.bankAct').forEach(function (b) { b.onclick = function () { openBankForm(b.dataset.k); }; });
 $('bankAmt').addEventListener('input', function () { var n = numOf(this.value); this.value = n ? comma(n) : ''; });
 $('bankCancel').onclick = function () { $('bankForm').classList.add('hidden-x'); };

@@ -139,6 +139,9 @@
       <button id="mNext" aria-label="다음 달">›</button>
     </div>
 
+    <button class="btn ghost" id="htPull" style="margin:4px 0 2px">📥 홈택스에서 가져오기</button>
+    <div class="h" id="htNote" style="font-size:12px;color:#8a7f6c;margin:4px 6px 0">비서실(어사이드)이 홈택스에서 읽어 둔 이 달 합계를 칸에 채워요. 확인하고 「이번 달 저장」을 누르세요.</div>
+
     <div class="sec">1. 이번 달에 받은 돈 (매출)</div>
     <div class="card">
       <div class="field">
@@ -214,6 +217,11 @@
         <input class="txt" id="sOpen" type="month">
       </div>
       <div class="field">
+        <div class="t">허브 비밀번호</div>
+        <div class="h">「홈택스에서 가져오기」에 필요해요. 이 폰에만 저장돼요.</div>
+        <input class="txt" id="sHub" type="password" inputmode="numeric" placeholder="숫자 6자리">
+      </div>
+      <div class="field">
         <div class="t">세금계산서 발급 간이과세자</div>
         <label style="display:flex;gap:10px;align-items:flex-start;margin-top:6px"><input type="checkbox" id="sInvoice" style="width:22px;height:22px;margin-top:2px"><span class="h" style="margin:0">작년 매출이 4,800만원 이상이었다면 체크. 이 경우 7월에 상반기(1~6월) 예정신고를 직접 해야 해요.</span></label>
       </div>
@@ -248,7 +256,7 @@
   <button data-tab="file"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6M8 13h8M8 17h5"/></svg>신고</button>
   <button data-tab="set"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 0 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 0 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 0 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 0 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></svg>설정</button>
 </div></nav>
-<div class="ver">v1</div>
+<div class="ver">v2</div>
 <div id="toast"></div>
 
 <script>
@@ -492,7 +500,7 @@ function renderFile() {
 
 // ---------- 설정 ----------
 function renderSet() {
-  $('sName').value = DB.set.name; $('sRate').value = DB.set.rate; $('sOpen').value = DB.set.open || ''; $('sInvoice').checked = DB.set.invoice;
+  $('sName').value = DB.set.name; $('sHub').value = DB.set.hub || ''; $('sRate').value = DB.set.rate; $('sOpen').value = DB.set.open || ''; $('sInvoice').checked = DB.set.invoice;
   $('lastBackup').textContent = DB.lastBackup ? '마지막 백업: ' + new Date(DB.lastBackup).toLocaleString('ko-KR') : '아직 백업한 적이 없어요.';
 }
 function dl(name, text, type) {
@@ -520,6 +528,29 @@ $('saveMonth').onclick = saveMonth;
 $('sName').onchange = function () { DB.set.name = this.value.trim() || '크림어스'; save(); };
 $('sRate').onchange = function () { DB.set.rate = this.value; save(); toast('업종을 바꿨어요'); };
 $('sOpen').onchange = function () { DB.set.open = this.value; save(); };
+$('sHub').onchange = function () { DB.set.hub = this.value.replace(/[^0-9]/g, ''); save(); toast('허브 비밀번호 저장'); };
+$('htPull').onclick = function () {
+  var pin = DB.set.hub;
+  if (!pin) { toast('설정에서 허브 비밀번호를 먼저 넣어 주세요'); tab('set'); return; }
+  var k = ym(curY, curM);
+  $('htPull').disabled = true; $('htPull').textContent = '가져오는 중…';
+  fetch('https://linkclean-promo.han0829.workers.dev/api/hub/tax?t=' + Date.now(), { headers: { 'X-Hub-Pin': pin }, cache: 'no-store' })
+    .then(function (r) { return r.json().then(function (j) { if (!r.ok) throw new Error(j.error || r.status); return j; }); })
+    .then(function (j) {
+      var d = j.biz && j.biz.creamus && j.biz.creamus[k];
+      if (!d) { toast(curM + '월 홈택스 자료가 아직 없어요'); return; }
+      var set = function (key, v) { if (v == null) return; document.querySelector('#p-input [data-k="' + key + '"]').value = comma(v); };
+      set('card', d.cardSale);
+      set('cashReceipt', d.cashSale != null || d.invoiceSale != null ? (d.cashSale || 0) + (d.invoiceSale || 0) : null);
+      var buy = (d.cardBuy || 0) + (d.cashBuy || 0) + (d.invoiceBuy || 0);
+      if (d.cardBuy != null || d.cashBuy != null || d.invoiceBuy != null) set('buyProof', buy);
+      updTotal();
+      $('htNote').textContent = '홈택스 ' + (d.at || '') + ' 기준으로 채웠어요 — 카드 매출, 현금영수증(+세금계산서) 매출, 증빙 있는 지출. 배달앱·영수증 없는 현금은 홈택스에 없어서 직접 적어 주세요. 확인 후 「이번 달 저장」.';
+      toast('홈택스 숫자를 채웠어요 — 확인 후 저장');
+    })
+    .catch(function (e) { toast('가져오지 못했어요 (' + (e.message || e) + ')'); })
+    .then(function () { $('htPull').disabled = false; $('htPull').textContent = '📥 홈택스에서 가져오기'; });
+};
 $('sInvoice').onchange = function () { DB.set.invoice = this.checked; save(); };
 $('bBackup').onclick = function () {
   var d = new Date();
