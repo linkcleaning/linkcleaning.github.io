@@ -3,15 +3,15 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<meta name="theme-color" content="#FFD233">
+<meta name="theme-color" content="#0E1A24">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <title>링크 미래전략실 · 비서실</title>
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700;800;900&display=swap">
-<script src="/v.js" data-v="v50" defer></script>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700;800;900&family=Noto+Serif+KR:wght@600;700;900&display=swap">
+<script src="/v.js" data-v="v51" defer></script>
 <style>
   /* 비서실 화면 — 앱 안에서 열림 (Claude 앱으로 넘어가지 않음). 대화만 Claude에서. */
   :root {
@@ -105,6 +105,52 @@
   .appbtn { flex: 1 1 auto; text-align: center; text-decoration: none; border-radius: 999px; padding: 11px 12px; font-weight: 800; font-size: 14px; color: #191919; background: #F2F3F5; border: 1.5px solid #E2E4E9; white-space: nowrap; }
   .appbtn.main { background: #191919; color: #FFD233; border-color: #191919; }
   .bdept small { display: block; }
+
+  /* ── 전략기획실 v2 디자인: 근엄·고급 (대표님 11/20 "가벼워 보이니 무게감 있고 고급스럽게") ── */
+  :root {
+    --paper: #F3F0E8; --card: #FFFDF8; --ink: #141C24; --muted: #6E6A61; --line: #E2DCCF;
+    --navy: #0E1A24; --navy2: #172634; --gold: #B8955C; --gold-soft: #E9DCC2; --ok: #3F7A5C; --bad: #A13A2F;
+    --serif: "Noto Serif KR", "AppleMyungjo", "Batang", serif;
+  }
+  html, body { background: var(--paper); color: var(--ink); }
+  .top { background: linear-gradient(170deg, #0E1A24 0%, #172634 70%, #1C2E3D 100%); border-radius: 0; padding-bottom: 22px; position: relative; box-shadow: 0 6px 24px rgba(14,26,36,.18); }
+  .top::after { content: ""; position: absolute; left: 0; right: 0; bottom: 0; height: 3px; background: linear-gradient(90deg, transparent, var(--gold) 20%, var(--gold) 80%, transparent); opacity: .85; }
+  .back { background: transparent; color: var(--gold-soft); border: 1px solid rgba(233,220,194,.45); font-weight: 700; }
+  .eyebrow { background: transparent; color: var(--gold); border: 1px solid var(--gold); letter-spacing: .12em; font-weight: 700; border-radius: 3px; padding: 3px 9px; }
+  h1 { font-family: var(--serif); font-weight: 900; color: #F6F1E6; font-size: 32px; letter-spacing: .02em; margin-top: 14px; }
+  h1::after { content: "STRATEGIC SECRETARIAT"; display: block; font-family: var(--sans); font-size: 10px; letter-spacing: .32em; color: var(--gold); font-weight: 700; margin-top: 2px; }
+  .lead { color: #C9C2B3; }
+  .board { background: rgba(255,253,248,.04); border: 1px solid rgba(184,149,92,.35); border-radius: 12px; padding: 6px 10px; }
+  .brow { border-bottom: 1px solid rgba(233,220,194,.12); }
+  .bmain { color: #F6F1E6; }
+  .bname { font-family: var(--serif); font-weight: 700; font-size: 16px; color: #F6F1E6; }
+  .bname small { color: #A8A193; }
+  .bsum { color: #A8A193; } .bsum b { color: #8FC2A3; } .bsum b.todo { color: #F6F1E6; } .bsum .bad { color: #E08A7E; }
+  .bdot { width: 4px; height: 32px; border-radius: 2px; }
+  .bapp { background: transparent; color: var(--gold); border: 1px solid var(--gold); border-radius: 6px; font-weight: 700; padding: 8px 11px; }
+  #chief, .brow[data-k="chief"] { --dc: #2A3A4A; } #pr, .brow[data-k="pr"] { --dc: #8A5232; } #sns, .brow[data-k="sns"] { --dc: #2E4D72; }
+  #sales, .brow[data-k="sales"] { --dc: #2F5E4B; } #strategy, .brow[data-k="strategy"] { --dc: #4E4377; } #office, .brow[data-k="office"] { --dc: #5A5E66; } #biz, .brow[data-k="biz"] { --dc: #7A3047; }
+  .brow .bdot { background: color-mix(in srgb, var(--dc) 55%, var(--gold)); }
+  .wrap { gap: 14px; padding-top: 18px; }
+  .dept { background: var(--card); border: 1px solid var(--line); border-radius: 14px; box-shadow: 0 1px 2px rgba(20,28,36,.04), 0 8px 24px rgba(20,28,36,.05); margin-top: 0; }
+  .dept-head { background: var(--card); color: var(--ink); border-bottom: 1px solid var(--line); padding: 16px 16px 12px; position: relative; }
+  .dept-head::before { content: ""; position: absolute; left: 0; top: 14px; bottom: 12px; width: 4px; background: var(--dc); border-radius: 0 3px 3px 0; }
+  .dept-head h2 { font-family: var(--serif); font-weight: 700; font-size: 21px; color: var(--ink); letter-spacing: .01em; }
+  .dept-head span { color: var(--muted); font-weight: 500; }
+  .task { border: 1px solid var(--line); border-left: 3px solid var(--dc); border-radius: 10px; background: #FFFEFB; }
+  .who { color: var(--dc); font-weight: 700; letter-spacing: .02em; }
+  .task h3 { font-family: var(--serif); font-weight: 700; font-size: 17.5px; color: var(--ink); }
+  .task p { color: var(--muted); }
+  .chip { border-radius: 3px; font-weight: 700; background: color-mix(in srgb, var(--dc) 10%, #fff); color: var(--dc); border: 1px solid color-mix(in srgb, var(--dc) 25%, #fff); }
+  .chip.pc { background: #F6EEDF; color: #7A5A2A; border-color: #E6D6B8; }
+  .meta b { color: var(--dc); }
+  .donechip { border-radius: 4px; background: #EFEBE2; color: var(--muted); font-weight: 700; }
+  .donechip.ok { background: var(--ok); color: #fff; } .donechip.bad { background: var(--bad); color: #fff; }
+  .applink { border-radius: 8px; background: #F6EEDF; color: var(--ink); border: 1px solid var(--gold-soft); font-weight: 700; }
+  .approw { margin-top: 4px; }
+  .appbtn { border-radius: 8px; background: #FFFEFB; border: 1px solid var(--line); color: var(--ink); font-weight: 700; }
+  .appbtn.main { background: var(--navy); color: var(--gold-soft); border-color: var(--navy); }
+  .pill { border-radius: 4px; } .pill.ok { background: var(--ok); } .pill.bad { background: var(--bad); }
   @media (max-width: 360px) { .suseok { grid-template-columns: repeat(2, 1fr); } }
 </style>
 </head>
@@ -284,7 +330,7 @@
   document.addEventListener('visibilitychange', function () { if (!document.hidden) load(); });
 })();
 </script>
-<button type="button" id="toTop" aria-label="맨 위로" style="position:fixed;right:16px;bottom:calc(env(safe-area-inset-bottom,0px) + 20px);z-index:50;width:52px;height:52px;border-radius:999px;border:0;background:#191919;color:#FFD233;font:800 11px/1.1 'Noto Sans KR',sans-serif;box-shadow:0 4px 14px rgba(0,0,0,.25);display:none;cursor:pointer">▲<br>맨 위</button>
+<button type="button" id="toTop" aria-label="맨 위로" style="position:fixed;right:16px;bottom:calc(env(safe-area-inset-bottom,0px) + 20px);z-index:50;width:52px;height:52px;border-radius:999px;border:0;background:#0E1A24;color:#E9DCC2;border:1px solid #B8955C !important;font:700 11px/1.1 'Noto Sans KR',sans-serif;box-shadow:0 4px 14px rgba(14,26,36,.3);display:none;cursor:pointer">▲<br>맨 위</button>
 <script>(function(){var b=document.getElementById('toTop');window.addEventListener('scroll',function(){b.style.display=window.scrollY>400?'block':'none';},{passive:true});b.addEventListener('click',function(){window.scrollTo({top:0,behavior:'smooth'});});})();</script>
 </body>
 </html>
