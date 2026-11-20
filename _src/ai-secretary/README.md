@@ -5,6 +5,7 @@
 - 매일 아침 예약 작업(Claude)이 ai-secretary/data/today.json 을 새로 써서 push → 앱이 브리핑 맨 위에 표시
   스키마: { date, generatedAt, headline, todo[], fieldMemo[], issues[{title,desc,source,url}], golden[{kw,reason}], blog{keyword,title,body}?, threads{text,tags[1개 주제태그]} } — 저녁 스레드는 저녁 홍보 작업 담당이라 쓰지 않음
   ✍️ blog(블로그 초안)·이케이클린 blog·칼럼·개인 블로그 글은 반드시 _src/ai-secretary/BLOG_PLAYBOOK.md 5단계 규칙(클릭되는 제목·첫 3초 2줄·한눈에 정리·AI 냄새 지우기·자연스러운 마무리)을 따른다 (대표님 승인 11/19).
+  🤖 모든 글·페이지는 _src/ai-secretary/AI_SEARCH_PLAYBOOK.md(AI 검색 노출 지침, 대표님 신신당부 11/20)도 따른다 — 손님이 AI에게 묻는 질문 문장을 제목·소제목에, 그 아래 첫 문장이 답, 링크클린 정체성(이름·2016·제주 전 지역·064-763-4545) 일관되게.
 - ai-secretary/data/ranks.json : { updatedAt, keywords[], byDate: { 'YYYY-MM-DD': { '키워드': { blog: n, web: n } } } } (0 = 권외) → 앱이 자동 반영
 - naver-rank-worker.js 는 선택 기능(네이버 API 등록 필요)이라 현재 미사용
 
