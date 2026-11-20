@@ -1,110 +1,111 @@
 {
- "date": "2026-11-20",
- "items": {
-  "report": {
-   "done": true,
-   "at": "07:21",
-   "note": "보고서·황금키워드 3개"
-  },
-  "bids": {
-   "done": true,
-   "at": "07:20",
-   "note": "새 공고 없음"
-  },
-  "google": {
-   "done": true,
-   "at": "07:22",
-   "note": "14개 확인·하락 없음"
-  },
-  "rankmeeting": {
-   "done": true,
-   "at": "07:22",
-   "note": "하락 없음"
-  },
-  "health": {
-   "done": true,
-   "at": "07:22",
-   "note": "확인함"
-  },
-  "threads": {
-   "done": true,
-   "at": "07:24",
-   "note": "창틀 레일 흙먼지 글 게시",
-   "detail": "제주 오늘 바람 엄청 세게 분대요.\n이런 날 지나고 나면 창틀 레일에 흙먼지랑 모래가 한가득 쌓여 있어요.\n바로 물부터 부으면 진흙이 돼서 더 안 빠지더라고요.\n마른 붓이나 칫솔로 먼저 쓸어내고, 그다음에 물티슈로 닦아 주세요.\n여러분 집 창틀 레일, 마지막으로 언제 닦으셨어요?\n\n주제 태그: 청소",
-   "url": "https://www.threads.com/@linkcleaning/post/Df8JMDjEsCr"
-  },
-  "neighbors": {
-   "done": true,
-   "at": "07:26",
-   "note": "댓글 3개",
-   "detail": "@loveyoooon_ · 아이 표선초 2년 유학 고민 → 표선 바다 앞에서 크는 아이라니 부러워요. 2년이면 한 계절씩 다 겪어 보실 텐데, 제주 겨울 바람이 꽤 세니까 겨울에 한 번 미리 지내 보고 정하셔도 좋을 것 같아요!\n@yyyyyy00272 · 지금 제주 가면 롱패 입나요? → 오늘부터 제주 바람이 확 차가워졌어요. 해안가는 롱패까진 아니어도 바람 막아 주는 패딩이면 충분하고, 한라산 쪽 가시면 롱패 입으셔도 안 덥더라고요!\n@nabongtam · 516도로 성판악 밤 눈길 영상 → 성판악 벌써 겨울왕국이네요. 오늘도 산지에 눈 더 온다던데 516도로 넘으실 땐 살얼음 조심하세요!\n(새 팔로워 맞팔: 새로 팔로우한 계정 없음)"
-  },
-  "salimmorning": {
-   "done": true,
-   "at": "07:27",
-   "note": "니트 보풀 글 게시",
-   "detail": "니트 보풀, 가위로 바짝 자르다 구멍 낸 적 있죠? 🧶\n1) 빨 땐 뒤집어서 세탁망에 넣기\n2) 울 코스·찬물로 짧게 🧺\n3) 생긴 보풀은 결 따라 살살, 잡아당기지 않기\n니트 몇 벌이나 갖고 계세요?\n\n주제 태그: 옷관리\n(게시 후 살림 글 읽고 좋아요 3개)",
-   "url": "https://www.threads.com/@linkdole2026/post/Df8JrqrE0Y7"
-  },
-  "aside": {
-   "done": true,
-   "at": "07:44",
-   "note": "어제 보고 없음",
-   "detail": "보고함에는 연결 확인용 시험 보고(11/19)만 있어 기록하지 않았습니다. 오늘 지시서(키워드 11개)는 08:00 전에 올려 두었습니다."
-  },
-  "replies": {
-   "done": true,
-   "note": "답글 1개",
-   "detail": "07:55 아침 글(창틀 레일 흙먼지) 확인 — 아직 댓글 없음\n@rarafamily: 감기 좋아졌다·즐거운 금요일 인사 → \"감기 나으셨다니 다행이에요! 라라패밀리도 즐거운 금요일 보내세요 😊\"",
-   "at": "13:20"
-  },
-  "tip": {
-   "done": false,
-   "note": "홈페이지 대기열 저장",
-   "detail": "[청소팁] 겨울 매트리스 먼지·얼룩 정리 — 카드 3장·글 7종 저녁 게시 대기열(id b01182e5-2d73-466c-baf3-c14de16857aa, 플레이스 글은 서귀포점용). 홈페이지 Q&A \"매트리스 청소, 집에서는 어떻게 하나요?\"는 linkclean-web 쓰기 권한이 없어 web-queue/2026-11-20-tip.json 에 저장",
-   "id": "b01182e5-2d73-466c-baf3-c14de16857aa",
-   "at": "13:23"
-  },
-  "placenews": {
-   "done": true,
-   "note": "제주시점·연동 이사청소 냉장고 정리(계절 팁, 새 현장 사진 없음)",
-   "detail": "연동 이사청소 전, 냉장고 비우고 닦는 순서 · 영상 13초(글 카드) https://linkclean-promo.han0829.workers.dev/api/clip/482eab7e-47b.mp4",
-   "at": "13:23"
-  },
-  "areapage": {
-   "done": false,
-   "note": "홈페이지 대기열 저장",
-   "detail": "노형동 입주청소·이사청소 (/nohyeong-dong/) — linkclean-web 쓰기 권한이 없어 web-queue/2026-11-20-areapage.json 에 저장",
-   "url": "https://www.linkclean.co.kr/nohyeong-dong/",
-   "at": "13:24"
-  },
-  "column": {
-   "done": false,
-   "note": "홈페이지 대기열 저장",
-   "detail": "[유품정리] 제주 유품정리, 부모님 집 정리는 언제부터 시작하나요? — linkclean-web 쓰기 권한이 없어 web-queue/2026-11-20-column.json 에 저장(렌더링 확인함)",
-   "url": "https://www.linkclean.co.kr/stories/jeju-parents-house-memorial-cleanup/",
-   "at": "13:25"
-  },
-  "aitodo": {
-   "done": true,
-   "note": "할 일 없음",
-   "detail": "ai-visibility.json 파일이 아직 없어 건너뜀 (오늘 칼럼이 집중 키워드 \"제주 부모님 집 정리\"를 다룸)",
-   "at": "13:25"
-  },
-  "coupang": {
-   "done": true,
-   "at": "19:22",
-   "note": "저녁1·아침1·쿠팡1·릴스"
-  },
-  "sidejobs": {
-   "done": true,
-   "at": "19:22",
-   "note": "새 기회 2개"
-  },
-  "dayreport": {
-   "done": true,
-   "at": "19:22",
-   "note": "19건 중 15건 처리"
+  "date": "2026-11-20",
+  "items": {
+    "report": {
+      "done": true,
+      "at": "07:21",
+      "note": "보고서·황금키워드 3개"
+    },
+    "bids": {
+      "done": true,
+      "at": "07:20",
+      "note": "새 공고 없음"
+    },
+    "google": {
+      "done": true,
+      "at": "07:22",
+      "note": "14개 확인·하락 없음"
+    },
+    "rankmeeting": {
+      "done": true,
+      "at": "07:22",
+      "note": "하락 없음"
+    },
+    "health": {
+      "done": true,
+      "at": "07:22",
+      "note": "확인함"
+    },
+    "threads": {
+      "done": true,
+      "at": "07:24",
+      "note": "창틀 레일 흙먼지 글 게시",
+      "detail": "제주 오늘 바람 엄청 세게 분대요.\n이런 날 지나고 나면 창틀 레일에 흙먼지랑 모래가 한가득 쌓여 있어요.\n바로 물부터 부으면 진흙이 돼서 더 안 빠지더라고요.\n마른 붓이나 칫솔로 먼저 쓸어내고, 그다음에 물티슈로 닦아 주세요.\n여러분 집 창틀 레일, 마지막으로 언제 닦으셨어요?\n\n주제 태그: 청소",
+      "url": "https://www.threads.com/@linkcleaning/post/Df8JMDjEsCr"
+    },
+    "neighbors": {
+      "done": true,
+      "at": "07:26",
+      "note": "댓글 3개",
+      "detail": "@loveyoooon_ · 아이 표선초 2년 유학 고민 → 표선 바다 앞에서 크는 아이라니 부러워요. 2년이면 한 계절씩 다 겪어 보실 텐데, 제주 겨울 바람이 꽤 세니까 겨울에 한 번 미리 지내 보고 정하셔도 좋을 것 같아요!\n@yyyyyy00272 · 지금 제주 가면 롱패 입나요? → 오늘부터 제주 바람이 확 차가워졌어요. 해안가는 롱패까진 아니어도 바람 막아 주는 패딩이면 충분하고, 한라산 쪽 가시면 롱패 입으셔도 안 덥더라고요!\n@nabongtam · 516도로 성판악 밤 눈길 영상 → 성판악 벌써 겨울왕국이네요. 오늘도 산지에 눈 더 온다던데 516도로 넘으실 땐 살얼음 조심하세요!\n(새 팔로워 맞팔: 새로 팔로우한 계정 없음)"
+    },
+    "salimmorning": {
+      "done": true,
+      "at": "07:27",
+      "note": "니트 보풀 글 게시",
+      "detail": "니트 보풀, 가위로 바짝 자르다 구멍 낸 적 있죠? 🧶\n1) 빨 땐 뒤집어서 세탁망에 넣기\n2) 울 코스·찬물로 짧게 🧺\n3) 생긴 보풀은 결 따라 살살, 잡아당기지 않기\n니트 몇 벌이나 갖고 계세요?\n\n주제 태그: 옷관리\n(게시 후 살림 글 읽고 좋아요 3개)",
+      "url": "https://www.threads.com/@linkdole2026/post/Df8JrqrE0Y7"
+    },
+    "aside": {
+      "done": true,
+      "at": "07:44",
+      "note": "어제 보고 없음",
+      "detail": "보고함에는 연결 확인용 시험 보고(11/19)만 있어 기록하지 않았습니다. 오늘 지시서(키워드 11개)는 08:00 전에 올려 두었습니다."
+    },
+    "replies": {
+      "done": true,
+      "note": "답글 1개",
+      "detail": "07:55 아침 글(창틀 레일 흙먼지) 확인 — 아직 댓글 없음\n@rarafamily: 감기 좋아졌다·즐거운 금요일 인사 → \"감기 나으셨다니 다행이에요! 라라패밀리도 즐거운 금요일 보내세요 😊\"",
+      "at": "13:20"
+    },
+    "tip": {
+      "done": true,
+      "note": "19:55 비서실장이 대신 올림",
+      "detail": "[청소팁] 겨울 매트리스 먼지·얼룩 정리 — 카드 3장·글 7종 저녁 게시 대기열(id b01182e5-2d73-466c-baf3-c14de16857aa, 플레이스 글은 서귀포점용)\n→ 낮 근무가 홈페이지 올릴 권한이 없어 보관해 둔 것을 비서실장이 19:55에 홈페이지에 올렸어요.",
+      "id": "b01182e5-2d73-466c-baf3-c14de16857aa",
+      "at": "13:23",
+      "url": "https://www.linkclean.co.kr/guide/mattress-cleaning-winter/"
+    },
+    "placenews": {
+      "done": true,
+      "note": "제주시점·연동 이사청소 냉장고 정리(계절 팁, 새 현장 사진 없음)",
+      "detail": "연동 이사청소 전, 냉장고 비우고 닦는 순서 · 영상 13초(글 카드) https://linkclean-promo.han0829.workers.dev/api/clip/482eab7e-47b.mp4",
+      "at": "13:23"
+    },
+    "areapage": {
+      "done": true,
+      "note": "19:55 비서실장이 대신 올림",
+      "detail": "노형동 입주청소·이사청소 (/nohyeong-dong/)\n→ 낮 근무가 홈페이지 올릴 권한이 없어 보관해 둔 것을 비서실장이 19:55에 홈페이지에 올렸어요.",
+      "url": "https://www.linkclean.co.kr/nohyeong-dong/",
+      "at": "13:24"
+    },
+    "column": {
+      "done": true,
+      "note": "19:55 비서실장이 대신 올림",
+      "detail": "[유품정리] 제주 유품정리, 부모님 집 정리는 언제부터 시작하나요?\n→ 낮 근무가 홈페이지 올릴 권한이 없어 보관해 둔 것을 비서실장이 19:55에 홈페이지에 올렸어요.",
+      "url": "https://www.linkclean.co.kr/stories/jeju-parents-house-memorial-cleanup/",
+      "at": "13:25"
+    },
+    "aitodo": {
+      "done": true,
+      "note": "할 일 없음",
+      "detail": "ai-visibility.json 파일이 아직 없어 건너뜀 (오늘 칼럼이 집중 키워드 \"제주 부모님 집 정리\"를 다룸)",
+      "at": "13:25"
+    },
+    "coupang": {
+      "done": true,
+      "at": "19:22",
+      "note": "저녁1·아침1·쿠팡1·릴스"
+    },
+    "sidejobs": {
+      "done": true,
+      "at": "19:22",
+      "note": "새 기회 2개"
+    },
+    "dayreport": {
+      "done": true,
+      "at": "19:22",
+      "note": "19건 중 15건 처리"
+    }
   }
- }
 }
