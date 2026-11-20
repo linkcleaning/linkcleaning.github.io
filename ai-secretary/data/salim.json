@@ -21,7 +21,21 @@
   "file": "data/salim/2026-11-20.mp4",
   "caption": "(광고) 이 포스팅은 쿠팡 파트너스 활동의 일환으로, 이에 따른 일정액의 수수료를 제공받습니다.\n아끼는 니트, 보풀 때문에 못 입고 있다면 🧶\n01 평평하게 펴기\n02 결 따라 살살\n03 뒤집어서 세탁망\n저장해두세요 📌 (보풀제거기는 스레드 댓글에)\n#니트관리 #보풀제거 #살림팁 #겨울옷관리 #살림기록소"
  },
- "posted": {},
+ "posted": {
+  "threads1": {
+   "at": "20:49",
+   "url": "https://www.threads.com/@linkdole2026/post/Df9le1znwGs",
+   "images": false
+  },
+  "coupang": null,
+  "coupang_skipped": "계정 주의(최근 3일 일상글 조회수 중앙값 100 미만) — 링크 글 쉼. 링크는 만들어 둠 https://link.coupang.com/a/iPHUOhk6qy (풀라스 충전식 보풀제거기 LR3000, 로켓)",
+  "kakao": null,
+  "reel": false,
+  "neighbors": 3,
+  "likes": 4,
+  "replies": 1,
+  "at": "21:03"
+ },
  "history": [
   {
    "date": "2026-11-20",
@@ -159,6 +173,14 @@
    "click": 0,
    "buy": 0
   },
+  "2026-11-18": {
+   "click": 4,
+   "buy": 0
+  },
+  "2026-11-19": {
+   "click": 0,
+   "buy": 0
+  },
   "threads": {
    "2026-11-18": [
     {
@@ -205,11 +227,44 @@
      "replies": 1,
      "link": true
     }
+   ],
+   "2026-11-20": [
+    {
+     "topic": "니트 보풀(아침)",
+     "views": 45,
+     "likes": 0,
+     "replies": 0,
+     "link": false
+    },
+    {
+     "topic": "겨울 정전기",
+     "views": 24,
+     "likes": 2,
+     "replies": 1,
+     "link": false
+    },
+    {
+     "topic": "김장김치 보관",
+     "views": 66,
+     "likes": 0,
+     "replies": 0,
+     "link": false
+    },
+    {
+     "topic": "방풍비닐(쿠팡)",
+     "views": 18,
+     "likes": 1,
+     "replies": 1,
+     "link": true
+    },
+    {
+     "topic": "외풍 바람길",
+     "views": 17,
+     "likes": 0,
+     "replies": 0,
+     "link": false
+    }
    ]
-  },
-  "2026-11-18": {
-   "click": 4,
-   "buy": 0
   }
  },
  "morning": {
