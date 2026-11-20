@@ -65,10 +65,24 @@
     </table>
   </div>
 
-  <h2>2. 블로그 글 임시저장</h2>
+  <h2>2. 네이버 AI 브리핑 확인</h2>
+  <div class="card">
+    <ol>
+      <li>아래 질문을 하나씩 누르면 네이버 <b>통합검색</b>이 열립니다.</li>
+      <li>맨 위쪽에 <b>AI 브리핑</b>(AI가 정리한 답) 칸이 있는지 봅니다. 있으면 <code>있음</code>, 없으면 <code>없음</code>.</li>
+      <li>AI 브리핑 안에 <b>링크클린</b>이나 <b>이케이클린</b>이 나오면 <code>링크클린</code> / <code>이케이클린</code>, 안 나오면 <code>없음</code>.</li>
+      <li>AI 브리핑이 추천하거나 인용한 업체·블로그 이름을 3개까지 적습니다.</li>
+    </ol>
+    <table>
+      <thead><tr><th>질문</th><th>AI 브리핑</th><th>우리 언급</th><th>대신 나온 곳</th></tr></thead>
+      <tbody id="aiRows"></tbody>
+    </table>
+  </div>
+
+  <h2>3. 블로그 글 임시저장</h2>
   <div class="card" id="draftBox"></div>
 
-  <h2>3. 보고 보내기</h2>
+  <h2>4. 보고 보내기</h2>
   <div class="card">
     <label for="memo">메모 (막힌 것, 이상한 것이 있으면)</label>
     <textarea id="memo" placeholder="예: 로그인 필요 / 검색 결과가 이상함"></textarea>
@@ -82,7 +96,7 @@
     <div id="history" class="card" style="font-size:14px">불러오는 중…</div>
   </details>
 </main>
-<div class="ver">v1</div>
+<div class="ver">v2</div>
 <script>
 const API = 'https://linkclean-promo.han0829.workers.dev/api/hub/aside';
 let T = null;
@@ -103,6 +117,14 @@ async function load() {
       <td><input type="text" class="rank" id="rank-${i}" aria-label="${esc(kw)} 순위" placeholder="몇 위"></td>
       <td><input type="text" id="title-${i}" aria-label="${esc(kw)} 찾은 글 제목" placeholder="글 제목"></td>
     </tr>`).join('');
+  const qs = T.aiQuestions || [];
+  $('aiRows').innerHTML = !qs.length ? '<tr><td colspan="4">오늘은 확인할 질문이 없습니다.</td></tr>' : qs.map((q, i) => `
+    <tr>
+      <td><a class="kw" target="_blank" rel="noopener" href="https://search.naver.com/search.naver?query=${encodeURIComponent(q)}">${esc(q)}</a></td>
+      <td><input type="text" class="rank" id="aihas-${i}" aria-label="${esc(q)} AI 브리핑 있음 없음" placeholder="있음/없음"></td>
+      <td><input type="text" class="rank" id="aimen-${i}" aria-label="${esc(q)} 우리 언급" placeholder="없음"></td>
+      <td><input type="text" id="aiwho-${i}" aria-label="${esc(q)} 대신 나온 곳" placeholder="업체·블로그 이름"></td>
+    </tr>`).join('');
   const d = T.drafts || [];
   $('draftBox').innerHTML = !d.length ? '오늘은 임시저장할 글이 <b>없습니다.</b> 이 단계는 건너뜁니다.' :
     '<ol><li><code>' + esc((T.ourBlogs || [])[0] || 'blog.naver.com/linkclean') + '</code> 에서 <b>글쓰기</b>를 엽니다.</li><li>아래 제목과 본문을 그대로 붙여 넣고, 태그를 넣습니다.</li><li><b>임시저장</b>만 누르고 발행은 누르지 않습니다.</li><li>끝나면 아래 「저장함」을 체크합니다.</li></ol>' +
@@ -115,7 +137,8 @@ $('send').onclick = async () => {
   if (!T) return;
   const ranks = (T.ranks || []).map((kw, i) => ({ kw, rank: $('rank-' + i).value.trim(), title: $('title-' + i).value.trim() }));
   const drafts = (T.drafts || []).map((x, i) => ({ title: x.title, done: !!($('draft-' + i) || {}).checked }));
-  const body = { date: today(), task: T.date, ranks, drafts, memo: $('memo').value.trim() };
+  const ai = (T.aiQuestions || []).map((q, i) => ({ q, has: $('aihas-' + i).value.trim(), mentioned: $('aimen-' + i).value.trim(), who: $('aiwho-' + i).value.trim() }));
+  const body = { date: today(), task: T.date, ranks, ai, drafts, memo: $('memo').value.trim() };
   $('send').disabled = true; $('sent').textContent = '보내는 중…';
   try {
     const r = await fetch(API, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
