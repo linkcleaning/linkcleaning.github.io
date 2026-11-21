@@ -11,7 +11,7 @@
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700;800;900&family=Noto+Serif+KR:wght@600;700;900&display=swap">
-<script src="/v.js" data-v="v57" defer></script>
+<script src="/v.js" data-v="v58" defer></script>
 <style>
   /* 비서실 화면 — 앱 안에서 열림 (Claude 앱으로 넘어가지 않음). 대화만 Claude에서. */
   :root {
@@ -129,7 +129,7 @@
   .bdot { width: 4px; height: 32px; border-radius: 2px; }
   .bapp { background: transparent; color: var(--gold); border: 1px solid var(--gold); border-radius: 6px; font-weight: 700; padding: 8px 11px; }
   #chief, .brow[data-k="chief"] { --dc: #2A3A4A; } #pr, .brow[data-k="pr"] { --dc: #8A5232; } #sns, .brow[data-k="sns"] { --dc: #2E4D72; }
-  #sales, .brow[data-k="sales"] { --dc: #2F5E4B; } #strategy, .brow[data-k="strategy"] { --dc: #4E4377; } #office, .brow[data-k="office"] { --dc: #5A5E66; } #biz, .brow[data-k="biz"] { --dc: #7A3047; } #design, .brow[data-k="design"] { --dc: #B8955C; } #travel, .brow[data-k="travel"] { --dc: #2E5E9E; }
+  #sales, .brow[data-k="sales"] { --dc: #2F5E4B; } #strategy, .brow[data-k="strategy"] { --dc: #4E4377; } #office, .brow[data-k="office"] { --dc: #5A5E66; } #biz, .brow[data-k="biz"] { --dc: #7A3047; } #design, .brow[data-k="design"] { --dc: #B8955C; } #travel, .brow[data-k="travel"] { --dc: #2E5E9E; } #aide, .brow[data-k="aide"] { --dc: #3A3A3A; }
   .brow .bdot { background: color-mix(in srgb, var(--dc) 55%, var(--gold)); }
   .wrap { gap: 14px; padding-top: 18px; }
   .dept { background: var(--card); border: 1px solid var(--line); border-radius: 14px; box-shadow: 0 1px 2px rgba(20,28,36,.04), 0 8px 24px rgba(20,28,36,.05); margin-top: 0; }
@@ -192,6 +192,7 @@ header.top .in{position:relative}
 
   var DEPTS = [
     { key: 'chief', person: '한정호', name: '비서실장실', short: '실장실', duty: '아침 보고 총괄' },
+    { key: 'aide', person: '서도윤', name: '수행비서', short: '수행비서', duty: '비서실장 밑 · 동선·일정·경조사' },
     { key: 'pr', person: '한정민', name: '홍보수석실', short: '홍보수석', duty: '6곳 게시·청소팁' },
     { key: 'sns', person: '김기훈', name: '소통수석실', short: '소통수석', duty: '스레드·댓글' },
     { key: 'sales', person: '안규태', name: '영업수석실', short: '영업수석', duty: '입찰·지원사업',
@@ -242,6 +243,12 @@ header.top .in{position:relative}
       ['디자인실장', '쇼츠·릴스 디자인', '살림기록소·링크클린 영상을 디자인실 기준표(첫 1초 훅·큰 글자·진한 색·움직임·진행 막대)로 만들고, 기준표로 1차 점검합니다. 비서실장이 다시 확인해 승인한 영상만 올라갑니다.', '매일 18:57', 0, 'design', ALL],
       ['비서실장', '영상 최종 승인', '디자인실이 점검한 쇼츠·릴스를 처음 보는 눈으로 다시 확인(트렌드·글자·잘림·브랜드)하고 승인해야 저녁 홍보가 올립니다.', '매일 18:57', 0, 'design', ALL],
       ['디자인실장', '주간 트렌드 조사', '요즘 조회수 높은 살림·청소 쇼츠의 첫 장면·자막·색·길이를 찾아 우리 영상 조회수와 비교하고 기준표를 고칩니다.', '매주 월 18:57', 0, 'designtrend', [1]]
+    ],
+    aide: [
+      ['수행비서', '현장 동선 점검', '오늘 견적·현장 일정을 시간순으로 놓고 이동 시간·빠듯한 구간·순서 바꾸면 절약되는 시간·준비물을 아침 보고에 알려 드립니다.', '매일 07:17', 0, 'aide', ALL],
+      ['수행비서', '일정 조율', '겹치거나 이동이 불가능한 일정을 찾아 바꿀 방법을 제안하고, "옮겨" 하시면 캘린더를 고칩니다. 고객 연락은 문자 초안만.', '매일 07:17', 0, 'aide', ALL],
+      ['수행비서', '출장 동행·해외 소통', '여행실이 예약하면 출장 당일 시간표·챙길 것을 하루 전에 드리고, 외국어 메시지는 번역·답장 초안(원문+한글)을 드려요.', '말씀하실 때', 0, '', []],
+      ['수행비서', '경조사·선물', '결혼식·돌잔치·장례 등은 일주일 전·하루 전에 챙겨 드리고(장소·주차·복장·봉투), 선물은 예산에 맞춰 3개 추천합니다. 내용은 공개 파일에 남기지 않아요.', '일주일 전·하루 전', 0, '', []]
     ],
     travel: [
       ['여행실', '항공권 지켜보기', '제주↔상해 왕복(2~4명) 최저가·특가·이벤트를 확인해 아침 보고에 한 줄로 알려 드립니다. 예약은 하지 않아요.', '화·금 06:43', 0, 'flight', [2,5]],
@@ -332,7 +339,7 @@ header.top .in{position:relative}
       var due = c.days.indexOf(dow) >= 0; if (due) { m++; g.due++; }
       if (it && it.done) { n += due ? 1 : 0; s.classList.add('ok'); s.textContent = '✓ 오늘 ' + (it.at || '') + ' 완료'; setP('ok', it.at); return; }
       if (it && it.done === false) { s.classList.add('bad'); s.textContent = '✗ 못 함' + (it.note ? ' · ' + it.note : ''); setP('bad'); return; }
-      if (!c.days.length) { s.classList.add('off'); s.textContent = c.when && /요청|예약 후/.test(c.when) ? '말씀하시면 시작' : '매월 1일'; setP('off'); return; }
+      if (!c.days.length) { s.classList.add('off'); s.textContent = c.when && /요청|예약 후|말씀/.test(c.when) ? '말씀하시면 시작' : c.when && /전|있을/.test(c.when) ? '일정 있을 때' : '매월 1일'; setP('off'); return; }
       if (!due) { s.classList.add('off'); s.textContent = '오늘은 안 하는 날'; setP('off'); return; }
       s.textContent = '오늘 아직 전'; setP('due');
     });

@@ -74,3 +74,6 @@
 1. 앱 데이터(push 끝난 뒤)로 `python3 _src/ai-secretary/tools/make_brief.py > /tmp/brief.json`
 2. ArtifactData 도구(없으면 ToolSearch "select:ArtifactData")로 `get` url=https://claude.ai/artifact/5NejHa4Rrzhpay23bbd97X collection=brief doc_id=today → 나온 version으로 `set` (file_path=/tmp/brief.json, if_version=그 version).
 3. 도구가 없거나 실패하면 건너뛰고 보고에 쓰지 않는다(대표님께 알릴 일 아님).
+
+## 🧳 수행비서 (저녁 보고에 한 줄, AIDE_PLAYBOOK.md)
+- 내일 캘린더에 경조사(결혼식·돌잔치·장례 등)가 있으면 D-1 안내(장소·시간·주차·복장·봉투·지도 링크), 내일 출장·여행이면 출장 시간표 + 챙길 것. 상세는 SendUserMessage 에만, 공개 파일엔 쓰지 않는다. 없으면 생략.
