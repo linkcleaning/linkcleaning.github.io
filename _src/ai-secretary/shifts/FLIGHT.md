@@ -15,8 +15,10 @@
    - https://www.skyscanner.co.kr/routes/cju/csha/jeju-to-shanghai.html
    - https://kr.trip.com/flights/airport-cju-sha/
 2. 월별(12월·1월·2월) 왕복 최저가, 가장 싼 출발 날짜와 항공사, 직항 여부를 정리한다. 사이트마다 다르면 사이트 이름을 붙여 따로 적는다. 숫자는 페이지에 있는 것만 — 지어내지 않는다.
+2-1. 🎁 특가·이벤트 찾기(대표님 11/21 "특별 금액이 있거나 이벤트가 있으면 알려줘 같이"): WebSearch 로 이번 주 "춘추항공 특가", "길상항공 이벤트", "중국동방항공 프로모션", "제주 상해 특가 항공", "제주항공·티웨이 상해 특가"(제주 출발이 아니어도 제주 출발 노선이 새로 생기면 포함), 그리고 여행사·카드사·네이버항공 할인 쿠폰(제주-상해에 쓸 수 있는 것)을 찾는다. 각 이벤트: 이름, 기간(언제까지), 내용(얼마·몇 % 할인, 조건), 주소. 제주↔상해에 실제로 쓸 수 있는 것만, 기간이 지난 것·출처 없는 것은 넣지 않는다. 지난번 flight.json events 에 이미 있는 것은 "계속 진행 중"으로 표시만. 상해 여행에 영향 주는 큰 소식(한국인 무비자 기간 변경, 새 직항 취항·운휴)도 있으면 한 줄.
 3. ai-secretary/data/flight.json 을 읽어 지난번 최저가(history)와 비교한다.
+   - 새 특가·이벤트(events 중 new:true)가 있어도 good:true.
    - 왕복 최저가가 지난번보다 1만 원 이상 내렸거나, **왕복 15만 원 이하**가 나오면 good:true("⭐ 싸요").
-4. flight.json 통째로 쓰기: {"route":"제주↔상해 왕복","updatedAt":"YYYY-MM-DD HH:MM","best":{"price":원,"dates":"12/9~12/16","airline":"춘추항공","direct":true,"site":"카약","url":"…"},"months":[{"m":"12월","price":원,"site":"…"},…],"change":"지난번보다 ○원 ↓/↑ 또는 처음","good":true|false,"line":"✈️ 제주↔상해 왕복 최저 13.7만 원(12/9~16, 춘추 직항·카약) — 지난번보다 0.5만↓","history":[{"date","price"}] 최근 20개}
+4. flight.json 통째로 쓰기: {"route":"제주↔상해 왕복","updatedAt":"YYYY-MM-DD HH:MM","best":{"price":원,"dates":"12/9~12/16","airline":"춘추항공","direct":true,"site":"카약","url":"…"},"months":[{"m":"12월","price":원,"site":"…"},…],"change":"지난번보다 ○원 ↓/↑ 또는 처음","good":true|false,"events":[{"name","until":"YYYY-MM-DD","what","url","new":true|false}],"news":"무비자·취항 소식 한 줄 또는 null","line":"✈️ 제주↔상해 왕복 최저 13.7만 원(12/9~16, 춘추 직항·카약) — 지난번보다 0.5만↓","history":[{"date","price"}] 최근 20개}
    - 공개 저장소이므로 대표님 이름·여권·개인 일정은 쓰지 않는다.
 5. status.json(date 가 오늘이 아니면 그대로 두고 건드리지 않음 — 아침 근무가 새로 시작한다)에는 쓰지 않는다. commit "항공권 지켜보기 M/D"(attribution 줄 포함) → push(거부되면 pull --rebase 후 다시).
