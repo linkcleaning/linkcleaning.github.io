@@ -1,0 +1,220 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>여행 지갑 카드</title>
+<meta name="robots" content="noindex">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<link rel="apple-touch-icon" href="icon-180.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700;800;900&display=swap">
+<script src="https://cdn.jsdelivr.net/npm/node-forge@1.3.1/dist/forge.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/fflate@0.8.2/umd/index.js"></script>
+<script src="/v.js" data-v="v1" defer></script>
+<style>
+  :root { --ink:#14202B; --paper:#F3F0EA; --card:#fff; --muted:#6A7078; --line:#E3DED5; --sky:#1E5BD8; --sun:#FF8A3D; --sans:"Noto Sans KR","Apple SD Gothic Neo",system-ui,sans-serif; color-scheme: light; }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--paper); color: var(--ink); font-family: var(--sans); padding: calc(env(safe-area-inset-top,0px) + 16px) 16px calc(env(safe-area-inset-bottom,0px) + 32px); }
+  .wrap { max-width: 520px; margin: 0 auto; display: grid; gap: 12px; }
+  h1 { margin: 4px 0 0; font-size: 26px; font-weight: 900; letter-spacing: -.02em; }
+  .lead { margin: 0; color: var(--muted); font-size: 14px; line-height: 1.6; }
+  .tabs { display: grid; grid-template-columns: repeat(3,1fr); gap: 6px; background: #fff; padding: 5px; border-radius: 999px; }
+  .tabs button { border: 0; border-radius: 999px; padding: 10px 0; font: 800 14px var(--sans); background: none; color: var(--muted); cursor: pointer; }
+  .tabs button.on { background: var(--ink); color: #fff; }
+  .preview { border-radius: 22px; color: #fff; padding: 18px; display: grid; gap: 14px; box-shadow: 0 8px 22px rgba(20,32,43,.18); }
+  .pv-top { display: flex; justify-content: space-between; font-weight: 800; font-size: 14px; opacity: .9; }
+  .pv-mid { display: flex; align-items: flex-end; justify-content: space-between; gap: 8px; }
+  .pv-big { font-size: 40px; font-weight: 900; letter-spacing: -.02em; line-height: 1; }
+  .pv-small { font-size: 12px; opacity: .8; margin-bottom: 4px; }
+  .pv-row { display: grid; grid-template-columns: repeat(3,1fr); gap: 8px; font-size: 12px; }
+  .pv-row b { display: block; font-size: 15px; margin-top: 2px; }
+  form { background: var(--card); border-radius: 20px; padding: 14px; display: grid; gap: 10px; }
+  label { display: grid; gap: 4px; font-size: 12px; font-weight: 700; color: var(--muted); }
+  input, textarea { width: 100%; border: 1.5px solid var(--line); border-radius: 12px; padding: 11px 12px; font: 16px var(--sans); color: var(--ink); background: #fff; }
+  .two { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+  .go { border: 0; border-radius: 999px; padding: 15px; font: 900 16px var(--sans); background: #000; color: #fff; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; }
+  .go:disabled { opacity: .5; }
+  .note { font-size: 12px; color: var(--muted); line-height: 1.6; text-align: center; }
+  .hidden { display: none !important; }
+  #lock { position: fixed; inset: 0; background: rgba(0,0,0,.5); display: grid; place-items: center; padding: 16px; z-index: 9; }
+  #lock .box { background: #fff; border-radius: 20px; padding: 18px; width: 100%; max-width: 360px; display: grid; gap: 10px; }
+  #toast { position: fixed; left: 50%; bottom: 30px; transform: translateX(-50%); background: var(--ink); color: #fff; padding: 10px 16px; border-radius: 999px; font-size: 14px; opacity: 0; transition: opacity .2s; pointer-events: none; }
+  #toast.on { opacity: 1; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div>
+    <div style="font-size:12px;font-weight:800;color:var(--sun)">링크 미래전략실 · 여행실</div>
+    <h1>여행 지갑 카드</h1>
+    <p class="lead">예약한 항공·호텔·렌트카를 아이폰 지갑에 넣어 두면, 날짜가 되면 잠금 화면에 알아서 떠요.</p>
+  </div>
+  <div class="tabs" role="tablist">
+    <button type="button" data-t="flight" class="on">✈️ 항공</button>
+    <button type="button" data-t="hotel">🏨 호텔</button>
+    <button type="button" data-t="car">🚗 렌트카</button>
+  </div>
+  <div class="preview" id="pv"></div>
+  <form id="f" autocomplete="off"></form>
+  <button type="button" class="go" id="add"> 지갑에 추가</button>
+  <p class="note">정식 탑승권은 항공사 앱의 '지갑에 추가'가 공항에서 인정돼요.<br>이 카드는 예약 내용·확인번호를 한눈에 보는 용도예요.<br>입력한 내용은 이 휴대폰 안에서만 쓰이고 어디에도 저장되지 않아요.</p>
+</div>
+<div id="lock" class="hidden"><div class="box">
+  <b>지갑 카드 잠금 풀기</b>
+  <p class="lead" style="font-size:13px">링크 패스에서 쓰던 비밀번호를 넣어 주세요. (한 번 넣으면 이 휴대폰이 기억해요)</p>
+  <input id="pwInput" type="password" autocomplete="current-password">
+  <p id="pwErr" class="hidden" style="color:#D33;margin:0;font-size:13px">비밀번호가 맞지 않아요</p>
+  <div class="two"><button type="button" class="go" id="pwCancel" style="background:#eee;color:#000">취소</button><button type="button" class="go" id="pwOk">확인</button></div>
+</div></div>
+<div id="toast"></div>
+<script>
+/*__CONSTS__*/
+const ORG_NAME = '링크 미래전략실';
+const $ = s => document.querySelector(s);
+const toast = m => { const t = $('#toast'); t.textContent = m; t.classList.add('on'); setTimeout(() => t.classList.remove('on'), 2200); };
+const isIOS = /iphone|ipad|ipod/i.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+
+const FIELDS = {
+  flight: [['airline','항공사','예) 진에어'],['flightNo','편명','예) LJ123'],['from','출발 공항 코드','CJU'],['to','도착 공항 코드','PVG'],['fromName','출발 도시','제주'],['toName','도착 도시','상하이'],['date','출발 날짜','2026-12-10','date'],['time','출발 시각','09:40','time'],['arrive','도착 시각','11:10','time'],['pnr','예약번호','ABC123'],['pax','탑승자','한승우 외 1명'],['seat','좌석·수하물','15kg / 좌석 미정'],['link','예약 확인 주소(선택)','https://']],
+  hotel: [['name','호텔 이름','예) ○○호텔'],['city','도시','상하이'],['checkin','체크인 날짜','2026-12-10','date'],['inTime','체크인 시각','15:00','time'],['checkout','체크아웃 날짜','2026-12-13','date'],['outTime','체크아웃 시각','11:00','time'],['room','객실','디럭스 더블 1실'],['guests','투숙객','2명'],['conf','예약 확인번호','123456789'],['address','주소','지도에 쓸 주소'],['tel','호텔 전화',''],['link','예약 확인 주소(선택)','https://']],
+  car: [['company','렌트카 회사','예) ○○렌트카'],['car','차종','예) 아반떼 또는 동급'],['pickDate','받는 날짜','2026-12-10','date'],['pickTime','받는 시각','10:00','time'],['pickPlace','받는 곳','제주공항 렌트카 하우스'],['retDate','반납 날짜','2026-12-12','date'],['retTime','반납 시각','18:00','time'],['retPlace','반납 곳',''],['conf','예약번호',''],['ins','보험','완전자차'],['tel','회사 전화',''],['link','예약 확인 주소(선택)','https://']]
+};
+const COLORS = { flight: '#1E5BD8', hotel: '#7A4A2A', car: '#0E7A5F' };
+let type = 'flight', data = { flight: {}, hotel: {}, car: {} };
+
+// 여행실이 보낸 링크: #b64url(JSON {type, ...필드})
+try {
+  if (location.hash.length > 2) {
+    const j = JSON.parse(new TextDecoder().decode(Uint8Array.from(atob(location.hash.slice(1).replace(/-/g,'+').replace(/_/g,'/')), c => c.charCodeAt(0))));
+    if (FIELDS[j.type]) { type = j.type; data[type] = j; }
+    history.replaceState(null, '', location.pathname); // 주소창에 예약번호가 남지 않게
+  }
+} catch (e) {}
+
+const esc = s => String(s || '').replace(/[&<>"]/g, c => ({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;' }[c]));
+function renderForm() {
+  document.querySelectorAll('.tabs button').forEach(b => b.classList.toggle('on', b.dataset.t === type));
+  const f = $('#f'); f.innerHTML = '';
+  FIELDS[type].forEach(([k, l, ph, inputType]) => {
+    const lab = document.createElement('label'); lab.textContent = l;
+    const i = document.createElement('input'); i.name = k; i.placeholder = ph; i.type = inputType || (k === 'link' ? 'url' : 'text'); i.value = data[type][k] || '';
+    if (/^(from|to)$/.test(k)) { i.maxLength = 3; i.style.textTransform = 'uppercase'; }
+    i.addEventListener('input', () => { data[type][k] = i.value; renderPv(); });
+    lab.appendChild(i); f.appendChild(lab);
+  });
+  renderPv();
+}
+function renderPv() {
+  const d = data[type], pv = $('#pv'); pv.style.background = COLORS[type];
+  if (type === 'flight') pv.innerHTML = `<div class="pv-top"><span>${esc(d.airline || '항공사')}</span><span>${esc(d.flightNo || '')}</span></div>
+    <div class="pv-mid"><div><div class="pv-small">${esc(d.fromName || '출발')}</div><div class="pv-big">${esc((d.from || '---').toUpperCase())}</div></div><div style="font-size:26px">✈️</div><div style="text-align:right"><div class="pv-small">${esc(d.toName || '도착')}</div><div class="pv-big">${esc((d.to || '---').toUpperCase())}</div></div></div>
+    <div class="pv-row"><div>날짜<b>${esc(d.date || '-')}</b></div><div>출발<b>${esc(d.time || '-')}</b></div><div>예약번호<b>${esc(d.pnr || '-')}</b></div></div>`;
+  else if (type === 'hotel') pv.innerHTML = `<div class="pv-top"><span>🏨 ${esc(d.city || '호텔')}</span><span>${esc(d.guests || '')}</span></div>
+    <div class="pv-big" style="font-size:28px">${esc(d.name || '호텔 이름')}</div>
+    <div class="pv-row"><div>체크인<b>${esc(d.checkin || '-')}</b></div><div>체크아웃<b>${esc(d.checkout || '-')}</b></div><div>확인번호<b>${esc(d.conf || '-')}</b></div></div>`;
+  else pv.innerHTML = `<div class="pv-top"><span>🚗 ${esc(d.company || '렌트카')}</span><span>${esc(d.ins || '')}</span></div>
+    <div class="pv-big" style="font-size:28px">${esc(d.car || '차종')}</div>
+    <div class="pv-row"><div>받는 날<b>${esc(d.pickDate || '-')} ${esc(d.pickTime || '')}</b></div><div>반납<b>${esc(d.retDate || '-')} ${esc(d.retTime || '')}</b></div><div>예약번호<b>${esc(d.conf || '-')}</b></div></div>`;
+}
+document.querySelectorAll('.tabs button').forEach(b => b.addEventListener('click', () => { type = b.dataset.t; renderForm(); }));
+renderForm();
+
+/* ===== 서명 (링크 패스와 같은 애플 인증서, 이 휴대폰 안에서만) ===== */
+const u8ToBin = u8 => { let s = ''; for (let i = 0; i < u8.length; i += 8192) s += String.fromCharCode.apply(null, u8.subarray(i, i + 8192)); return s; };
+const binToU8 = s => Uint8Array.from(s, c => c.charCodeAt(0));
+const sha1Hex = u8 => { const md = forge.md.sha1.create(); md.update(u8ToBin(u8)); return md.digest().toHex(); };
+const b64 = s => Uint8Array.from(atob(s), c => c.charCodeAt(0));
+async function decryptKey(pw) {
+  const base = await crypto.subtle.importKey('raw', new TextEncoder().encode(pw), 'PBKDF2', false, ['deriveKey']);
+  const k = await crypto.subtle.deriveKey({ name: 'PBKDF2', salt: b64(ENC_KEY.s), iterations: ENC_KEY.n, hash: 'SHA-256' }, base, { name: 'AES-GCM', length: 256 }, false, ['decrypt']);
+  return new TextDecoder().decode(await crypto.subtle.decrypt({ name: 'AES-GCM', iv: b64(ENC_KEY.i) }, k, b64(ENC_KEY.c)));
+}
+let keyPem = null;
+async function unlock() {
+  if (keyPem) return true;
+  const saved = (() => { try { return localStorage.getItem('linkpass.pw'); } catch (e) { return null; } })();
+  if (saved) { try { keyPem = await decryptKey(saved); return true; } catch (e) {} }
+  return new Promise(res => {
+    $('#lock').classList.remove('hidden'); $('#pwErr').classList.add('hidden'); $('#pwInput').value = ''; setTimeout(() => $('#pwInput').focus(), 100);
+    $('#pwCancel').onclick = () => { $('#lock').classList.add('hidden'); res(false); };
+    $('#pwOk').onclick = async () => { const pw = $('#pwInput').value.trim().toLowerCase(); try { keyPem = await decryptKey(pw); try { localStorage.setItem('linkpass.pw', pw); } catch (e) {} $('#lock').classList.add('hidden'); res(true); } catch (e) { $('#pwErr').classList.remove('hidden'); } };
+  });
+}
+const hexRgb = h => { const n = parseInt(h.slice(1), 16); return `rgb(${n >> 16},${(n >> 8) & 255},${n & 255})`; };
+function iconPng(size, emoji, color) {
+  const c = document.createElement('canvas'); c.width = c.height = size; const x = c.getContext('2d');
+  x.fillStyle = color; x.fillRect(0, 0, size, size); x.font = `${size * .62}px "Apple Color Emoji","Noto Color Emoji",sans-serif`; x.textAlign = 'center'; x.textBaseline = 'middle'; x.fillText(emoji, size / 2, size * .56);
+  return new Promise(r => c.toBlob(b => b.arrayBuffer().then(a => r(new Uint8Array(a))), 'image/png'));
+}
+const iso = (d, t) => d ? new Date(`${d}T${t || '09:00'}:00+09:00`).toISOString().replace('.000Z', '+00:00') : undefined;
+function passBody(d) {
+  const back = [];
+  const add = (key, label, value) => { if (value) back.push({ key, label, value: String(value) }); };
+  if (type === 'flight') {
+    add('pax', '탑승자', d.pax); add('seat', '좌석·수하물', d.seat); add('arr', '도착 시각', d.arrive); add('link', '예약 확인', d.link);
+    add('tip', '안내', '정식 탑승권은 항공사 앱·체크인 후 받는 탑승권을 쓰세요. 국제선은 출발 2시간 전까지 공항 도착.');
+    return { style: 'boardingPass', desc: `${d.airline || ''} ${d.flightNo || ''} 항공 예약`, date: iso(d.date, d.time), code: d.pnr, body: {
+      transitType: 'PKTransitTypeAir',
+      headerFields: [{ key: 'fl', label: '편명', value: d.flightNo || '-' }],
+      primaryFields: [{ key: 'from', label: d.fromName || '출발', value: (d.from || '---').toUpperCase() }, { key: 'to', label: d.toName || '도착', value: (d.to || '---').toUpperCase() }],
+      secondaryFields: [{ key: 'date', label: '날짜', value: d.date || '-' }, { key: 'time', label: '출발', value: d.time || '-' }, { key: 'pnr', label: '예약번호', value: d.pnr || '-' }],
+      auxiliaryFields: [{ key: 'air', label: '항공사', value: d.airline || '-' }, ...(d.arrive ? [{ key: 'arr', label: '도착', value: d.arrive }] : [])],
+      backFields: back } };
+  }
+  if (type === 'hotel') {
+    add('room', '객실', d.room); add('guests', '투숙객', d.guests); add('addr', '주소', d.address); add('tel', '호텔 전화', d.tel); add('link', '예약 확인', d.link);
+    return { style: 'generic', desc: `${d.name || '호텔'} 숙박 예약`, date: iso(d.checkin, d.inTime || '15:00'), code: d.conf, body: {
+      headerFields: [{ key: 'city', label: '도시', value: d.city || '-' }],
+      primaryFields: [{ key: 'name', label: '호텔', value: d.name || '-' }],
+      secondaryFields: [{ key: 'in', label: '체크인', value: `${d.checkin || '-'} ${d.inTime || ''}`.trim() }, { key: 'out', label: '체크아웃', value: `${d.checkout || '-'} ${d.outTime || ''}`.trim() }],
+      auxiliaryFields: [{ key: 'conf', label: '확인번호', value: d.conf || '-' }],
+      backFields: back } };
+  }
+  add('pick', '받는 곳', d.pickPlace); add('ret', '반납 곳', d.retPlace || d.pickPlace); add('ins', '보험', d.ins); add('tel', '회사 전화', d.tel); add('link', '예약 확인', d.link);
+  add('tip', '안내', '받을 때 차 외관 사진·주유량을 먼저 찍어 두세요. 운전면허증 지참.');
+  return { style: 'generic', desc: `${d.company || '렌트카'} 예약`, date: iso(d.pickDate, d.pickTime), code: d.conf, body: {
+    headerFields: [{ key: 'co', label: '렌트카', value: d.company || '-' }],
+    primaryFields: [{ key: 'car', label: '차종', value: d.car || '-' }],
+    secondaryFields: [{ key: 'pick', label: '받는 날', value: `${d.pickDate || '-'} ${d.pickTime || ''}`.trim() }, { key: 'ret', label: '반납', value: `${d.retDate || '-'} ${d.retTime || ''}`.trim() }],
+    auxiliaryFields: [{ key: 'conf', label: '예약번호', value: d.conf || '-' }],
+    backFields: back } };
+}
+async function build() {
+  const d = data[type], p = passBody(d);
+  const cert = forge.pki.certificateFromPem(CERT_PEM);
+  const uid = cert.subject.attributes.find(a => a.type === '0.9.2342.19200300.100.1.1'), ou = cert.subject.getField('OU');
+  const pass = { formatVersion: 1, passTypeIdentifier: uid.value, teamIdentifier: ou.value, serialNumber: 'TRIP-' + Date.now().toString(36),
+    organizationName: ORG_NAME, description: p.desc, logoText: { flight: '항공', hotel: '숙소', car: '렌트카' }[type],
+    foregroundColor: 'rgb(255,255,255)', labelColor: 'rgb(255,255,255)', backgroundColor: hexRgb(COLORS[type]), [p.style]: p.body };
+  if (p.date) pass.relevantDate = p.date;
+  if (p.code) pass.barcodes = [{ format: 'PKBarcodeFormatQR', message: String(p.code), messageEncoding: 'iso-8859-1', altText: String(p.code) }];
+  const emoji = { flight: '✈️', hotel: '🏨', car: '🚗' }[type], enc = new TextEncoder();
+  const files = { 'pass.json': enc.encode(JSON.stringify(pass)), 'icon.png': await iconPng(29, emoji, COLORS[type]), 'icon@2x.png': await iconPng(58, emoji, COLORS[type]), 'icon@3x.png': await iconPng(87, emoji, COLORS[type]) };
+  const manifest = {}; for (const [n, b] of Object.entries(files)) manifest[n] = sha1Hex(b);
+  const mb = enc.encode(JSON.stringify(manifest));
+  const p7 = forge.pkcs7.createSignedData(); p7.content = forge.util.createBuffer(u8ToBin(mb));
+  p7.addCertificate(cert); p7.addCertificate(forge.pki.certificateFromPem(WWDR_G4_PEM));
+  p7.addSigner({ key: forge.pki.privateKeyFromPem(keyPem), certificate: cert, digestAlgorithm: forge.pki.oids.sha256,
+    authenticatedAttributes: [{ type: forge.pki.oids.contentType, value: forge.pki.oids.data }, { type: forge.pki.oids.messageDigest }, { type: forge.pki.oids.signingTime, value: new Date() }] });
+  p7.sign({ detached: true });
+  const zip = fflate.zipSync({ ...files, 'manifest.json': mb, signature: binToU8(forge.asn1.toDer(p7.toAsn1()).getBytes()) });
+  return new File([zip], `${type}.pkpass`, { type: 'application/vnd.apple.pkpass' });
+}
+$('#add').onclick = async () => {
+  const d = data[type];
+  const need = { flight: ['flightNo', 'date'], hotel: ['name', 'checkin'], car: ['company', 'pickDate'] }[type];
+  if (need.some(k => !d[k])) { toast('이름·날짜는 꼭 넣어 주세요'); return; }
+  if (typeof forge === 'undefined' || typeof fflate === 'undefined') { toast('인터넷 연결을 확인해 주세요'); return; }
+  if (!(await unlock())) return;
+  const b = $('#add'); b.disabled = true; b.textContent = '만드는 중…';
+  try {
+    const file = await build(), url = URL.createObjectURL(file);
+    const a = document.createElement('a'); a.href = url; if (!isIOS) a.download = file.name; document.body.appendChild(a); a.click(); a.remove();
+    setTimeout(() => URL.revokeObjectURL(url), 60000);
+  } catch (e) { toast('만들기 실패: ' + (e.message || e)); }
+  finally { b.disabled = false; b.textContent = ' 지갑에 추가'; }
+};
+</script>
+</body>
+</html>
