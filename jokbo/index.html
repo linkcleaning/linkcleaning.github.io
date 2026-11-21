@@ -88,6 +88,15 @@ tailwind.config={theme:{extend:{colors:{hanji:'#FAF8F5',ink:'#1F2937',jjok:'#1E3
   .mhead{position:sticky;top:-12px;z-index:2;background:#FAF8F5;margin:-12px -16px 8px;padding:12px 16px 8px;border-bottom:1px solid #E5DDD0}
   .mfoot{position:sticky;bottom:-16px;z-index:2;background:#FAF8F5;margin:8px -16px -16px;padding:10px 16px calc(12px + env(safe-area-inset-bottom));border-top:1px solid #E5DDD0}
   @media (max-width:640px){
+    .itree ul{margin-left:.55rem;padding-left:.4rem}
+    .itree li{margin:.25rem 0}
+    .itog{width:1.45rem;height:1.45rem}
+    .icard{padding:.4rem .5rem;gap:.35rem;min-width:0}
+    .icard .ihanja{display:none}
+    .icard .nkin{white-space:normal;line-height:1.2}
+    #tab-tree .btn{padding:.38rem .6rem;font-size:.8rem}
+    #tab-tree .inline-flex > button{padding:.3rem .55rem;font-size:.8rem}
+    #zoomBox{display:none}
     #ef .inp{padding:.5rem .65rem}
     #ef{gap:.6rem}
     #ef .lbl{margin-bottom:.15rem}
@@ -117,7 +126,7 @@ tailwind.config={theme:{extend:{colors:{hanji:'#FAF8F5',ink:'#1F2937',jjok:'#1E3
       <button class="fbtn text-[19px]" data-fs="2" title="아주 크게">가</button>
     </div>
   </div>
-  <span class="absolute right-1 bottom-0 text-[8px] text-gray-300 select-none">v10</span>
+  <span class="absolute right-1 bottom-0 text-[8px] text-gray-300 select-none">v11</span>
 </header>
 
 <main class="max-w-3xl mx-auto px-4 pt-4 pb-32">
@@ -416,8 +425,8 @@ function iNode(p){
     ${kids.length?`<button class="itog" onclick="toggleNode('${p.id}')">${col?'▸':'▾'}</button>`:'<span class="w-[1.7rem] flex-none"></span>'}
     <button class="icard${nodeCls(p)}" id="n-${p.id}" onclick="openPerson('${p.id}')">
       <span class="ngen flex-none">${p.generation}세</span>
-      <span class="font-serif font-bold">${nameHTML(p)}</span>
-      <span class="font-serif text-sm text-muk">${esc(p.hanja)}</span>
+      <span class="font-serif font-bold whitespace-nowrap">${nameHTML(p)}</span>
+      <span class="ihanja font-serif text-sm text-muk whitespace-nowrap">${esc(p.hanja)}</span>
       <span class="ml-auto text-xs text-jjok font-bold text-right">${scope==='all'?esc(p.branch):kinHTML(p)}${col&&kids.length?` · 자손 ${kids.length}`:''}</span>
     </button></div>
     ${kids.length&&!col?`<ul>${kids.map(iNode).join('')}</ul>`:''}</li>`;
