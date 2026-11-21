@@ -73,3 +73,7 @@ status.json items.appcare 로 '비서들이 한 일'에 표시. 공개 저장소
 - 근무가 done:false 로 남길 때는 items.<키>.fix = {"why":"왜 못 했나(쉬운 말 한 줄)","act":"비서실이 언제 어떻게 처리하나","you":"대표님 할 일 — 없으면 '없어요.', 선택이면 '(선택) '으로 시작"} 를 함께 쓴다.
 - '대기열', '권한' 같은 내부 말만 쓰지 않는다. 앱은 fix 가 없으면 note 로 짐작해 설명한다(explainFail).
 - 🧯 못 한 일 처리 근무(매일 14:37·18:37)가 done:false 항목을 다시 시도하고(홈페이지 대기열 올리기 등), 끝내 못 한 것은 fix 를 채운다.
+
+### 블로그 사진 넣기 (대표님 11/21, 시험 성공)
+- 대표님이 사진을 비서실장 대화에 보내면: 위치 정보(EXIF)를 지우고 긴 변 1600px JPG로 줄여 ai-secretary/data/blogphotos/<큐 id>/1.jpg… 에 올리고, draft-queue.json 해당 항목에 photos [{url:"https://linkcleaning.github.io/ai-secretary/data/blogphotos/<id>/N.jpg",caption}] 를 넣는다(본문 [사진 N] 순서와 맞춤). 07:43 어사이드 근무가 drafts 에 실어 주면 어사이드가 사진까지 넣어 임시저장한다.
+- 공개 주소이므로 얼굴·집 주소·차량 번호·고객 물건 이름이 보이는 사진은 쓰지 않는다(대표님께 다시 요청).
