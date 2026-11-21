@@ -11,7 +11,7 @@
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css">
-<script src="/v.js" data-v="v61" defer></script>
+<script src="/v.js" data-v="v62" defer></script>
 <style>
   /* 비서실 화면 — 앱 안에서 열림 (Claude 앱으로 넘어가지 않음). 대화만 Claude에서. */
   :root {
@@ -221,7 +221,7 @@ header.top .in{position:relative}
   var DEPTS = [
     { key: 'chief', person: '한정호', name: '비서실장실', short: '실장실', duty: '미래전략실 컨트롤타워 · 보고 · 영상 최종 승인', color: '#191919' },
     { key: 'office', person: '서도윤', name: '대표실 (나·가족)', short: '대표실', duty: '팀장 수행비서 · 의전·수행 / 자금·세무 / 가족·생활', color: '#3A3A3A' },
-    { key: 'design', person: '윤세라', name: '디자인실', short: '디자인실', duty: '실장 직속 · 영상·이미지 점검 (디자인회사 12년)', color: '#B8955C' },
+    { key: 'design', person: '윤세라', name: '디자인실', short: '디자인실', duty: '실장 직속 · 모든 사진·영상 (디자인회사 12년)', color: '#B8955C' },
     { key: 'pr', person: '한정민', name: '홍보수석실', short: '홍보수석', duty: '블로그·플레이스·홍보게시', color: '#FF6B00' },
     { key: 'sns', person: '김기훈', name: '소통수석실', short: '소통수석', duty: '스레드·이케이클린', color: '#1A73E8' },
     { key: 'sales', person: '안규태', name: '영업수석실', short: '영업수석', duty: '입찰·지원사업·고객관리', color: '#0E9F5A',
@@ -235,7 +235,7 @@ header.top .in{position:relative}
     chief: [
       ['비서실장', '아침 보고서', '구글 캘린더 일정, 제주 날씨·소식, 황금키워드, 현장 메모를 정리해 앱에 올리고 아침 보고를 보냅니다.', '매일 07:17', 0, 'report', ALL],
       ['비서실장', '저녁 하루 보고', '오늘 비서실이 한 일·내일 일정·승인하실 것을 정리해 보고합니다. "1번 해줘", "썰: …"로 답장하면 바로 처리해요.', '매일 18:57', 0, 'dayreport', ALL],
-      ['비서실장', '영상 최종 승인', '디자인실이 점검한 쇼츠·릴스를 처음 보는 눈으로 다시 확인(트렌드·글자·잘림·브랜드)하고 승인해야 올라갑니다.', '매일 18:57', 0, 'design', ALL]
+      ['비서실장', '사진·영상 최종 승인', '디자인실이 점검한 모든 사진·영상을 처음 보는 눈으로 다시 확인(트렌드·글자·잘림·브랜드)하고 승인해야 올라갑니다. 승인 없으면 사진 빼고 글만.', '매일 18:57', 0, 'design', ALL]
     ],
     office: [
       ['의전·수행팀', '현장 동선·일정 조율', '오늘 견적·현장 일정의 이동 시간·빠듯한 구간·순서 바꾸면 절약되는 시간·준비물, 겹치는 일정 조율안을 아침 보고에 드립니다.', '매일 07:17', 0, 'aide', ALL],
@@ -246,7 +246,7 @@ header.top .in{position:relative}
       ['가족·생활팀', '여행 비교·예약·지갑 카드', '말씀하시면 항공·호텔·렌트카를 총액으로 3개씩 비교하고, 고르시면 결제 직전까지 준비, 예약 후엔 아이폰 지갑 카드를 만들어 드려요.', '말씀하실 때', 0, '', []]
     ],
     design: [
-      ['디자인실장', '쇼츠·릴스 디자인·1차 점검', '살림기록소·링크클린 영상을 디자인실 기준표(첫 1초 훅·큰 글자·진한 색·움직임·진행 막대)로 만들고 1차 점검합니다. 비서실장 승인 후에만 올라가요.', '매일 18:57', 0, 'design', ALL],
+      ['디자인실장', '모든 사진·영상 디자인·1차 점검', '쇼츠·릴스·스레드·유튜브·인스타·블로그·플레이스에 들어가는 사진과 영상은 전부 디자인실이 기준표대로 만들고 1차 점검합니다. 비서실장 승인 후에만 올라가요.', '매일 18:57', 0, 'design', ALL],
       ['디자인실장', '주간 트렌드 조사', '요즘 조회수 높은 살림·청소 쇼츠의 첫 장면·자막·색·길이를 보고 우리 영상과 비교해 기준표를 고칩니다.', '매주 월 18:57', 0, 'designtrend', [1]]
     ],
     pr: [
