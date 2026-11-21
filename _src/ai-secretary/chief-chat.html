@@ -65,13 +65,20 @@
   .thumbs button { position: absolute; top: -6px; right: -6px; width: 22px; height: 22px; border-radius: 999px; border: 0; background: var(--ink); color: #fff; font: 800 12px var(--sans); cursor: pointer; }
   .msg .pics { display: flex; gap: 4px; flex-wrap: wrap; margin-bottom: 4px; }
   .msg .pics img { width: 72px; height: 72px; object-fit: cover; border-radius: 10px; }
+  #guide { position: fixed; inset: 0; z-index: 50; background: rgba(25,25,25,.55); display: none; }
+  #guide.on { display: block; }
+  #guide .gbox { position: absolute; left: 12px; right: 12px; top: 12px; background: #fff; border-radius: 20px; padding: 16px 18px 14px; display: grid; gap: 6px; }
+  #guide .garrow { font: 900 30px var(--sans); line-height: 1; color: var(--warm); }
+  #guide b { font-size: 17px; }
+  #guide p { margin: 0; font-size: 14px; color: var(--muted); line-height: 1.55; }
+  #guide button { justify-self: end; appearance: none; border: 0; border-radius: 999px; padding: 10px 18px; background: var(--ink); color: #fff; font: 800 14px var(--sans); cursor: pointer; }
   .endbox { align-self: stretch; background: var(--card); border: 2px solid var(--ink); border-radius: 18px; padding: 16px; text-align: center; display: grid; gap: 10px; }
   .endbox b { font-size: 16px; }
 </style>
 </head>
 <body>
 <header class="top"><div class="in">
-  <a class="back" id="backTop" href="https://linkcleaning.github.io/ai-secretary/office.html" target="_top">‹ 비서실</a>
+  <button type="button" class="back" id="backTop" style="border:0;cursor:pointer">‹ 비서실</button>
   <div class="who-head"><b>비서실장 한정호</b><small id="st">연결 확인 중…</small></div>
   <div class="avatar" aria-hidden="true">정호</div>
 </div></header>
@@ -81,7 +88,6 @@
 </main></div>
 
 <div class="dock"><div class="in">
-  <div class="chips" id="chips"></div>
   <div class="thumbs" id="thumbs"></div>
   <form class="ask" id="askForm">
     <button type="button" class="pick" id="pick" hidden aria-label="사진 넣기">📷</button>
@@ -92,7 +98,7 @@
   </form>
   <div class="row2">
     <button type="button" class="tiny" id="clearChat">대화 지우기</button>
-    <a class="end" id="endBtn" href="https://linkcleaning.github.io/ai-secretary/office.html" target="_top">대화 끝내고 비서실로 ›</a>
+    <button type="button" class="end" id="endBtn">대화 끝내고 비서실로 ›</button>
   </div>
 </div></div>
 
@@ -122,8 +128,14 @@
   function fmt(iso) { var d = new Date(iso); if (isNaN(d)) return ''; return (d.getMonth() + 1) + '/' + d.getDate() + ' ' + String(d.getHours()).padStart(2, '0') + ':' + String(d.getMinutes()).padStart(2, '0'); }
 
   // 돌아가기: 새 창으로 열렸으면 닫기 시도, 아니면 비서실 화면으로
-  function goBack(ev) {
-    try { if (window.opener && !window.opener.closed) { ev.preventDefault(); window.close(); return; } } catch (e) {}
+  // Claude 앱 안에서는 바깥 주소로 가면 '링크 열기' 확인 창이 떠서, 앱 왼쪽 위 '◀ AI 비서실'로 돌아가도록 안내만 한다
+  var guide = document.createElement('div'); guide.id = 'guide';
+  guide.innerHTML = '<div class="gbox"><div class="garrow">↖</div><b>왼쪽 맨 위 「◀ AI 비서실」을 누르세요</b><p>대화 내용은 그대로 저장돼요.<br>다음에 [비서실장과 대화하기]를 누르면 이어서 할 수 있어요.</p><button type="button" id="gclose">알겠어요</button></div>';
+  document.body.appendChild(guide);
+  guide.addEventListener('click', function (e) { if (e.target === guide || e.target.id === 'gclose') guide.classList.remove('on'); });
+  function goBack() {
+    try { if (window.opener && !window.opener.closed) { window.close(); return; } } catch (e) {}
+    guide.classList.add('on');
   }
   document.getElementById('backTop').addEventListener('click', goBack);
   document.getElementById('endBtn').addEventListener('click', goBack);
@@ -262,9 +274,6 @@
   qEl.addEventListener('input', fit);
   document.getElementById('askForm').addEventListener('submit', function (ev) { ev.preventDefault(); if (busy && ctl) { ctl.abort(); return; } send(qEl.value); });
   document.getElementById('clearChat').addEventListener('click', function () { if (busy) return; turns = []; save(); renderHistory(); });
-  ['오늘 비서실 상황 보고해 줘', '📷 사진으로 블로그 글 써 줘', '내가 승인할 것만', '최근 회의 결론 요약', '새로 바뀐 공지 있어?'].forEach(function (c) {
-    var b = el('button', null, c); b.type = 'button'; b.addEventListener('click', function () { if (c.charAt(0) === '📷'.charAt(0)) { qEl.value = '이 사진들로 링크클린 블로그 글 써 줘'; fit(); if (maxPics) fileEl.click(); else qEl.focus(); return; } send(c); }); document.getElementById('chips').appendChild(b);
-  });
   renderHistory();
 
   var claude = window.claude;
