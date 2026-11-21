@@ -11,7 +11,7 @@
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700;800;900&family=Noto+Serif+KR:wght@600;700;900&display=swap">
-<script src="/v.js" data-v="v56" defer></script>
+<script src="/v.js" data-v="v57" defer></script>
 <style>
   /* 비서실 화면 — 앱 안에서 열림 (Claude 앱으로 넘어가지 않음). 대화만 Claude에서. */
   :root {
@@ -290,7 +290,7 @@ header.top .in{position:relative}
       card.appendChild(el('p', null, t[2]));
       var meta = el('div', 'meta');
       var sched = el('span'); sched.append('정기 '); sched.appendChild(el('b', null, t[3])); meta.appendChild(sched);
-      var dc = el('span', 'donechip', '확인 중…'); meta.appendChild(dc); chips.push({ el: dc, key: t[5], days: t[6] });
+      var dc = el('span', 'donechip', '확인 중…'); meta.appendChild(dc); chips.push({ el: dc, key: t[5], days: t[6], when: t[3] });
       card.appendChild(meta);
       sec.appendChild(card);
     });
@@ -332,7 +332,7 @@ header.top .in{position:relative}
       var due = c.days.indexOf(dow) >= 0; if (due) { m++; g.due++; }
       if (it && it.done) { n += due ? 1 : 0; s.classList.add('ok'); s.textContent = '✓ 오늘 ' + (it.at || '') + ' 완료'; setP('ok', it.at); return; }
       if (it && it.done === false) { s.classList.add('bad'); s.textContent = '✗ 못 함' + (it.note ? ' · ' + it.note : ''); setP('bad'); return; }
-      if (!c.days.length) { s.classList.add('off'); s.textContent = '매월 1일'; setP('off'); return; }
+      if (!c.days.length) { s.classList.add('off'); s.textContent = c.when && /요청|예약 후/.test(c.when) ? '말씀하시면 시작' : '매월 1일'; setP('off'); return; }
       if (!due) { s.classList.add('off'); s.textContent = '오늘은 안 하는 날'; setP('off'); return; }
       s.textContent = '오늘 아직 전'; setP('due');
     });
