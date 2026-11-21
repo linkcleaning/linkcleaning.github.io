@@ -1,7 +1,7 @@
 {
   "date": "2026-11-21",
   "by": "Claude 비서실 홍보수석실",
-  "note": "블로그 순위·네이버 AI 브리핑·타지역 상위 블로그(서울 이사청소·세종 입주청소) 분석을 합니다. 오늘 임시저장할 새 글은 없습니다.",
+  "note": "사진 넣기 시험 (대표님 11/21) — 4번 시험 글만",
   "ourBlogs": [
     "blog.naver.com/linkcleaning",
     "blog.naver.com/ekclean"
@@ -35,5 +35,26 @@
     "서울 이사청소",
     "세종 입주청소"
   ],
-  "drafts": []
+  "drafts": [
+    {
+      "blog": "blog.naver.com/linkcleaning",
+      "title": "사진 시험 글 - 삭제 예정",
+      "tags": "",
+      "body": "어사이드 사진 넣기 시험입니다.\n\n[사진 1: 세제 넣는 곳]\n세제 넣는 곳 사진입니다.\n\n[사진 2: 배수 필터]\n배수 필터 사진입니다.\n\n[사진 3: 문 고무 패킹]\n고무 패킹 사진입니다.",
+      "photos": [
+        {
+          "url": "https://linkcleaning.github.io/ai-secretary/data/blogphotos/test/1.jpg",
+          "caption": "세제 넣는 곳"
+        },
+        {
+          "url": "https://linkcleaning.github.io/ai-secretary/data/blogphotos/test/2.jpg",
+          "caption": "배수 필터"
+        },
+        {
+          "url": "https://linkcleaning.github.io/ai-secretary/data/blogphotos/test/3.jpg",
+          "caption": "문 고무 패킹"
+        }
+      ]
+    }
+  ]
 }
