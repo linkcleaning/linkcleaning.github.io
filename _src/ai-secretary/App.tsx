@@ -3121,8 +3121,11 @@ function PlaceApprove({ id, place, title, body, photos, hubPin, toast }: { id: s
   const api = `${HUB_BASE}/placeok`;
   useEffect(() => {
     let off = false;
-    fetch(`${api}?t=${Date.now()}`, { cache: 'no-store' }).then((r) => r.json()).then((j) => { if (!off) setSt((j.items || []).find((x: PlaceOkItem) => x.id === id) || null); }).catch(() => {});
-    return () => { off = true; };
+    const load = () => fetch(`${api}?t=${Date.now()}`, { cache: 'no-store' }).then((r) => r.json()).then((j) => { if (!off) setSt((j.items || []).find((x: PlaceOkItem) => x.id === id) || null); }).catch(() => {});
+    load();
+    const on = (e: Event) => { const d = (e as CustomEvent).detail; if (d && Array.isArray(d.items)) setSt(d.items.find((x: PlaceOkItem) => x.id === id) || null); else load(); };
+    window.addEventListener('placeok', on);
+    return () => { off = true; window.removeEventListener('placeok', on); };
   }, [id]);
   const send = async (payload: unknown) => {
     if (!hubPin) { toast('설정에서 허브 비밀번호를 먼저 넣어 주세요.'); return; }
@@ -3132,6 +3135,7 @@ function PlaceApprove({ id, place, title, body, photos, hubPin, toast }: { id: s
       const j = await r.json();
       if (!r.ok || !j.ok) throw new Error(j.error || String(r.status));
       setSt((j.items || []).find((x: PlaceOkItem) => x.id === id) || null);
+      try { window.dispatchEvent(new CustomEvent('placeok', { detail: { items: j.items || [] } })); } catch { /* 무시 */ }
       return true;
     } catch (e) { toast('보내지 못했어요: ' + String((e as Error).message || e)); return false; } finally { setBusy(false); }
   };
@@ -3931,6 +3935,35 @@ const SEC_LABEL: Record<string, string> = {
   placenews: '플레이스 소식', ekpromo: '이케이클린 글', evening: '저녁 6곳 홍보', salim: '살림기록소 게시', salimmorning: '살림기록소 아침 글', coupang: '살림기록소 글 준비',
   google: '구글 순위', bids: '입찰·공고', grants: '지원사업', keywords: '주간 키워드', rankmeeting: '순위 하락 회의', areapage: '홈페이지 동네 페이지', column: '홈페이지 칼럼', pblog: '개인 블로그', appcare: '앱 정비', dayreport: '저녁 보고', sidejobs: '부수입 리포트',
 };
+/* 대표님 11/21: "메인 위에 내가 승인할 칸을 만들어서 누르면 승인됨이 되면 — 보다가 있는 것도 몰랐어" */
+function ApproveTopCard({ placeNews, ek, today, hubPin, toast }: { placeNews: PlaceNewsData | null; ek: EkData | null; today: string; hubPin: string; toast: (m: string) => void }) {
+  const recent = (d?: string) => !!d && d <= today && daysBetween(d, today) <= 3;
+  const rows: { id: string; place: 'jeju' | 'seogwipo' | 'ek'; label: string; title: string; body: string; photos: string[]; date: string }[] = [];
+  const pn = placeNews?.items?.[0];
+  if (pn && recent(pn.date)) rows.push({ id: `pn-${pn.date}-${pn.place || 'jeju'}`, place: pn.place === 'seogwipo' ? 'seogwipo' : 'jeju', label: pn.place === 'seogwipo' ? '🧹 링크클린 · 서귀포점' : '🧹 링크클린 · 제주시점', title: pn.title, body: pn.body, photos: Array.isArray(pn.photos) ? pn.photos : [], date: pn.date });
+  if (ek?.place && recent(ek.date)) rows.push({ id: `ek-${ek.date}`, place: 'ek', label: '🌿 이케이클린', title: ek.place.title, body: ek.place.body, photos: [], date: ek.date });
+  if (!rows.length) return null;
+  return (
+    <section className={`${card} border-cw/60`}>
+      <SectionTitle icon={ClipboardList} title="✅ 대표님 승인 칸" right={<span className="text-[11px] font-bold text-slate-400">{rows.length}건</span>} />
+      <p className="mb-2 text-[12px] leading-snug text-slate-400">누르면 <b className="text-slate-200">승인됨</b>으로 바뀌고, 다음 날 아침 8시에 어사이드가 그 플레이스에 올려요.</p>
+      <ul className="space-y-3">
+        {rows.map((r) => (
+          <li key={r.id} className="rounded-2xl bg-[#F2F3F5] p-3">
+            <p className="flex flex-wrap items-center gap-1.5 text-[11px]">
+              <span className="rounded-full bg-[#191919] px-2.5 py-0.5 font-extrabold text-cw">📍 {r.label}</span>
+              <span className="text-slate-400">{Number(r.date.slice(5, 7))}/{Number(r.date.slice(8))} 준비 · 플레이스 소식</span>
+            </p>
+            <p className="mt-1.5 text-[14px] font-bold leading-snug text-slate-50">{r.title}</p>
+            <button onClick={() => goCard(r.place === 'ek' ? 'sec-naver' : 'sec-naver')} className="mt-0.5 text-[12px] font-bold text-slate-400 underline">글 내용 보기 ›</button>
+            <PlaceApprove id={r.id} place={r.place} title={r.title} body={r.body} photos={r.photos} hubPin={hubPin} toast={toast} />
+          </li>
+        ))}
+      </ul>
+    </section>
+  );
+}
+
 function InboxCard({ status, bids, grants, dayRep, agent, placeNews, ek, today }: {
   status: AgentStatus | null; bids: BidsData | null; grants: BidsData | null; dayRep: DayReport | null; agent: AgentDaily | null; placeNews: PlaceNewsData | null; ek: EkData | null; today: string;
 }) {
@@ -6288,6 +6321,7 @@ export default function App() {
             top={
               <>
                 <div id="sec-top" className="space-y-4">
+                  <ApproveTopCard placeNews={placeNews} ek={ekData} today={today} hubPin={hubPin} toast={toast} />
                   <InboxCard status={agentStatus} bids={bids} grants={grants} dayRep={dayRep} agent={agent} placeNews={placeNews} ek={ekData} today={today} />
                   <DayReportCard rep={dayRep} today={today} />
                   <MeetingCard today={today} />
