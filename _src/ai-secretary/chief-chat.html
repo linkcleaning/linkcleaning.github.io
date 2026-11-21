@@ -54,6 +54,16 @@
   .end { appearance: none; border: 0; flex: 1; border-radius: 999px; padding: 12px; background: var(--gold); color: var(--ink); font: 900 15px var(--sans); cursor: pointer; text-align: center; text-decoration: none; }
   .tiny { appearance: none; border: 0; background: none; color: var(--muted); font: 700 12px var(--sans); cursor: pointer; padding: 6px; }
   .note { font-size: 12px; color: var(--muted); text-align: center; line-height: 1.6; }
+  .pick { flex: none; appearance: none; border: 1.5px solid var(--line); background: #fff; border-radius: 999px; width: 48px; height: 48px; font-size: 20px; cursor: pointer; }
+  .pick[hidden] { display: none; }
+  form.ask.ph { grid-template-columns: auto 1fr auto; }
+  .thumbs { display: flex; gap: 6px; overflow-x: auto; }
+  .thumbs:empty { display: none; }
+  .thumbs .t { position: relative; flex: none; }
+  .thumbs img { width: 64px; height: 64px; object-fit: cover; border-radius: 12px; display: block; }
+  .thumbs button { position: absolute; top: -6px; right: -6px; width: 22px; height: 22px; border-radius: 999px; border: 0; background: var(--ink); color: #fff; font: 800 12px var(--sans); cursor: pointer; }
+  .msg .pics { display: flex; gap: 4px; flex-wrap: wrap; margin-bottom: 4px; }
+  .msg .pics img { width: 72px; height: 72px; object-fit: cover; border-radius: 10px; }
   .endbox { align-self: stretch; background: var(--card); border: 2px solid var(--ink); border-radius: 18px; padding: 16px; text-align: center; display: grid; gap: 10px; }
   .endbox b { font-size: 16px; }
 </style>
@@ -71,7 +81,10 @@
 
 <div class="dock"><div class="in">
   <div class="chips" id="chips"></div>
+  <div class="thumbs" id="thumbs"></div>
   <form class="ask" id="askForm">
+    <button type="button" class="pick" id="pick" hidden aria-label="사진 넣기">📷</button>
+    <input type="file" id="file" accept="image/*" multiple hidden>
     <label for="q" style="position:absolute;left:-9999px">비서실장에게 할 말</label>
     <textarea id="q" rows="1" placeholder="무엇이든 물어보거나 맡기세요"></textarea>
     <button class="go" type="submit" id="send">보내기</button>
@@ -114,6 +127,8 @@
   document.getElementById('endBtn').addEventListener('click', goBack);
 
   // 앱 기록 읽기 (공개 저장소의 앱 데이터)
+  var db = null, brief = null;
+  function loadBrief() { if (!db) return Promise.resolve(null); return db.doc('brief/today').get().then(function (d) { brief = d.exists ? d.data() : null; return brief; }).catch(function () { return null; }); }
   function getJSON(path) { return fetch(APP + 'data/' + path + '?t=' + Date.now(), { cache: 'no-store' }).then(function (r) { return r.ok ? r.json() : null; }).catch(function () { return null; }); }
   function getText(url) { return fetch(url + '?t=' + Date.now(), { cache: 'no-store' }).then(function (r) { return r.ok ? r.text() : ''; }).catch(function () { return ''; }); }
 
@@ -124,6 +139,7 @@
     '금지: 스카이차량·벌집클린 단어, 지어낸 현장 일화·통계·가격·후기, 고객 정보 공개. 네이버 순위는 재촉하지 않는다. 링크클린·이케이클린 블로그 최종 발행과 플레이스 소식은 대표님 승인 후.',
     '정기 근무: ' + SHIFTS.map(function (s) { return s.name + ' ' + s.when; }).join(', ') + '. 보고는 아침·저녁 두 번만.',
     '도구: report = 오늘 저녁 보고·최근 회의 결론, today = 오늘 각 업무 결과(앱 기록), notice = 전체 공지(새로 바뀐 것), status = 근무 실행 기록, dispatch = 실제 실행이 필요한 일의 지시서 카드.',
+    '사진: 대표님이 사진을 보내면(블로그·현장·제품·문서 등) 먼저 무엇이 보이는지 짧게 말하고 원하는 걸 해 준다. 블로그용이면 링크클린 블로그 말투로 제목 3개·본문 초안·사진 순서·사진 설명(대체 텍스트)을 써 준다(살림 사진이면 살림기록소 반말). 얼굴·차량 번호·집 주소·고객 이름이 보이면 "이 사진은 가리고 쓰세요"라고 알린다. 실제 게시는 하지 못하니, 현장 사진을 6곳 홍보에 쓰려면 현장홍보 앱에 맡기라고 안내한다. 사진에 없는 내용(작업 시간·가격·고객 반응)은 지어내지 말고 대표님께 묻는다.',
     '일하는 법: 1) 질문·상담·글 초안·문구는 바로 답한다. 비서실 상황을 물으면 도구로 실제 기록을 확인하고 답한다(추측 금지). 2) 게시·앱 수정·파일 제작·최신 정보 조사·캘린더 등록처럼 실제로 해야 하는 일만 dispatch. instruction은 이 대화를 못 본 사람도 바로 할 수 있게 구체적으로. 카드를 띄운 건 아직 실행이 아니니 "지시서를 올렸어요, [지시하기]를 누르시면 시작해요"라고 말한다. 3) 너는 인터넷을 직접 볼 수 없다 — 날씨·뉴스·가격 같은 최신 정보는 조사 지시서를 제안. 4) 결제·송금·구매·삭제·계정 설정·고객 문자·홈택스 제출은 "준비만 하고 대표님 확인"으로 적는다. 5) 대화가 끝난 것 같으면 "더 없으시면 아래 [대화 끝내고 비서실로]를 누르세요"라고 짧게 안내한다.'
   ].join('\n');
 
@@ -166,16 +182,20 @@
       execute: function (input) { orderCard(input); return '지시서 카드를 띄웠음. 대표님이 [지시하기]를 눌러야 실행됨.'; } },
     { name: 'report', description: '오늘(또는 가장 최근) 저녁 보고와 최근 비서진 회의 3개의 제목·결론·할 일을 돌려준다.',
       execute: function () {
-        return Promise.all([getJSON('day-report.json'), getJSON('meetings.json')]).then(function (a) {
+        return loadBrief().then(function (b) {
+          if (b) return '기록 갱신 ' + (b.updated || '') + '\n' + (b.report || '') + '\n\n' + (b.meetings || '');
+          return Promise.all([getJSON('day-report.json'), getJSON('meetings.json')]).then(function (a) {
           var r = a[0], m = a[1], out = [];
           if (r) out.push('저녁 보고(' + r.date + ' ' + (r.at || '') + '): ' + (r.headline || '') + '\n한 일: ' + (r.done || []).join(' / ') + '\n내일: ' + (r.tomorrow || []).join(' / ') + '\n승인할 것: ' + (r.approvals || []).join(' / '));
           ((m && m.items) || []).slice(0, 3).forEach(function (x) { out.push('회의 ' + x.date + ' ' + (x.at || '') + ' ' + x.title + '\n결론: ' + (x.conclusion || '') + '\n할 일: ' + JSON.stringify(x.actions || []).slice(0, 500)); });
           return out.join('\n\n') || '기록을 못 불러왔음.';
+          });
         });
       } },
     { name: 'today', description: '오늘 비서실 각 업무의 결과(완료/못 함, 시각, 메모)를 돌려준다.',
       execute: function () {
-        return getJSON('status.json').then(function (s) {
+        return loadBrief().then(function (b) { if (b && b.today) return '기록 갱신 ' + (b.updated || '') + '\n' + b.today; return getJSON('status.json'); }).then(function (s) {
+          if (typeof s === 'string') return s;
           if (!s) return '앱 기록을 못 불러왔음.';
           var lines = ['기록 날짜 ' + s.date];
           Object.keys(s.items || {}).forEach(function (k) { var it = s.items[k] || {}; lines.push(k + ': ' + (it.done ? '완료' : '못 함') + ' ' + (it.at || '') + ' · ' + (it.note || '') + (it.detail ? ' · ' + String(it.detail).replace(/\n/g, ' / ').slice(0, 200) : '')); });
@@ -183,7 +203,7 @@
         });
       } },
     { name: 'notice', description: '비서실 전체 공지판(새로 추가·변경된 것, 현재 기준표)의 앞부분을 돌려준다.',
-      execute: function () { return getText('https://linkcleaning.github.io/_src/ai-secretary/NOTICE.md').then(function (t) { return t ? t.slice(0, 6000) : '공지판을 못 불러왔음.'; }); } },
+      execute: function () { return loadBrief().then(function (b) { if (b && b.notice) return b.notice; return getText('https://linkcleaning.github.io/_src/ai-secretary/NOTICE.md').then(function (t) { return t ? t.slice(0, 6000) : '공지판을 못 불러왔음.'; }); }); } },
     { name: 'status', description: '정기 근무의 최근 실행 결과(완료/실패/진행 중)를 돌려준다.',
       execute: function () {
         return SHIFTS.map(function (s) { var r = lastRuns[s.id], l = r && r.last_run; return s.name + ' · ' + s.when + ' · 최근 ' + (l && l.fired_at ? fmt(l.fired_at) + ' ' + (/SUCCEEDED/.test(l.status) ? '완료' : /FAILED/.test(l.status) ? '실패' : '진행 중') : '기록 없음'); }).join('\n');
@@ -203,17 +223,31 @@
     if (c === 'prompt_too_large') return '대화가 너무 길어졌어요. [대화 지우기] 후 다시 물어봐 주세요.';
     return '답을 받지 못했어요. 다시 보내 주세요.';
   }
+  var pics = [], maxPics = 0;
+  var thumbsEl = document.getElementById('thumbs'), fileEl = document.getElementById('file');
+  function renderThumbs() {
+    thumbsEl.textContent = '';
+    pics.forEach(function (f, i) { var w = el('div', 't'), im = el('img'); im.src = URL.createObjectURL(f); im.alt = '보낼 사진 ' + (i + 1); var x = el('button', null, '×'); x.type = 'button'; x.setAttribute('aria-label', '사진 빼기'); x.addEventListener('click', function () { pics.splice(i, 1); renderThumbs(); }); w.appendChild(im); w.appendChild(x); thumbsEl.appendChild(w); });
+  }
+  document.getElementById('pick').addEventListener('click', function () { fileEl.click(); });
+  fileEl.addEventListener('change', function () { Array.prototype.forEach.call(fileEl.files || [], function (f) { if (pics.length < maxPics && /^image\//.test(f.type)) pics.push(f); }); fileEl.value = ''; renderThumbs(); });
   function send(text) {
-    text = (text || '').trim(); if (!text || busy) return;
+    text = (text || '').trim(); if (busy) return;
+    if (!text && pics.length) text = '이 사진 봐 줘';
+    if (!text) return;
     if (!sample) { bubble('ai err', 'Claude 앱이나 claude.ai에서 열어야 대화할 수 있어요.'); return; }
     busy = true; sendBtn.textContent = '그만';
-    bubble('me', text); turns.push({ role: 'user', content: text }); save(); qEl.value = ''; fit();
+    var sendPics = pics.slice(); pics = []; renderThumbs();
+    var mine = bubble('me', text);
+    if (sendPics.length) { var pw = el('div', 'pics'); sendPics.forEach(function (f) { var im = el('img'); im.src = URL.createObjectURL(f); im.alt = ''; pw.appendChild(im); }); mine.parentNode.insertBefore(pw, mine); }
+    turns.push({ role: 'user', content: (sendPics.length ? '[사진 ' + sendPics.length + '장 보냄] ' : '') + text }); save(); qEl.value = ''; fit();
     var out = bubble('ai wait', '생각 중…', '비서실장'), box = out.parentNode;
     ctl = new AbortController();
     var hist = turns.slice(-16); while (hist.length && hist[0].role !== 'user') hist.shift();
     var input = [{ role: 'user', content: RULES + '\n지금: ' + today() }, { role: 'assistant', content: '네, 대표님.' }].concat(hist);
+    if (sendPics.length) hist[hist.length - 1] = { role: 'user', content: '(대표님이 지금 사진 ' + sendPics.length + '장을 함께 보냈음 — 아래 첨부)\n' + text };
     var opts = { cache: false, signal: ctl.signal, onText: function (u) { box.classList.remove('wait'); out.textContent = u.text; } };
-    sample.limits().catch(function () { return {}; }).then(function (lim) { if (lim && lim.tools) opts.tools = TOOLS; return sample(input, opts); })
+    sample.limits().catch(function () { return {}; }).then(function (lim) { if (lim && lim.tools) opts.tools = TOOLS; if (sendPics.length) opts.images = sendPics; return sample(input, opts); })
       .then(function (r) { out.textContent = r.text; box.classList.remove('wait'); turns.push({ role: 'assistant', content: r.text }); save(); scrollEnd(); })
       .catch(function (e) {
         box.classList.remove('wait');
@@ -226,14 +260,16 @@
   qEl.addEventListener('input', fit);
   document.getElementById('askForm').addEventListener('submit', function (ev) { ev.preventDefault(); if (busy && ctl) { ctl.abort(); return; } send(qEl.value); });
   document.getElementById('clearChat').addEventListener('click', function () { if (busy) return; turns = []; save(); renderHistory(); });
-  ['오늘 비서실 상황 보고해 줘', '내가 승인할 것만', '최근 회의 결론 요약', '새로 바뀐 공지 있어?'].forEach(function (c) {
-    var b = el('button', null, c); b.type = 'button'; b.addEventListener('click', function () { send(c); }); document.getElementById('chips').appendChild(b);
+  ['오늘 비서실 상황 보고해 줘', '📷 사진으로 블로그 글 써 줘', '내가 승인할 것만', '최근 회의 결론 요약', '새로 바뀐 공지 있어?'].forEach(function (c) {
+    var b = el('button', null, c); b.type = 'button'; b.addEventListener('click', function () { if (c.charAt(0) === '📷'.charAt(0)) { qEl.value = '이 사진들로 링크클린 블로그 글 써 줘'; fit(); if (maxPics) fileEl.click(); else qEl.focus(); return; } send(c); }); document.getElementById('chips').appendChild(b);
   });
   renderHistory();
 
   var claude = window.claude;
   if (claude && claude.use) {
-    claude.use('sample').then(function (s) { sample = s; stEl.textContent = s ? '컨트롤타워 · 보고 담당' : 'Claude 앱에서 열어야 대화할 수 있어요'; if (!s) sendBtn.disabled = true; }).catch(function () {});
+    claude.use('db').then(function (d) { db = d; if (d) loadBrief(); }).catch(function () {});
+    claude.use('sample').then(function (s) { sample = s;
+      if (s) s.limits().then(function (l) { if (l && l.images) { maxPics = Math.min(l.images.maxCount || 4, 6); fileEl.accept = (l.images.mediaTypes || ['image/*']).join(','); document.getElementById('pick').hidden = false; document.getElementById('askForm').classList.add('ph'); } }).catch(function () {}); stEl.textContent = s ? '컨트롤타워 · 보고 담당' : 'Claude 앱에서 열어야 대화할 수 있어요'; if (!s) sendBtn.disabled = true; }).catch(function () {});
     claude.use('mcp').then(function (m) {
       mcp = m; if (!m) return;
       try { m.watchTool(SERVER, 'list_triggers', { limit: 50 }, function (ev) {

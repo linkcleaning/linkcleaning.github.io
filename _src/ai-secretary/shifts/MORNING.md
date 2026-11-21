@@ -94,3 +94,8 @@
 
 ## 대표님이 이 세션에 답하면
 - "초안 N 올려": night-report.json 의 해당 초안을 대표님 PC 크롬(링크클린 계정)에서 올리고 한 줄로 답한다. "N번 해줘"·그 밖의 지시도 비서실장으로서 처리하고 짧게 답한다(결제·고객 문자·삭제·계정 설정은 준비만 하고 확인).
+## 💬 마지막: 비서실장 대화창 기록 새로 고치기 (1분, 실패해도 보고엔 영향 없음)
+대표님이 앱 비서실 → [비서실장과 대화하기]에서 물으면 비서실장이 이 기록을 보고 답한다(대화 페이지는 인터넷을 못 읽어서 여기로 넣어 줘야 함).
+1. 앱 데이터(push 끝난 뒤)로 `python3 _src/ai-secretary/tools/make_brief.py > /tmp/brief.json`
+2. ArtifactData 도구(없으면 ToolSearch "select:ArtifactData")로 `get` url=https://claude.ai/artifact/5NejHa4Rrzhpay23bbd97X collection=brief doc_id=today → 나온 version으로 `set` (file_path=/tmp/brief.json, if_version=그 version).
+3. 도구가 없거나 실패하면 건너뛰고 보고에 쓰지 않는다(대표님께 알릴 일 아님).

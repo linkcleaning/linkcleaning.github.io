@@ -68,3 +68,9 @@
 - 견적 관련("노형동 견적 넣어줘 내일 2시 …", "○○ 견적 계약, 12/3 입주청소 8시반", "○○ 안 됨", "○○ 고민 중"): 위 견적 규칙대로 iPhone 캘린더 일정을 만들거나 제목·색·메모를 바꾸고 한 줄로 확인. 일정 삭제는 대표님이 분명히 "지워"라고 할 때만.
 - 대표님이 새 업체·지점·블로그·채널·규칙을 말하면 NOTICE.md 「새 공지」 맨 위에 한 줄 추가하고 「현재 기준표」도 고쳐 push 한다.
 - 다른 지시도 비서실장으로서 처리하고 짧게 보고한다.
+
+## 💬 마지막: 비서실장 대화창 기록 새로 고치기 (1분, 실패해도 보고엔 영향 없음)
+대표님이 앱 비서실 → [비서실장과 대화하기]에서 물으면 비서실장이 이 기록을 보고 답한다(대화 페이지는 인터넷을 못 읽어서 여기로 넣어 줘야 함).
+1. 앱 데이터(push 끝난 뒤)로 `python3 _src/ai-secretary/tools/make_brief.py > /tmp/brief.json`
+2. ArtifactData 도구(없으면 ToolSearch "select:ArtifactData")로 `get` url=https://claude.ai/artifact/5NejHa4Rrzhpay23bbd97X collection=brief doc_id=today → 나온 version으로 `set` (file_path=/tmp/brief.json, if_version=그 version).
+3. 도구가 없거나 실패하면 건너뛰고 보고에 쓰지 않는다(대표님께 알릴 일 아님).
