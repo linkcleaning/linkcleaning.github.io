@@ -4068,7 +4068,7 @@ function PromoFeedCard({ status, today }: { status: AgentStatus | null; today: s
 interface MeetingItem { id?: string; date: string; at?: string; title: string; kind?: string; request?: string; attendees?: string[]; discussion?: string[]; conclusion?: string; actions?: { who?: string; what: string; when?: string; status?: string }[]; approvals?: string[] }
 function MeetingCard({ today }: { today: string }) {
   const [list, setList] = useState<MeetingItem[]>([]);
-  const [open, setOpen] = useState<number | null>(0);
+  const [open, setOpen] = useState<number | null>(null);
   const [more, setMore] = useState(false);
   useEffect(() => {
     fetchAgentJson<{ items?: MeetingItem[] }>('meetings.json').then((d) => d && Array.isArray(d.items) && setList(d.items.slice(0, 10)));
@@ -4086,11 +4086,11 @@ function MeetingCard({ today }: { today: string }) {
           <li key={m.id || i} className="rounded-2xl bg-white/10 p-3">
             <button className="w-full text-left" onClick={() => setOpen(open === i ? null : i)}>
               <p className="text-[11px] text-white/50">{m.date.slice(5).replace('-', '/')} {m.at || ''} · {m.kind === 'request' ? '대표님 요청' : '정기 회의'}</p>
-              <p className="mt-0.5 text-[15px] font-bold leading-snug">{m.title}</p>
-              {m.conclusion && <p className="mt-1 text-[13px] leading-snug text-amber-200">결론: {m.conclusion}</p>}
+              <span className="mt-0.5 flex items-start justify-between gap-2"><span className="text-[15px] font-bold leading-snug">{m.title}</span><span className="shrink-0 rounded-full bg-white/15 px-2.5 py-0.5 text-[11px] font-bold text-white/80">{open === i ? '접기' : '열기'}</span></span>
             </button>
             {open === i && (
               <div className="mt-2 space-y-2 text-[13px] leading-relaxed text-white/85">
+                {m.conclusion && <p className="leading-snug text-amber-200"><b>결론</b> · {m.conclusion}</p>}
                 {m.request && <p><b className="text-white">요청</b> · {m.request}</p>}
                 {m.attendees && m.attendees.length > 0 && <p><b className="text-white">참석</b> · {m.attendees.join(', ')}</p>}
                 {m.discussion && m.discussion.length > 0 && (
@@ -4113,6 +4113,7 @@ function MeetingCard({ today }: { today: string }) {
 }
 
 function DayReportCard({ rep, today }: { rep: DayReport | null; today: string }) {
+  const [openR, setOpenR] = useState(false);
   if (!rep || rep.date !== today) return null;
   return (
     <section className="rounded-[28px] bg-[#191919] p-5 text-white shadow-[0_6px_18px_rgba(0,0,0,0.18)]">
@@ -4121,12 +4122,13 @@ function DayReportCard({ rep, today }: { rep: DayReport | null; today: string })
         {rep.at && <span className="text-[11px] text-white/50">{rep.at}</span>}
       </div>
       {rep.headline && <p className="mt-3 text-[16px] font-bold leading-snug">{rep.headline}</p>}
-      {(rep.done || []).length > 0 && (
+      {((rep.done || []).length > 0 || (rep.tomorrow || []).length > 0) && <button onClick={() => setOpenR(!openR)} className="mt-2 rounded-full bg-white/15 px-3 py-1 text-[12px] font-bold text-white/85">{openR ? '접기' : '한 일·내일 할 일 열기'}</button>}
+      {openR && (rep.done || []).length > 0 && (
         <ul className="mt-3 space-y-1 text-[13px] leading-snug text-white/85">
           {(rep.done || []).map((x, i) => <li key={i}>✓ {x}</li>)}
         </ul>
       )}
-      {(rep.tomorrow || []).length > 0 && (
+      {openR && (rep.tomorrow || []).length > 0 && (
         <>
           <p className="mt-3 text-[11px] font-extrabold text-cw">내일 비서실이 할 일</p>
           <ul className="mt-1 space-y-1 text-[13px] leading-snug text-white/85">
@@ -4138,7 +4140,7 @@ function DayReportCard({ rep, today }: { rep: DayReport | null; today: string })
         <div className="mt-3 rounded-2xl bg-white/10 p-3">
           <p className="text-[11px] font-extrabold text-cw">승인하실 것 — 저녁 보고 알림에 "1번 해줘"라고 답장만</p>
           <ul className="mt-1 space-y-1 text-[13px] leading-snug">
-            {(rep.approvals || []).map((x, i) => <li key={i}>{i + 1}. {x}</li>)}
+            {(rep.approvals || []).map((x, i) => <li key={i}>{i + 1}. {String(x).replace(/^\s*\d+[.)]\s*/, '')}</li>)}
           </ul>
         </div>
       )}
