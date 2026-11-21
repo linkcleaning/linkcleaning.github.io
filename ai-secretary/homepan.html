@@ -30,6 +30,7 @@
   .imgs a{display:block;position:relative}
   .imgs img{width:100%;aspect-ratio:1;object-fit:cover;border-radius:10px;border:1px solid var(--line)}
   .imgs span{position:absolute;left:6px;top:6px;background:rgba(35,48,74,.85);color:#fff;font-size:11px;border-radius:6px;padding:0 6px}
+  .cat{background:#FFF1D6;color:#7A4A12;border:1px solid #F0D3A0;border-radius:8px;padding:3px 8px;font-size:13px}
   .chk{display:flex;align-items:center;gap:8px;margin-top:10px;font-size:14px;font-weight:700}
   .empty{color:var(--mute);text-align:center;padding:40px 0}
   #toast{position:fixed;left:50%;bottom:24px;transform:translateX(-50%);background:var(--ink);color:#fff;padding:10px 16px;border-radius:999px;font-size:14px;opacity:0;transition:.2s;pointer-events:none}
@@ -43,11 +44,11 @@
   <p>비서실(제휴수석실)이 월·수·금에 써 두는 네이버 홈판용 살림 글이에요.</p>
 </header>
 <main>
-  <div class="tip">올리는 법: ⓪ 글에 적힌 <b>📂 카테고리</b> 고르기 ① <b>제목 복사</b> → 제목 칸에 붙여넣기 ② <b>📋 본문 통째로 복사</b> → 본문에 붙여넣기(소제목·그림까지 한 번에 — 그림이 안 들어오면 「그림 한 번에 받기」 후 [그림 N] 자리에 넣기) ③ 「태그 복사」 → 발행 창 태그 칸 ④ 사람이 많은 아침 7~9시나 점심 12시로 <b>예약 발행</b> ⑤ 아래 「올렸어요」 체크.</div>
+  <div class="tip">올리는 법: ⓪ 발행 창에서 <b>📂 카테고리·주제</b>를 글에 적힌 대로 꼭 바꾸기(기본값이 냉장고·주방이라 실수하기 쉬워요) ① <b>제목 복사</b> → 제목 칸에 붙여넣기 ② <b>📋 본문 통째로 복사</b> → 본문에 붙여넣기(소제목·그림까지 한 번에 — 그림이 안 들어오면 「그림 한 번에 받기」 후 [그림 N] 자리에 넣기) ③ 「태그 복사」 → 발행 창 태그 칸 ④ 사람이 많은 아침 7~9시나 점심 12시로 <b>예약 발행</b> ⑤ 아래 「올렸어요」 체크.</div>
   <div id="list"><p class="empty">불러오는 중…</p></div>
 </main>
 <div id="toast"></div>
-<div class="ver">v3</div>
+<div class="ver">v4</div>
 <script>
 const $ = (s) => document.querySelector(s);
 const esc = (s) => String(s ?? '').replace(/[&<>"]/g, (c) => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
@@ -62,7 +63,7 @@ async function load() {
   if (!items.length) { $('#list').innerHTML = '<p class="empty">아직 준비된 글이 없어요.</p>'; return; }
   $('#list').innerHTML = items.map((x, i) => `
     <article class="post ${done[x.id] ? 'done' : ''}">
-      <div class="meta"><span class="badge">${done[x.id] ? '올림' : '대기'}</span><span>${esc(x.date)}</span>${x.category ? `<span>📂 ${esc(x.category)}</span>` : ''}${x.golden ? `<span>🔑 ${esc(x.golden)}</span>` : ''}</div>
+      <div class="meta"><span class="badge">${done[x.id] ? '올림' : '대기'}</span><span>${esc(x.date)}</span>${x.category ? `<span class="cat">📂 카테고리 <b>${esc(x.category)}</b> · 주제 <b>${esc(topicOf(x.category))}</b></span>` : ''}${x.golden ? `<span>🔑 ${esc(x.golden)}</span>` : ''}</div>
       <h2>${esc(x.title)}</h2>
       <pre id="b${i}">${esc(x.body)}</pre>
       ${x.tags && x.tags.length ? `<div class="meta">태그: ${esc(x.tags.join(', '))}</div>` : ''}
@@ -87,6 +88,7 @@ async function load() {
   document.querySelectorAll('[data-o]').forEach((b) => b.onclick = () => { const p = $('#b' + b.dataset.o); p.classList.toggle('open'); b.textContent = p.classList.contains('open') ? '접기' : '전체 보기'; });
   document.querySelectorAll('[data-d]').forEach((c) => c.onchange = () => { done[c.dataset.d] = c.checked; try { localStorage.setItem('homepanDone', JSON.stringify(done)); } catch {} c.closest('.post').classList.toggle('done', c.checked); c.closest('.post').querySelector('.badge').textContent = c.checked ? '올림' : '대기'; });
 }
+const topicOf = (c) => /냉장고|주방/.test(c) ? '요리·레시피' : /다이소|꿀템/.test(c) ? '상품리뷰' : /생활비/.test(c) ? '일상·생각' : '인테리어·DIY';
 const plain = (x) => String(x.body || '').replace(/^## /gm, '');
 function toHtml(x) {
   const imgs = x.images || [];
