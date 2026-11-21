@@ -10,6 +10,8 @@
 ## 0. 블로그
 - 대표님 네이버 아이디 3개(11/21 확인): linkcleaning(링크클린 회사 블로그 — 여기에 살림 글 금지), linkdole(살림 블로그 후보 — 스레드 살림기록소 @linkdole2026 과 이름이 이어짐), linktravel(여행 — 나중에 여행 홈판용). 대표님이 정하면 이 줄을 고친다: 살림 블로그 = blog.naver.com/linkdole 확정(11/21, 블로그명 살림기록소).
 
+- 블로그 꾸미기 끝(11/21): 프로필·모바일 커버(살림기록소), 카테고리 6개 — 🧊 냉장고·주방 / 👕 빨래·세탁 / 📦 정리·수납 / 🍂 계절 살림 / 🛒 다이소·꿀템 / 💰 생활비 아끼기. 글마다 이 중 하나를 category 로 정한다(한 주에 같은 카테고리만 몰리지 않게).
+
 ## 1. 주제 고르기 (글 1개)
 - ai-secretary/data/homepan.json(없으면 {"items":[]}) 최근 글과 ai-secretary/data/salim.json history·stats.threads(조회 잘 나온 살림 주제)를 본다. 최근 14일 안 주제와 겹치지 않게.
 - WebSearch 로 지금(오늘 날짜 기준) 사람들이 많이 찾는 살림 이슈를 확인: 계절(김장·난방비·결로·대청소·이사철·장마), 다이소·코스트코·이케아 신상/인기 생활템 정리, 살림 노하우(빨래·주방·정리수납·냉장고 보관), 생활비 아끼기. 실제로 연 기사·공식 페이지로 확인한 사실만 쓴다(상품 가격·출시일은 '확인한 날짜 기준'을 적거나 빼기).
@@ -27,7 +29,7 @@
 - ai-secretary/data/homepan/<YYYY-MM-DD>/1.png… 로 저장.
 
 ## 4. 올리기·기록
-- homepan.json items 맨 앞에 {"id":"YYYY-MM-DD","date","title","body","tags":[],"golden","related":[],"images":["https://linkcleaning.github.io/ai-secretary/data/homepan/<날짜>/1.png",…]} (최근 30개, 30일 지난 png 폴더 삭제), "updatedAt".
+- homepan.json items 맨 앞에 {"id":"YYYY-MM-DD","date","title","body","tags":[],"golden","category":"카테고리 이름","related":[],"images":["https://linkcleaning.github.io/ai-secretary/data/homepan/<날짜>/1.png",…]} (최근 30개, 30일 지난 png 폴더 삭제), "updatedAt".
 - status.json(date 가 오늘 KST 가 아니면 {"date":오늘,"items":{}}로 시작) items.homepan = {"done":true,"at":"HH:MM","note":"🔑 황금키워드","detail":"제목\n첫 3줄\n그림 N장 — 앱 서랍 또는 https://linkcleaning.github.io/ai-secretary/homepan.html 에서 복사해 살림 블로그에 올리기(예약 발행 아침 7~9시)","url":"https://linkcleaning.github.io/ai-secretary/homepan.html"}. 못 하면 done:false + fix{why,act,you}. 다른 키는 건드리지 않는다.
 - commit "살림 블로그 홈판 글 {M/D}"(attribution 줄 포함) → push(거부 시 pull --rebase).
 - 알림·메시지는 보내지 않는다(대표님 11/20 "아침과 저녁 보고로만" — 저녁 보고가 보고).

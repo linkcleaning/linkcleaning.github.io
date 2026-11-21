@@ -43,11 +43,11 @@
   <p>비서실(제휴수석실)이 월·수·금에 써 두는 네이버 홈판용 살림 글이에요.</p>
 </header>
 <main>
-  <div class="tip">올리는 법: ① <b>제목 복사</b> → 네이버 블로그 앱(살림 블로그 아이디) 글쓰기 제목에 붙여넣기 ② <b>본문 복사</b> → 본문에 붙여넣기 ③ 그림을 길게 눌러 저장한 뒤 본문의 <b>[그림 N]</b> 자리에 넣기 ④ 사람이 많은 아침 7~9시나 점심 12시로 <b>예약 발행</b> ⑤ 아래 「올렸어요」 체크.</div>
+  <div class="tip">올리는 법: ⓪ 글에 적힌 <b>📂 카테고리</b> 고르기 ① <b>제목 복사</b> → 네이버 블로그 앱(살림 블로그 아이디) 글쓰기 제목에 붙여넣기 ② <b>본문 복사</b> → 본문에 붙여넣기 ③ 그림을 길게 눌러 저장한 뒤 본문의 <b>[그림 N]</b> 자리에 넣기 ④ 사람이 많은 아침 7~9시나 점심 12시로 <b>예약 발행</b> ⑤ 아래 「올렸어요」 체크.</div>
   <div id="list"><p class="empty">불러오는 중…</p></div>
 </main>
 <div id="toast"></div>
-<div class="ver">v1</div>
+<div class="ver">v2</div>
 <script>
 const $ = (s) => document.querySelector(s);
 const esc = (s) => String(s ?? '').replace(/[&<>"]/g, (c) => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
@@ -62,7 +62,7 @@ async function load() {
   if (!items.length) { $('#list').innerHTML = '<p class="empty">아직 준비된 글이 없어요.</p>'; return; }
   $('#list').innerHTML = items.map((x, i) => `
     <article class="post ${done[x.id] ? 'done' : ''}">
-      <div class="meta"><span class="badge">${done[x.id] ? '올림' : '대기'}</span><span>${esc(x.date)}</span>${x.golden ? `<span>🔑 ${esc(x.golden)}</span>` : ''}</div>
+      <div class="meta"><span class="badge">${done[x.id] ? '올림' : '대기'}</span><span>${esc(x.date)}</span>${x.category ? `<span>📂 ${esc(x.category)}</span>` : ''}${x.golden ? `<span>🔑 ${esc(x.golden)}</span>` : ''}</div>
       <h2>${esc(x.title)}</h2>
       <pre id="b${i}">${esc(x.body)}</pre>
       ${x.tags && x.tags.length ? `<div class="meta">태그: ${esc(x.tags.join(', '))}</div>` : ''}
