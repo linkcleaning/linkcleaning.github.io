@@ -10,18 +10,18 @@
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700;800;900&family=Noto+Serif+KR:wght@600;700;900&display=swap">
-<script src="/v.js" data-v="v60" defer></script>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css">
+<script src="/v.js" data-v="v61" defer></script>
 <style>
   /* 비서실 화면 — 앱 안에서 열림 (Claude 앱으로 넘어가지 않음). 대화만 Claude에서. */
   :root {
     --paper: #F2F3F5; --card: #FFFFFF; --brand: #191919; --brand-deep: #FFD233; --brand-tint: #FFF5CC;
     --leaf: #14B86A; --danger: #F04438; --ink: #191919; --muted: #6B6E76; --line: #E9EAEE;
-    --sans: "Noto Sans KR", "Apple SD Gothic Neo", "Malgun Gothic", system-ui, sans-serif;
+    --sans: "Pretendard Variable", Pretendard, -apple-system, BlinkMacSystemFont, "Apple SD Gothic Neo", "Malgun Gothic", system-ui, sans-serif;
     color-scheme: light;
   }
   * { box-sizing: border-box; }
-  html, body { margin: 0; background: var(--paper); color: var(--ink); font-family: var(--sans); -webkit-tap-highlight-color: transparent; }
+  html, body { margin: 0; background: var(--paper); color: var(--ink); font-family: var(--sans); -webkit-tap-highlight-color: transparent; -webkit-font-smoothing: antialiased; }
   body { padding: 0 0 calc(env(safe-area-inset-bottom, 0px) + 24px); }
   .top { background: var(--brand-deep); border-radius: 0 0 32px 32px; padding: calc(env(safe-area-inset-top, 0px) + 10px) max(12px, env(safe-area-inset-right, 0px)) 18px max(12px, env(safe-area-inset-left, 0px)); }
   .in { max-width: 520px; margin: 0 auto; }
@@ -110,14 +110,14 @@
   :root {
     --paper: #F3F0E8; --card: #FFFDF8; --ink: #141C24; --muted: #6E6A61; --line: #E2DCCF;
     --navy: #0E1A24; --navy2: #172634; --gold: #B8955C; --gold-soft: #E9DCC2; --ok: #3F7A5C; --bad: #A13A2F;
-    --serif: "Noto Serif KR", "AppleMyungjo", "Batang", serif;
+    --serif: "Pretendard Variable", Pretendard, -apple-system, BlinkMacSystemFont, "Apple SD Gothic Neo", "Malgun Gothic", system-ui, sans-serif;
   }
   html, body { background: var(--paper); color: var(--ink); }
   .top { background: linear-gradient(170deg, #0E1A24 0%, #172634 70%, #1C2E3D 100%); border-radius: 0; padding-bottom: 22px; position: relative; box-shadow: 0 6px 24px rgba(14,26,36,.18); }
   .top::after { content: ""; position: absolute; left: 0; right: 0; bottom: 0; height: 3px; background: linear-gradient(90deg, transparent, var(--gold) 20%, var(--gold) 80%, transparent); opacity: .85; }
   .back { background: transparent; color: var(--gold-soft); border: 1px solid rgba(233,220,194,.45); font-weight: 700; }
   .eyebrow { background: transparent; color: var(--gold); border: 1px solid var(--gold); letter-spacing: .12em; font-weight: 700; border-radius: 3px; padding: 3px 9px; }
-  h1 { font-family: var(--serif); font-weight: 900; color: #F6F1E6; font-size: 32px; letter-spacing: .02em; margin-top: 14px; }
+  h1 { font-family: var(--serif); font-weight: 800; color: #F6F1E6; font-size: 32px; letter-spacing: -.03em; margin-top: 14px; }
   h1::after { content: "STRATEGIC SECRETARIAT"; display: block; font-family: var(--sans); font-size: 10px; letter-spacing: .32em; color: var(--gold); font-weight: 700; margin-top: 2px; }
   .lead { color: #C9C2B3; }
   .board { background: rgba(255,253,248,.04); border: 1px solid rgba(184,149,92,.35); border-radius: 12px; padding: 6px 10px; }
@@ -135,11 +135,11 @@
   .dept { background: var(--card); border: 1px solid var(--line); border-radius: 14px; box-shadow: 0 1px 2px rgba(20,28,36,.04), 0 8px 24px rgba(20,28,36,.05); margin-top: 0; }
   .dept-head { background: var(--card); color: var(--ink); border-bottom: 1px solid var(--line); padding: 16px 16px 12px; position: relative; }
   .dept-head::before { content: ""; position: absolute; left: 0; top: 14px; bottom: 12px; width: 4px; background: var(--dc); border-radius: 0 3px 3px 0; }
-  .dept-head h2 { font-family: var(--serif); font-weight: 700; font-size: 21px; color: var(--ink); letter-spacing: .01em; }
+  .dept-head h2 { font-family: var(--serif); font-weight: 800; font-size: 21px; color: var(--ink); letter-spacing: -.02em; }
   .dept-head span { color: var(--muted); font-weight: 500; }
   .task { border: 1px solid var(--line); border-left: 3px solid var(--dc); border-radius: 10px; background: #FFFEFB; }
   .who { color: var(--dc); font-weight: 700; letter-spacing: .02em; }
-  .task h3 { font-family: var(--serif); font-weight: 700; font-size: 17.5px; color: var(--ink); }
+  .task h3 { font-family: var(--serif); font-weight: 700; font-size: 17.5px; color: var(--ink); letter-spacing: -.02em; }
   .task p { color: var(--muted); }
   .chip { border-radius: 3px; font-weight: 700; background: color-mix(in srgb, var(--dc) 10%, #fff); color: var(--dc); border: 1px solid color-mix(in srgb, var(--dc) 25%, #fff); }
   .chip.pc { background: #F6EEDF; color: #7A5A2A; border-color: #E6D6B8; }
@@ -389,7 +389,7 @@ header.top .in{position:relative}
   document.addEventListener('visibilitychange', function () { if (!document.hidden) load(); });
 })();
 </script>
-<button type="button" id="toTop" aria-label="맨 위로" style="position:fixed;right:16px;bottom:calc(env(safe-area-inset-bottom,0px) + 20px);z-index:50;width:52px;height:52px;border-radius:999px;border:0;background:#0E1A24;color:#E9DCC2;border:1px solid #B8955C !important;font:700 11px/1.1 'Noto Sans KR',sans-serif;box-shadow:0 4px 14px rgba(14,26,36,.3);display:none;cursor:pointer">▲<br>맨 위</button>
+<button type="button" id="toTop" aria-label="맨 위로" style="position:fixed;right:16px;bottom:calc(env(safe-area-inset-bottom,0px) + 20px);z-index:50;width:52px;height:52px;border-radius:999px;border:0;background:#0E1A24;color:#E9DCC2;border:1px solid #B8955C !important;font:700 11px/1.1 'Pretendard Variable',Pretendard,-apple-system,sans-serif;box-shadow:0 4px 14px rgba(14,26,36,.3);display:none;cursor:pointer">▲<br>맨 위</button>
 <script>(function(){var b=document.getElementById('toTop');window.addEventListener('scroll',function(){b.style.display=window.scrollY>400?'block':'none';},{passive:true});b.addEventListener('click',function(){window.scrollTo({top:0,behavior:'smooth'});});})();</script>
 </body>
 </html>
