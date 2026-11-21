@@ -11,7 +11,7 @@
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css">
-<script src="/v.js" data-v="v62" defer></script>
+<script src="/v.js" data-v="v63" defer></script>
 <style>
   /* 비서실 화면 — 앱 안에서 열림 (Claude 앱으로 넘어가지 않음). 대화만 Claude에서. */
   :root {
@@ -178,6 +178,25 @@ header.top .in{position:relative}
 .og5{display:grid;grid-template-columns:repeat(5,1fr);gap:4px;width:100%;margin-top:8px}
 .og5>div{display:grid;gap:1px;text-align:center;background:rgba(255,253,248,.07);border-radius:10px;padding:6px 2px}
 .og5 b{font-size:12px}.og5 i{font-style:normal;font-size:11px;color:#C9C2B3}.og5 span{font-size:10px;letter-spacing:-.04em;white-space:nowrap;color:#B8955C;font-weight:800}.og5 em{font-style:normal;font-size:10px;line-height:1.45;color:#C9C2B3;margin-top:3px}
+
+/* ── CJ ONE 분위기 (대표님 11/21 23:52): 위 바탕 진보라 + 라벤더 포인트, 부서 머리글 간격 정리 ── */
+:root { --gold: #B9A6FF; --gold-soft: #E6DEFF; --navy: #1C1630; }
+.top { background: radial-gradient(120% 70% at 85% 0%, rgba(124,92,255,.45) 0%, transparent 60%), radial-gradient(90% 60% at 0% 100%, rgba(236,72,153,.18) 0%, transparent 60%), linear-gradient(170deg, #1A1530 0%, #231A42 55%, #2B1F52 100%) !important; box-shadow: 0 6px 24px rgba(28,22,48,.25); }
+.top::after { background: linear-gradient(90deg, transparent, #7C5CFF 20%, #EC4899 50%, #F59E0B 80%, transparent) !important; }
+.lead { color: #CFC8E6; } .board { border-color: rgba(185,166,255,.35); background: rgba(255,255,255,.05); }
+.brow { border-bottom-color: rgba(230,222,255,.12); } .bname small, .bsum { color: #B3ABCC; }
+.orgc { border-color: rgba(185,166,255,.35) !important; color: #E6DEFF !important; }
+.lglogo { box-shadow: 0 0 0 1.5px #B9A6FF !important; }
+.chiefchat { background: linear-gradient(135deg, #E6DEFF, #B9A6FF) !important; color: #1C1630 !important; }
+.chiefchat .av { background: #1C1630 !important; color: #E6DEFF !important; }
+#toTop { background: #1C1630 !important; color: #E6DEFF !important; border-color: #B9A6FF !important; }
+.dept-head { display: flex !important; flex-direction: column; align-items: flex-start !important; gap: 4px !important; padding: 16px 16px 12px 20px !important; }
+.dept-head h2 { white-space: nowrap; font-size: 20px !important; line-height: 1.25; }
+.dept-head span { font-size: 13px; line-height: 1.5; letter-spacing: -.01em; word-break: keep-all; }
+.dept-head .badge { margin-left: 0; }
+.on { background: #E6DEFF !important; color: #1C1630 !important; } .on.top { background: linear-gradient(90deg,#7C5CFF,#C084FC) !important; color: #fff !important; } .on.ceo { background: #fff !important; } .on.s { background: transparent !important; color: #E6DEFF !important; }
+.oc { border-color: rgba(185,166,255,.3) !important; } .og5 > div { background: rgba(255,255,255,.07) !important; } .og5 i, .og5 em, .ob { color: #C9C0E6 !important; }
+.og5 > div { align-content: start; gap: 2px !important; padding: 8px 2px !important; } .og5 em { margin-top: 6px !important; }
 </style>
 </head>
 <body>
