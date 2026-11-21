@@ -1,13 +1,22 @@
 <!doctype html><html lang="ko"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>PC Claude 지시문</title><meta name="robots" content="noindex">
 <style>body{margin:0;background:#F5EFE4;font:17px/1.6 "Malgun Gothic",sans-serif;color:#23304A}main{max-width:820px;margin:30px auto;padding:0 16px}h1{font-size:22px}h2{font-size:18px;margin-top:28px}pre{white-space:pre-wrap;background:#fff;border:1px solid #E4DACB;border-radius:14px;padding:16px;font:15px/1.65 "Malgun Gothic",sans-serif}button{font:inherit;font-weight:700;border:0;border-radius:999px;padding:14px 22px;background:#23304A;color:#fff;cursor:pointer;width:100%}.t{margin-top:8px;text-align:center;color:#6B7A3A;font-weight:700}.box{background:#FFF8E8;border:1px solid #EAD9B0;border-radius:12px;padding:12px 14px;font-size:15px}</style></head><body><main>
-<h1>📋 PC Claude 예약 작업 — 🏠 살림 블로그 자동 예약 발행</h1>
-<div class="box"><b>만드는 곳:</b> PC Claude 앱 왼쪽 <b>「예약됨」</b> → 새 예약 작업<br>
-<b>이름:</b> 살림 블로그 자동 예약 발행<br><b>언제:</b> 매주 <b>월·수·금 오후 3:30</b><br>
-<b>지시문:</b> 아래 「복사하기」 → 지시문 칸에 붙여넣기 → 저장<br>
-<b>권한</b>을 묻는 선택이 있으면 <b>자동(묻지 않고 진행)</b>으로.</div>
+<h1>📋 PC Claude에게 — 🏠 살림 블로그 자동 예약 발행 설치</h1>
+<div class="box"><b>붙여 넣는 곳:</b> PC Claude 앱 → 「+ 새로 만들기」(어사이드 시험했던 것과 같은 PC 작업 창) → 입력칸에 Ctrl+V → 보내기<br>PC Claude가 <b>Windows 작업 스케줄러</b>에 월·수·금 15:30 작업을 직접 만들고, 시험으로 임시저장까지 해 봐요.<br>중간에 <b>허용할까요?</b> 묻는 창이 뜨면 <b>허용</b>을 눌러 주세요.</div>
 <h2>지시문</h2>
 <button id="c">복사하기</button><div class="t" id="t"></div>
-<pre id="p">🇰🇷 모든 진행 문구와 마지막 정리는 한글로.
+<pre id="p">이 PC에서 아래 일을 해줘. 모든 진행 문구와 정리는 한글로.
+
+[목표] 살림 블로그 자동 예약 발행을 이 PC의 「Windows 작업 스케줄러」로 매주 월·수·금 오후 3:30에 돌리기. (Claude 앱의 '예약됨'은 클라우드에서 돌아서 이 PC의 어사이드를 못 쓰기 때문)
+
+1. 폴더 C:\Users\han08\salim-blog 를 만들고, 맨 아래 [작업 지시문] 전체를 prompt.md 로 저장해.
+2. 이 PC에서 claude 명령줄(Claude Code CLI)을 쓸 수 있는지, 그 claude 에 aside MCP(aside mcp)가 연결돼 있는지 확인해. 없으면 연결해 줘(claude mcp add aside -- aside mcp, 사용자 범위). 경로가 필요하면 전체 경로로.
+3. run.ps1 을 만들어: prompt.md 내용을 claude 에 헤드리스(-p)로 넘겨 실행하고, 결과를 log.txt 에 날짜·시간과 함께 덧붙여 저장. 권한은 필요한 것만 허용(aside 도구, 웹 받아오기, 이 폴더 읽기/쓰기). 사람에게 묻는 창이 뜨면 안 됨.
+4. Windows 작업 스케줄러에 작업 '살림블로그_자동예약' 을 등록: 매주 월·수·금 15:30, 현재 사용자로, 로그인돼 있을 때 실행, PC가 그 시간에 꺼져 있었으면 켜진 뒤 한 번 실행.
+5. 지금 바로 시험 1번: 같은 방식으로 실행하되 [시험 모드] — 오늘 날짜 대신 homepan.json 의 가장 최근 글로, 글쓰기 화면에 제목·본문·그림까지 넣어 보고 '발행'은 누르지 말고 임시저장만 한 뒤, 잘 들어갔는지 알려줘. (시험 글 제목 앞에 [시험] 을 붙여)
+6. 끝나면 무엇을 만들었는지(파일·작업 이름·다음 실행 시각)와 시험 결과를 짧게 알려줘. 'Remote Control' 이나 기본 프로필 같은 다른 설정은 바꾸지 마.
+
+[작업 지시문]
+🇰🇷 모든 진행 문구와 마지막 정리는 한글로.
 
 [살림 블로그(blog.naver.com/linkdole) 자동 예약 발행 — 월·수·금 15:30]
 대표님 승인(2026-11-21): 링크클린·이케이클린 블로그는 건드리지 않고, 살림 블로그만 자동으로 예약 발행한다.
