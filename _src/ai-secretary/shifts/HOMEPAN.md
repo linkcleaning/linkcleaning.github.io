@@ -35,3 +35,7 @@
 - status.json(date 가 오늘 KST 가 아니면 {"date":오늘,"items":{}}로 시작) items.homepan = {"done":true,"at":"HH:MM","note":"🔑 황금키워드","detail":"제목\n첫 3줄\n그림 N장 — 앱 서랍 또는 https://linkcleaning.github.io/ai-secretary/homepan.html 에서 복사해 살림 블로그에 올리기(예약 발행 아침 7~9시)","url":"https://linkcleaning.github.io/ai-secretary/homepan.html"}. 못 하면 done:false + fix{why,act,you}. 다른 키는 건드리지 않는다.
 - commit "살림 블로그 홈판 글 {M/D}"(attribution 줄 포함) → push(거부 시 pull --rebase).
 - 알림·메시지는 보내지 않는다(대표님 11/20 "아침과 저녁 보고로만" — 저녁 보고가 보고).
+
+
+## 🤖 자동 예약 발행 (대표님 11/21 승인)
+- 이 근무가 14:47에 homepan.json 에 오늘 글을 push 하면, 대표님 PC Claude 앱의 예약 작업(월·수·금 15:30, 지시문 linkcleaning.github.io/p)이 어사이드 살림기록소 프로필로 다음 날 08:00 예약 발행한다. 그러니 **15:20 전까지 push 를 끝내고**, 그림 경로(images)는 공개 주소에서 열리는지 확인한다. 저녁 보고 ④-2는 "내일 08:00 자동 예약 예정"으로 쓰고, 대표님 할 일은 없다(예약 실패 시에만 앱 복사 방식).
