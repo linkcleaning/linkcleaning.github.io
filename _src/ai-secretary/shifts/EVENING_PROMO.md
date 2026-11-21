@@ -61,6 +61,7 @@
 - 내장 브라우저 작업이 끝나면 내가 연 탭만 닫는다(로그인은 그대로 둔다).
 
 ## Y. 유튜브 쇼츠
+> ✅ **비서실장 승인된 영상만 올린다**: 살림은 salim.json reel.approval.chief.ok == true, 링크클린은 shorts-queue 항목 approval.chief.ok == true. 아니면 올리지 않고 items.youtube note 에 "승인 전이라 안 올림"(DESIGN_PLAYBOOK 4-1).
 > 🎨 11/21~ 디자인실 기준: 제목은 salim.json reel.title(없으면 DESIGN_PLAYBOOK 9번 규칙으로 직접 — 증상·질문+결과 25자 안팎, #shorts 끝에). 영상이 DESIGN_PLAYBOOK 기준표(베이지 바탕·작은 글자·정지 화면)에 어긋나 보이면 올리지 말고 reel_maker.cjs 로 다시 만든 뒤 올린다.
 (대표님 11/21 "둘 다" 승인) — 대표님 PC 크롬(Claude in Chrome)
 - 크롬에는 구글 계정이 둘: **han0829**(크롬 프로필 주인 — 링크클린·동요 채널) / **linkdole**(살림기록소 채널). **구글 로그아웃·크롬 동기화 끄기 절대 금지**(11/21 로그아웃 사고). 계정은 유튜브 오른쪽 위 프로필 → '계정 전환'으로만 바꾸고, 끝나면 그대로 둔다. 로그인이 풀렸으면 올리지 않고 note "유튜브 로그인 필요"(비밀번호 입력 금지).
