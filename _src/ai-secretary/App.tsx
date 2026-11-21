@@ -3620,6 +3620,7 @@ function CallsTab({ hub, hasPin, toast, onOpenSettings }: { hub: HubData | null;
 
 const DRAWER_APPS: { name: string; url: string; ic: string; d: string }[] = [
   { name: '부속실·건강', url: './?action=health', ic: '💊', d: '약 체크·걸음·혈압·한마디' },
+  { name: '살림 블로그 글', url: './homepan.html', ic: '🏠', d: '홈판용 살림 글·그림 복사(월·수·금)' },
   { name: '전략기획실', url: './office.html', ic: '🏛️', d: '비서실 지시·비서실장 대화' },
   { name: '현장홍보', url: 'https://linkclean-promo.han0829.workers.dev/', ic: '📸', d: '현장 사진 맡기기 → 6곳 홍보' },
   { name: '세무장부', url: 'https://linkcleaning.github.io/ledger/', ic: '📒', d: '매출·매입·홈택스 요약' },
