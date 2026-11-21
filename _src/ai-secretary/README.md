@@ -1,4 +1,6 @@
 # AI 비서실 소스 (배포본: /ai-secretary)
+
+📢 **전체 공지판: `_src/ai-secretary/NOTICE.md`** — 새 업체·지점·블로그·계정·규칙은 반드시 여기에 먼저 적고, 모든 근무는 시작 전에 읽는다(대표님 11/21).
 - App.tsx 단일 파일 React 앱. 빌드: esbuild(entry.tsx, lucide-react는 stub로 alias) + Tailwind 3 CLI(tailwind.config.js, tw-in.css)
 - 배포 폴더 ai-secretary/ 에 assets/app.js, assets/app.css, index.html(버전 꼬리표 /v.js data-v)
 - 버전 올릴 때 index.html 의 data-v 와 맨 아래 자동 갱신 스크립트의 CUR 값을 같이 바꾼다(다르면 앱이 새로고침을 반복하지 않도록 세션당 1번만 시도).
