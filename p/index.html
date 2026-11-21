@@ -1,0 +1,11 @@
+<!doctype html><html lang="ko"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>PC Claude 지시문</title><meta name="robots" content="noindex">
+<style>body{margin:0;background:#F5EFE4;font:17px/1.6 "Malgun Gothic",sans-serif;color:#23304A}main{max-width:760px;margin:40px auto;padding:0 16px}h1{font-size:22px}pre{white-space:pre-wrap;background:#fff;border:1px solid #E4DACB;border-radius:14px;padding:16px;font:inherit}button{font:inherit;font-weight:700;border:0;border-radius:999px;padding:14px 22px;background:#23304A;color:#fff;cursor:pointer;width:100%}#t{margin-top:10px;text-align:center;color:#6B7A3A;font-weight:700}</style></head><body><main>
+<h1>📋 PC Claude에 붙여 넣을 지시문</h1>
+<button id="c">복사하기</button><div id="t"></div>
+<pre id="p">aside repl 로만(aside exec 는 쓰지 마) 해줘.
+1) 어사이드에 프로필이 '직장'과 '살림기록소' 두 개 있어. aside repl 에서 프로필을 골라 쓸 수 있는지, 어떻게 고르는지 확인해줘.
+2) '살림기록소' 프로필에서 https://blog.naver.com/linkdole?Redirect=Write 를 열고, 글쓰기 화면이 열리는지(= linkdole 로 로그인돼 있는지)만 확인해줘. 아무것도 입력하거나 저장·발행하지 마. 글쓰기 화면이 열리면 그 탭은 닫아줘.
+3) '직장' 프로필은 건드리지 마.
+결과와 '프로필 고르는 방법'을 한국어로 짧게 알려줘.</pre>
+<script>c.onclick=async()=>{try{await navigator.clipboard.writeText(p.innerText);t.textContent='복사했어요. PC Claude 입력칸에 Ctrl+V 하세요.'}catch(e){t.textContent='글을 드래그해서 복사해 주세요.'}}</script>
+</main></body></html>
