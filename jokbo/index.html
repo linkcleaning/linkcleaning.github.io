@@ -117,7 +117,7 @@ tailwind.config={theme:{extend:{colors:{hanji:'#FAF8F5',ink:'#1F2937',jjok:'#1E3
       <button class="fbtn text-[19px]" data-fs="2" title="아주 크게">가</button>
     </div>
   </div>
-  <span class="absolute right-1 bottom-0 text-[8px] text-gray-300 select-none">v9</span>
+  <span class="absolute right-1 bottom-0 text-[8px] text-gray-300 select-none">v10</span>
 </header>
 
 <main class="max-w-3xl mx-auto px-4 pt-4 pb-32">
@@ -386,7 +386,8 @@ function onlyDirect(){collapsed.clear();S.people.forEach(p=>{if(!p.isMyDirectLin
 function zoom(d){zoomLv=Math.min(1.6,Math.max(.4,+(zoomLv+d*.15).toFixed(2)));applyZoom();}
 function applyZoom(){const b=$('#treeBox');b.style.zoom=treeMode==='h'?zoomLv:1;$('#zoomVal').textContent=Math.round(zoomLv*100)+'%';}
 function scopeInfo(){const me=P(S.meId);if(scope==='all'||!me)return null;const up=(scope==='8'?4:5)+upExtra;let root=me;for(const a of ancestors(me.id)){if(me.generation-a.generation<=up)root=a;else break;}return {root,maxGen:me.generation+(scope==='8'?4:5)};}
-function goUp(){upExtra++;renderTree();const w=$('#treeWrap');setTimeout(()=>w&&w.scrollTo({top:0}),50);}
+function centerOn(id,top){const el=document.getElementById('n-'+id),w=$('#treeWrap');if(!el||!w)return;const r=el.getBoundingClientRect(),wr=w.getBoundingClientRect();w.scrollLeft+=r.left-wr.left-wr.width/2+r.width/2;w.scrollTop=top?0:w.scrollTop+r.top-wr.top-wr.height/2+r.height/2;}
+function goUp(){upExtra++;renderTree();setTimeout(()=>{const sc=scopeInfo();if(sc)centerOn(sc.root.id,true);},60);}
 function kidsIn(p){const sc=scopeInfo();return childrenOf(p.id).filter(k=>!sc||k.generation<=sc.maxGen);}
 function relTo(aId,bId){const A=P(aId),B=P(bId);if(!A||!B)return null;if(aId===bId)return {chon:0,title:'본인'};const r=lca(aId,bId);if(!r)return null;const L=r.anc;let a=A.generation-L.generation,b=B.generation-L.generation;if(!(A.generation&&B.generation&&L.generation)||a<0||b<0){a=r.stepA;b=r.stepB;}return {chon:(a===0||b===0)?Math.max(a,b):a+b,title:relTitle(a,b,B,A)};}
 function kinHTML(p){if(scope==='all'||!S.meId)return '';const r=relTo(S.meId,p.id);if(!r)return '';return `<span class="nkin">${r.chon?r.chon+'촌 · ':''}${esc(r.title)}</span>`;}
@@ -736,14 +737,14 @@ async function registerSW(){
 function swStatusText(){const el=$('#swStatus');if(el)el.textContent='오프라인 기능: '+swState;}
 function downloadSW(){const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([SW_CODE],{type:'text/javascript'}));a.download='sw.js';document.body.appendChild(a);a.click();a.remove();}
 
-function goTop(){window.scrollTo({top:0,behavior:'smooth'});const w=$('#treeWrap');if(curTab==='tree'&&w)w.scrollTo({top:0,behavior:'smooth'});}
+function goTop(){window.scrollTo({top:0,behavior:'smooth'});const w=$('#treeWrap');if(curTab==='tree'&&w){const sc=scopeInfo();const rt=sc?sc.root:roots()[0];if(rt)centerOn(rt.id,true);else w.scrollTo({top:0});}}
 function updTop(){const w=$('#treeWrap');const show=window.scrollY>300||(curTab==='tree'&&w&&w.scrollTop>150);const b=$('#topBtn');b.classList.toggle('hidden',!show);b.classList.toggle('flex',show);}
 window.addEventListener('scroll',updTop,{passive:true});
 /* ================= 시작 ================= */
 load();
 const pref=getPref();
 setFont(Number.isInteger(pref.fs)?pref.fs:0);
-treeMode=pref.tm==='v'?'v':'h';
+treeMode=pref.tm?(pref.tm==='v'?'v':'h'):(innerWidth<640?'v':'h');
 scope=['all','8','10'].includes(pref.sc)?pref.sc:'8';
 renderAll();
 if(!pref.picked)setTimeout(()=>pickMeModal(true),500);
