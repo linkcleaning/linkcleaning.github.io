@@ -126,7 +126,7 @@ tailwind.config={theme:{extend:{colors:{hanji:'#FAF8F5',ink:'#1F2937',jjok:'#1E3
       <button class="fbtn text-[19px]" data-fs="2" title="아주 크게">가</button>
     </div>
   </div>
-  <span class="absolute right-1 bottom-0 text-[8px] text-gray-300 select-none">v11</span>
+  <span class="absolute right-1 bottom-0 text-[8px] text-gray-300 select-none">v12</span>
 </header>
 
 <main class="max-w-3xl mx-auto px-4 pt-4 pb-32">
@@ -338,6 +338,7 @@ function showTab(t){
   document.querySelectorAll('.navbtn').forEach(b=>b.classList.toggle('on',b.dataset.tab===t));
   window.scrollTo({top:0});
   renderAll();
+  if(t==='line')scrollToMe(false);
 }
 document.querySelectorAll('.navbtn').forEach(b=>b.onclick=()=>showTab(b.dataset.tab));
 
@@ -371,7 +372,7 @@ function renderLine(){
 }
 function lineCard(p){
   const isMe=p.id===S.meId, kid=S.meId&&p.parentId===S.meId;
-  return `<button class="card text-left p-3.5 w-full ${isMe?'!border-seal ring-2 ring-seal/15':''}" onclick="openPerson('${p.id}')">
+  return `<button ${isMe?'id="line-me"':''} class="card text-left p-3.5 w-full scroll-mt-24 ${isMe?'!border-seal ring-2 ring-seal/15':''}" onclick="openPerson('${p.id}')">
     <div class="flex items-center gap-2 flex-wrap">
       <span class="font-serif text-xl font-bold">${nameHTML(p)}</span>
       <span class="font-serif text-muk">${esc(p.hanja)}</span>
@@ -502,7 +503,7 @@ function renderPick(){
     <span class="ngen">${p.generation}세</span><b class="font-serif text-lg">${esc(p.name)}</b><span class="font-serif text-sm text-muk">${esc(p.hanja)}</span>
     <span class="ml-auto text-xs text-muk">${pa?'부 '+esc(pa.name.replace(/^한/,'')):''}${p.birthYear?' · '+esc(p.birthYear.slice(0,4)):''}</span></button>`}).join('')||'<p class="text-sm text-muk p-3">찾는 이름이 없습니다. 계보도에서 직접 추가할 수 있습니다.</p>';
 }
-function setMe(id){S.meId=id;recomputeDirect();save();closeModal();renderAll();toast('"나"로 지정하고 직계를 정리했습니다');}
+function setMe(id){S.meId=id;recomputeDirect();save();closeModal();renderAll();if(curTab==='line')scrollToMe(true);toast('"나"로 지정하고 직계를 정리했습니다');}
 function chonWithMe(id){if(!S.meId){toast('먼저 「나로 지정」을 해 주세요');return;}closeModal();showTab('search');$('#selA').value=S.meId;$('#selB').value=id;renderChon();setTimeout(()=>$('#chonOut').scrollIntoView({behavior:'smooth',block:'center'}),60);}
 function delPerson(id){
   const p=P(id),ds=descendants(id);
@@ -746,6 +747,7 @@ async function registerSW(){
 function swStatusText(){const el=$('#swStatus');if(el)el.textContent='오프라인 기능: '+swState;}
 function downloadSW(){const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([SW_CODE],{type:'text/javascript'}));a.download='sw.js';document.body.appendChild(a);a.click();a.remove();}
 
+function scrollToMe(smooth){setTimeout(()=>{const el=document.getElementById('line-me');if(el){const y=el.getBoundingClientRect().top+window.scrollY-window.innerHeight*0.32;window.scrollTo({top:Math.max(0,y),behavior:smooth?'smooth':'auto'});}},60);}
 function goTop(){window.scrollTo({top:0,behavior:'smooth'});const w=$('#treeWrap');if(curTab==='tree'&&w){const sc=scopeInfo();const rt=sc?sc.root:roots()[0];if(rt)centerOn(rt.id,true);else w.scrollTo({top:0});}}
 function updTop(){const w=$('#treeWrap');const show=window.scrollY>300||(curTab==='tree'&&w&&w.scrollTop>150);const b=$('#topBtn');b.classList.toggle('hidden',!show);b.classList.toggle('flex',show);}
 window.addEventListener('scroll',updTop,{passive:true});
@@ -756,6 +758,7 @@ setFont(Number.isInteger(pref.fs)?pref.fs:0);
 treeMode=pref.tm?(pref.tm==='v'?'v':'h'):(innerWidth<640?'v':'h');
 scope=['all','8','10'].includes(pref.sc)?pref.sc:'8';
 renderAll();
+scrollToMe(false);
 if(!pref.picked)setTimeout(()=>pickMeModal(true),500);
 setupPWA();
 </script>
