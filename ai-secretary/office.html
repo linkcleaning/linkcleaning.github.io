@@ -11,7 +11,7 @@
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css">
-<script src="/v.js" data-v="v64" defer></script>
+<script src="/v.js" data-v="v65" defer></script>
 <style>
   /* 비서실 화면 — 앱 안에서 열림 (Claude 앱으로 넘어가지 않음). 대화만 Claude에서. */
   :root {
@@ -227,7 +227,7 @@ body { font-weight: 500; }
       <div><b>홍보수석</b><i>한정민</i><em>블로그팀<br>플레이스팀<br>홍보게시팀</em></div>
       <div><b>소통수석</b><i>김기훈</i><em>스레드팀<br>이케이클린팀</em></div>
       <div><b>영업수석</b><i>안규태</i><em>입찰팀<br>지원사업팀<br>고객관리팀</em></div>
-      <div><b>전략수석</b><i>최영길</i><em>검색순위팀<br>AI노출팀<br>홈페이지팀<br>정보·정비팀</em></div>
+      <div><b>전략수석</b><i>최영길</i><em>검색순위팀<br>AI노출팀<br>홈페이지팀<br>앱관리팀<br>정보팀</em></div>
       <div><b>제휴수석</b><i>박시은</i><em>살림기록소팀<br>부수입팀<br>크림어스팀</em></div>
     </div></div>
   </details>
@@ -253,7 +253,7 @@ body { font-weight: 500; }
     { key: 'sns', person: '김기훈', name: '소통수석실', short: '소통수석', duty: '스레드·이케이클린', color: '#1A73E8' },
     { key: 'sales', person: '안규태', name: '영업수석실', short: '영업수석', duty: '입찰·지원사업·고객관리', color: '#0E9F5A',
       app: { title: '고객관리팀 — 팔로업·후기 요청', desc: '견적 후 연락 없는 고객, 작업 끝난 고객의 후기 요청 문자는 앱 \'영업\' 탭에서 바로 보냅니다. 아침 보고에도 건수가 올라옵니다.', link: '앱 영업 탭 열기 ›' } },
-    { key: 'strategy', person: '최영길', name: '전략수석실', short: '전략수석', duty: '검색순위·AI노출·홈페이지·정보정비', color: '#7C3AED' },
+    { key: 'strategy', person: '최영길', name: '전략수석실', short: '전략수석', duty: '검색순위·AI노출·홈페이지·앱관리·정보', color: '#7C3AED' },
     { key: 'biz', person: '박시은', name: '제휴수석실', short: '제휴수석', duty: '살림기록소·부수입·크림어스', color: '#E0306B' }
   ];
   var ALL = [0,1,2,3,4,5,6], WK = [1,2,3,4,5];
@@ -301,8 +301,9 @@ body { font-weight: 500; }
       ['AI노출팀', 'AI 노출 할 일', '회의에서 정한 할 일 중 1개를 매일 처리합니다(질문형 Q&A·칼럼·동네 페이지).', '평일 13:17', 0, 'aitodo', WK],
       ['홈페이지팀', '동네 페이지', '동네별 안내 페이지를 홈페이지에 추가해 동네 검색에 걸리게 합니다.', '수·금 13:17', 0, 'areapage', [3,5]],
       ['홈페이지팀', '특수 분야 칼럼', '특수청소·유품정리·쓰레기집 글을 홈페이지 현장 기록에 올려 구글 검색에 걸리게 합니다.', '화·금 13:17', 0, 'column', [2,5]],
-      ['정보·정비팀', '앱 점검·정비', '홍보에 쓰는 앱을 점검해 고칠 건 고치고 제안을 올립니다.', '매주 목 13:17', 0, 'appcare', [4]],
-      ['정보·정비팀', 'AI 도구·자동화 정찰', '대표님 일을 줄여 줄 새 자동화 방법을 찾아 원리·쓸 곳·손·비용·위험을 따져 많아야 3개만 보고합니다.', '월·목 10:43', 1, 'scout', [1,4]]
+      ['앱관리팀', '앱 배포', '대표님이 앱을 새로 만들거나 고치라고 하시면 배포하고, 버전 표시·앱 현황판 등록·지인에게 보낼 공유 주소까지 저녁 보고로 알려 드립니다.', '말씀하실 때', 0, 'appdeploy', []],
+      ['앱관리팀', '앱 점검·상황 보고', '홍보·업무 앱이 잘 열리는지 점검해 고칠 건 고치고, 빼기·기억지도 스토어 별점·새 리뷰·심사 상태까지 확인해 "정상 N · 고친 것 N"으로 보고합니다.', '매주 목 13:17', 0, 'appcare', [4]],
+      ['정보팀', 'AI 도구·자동화 정찰', '대표님 일을 줄여 줄 새 자동화 방법을 찾아 원리·쓸 곳·손·비용·위험을 따져 많아야 3개만 보고합니다.', '월·목 10:43', 1, 'scout', [1,4]]
     ],
     biz: [
       ['살림기록소팀', '살림기록소 글·릴스 준비', '살림 꿀팁 글(반말), 쿠팡 글, 릴스·쇼츠를 준비합니다(디자인실 점검·실장 승인).', '매일 18:57', 0, 'coupang', ALL],
@@ -325,7 +326,7 @@ body { font-weight: 500; }
     pr: [['📸', '찰칵블로그', 'https://linkclean-blog-writer.vercel.app/', '블로그'], ['🧹', '현장홍보', 'https://linkclean-promo.han0829.workers.dev/']],
     sns: [['🧵', '오늘의 스레드', G + 'threads/', '스레드'], ['📷', '인스타 영업 비서', G + 'insta/']],
     sales: [['📞', '콜백문자', G + 'callback/', '콜백'], ['🧾', '영수증·견적서', G + 'receipt/'], ['⭐', '후기부스터', G + 'review/'], ['🏠', '통합 현장관리', G + 'field/']],
-    strategy: [['📈', '순위노트', G + 'rank/', '순위'], ['🗂', '앱 현황판', G + 'apps/']],
+    strategy: [['📈', '순위노트', G + 'rank/', '순위'], ['📱', '앱 현황판', G + 'apps/', '앱']],
     office: [['💊', '약 체크·건강', './?action=health', '건강'], ['✈️', '여행 지갑 카드', G + 'pass/trip.html', '여행'], ['🧾', '세무장부', G + 'ledger/'], ['🌳', '족보', G + 'jokbo/']],
     design: [['🎬', '쇼츠 기준표', 'https://github.com/linkcleaning/linkcleaning.github.io/blob/main/_src/ai-secretary/DESIGN_PLAYBOOK.md', '기준표']],
     biz: [['🛒', '오늘의 스레드(쿠팡 글)', G + 'threads/', '쿠팡 글']]
