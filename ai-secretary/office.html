@@ -11,7 +11,7 @@
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700;800;900&family=Noto+Serif+KR:wght@600;700;900&display=swap">
-<script src="/v.js" data-v="v53" defer></script>
+<script src="/v.js" data-v="v54" defer></script>
 <style>
   /* 비서실 화면 — 앱 안에서 열림 (Claude 앱으로 넘어가지 않음). 대화만 Claude에서. */
   :root {
@@ -129,7 +129,7 @@
   .bdot { width: 4px; height: 32px; border-radius: 2px; }
   .bapp { background: transparent; color: var(--gold); border: 1px solid var(--gold); border-radius: 6px; font-weight: 700; padding: 8px 11px; }
   #chief, .brow[data-k="chief"] { --dc: #2A3A4A; } #pr, .brow[data-k="pr"] { --dc: #8A5232; } #sns, .brow[data-k="sns"] { --dc: #2E4D72; }
-  #sales, .brow[data-k="sales"] { --dc: #2F5E4B; } #strategy, .brow[data-k="strategy"] { --dc: #4E4377; } #office, .brow[data-k="office"] { --dc: #5A5E66; } #biz, .brow[data-k="biz"] { --dc: #7A3047; }
+  #sales, .brow[data-k="sales"] { --dc: #2F5E4B; } #strategy, .brow[data-k="strategy"] { --dc: #4E4377; } #office, .brow[data-k="office"] { --dc: #5A5E66; } #biz, .brow[data-k="biz"] { --dc: #7A3047; } #design, .brow[data-k="design"] { --dc: #B8955C; }
   .brow .bdot { background: color-mix(in srgb, var(--dc) 55%, var(--gold)); }
   .wrap { gap: 14px; padding-top: 18px; }
   .dept { background: var(--card); border: 1px solid var(--line); border-radius: 14px; box-shadow: 0 1px 2px rgba(20,28,36,.04), 0 8px 24px rgba(20,28,36,.05); margin-top: 0; }
@@ -199,7 +199,8 @@ header.top .in{position:relative}
     { key: 'strategy', person: '최영길', name: '전략수석실', short: '전략수석', duty: '키워드·구글 순위' },
     { key: 'office', name: '부속실', short: '부속실', duty: '건강·약·일정',
       app: { title: '대표님 건강 챙기기', desc: '약을 먹으면 체크(아침, 저녁 약을 드시게 되면 저녁도 켜기) → 비서실도 알 수 있게 저장됩니다. 아이폰 건강 앱의 걸음·혈압·수면이 매일 들어오면 "운동이 필요해요" 같은 한마디를 드립니다. 시리로 "약 먹었어"라고 해도 체크돼요.', link: '💊 약 체크·건강 보기 ›', url: './?action=health' } },
-    { key: 'biz', person: '박시은', name: '제휴수석실', short: '제휴수석', duty: '살림기록소·부수입' }
+    { key: 'biz', person: '박시은', name: '제휴수석실', short: '제휴수석', duty: '살림기록소·부수입' },
+    { key: 'design', name: '디자인실', short: '디자인실', duty: '쇼츠·릴스·이미지 (디자인회사 10년+)' }
   ];
   var ALL = [0,1,2,3,4,5,6], WK = [1,2,3,4,5];
   // [맡은 사람, 제목, 설명, 정기, PC 필요, status.json 키, 하는 요일]
@@ -235,6 +236,10 @@ header.top .in{position:relative}
       ['전략수석', 'AI 추천 노출 점검·회의', '"제주 청소업체 추천해줘" 같은 AI 질문 15개를 웹·구글 AI 개요·빙 코파일럿에서 확인하고, 홍보·소통수석·비서실장과 회의해 빠진 질문마다 할 일을 정합니다.', '월·목 09:47', 1, 'aivis', [1,4]],
       ['전략수석', 'AI 노출 할 일', '회의에서 정한 할 일 중 1개를 매일 처리합니다(질문형 Q&A·칼럼·동네 페이지).', '평일 13:17', 0, 'aitodo', WK],
       ['정보비서관', 'AI 도구·자동화 정찰', '유튜브·웹에서 대표님께 맞는 새 자동화 방법을 찾아 원리·쓸 곳·손·비용·위험을 따져 많아야 3개만 보고합니다.', '월·목 10:43', 1, 'scout', [1,4]]
+    ],
+    design: [
+      ['디자인실장', '쇼츠·릴스 디자인', '살림기록소·링크클린 영상을 디자인실 기준표(첫 1초 훅·큰 글자·진한 색·움직임·진행 막대)로 만들고, 기준을 통과한 것만 올라가게 검수합니다.', '매일 18:57', 0, 'design', ALL],
+      ['디자인실장', '주간 트렌드 조사', '요즘 조회수 높은 살림·청소 쇼츠의 첫 장면·자막·색·길이를 찾아 우리 영상 조회수와 비교하고 기준표를 고칩니다.', '매주 월 18:57', 0, 'designtrend', [1]]
     ],
     biz: [
       ['제휴수석', '살림기록소 글·릴스 준비', '살림 팩트체크 O/X, 공감 꿀팁 글, 월·수·금 쿠팡 글, 먼지씨 릴스를 준비합니다.', '매일 18:57', 0, 'coupang', ALL],

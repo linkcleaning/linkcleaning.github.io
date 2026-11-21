@@ -60,7 +60,9 @@
 - salim.json posted 에 {threads1(저녁 글 {at,url}), reel, neighbors:N, at} 기록(posted.coupang·posted.kakao 는 점심 링크 글 근무 몫이라 건드리지 않는다) — 아침 근무가 쓴 posted.morning 은 지우지 않는다 → commit·push(거부 시 pull --rebase — 저녁 보고 세션이 kakao.link 를 먼저 push 했을 수 있음). status.json items.salim = {"done","at","note":"15자 이내(예: '저녁글·쿠팡1·릴스·댓글4')","detail":('📎 직접 올릴 것'이 있으면 맨 앞에) 올린 저녁 글·링크 글 첫 줄과 주소}.
 - 내장 브라우저 작업이 끝나면 내가 연 탭만 닫는다(로그인은 그대로 둔다).
 
-## Y. 유튜브 쇼츠 (대표님 11/21 "둘 다" 승인) — 대표님 PC 크롬(Claude in Chrome)
+## Y. 유튜브 쇼츠
+> 🎨 11/21~ 디자인실 기준: 제목은 salim.json reel.title(없으면 DESIGN_PLAYBOOK 9번 규칙으로 직접 — 증상·질문+결과 25자 안팎, #shorts 끝에). 영상이 DESIGN_PLAYBOOK 기준표(베이지 바탕·작은 글자·정지 화면)에 어긋나 보이면 올리지 말고 reel_maker.cjs 로 다시 만든 뒤 올린다.
+(대표님 11/21 "둘 다" 승인) — 대표님 PC 크롬(Claude in Chrome)
 - 크롬에는 구글 계정이 둘: **han0829**(크롬 프로필 주인 — 링크클린·동요 채널) / **linkdole**(살림기록소 채널). **구글 로그아웃·크롬 동기화 끄기 절대 금지**(11/21 로그아웃 사고). 계정은 유튜브 오른쪽 위 프로필 → '계정 전환'으로만 바꾸고, 끝나면 그대로 둔다. 로그인이 풀렸으면 올리지 않고 note "유튜브 로그인 필요"(비밀번호 입력 금지).
 - 채널: 🏠 살림기록소 = https://studio.youtube.com/channel/UCXCPV0Sw4Ol5jLyFPCHPweQ (linkdole) / 🧹 링크클린 = https://studio.youtube.com/channel/UCU-LswJateZiU3u5ah_12Rg (han0829). 스튜디오 주소를 열었는데 다른 채널이 보이거나 권한 없음이면 계정 전환 후 다시.
 - 올리는 법: 새 탭에서 해당 스튜디오 → 오른쪽 위 '만들기' → '동영상 업로드' 창의 input[type=file] 에, 저장소 mp4를 페이지 안에서 `fetch('https://linkcleaning.github.io/ai-secretary/data/…mp4')` → Blob → File → DataTransfer 로 넣고 change 이벤트(파일 선택 창은 열지 않는다; push 직후라 404면 30초 간격 최대 5번 재시도). 세로 60초 이하라 자동으로 Shorts. 제목(100자 이내, 끝에 #shorts) · 설명 · '아동용 아님' 선택 · 공개 → 게시. 게시 후 '동영상 링크'를 기록. 같은 영상이 이미 올라가 있으면 다시 올리지 않는다.
