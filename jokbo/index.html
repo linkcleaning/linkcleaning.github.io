@@ -85,6 +85,16 @@ tailwind.config={theme:{extend:{colors:{hanji:'#FAF8F5',ink:'#1F2937',jjok:'#1E3
   .fbtn{width:2.1rem;height:2.1rem;border-radius:9px;border:1.5px solid #E5DDD0;background:#fff;font-family:"Noto Serif KR",serif;font-weight:700;color:#6B6358;line-height:1}
   .fbtn.on{background:#1E3A8A;color:#fff;border-color:#1E3A8A}
   .sheet{animation:up .22s ease}
+  .mhead{position:sticky;top:-12px;z-index:2;background:#FAF8F5;margin:-12px -16px 8px;padding:12px 16px 8px;border-bottom:1px solid #E5DDD0}
+  .mfoot{position:sticky;bottom:-16px;z-index:2;background:#FAF8F5;margin:8px -16px -16px;padding:10px 16px calc(12px + env(safe-area-inset-bottom));border-top:1px solid #E5DDD0}
+  @media (max-width:640px){
+    #ef .inp{padding:.5rem .65rem}
+    #ef{gap:.6rem}
+    #ef .lbl{margin-bottom:.15rem}
+    .card{border-radius:12px}
+    main{padding-left:.75rem;padding-right:.75rem}
+    .fbtn{width:1.95rem;height:1.95rem}
+  }
   @keyframes up{from{transform:translateY(24px);opacity:0}}
   .tab{display:none}.tab.on{display:block}
   pre.memo{white-space:pre-wrap;font-family:inherit}
@@ -98,7 +108,7 @@ tailwind.config={theme:{extend:{colors:{hanji:'#FAF8F5',ink:'#1F2937',jjok:'#1E3
   <div class="max-w-3xl mx-auto px-4 py-2.5 flex items-center gap-3">
     <div class="seal w-10 h-10 text-xl flex-none">韓</div>
     <div class="flex-1 min-w-0">
-      <h1 class="font-serif font-black text-lg leading-tight text-ink truncate">나의 청주한씨 족보</h1>
+      <h1 class="font-serif font-black text-base sm:text-lg leading-tight text-ink truncate">나의 청주한씨 족보</h1>
       <p class="text-xs text-muk truncate" id="hdrSub">淸州韓氏 · 시조 위양공 한란</p>
     </div>
     <div class="flex items-center gap-1" aria-label="글자 크기">
@@ -107,7 +117,7 @@ tailwind.config={theme:{extend:{colors:{hanji:'#FAF8F5',ink:'#1F2937',jjok:'#1E3
       <button class="fbtn text-[19px]" data-fs="2" title="아주 크게">가</button>
     </div>
   </div>
-  <span class="absolute right-1 bottom-0 text-[8px] text-gray-300 select-none">v8</span>
+  <span class="absolute right-1 bottom-0 text-[8px] text-gray-300 select-none">v9</span>
 </header>
 
 <main class="max-w-3xl mx-auto px-4 pt-4 pb-32">
@@ -247,7 +257,7 @@ tailwind.config={theme:{extend:{colors:{hanji:'#FAF8F5',ink:'#1F2937',jjok:'#1E3
 <div id="modal" class="fixed inset-0 z-50 hidden">
   <div class="absolute inset-0 bg-black/40" onclick="closeModal()"></div>
   <div class="absolute inset-x-0 bottom-0 sm:inset-0 sm:flex sm:items-center sm:justify-center pointer-events-none">
-    <div id="modalBody" class="sheet pointer-events-auto bg-hanji w-full sm:max-w-lg rounded-t-2xl sm:rounded-2xl max-h-[88vh] overflow-y-auto p-5 safe-b shadow-2xl"></div>
+    <div id="modalBody" class="sheet pointer-events-auto bg-hanji w-full sm:max-w-lg rounded-t-2xl sm:rounded-2xl overflow-y-auto overscroll-contain px-4 pt-3 pb-4 sm:p-5 safe-b shadow-2xl" style="max-height:calc(100dvh - env(safe-area-inset-top) - 16px)"></div>
   </div>
 </div>
 <button id="topBtn" onclick="goTop()" class="fixed right-4 bottom-24 z-40 hidden w-12 h-12 rounded-full bg-jjok text-white shadow-lg font-bold text-lg leading-none flex-col items-center justify-center" style="padding-bottom:2px">↑<span class="block text-[10px] font-bold -mt-0.5">맨 위</span></button>
@@ -438,7 +448,7 @@ function openPerson(id){
   const p=P(id);if(!p)return;
   const pa=P(p.parentId),kids=childrenOf(id),isMe=id===S.meId;
   modal(`
-    <div class="flex items-start gap-3">
+    <div class="mhead flex items-start gap-3">
       <div class="seal w-14 h-14 text-sm leading-tight text-center flex-none ${isMe?'':'!bg-jjok'}">${p.generation}<br>世</div>
       <div class="flex-1 min-w-0">
         <div class="font-serif text-2xl font-bold">${nameHTML(p)} <span class="text-lg text-muk">${esc(p.hanja)}</span></div>
@@ -468,7 +478,7 @@ function openPerson(id){
     </div>`);
 }
 function pickMeModal(first){
-  modal(`<div class="flex items-center mb-1"><h3 class="font-serif text-xl font-bold flex-1">이 족보에서 본인을 찾아 주세요</h3>${first?'':'<button class="fbtn" onclick="closeModal()">✕</button>'}</div>
+  modal(`<div class="mhead flex items-center"><h3 class="font-serif text-xl font-bold flex-1">이 족보에서 본인을 찾아 주세요</h3>${first?'':'<button class="fbtn" onclick="closeModal()">✕</button>'}</div>
   <p class="text-sm text-muk mb-3">본인 이름을 누르면 「나의 직계」와 촌수가 모두 본인 기준으로 바뀝니다. 이 휴대폰에만 적용됩니다.</p>
   <input id="pq" class="inp mb-2" placeholder="이름으로 찾기 (예: 승주)" oninput="renderPick()">
   <div id="plist" class="space-y-1.5 max-h-[50vh] overflow-y-auto"></div>
@@ -498,7 +508,7 @@ function openEdit(id,parentId){
   const banned=new Set(isNew?[]:[id,...descendants(id).map(x=>x.id)]);
   const opts=S.people.filter(x=>!banned.has(x.id)).sort((a,b)=>a.generation-b.generation).map(x=>`<option value="${x.id}" ${x.id===d.parentId?'selected':''}>${x.generation}세 ${esc(x.name)} ${esc(x.branch)}</option>`).join('');
   modal(`
-    <div class="flex items-center mb-3"><h3 class="font-serif text-xl font-bold flex-1">${isNew?(pa?`${esc(pa.name)}의 자손 추가`:'새 인물 추가'):'인물 수정'}</h3><button class="fbtn" onclick="${isNew&&pa?`openPerson('${pa.id}')`:(isNew?'closeModal()':`openPerson('${id}')`)}">✕</button></div>
+    <div class="mhead flex items-center"><h3 class="font-serif text-xl font-bold flex-1">${isNew?(pa?`${esc(pa.name)}의 자손 추가`:'새 인물 추가'):'인물 수정'}</h3><button class="fbtn" onclick="${isNew&&pa?`openPerson('${pa.id}')`:(isNew?'closeModal()':`openPerson('${id}')`)}">✕</button></div>
     <form id="ef" class="grid grid-cols-2 gap-3" onsubmit="submitEdit(event,${isNew?'null':`'${id}'`})">
       <div><span class="lbl">세수 *</span><input name="generation" type="number" min="1" class="inp" value="${d.generation}" required></div>
       <div><span class="lbl">파명</span><input name="branch" class="inp" value="${esc(d.branch)}" placeholder="예: 문정공파"></div>
@@ -510,9 +520,9 @@ function openEdit(id,parentId){
       <div><span class="lbl">생년 / 간지</span><input name="birthYear" class="inp" value="${esc(d.birthYear)}" placeholder="예: 1958 무술"></div>
       <div class="col-span-2"><span class="lbl">배우자 (본관·성씨, 쉼표로 구분)</span><input name="spouses" class="inp" value="${esc(d.spouses.join(', '))}" placeholder="예: 밀양박씨"></div>
       <div class="col-span-2"><span class="lbl">부(父)</span><select name="parentId" class="inp"><option value="">(최상위 · 부모 없음)</option>${opts}</select></div>
-      <div class="col-span-2"><span class="lbl">행적 · 관직 · 묘소</span><textarea name="memo" rows="4" class="inp">${esc(d.memo)}</textarea></div>
+      <div class="col-span-2"><span class="lbl">행적 · 관직 · 묘소</span><textarea name="memo" rows="3" class="inp">${esc(d.memo)}</textarea></div>
       <label class="col-span-2 flex items-center gap-2 text-sm font-bold"><input type="checkbox" name="isMyDirectLine" ${d.isMyDirectLine?'checked':''}> 나의 직계 조상·자손으로 표시</label>
-      <button class="btn btn-p col-span-2 !py-3 text-base">${isNew?'추가하기':'저장하기'}</button>
+      <div class="col-span-2 mfoot"><button class="btn btn-p w-full !py-3 text-base">${isNew?'추가하기':'저장하기'}</button></div>
     </form>`);
 }
 function submitEdit(e,id){
