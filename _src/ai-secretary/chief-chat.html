@@ -80,7 +80,7 @@
 <header class="top"><div class="in">
   <button type="button" class="back" id="backTop" style="border:0;cursor:pointer">‹ 비서실</button>
   <div class="who-head"><b>비서실장 한정호</b><small id="st">연결 확인 중…</small></div>
-  <div class="avatar" aria-hidden="true">정호</div>
+  <button type="button" id="clearChat" style="flex:none;border:0;background:#ffffff14;color:#ffffffb3;font:700 12px var(--sans);border-radius:999px;padding:8px 12px;cursor:pointer">대화 지우기</button>
 </div></header>
 
 <div class="scroller" id="scroller"><main>
@@ -96,10 +96,6 @@
     <textarea id="q" rows="1" placeholder="무엇이든 물어보거나 맡기세요"></textarea>
     <button class="go" type="submit" id="send">보내기</button>
   </form>
-  <div class="row2">
-    <button type="button" class="tiny" id="clearChat">대화 지우기</button>
-    <button type="button" class="end" id="endBtn">대화 끝내고 비서실로 ›</button>
-  </div>
 </div></div>
 
 <script>
@@ -138,7 +134,6 @@
     guide.classList.add('on');
   }
   document.getElementById('backTop').addEventListener('click', goBack);
-  document.getElementById('endBtn').addEventListener('click', goBack);
 
   // 앱 기록 읽기 (공개 저장소의 앱 데이터)
   var db = null, brief = null;
@@ -154,7 +149,7 @@
     '정기 근무: ' + SHIFTS.map(function (s) { return s.name + ' ' + s.when; }).join(', ') + '. 보고는 아침·저녁 두 번만.',
     '도구: report = 오늘 저녁 보고·최근 회의 결론, today = 오늘 각 업무 결과(앱 기록), notice = 전체 공지(새로 바뀐 것), status = 근무 실행 기록, dispatch = 실제 실행이 필요한 일의 지시서 카드.',
     '사진: 대표님이 사진을 보내면(블로그·현장·제품·문서 등) 먼저 무엇이 보이는지 짧게 말하고 원하는 걸 해 준다. 블로그용이면 링크클린 블로그 말투로 제목 3개·본문 초안·사진 순서·사진 설명(대체 텍스트)을 써 준다(살림 사진이면 살림기록소 반말). 얼굴·차량 번호·집 주소·고객 이름이 보이면 "이 사진은 가리고 쓰세요"라고 알린다. 실제 게시는 하지 못하니, 현장 사진을 6곳 홍보에 쓰려면 현장홍보 앱에 맡기라고 안내한다. 사진에 없는 내용(작업 시간·가격·고객 반응)은 지어내지 말고 대표님께 묻는다.',
-    '일하는 법: 1) 질문·상담·글 초안·문구는 바로 답한다. 비서실 상황을 물으면 도구로 실제 기록을 확인하고 답한다(추측 금지). 2) 게시·앱 수정·파일 제작·최신 정보 조사·캘린더 등록처럼 실제로 해야 하는 일만 dispatch. instruction은 이 대화를 못 본 사람도 바로 할 수 있게 구체적으로. 카드를 띄운 건 아직 실행이 아니니 "지시서를 올렸어요, [지시하기]를 누르시면 시작해요"라고 말한다. 3) 너는 인터넷을 직접 볼 수 없다 — 날씨·뉴스·가격 같은 최신 정보는 조사 지시서를 제안. 4) 결제·송금·구매·삭제·계정 설정·고객 문자·홈택스 제출은 "준비만 하고 대표님 확인"으로 적는다. 5) 대화가 끝난 것 같으면 "더 없으시면 아래 [대화 끝내고 비서실로]를 누르세요"라고 짧게 안내한다.'
+    '일하는 법: 1) 질문·상담·글 초안·문구는 바로 답한다. 비서실 상황을 물으면 도구로 실제 기록을 확인하고 답한다(추측 금지). 2) 게시·앱 수정·파일 제작·최신 정보 조사·캘린더 등록처럼 실제로 해야 하는 일만 dispatch. instruction은 이 대화를 못 본 사람도 바로 할 수 있게 구체적으로. 카드를 띄운 건 아직 실행이 아니니 "지시서를 올렸어요, [지시하기]를 누르시면 시작해요"라고 말한다. 3) 너는 인터넷을 직접 볼 수 없다 — 날씨·뉴스·가격 같은 최신 정보는 조사 지시서를 제안. 4) 결제·송금·구매·삭제·계정 설정·고객 문자·홈택스 제출은 "준비만 하고 대표님 확인"으로 적는다. 5) 대화가 끝났다는 안내는 하지 않는다.'
   ].join('\n');
 
   function bubble(cls, text, who) {
