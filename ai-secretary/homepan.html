@@ -1,0 +1,85 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>살림 블로그 · 홈판 글</title>
+<meta name="robots" content="noindex">
+<meta name="theme-color" content="#23304A">
+<style>
+  :root{--ink:#23304A;--olive:#6B7A3A;--bg:#F5EFE4;--card:#FFFDF8;--line:#E4DACB;--mute:#7C7466;--warm:#C9864A}
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.65 -apple-system,"Apple SD Gothic Neo","Malgun Gothic",sans-serif}
+  header{background:var(--ink);color:#F5EFE4;padding:calc(env(safe-area-inset-top) + 18px) 18px 18px}
+  header h1{margin:0;font-size:21px}
+  header p{margin:4px 0 0;font-size:13px;opacity:.8}
+  main{max-width:720px;margin:0 auto;padding:14px 16px 60px}
+  .tip{background:#EEF0E2;border:1px solid #D7DDBA;border-radius:14px;padding:12px 14px;font-size:14px}
+  .post{background:var(--card);border:1px solid var(--line);border-radius:18px;padding:16px;margin:14px 0;box-shadow:0 6px 18px rgba(35,48,74,.05)}
+  .meta{display:flex;gap:8px;align-items:center;font-size:12px;color:var(--mute)}
+  .badge{background:var(--olive);color:#fff;border-radius:999px;padding:2px 9px;font-weight:700}
+  .done .badge{background:#9AA28A}
+  h2{font-size:18px;line-height:1.4;margin:8px 0}
+  pre{white-space:pre-wrap;font:inherit;font-size:15px;background:#FBF7EF;border:1px solid var(--line);border-radius:12px;padding:12px;max-height:240px;overflow:auto;margin:8px 0}
+  pre.open{max-height:none}
+  .row{display:flex;gap:8px;flex-wrap:wrap;margin-top:8px}
+  button{font:inherit;font-weight:700;border:0;border-radius:999px;padding:10px 14px;cursor:pointer;font-size:14px}
+  .b1{background:var(--ink);color:#F5EFE4;flex:1}
+  .b2{background:#E9E1D3;color:var(--ink)}
+  .imgs{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin-top:10px}
+  .imgs a{display:block;position:relative}
+  .imgs img{width:100%;aspect-ratio:1;object-fit:cover;border-radius:10px;border:1px solid var(--line)}
+  .imgs span{position:absolute;left:6px;top:6px;background:rgba(35,48,74,.85);color:#fff;font-size:11px;border-radius:6px;padding:0 6px}
+  .chk{display:flex;align-items:center;gap:8px;margin-top:10px;font-size:14px;font-weight:700}
+  .empty{color:var(--mute);text-align:center;padding:40px 0}
+  #toast{position:fixed;left:50%;bottom:24px;transform:translateX(-50%);background:var(--ink);color:#fff;padding:10px 16px;border-radius:999px;font-size:14px;opacity:0;transition:.2s;pointer-events:none}
+  #toast.on{opacity:1}
+  .ver{position:fixed;right:6px;bottom:4px;font-size:9px;color:#B9AE9C}
+</style>
+</head>
+<body>
+<header>
+  <h1>🏠 살림 블로그 · 홈판 글</h1>
+  <p>비서실(제휴수석실)이 월·수·금에 써 두는 네이버 홈판용 살림 글이에요.</p>
+</header>
+<main>
+  <div class="tip">올리는 법: ① <b>제목 복사</b> → 네이버 블로그 앱(살림 블로그 아이디) 글쓰기 제목에 붙여넣기 ② <b>본문 복사</b> → 본문에 붙여넣기 ③ 그림을 길게 눌러 저장한 뒤 본문의 <b>[그림 N]</b> 자리에 넣기 ④ 사람이 많은 아침 7~9시나 점심 12시로 <b>예약 발행</b> ⑤ 아래 「올렸어요」 체크.</div>
+  <div id="list"><p class="empty">불러오는 중…</p></div>
+</main>
+<div id="toast"></div>
+<div class="ver">v1</div>
+<script>
+const $ = (s) => document.querySelector(s);
+const esc = (s) => String(s ?? '').replace(/[&<>"]/g, (c) => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const toast = (m) => { const t = $('#toast'); t.textContent = m; t.classList.add('on'); setTimeout(() => t.classList.remove('on'), 1800); };
+let done = {}; try { done = JSON.parse(localStorage.getItem('homepanDone') || '{}'); } catch {}
+async function copy(t, m) { try { await navigator.clipboard.writeText(t); toast(m); } catch { toast('복사가 안 돼요. 글을 길게 눌러 복사해 주세요.'); } }
+async function load() {
+  let d;
+  try { d = await (await fetch('data/homepan.json?t=' + Date.now(), { cache: 'no-store' })).json(); }
+  catch { $('#list').innerHTML = '<p class="empty">아직 준비된 글이 없어요. 월·수·금 오후에 올라와요.</p>'; return; }
+  const items = d.items || [];
+  if (!items.length) { $('#list').innerHTML = '<p class="empty">아직 준비된 글이 없어요.</p>'; return; }
+  $('#list').innerHTML = items.map((x, i) => `
+    <article class="post ${done[x.id] ? 'done' : ''}">
+      <div class="meta"><span class="badge">${done[x.id] ? '올림' : '대기'}</span><span>${esc(x.date)}</span>${x.golden ? `<span>🔑 ${esc(x.golden)}</span>` : ''}</div>
+      <h2>${esc(x.title)}</h2>
+      <pre id="b${i}">${esc(x.body)}</pre>
+      ${x.tags && x.tags.length ? `<div class="meta">태그: ${esc(x.tags.join(', '))}</div>` : ''}
+      <div class="row">
+        <button class="b2" data-t="${i}">제목 복사</button>
+        <button class="b1" data-b="${i}">본문 복사</button>
+        <button class="b2" data-o="${i}">전체 보기</button>
+      </div>
+      ${(x.images || []).length ? `<div class="imgs">${x.images.map((u, k) => `<a href="${esc(u)}" target="_blank" rel="noopener"><img loading="lazy" src="${esc(u)}" alt="그림 ${k + 1}"><span>그림 ${k + 1}</span></a>`).join('')}</div>` : ''}
+      <label class="chk"><input type="checkbox" data-d="${esc(x.id)}" ${done[x.id] ? 'checked' : ''}> 올렸어요</label>
+    </article>`).join('');
+  document.querySelectorAll('[data-t]').forEach((b) => b.onclick = () => copy(items[b.dataset.t].title, '제목을 복사했어요'));
+  document.querySelectorAll('[data-b]').forEach((b) => b.onclick = () => copy(items[b.dataset.b].body, '본문을 복사했어요'));
+  document.querySelectorAll('[data-o]').forEach((b) => b.onclick = () => { const p = $('#b' + b.dataset.o); p.classList.toggle('open'); b.textContent = p.classList.contains('open') ? '접기' : '전체 보기'; });
+  document.querySelectorAll('[data-d]').forEach((c) => c.onchange = () => { done[c.dataset.d] = c.checked; try { localStorage.setItem('homepanDone', JSON.stringify(done)); } catch {} c.closest('.post').classList.toggle('done', c.checked); c.closest('.post').querySelector('.badge').textContent = c.checked ? '올림' : '대기'; });
+}
+load();
+</script>
+</body>
+</html>
