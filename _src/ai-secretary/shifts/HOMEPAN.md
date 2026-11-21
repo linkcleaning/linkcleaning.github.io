@@ -8,7 +8,7 @@
 - 네이버는 비서실 브라우저·어사이드 계정(링크클린)으로 못 올리므로 **대표님이 휴대폰 네이버 블로그 앱(살림 블로그 아이디)으로 복사해 올린다** — 이 근무는 글·그림을 준비해 ai-secretary/homepan.html 에 올려 두는 데까지.
 
 ## 0. 블로그
-- 대표님 네이버 아이디 3개(11/21 확인): linkcleaning(링크클린 회사 블로그 — 여기에 살림 글 금지), linkdole(살림 블로그 후보 — 스레드 살림기록소 @linkdole2026 과 이름이 이어짐), linktravel(여행 — 나중에 여행 홈판용). 대표님이 정하면 이 줄을 고친다: 살림 블로그 = blog.naver.com/linkdole (확정 대기).
+- 대표님 네이버 아이디 3개(11/21 확인): linkcleaning(링크클린 회사 블로그 — 여기에 살림 글 금지), linkdole(살림 블로그 후보 — 스레드 살림기록소 @linkdole2026 과 이름이 이어짐), linktravel(여행 — 나중에 여행 홈판용). 대표님이 정하면 이 줄을 고친다: 살림 블로그 = blog.naver.com/linkdole 확정(11/21, 블로그명 살림기록소).
 
 ## 1. 주제 고르기 (글 1개)
 - ai-secretary/data/homepan.json(없으면 {"items":[]}) 최근 글과 ai-secretary/data/salim.json history·stats.threads(조회 잘 나온 살림 주제)를 본다. 최근 14일 안 주제와 겹치지 않게.
