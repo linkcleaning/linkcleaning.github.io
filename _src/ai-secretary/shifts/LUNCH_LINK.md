@@ -14,3 +14,7 @@
 5. 기록: salim.json posted.coupang(또는 posted.kakao) = {"at":"HH:MM","url":글 주소} (다른 칸은 건드리지 않는다), learnings 는 그대로. commit "살림기록소 점심 링크 글 {M/D}"(attribution 줄 포함) → push(거부되면 git pull --rebase 후 다시).
 6. status.json(ai-secretary/data): date 가 오늘이 아니면 {"date":오늘,"items":{}}로 시작, items.salimlink = {"done":true/false,"at":"HH:MM","note":"15자 이내(예: '쿠팡 글 12:20')","detail":올린 글 첫 줄 + 상품명 + 글 주소(링크·가격은 쓰지 않음),"url":글 주소}. 못 했으면 fix = {"why":쉬운 말 한 줄,"act":"다음 링크 글 날 다시 해요" 등,"you":필요한 것만(예: "내장 브라우저에서 살림기록소로 로그인") 또는 "없어요."}. 다른 키는 건드리지 않는다. 공개 저장소이므로 금액·PIN 금지.
 7. 알림: 알림·메시지는 보내지 않는다(대표님 11/20: "아침과 저녁에 보고로만 하자") — 결과는 status.json 해당 키의 detail 에 빠짐없이(글 전문·주소·답글 내용) 남기고, 18:57 저녁 보고나 다음 날 07:17 아침 보고가 모아서 보고한다. 못 한 것은 done:false 와 fix{why,act,you}(쉬운 말)로 남긴다.
+
+## 📰 월·수·금 = 뉴스픽 글 (대표님 11/21 승인 — 2주 시험 11/23~12/5)
+- 오늘이 월·수·금이면 쿠팡·카카오 대신 THREADS_PLAYBOOK.md 맨 끝 '📰 뉴스픽 시험 운영'대로 한다: PC 크롬(Claude in Chrome)에서 생활 기사 1개 골라 링크 만들기(alert 막기 필수) → 같은 게시 방법(내장 브라우저, @linkdole2026 확인)으로 본문 3~4줄 게시 → 첫 댓글에 뉴스픽 링크. status items.salimlink note "뉴스픽 1".
+- 12/5 이후는 12/4 재회의 결론을 따른다(계속/중단).
