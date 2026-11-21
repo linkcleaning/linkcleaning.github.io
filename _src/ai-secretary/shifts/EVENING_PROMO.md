@@ -60,6 +60,15 @@
 - salim.json posted 에 {threads1(저녁 글 {at,url}), reel, neighbors:N, at} 기록(posted.coupang·posted.kakao 는 점심 링크 글 근무 몫이라 건드리지 않는다) — 아침 근무가 쓴 posted.morning 은 지우지 않는다 → commit·push(거부 시 pull --rebase — 저녁 보고 세션이 kakao.link 를 먼저 push 했을 수 있음). status.json items.salim = {"done","at","note":"15자 이내(예: '저녁글·쿠팡1·릴스·댓글4')","detail":('📎 직접 올릴 것'이 있으면 맨 앞에) 올린 저녁 글·링크 글 첫 줄과 주소}.
 - 내장 브라우저 작업이 끝나면 내가 연 탭만 닫는다(로그인은 그대로 둔다).
 
+## Y. 유튜브 쇼츠 (대표님 11/21 "둘 다" 승인) — 대표님 PC 크롬(Claude in Chrome)
+- 크롬에는 구글 계정이 둘: **han0829**(크롬 프로필 주인 — 링크클린·동요 채널) / **linkdole**(살림기록소 채널). **구글 로그아웃·크롬 동기화 끄기 절대 금지**(11/21 로그아웃 사고). 계정은 유튜브 오른쪽 위 프로필 → '계정 전환'으로만 바꾸고, 끝나면 그대로 둔다. 로그인이 풀렸으면 올리지 않고 note "유튜브 로그인 필요"(비밀번호 입력 금지).
+- 채널: 🏠 살림기록소 = https://studio.youtube.com/channel/UCXCPV0Sw4Ol5jLyFPCHPweQ (linkdole) / 🧹 링크클린 = https://studio.youtube.com/channel/UCU-LswJateZiU3u5ah_12Rg (han0829). 스튜디오 주소를 열었는데 다른 채널이 보이거나 권한 없음이면 계정 전환 후 다시.
+- 올리는 법: 새 탭에서 해당 스튜디오 → 오른쪽 위 '만들기' → '동영상 업로드' 창의 input[type=file] 에, 저장소 mp4를 페이지 안에서 `fetch('https://linkcleaning.github.io/ai-secretary/data/…mp4')` → Blob → File → DataTransfer 로 넣고 change 이벤트(파일 선택 창은 열지 않는다; push 직후라 404면 30초 간격 최대 5번 재시도). 세로 60초 이하라 자동으로 Shorts. 제목(100자 이내, 끝에 #shorts) · 설명 · '아동용 아님' 선택 · 공개 → 게시. 게시 후 '동영상 링크'를 기록. 같은 영상이 이미 올라가 있으면 다시 올리지 않는다.
+- 🏠 살림기록소 쇼츠(매일): 오늘 salim.json reel.file 을 그대로. 제목 = 릴스 첫 장 문구(예: "겨울 실내 빨래 쉰내, 이것부터 바꾸세요 #shorts"), 설명 = reel.caption + "\n\n스레드·인스타 @linkdole2026". (광고) 링크 글 날이어도 유튜브 설명에는 쿠팡 링크를 넣지 않는다. salim.json posted.yt = {url,at}.
+- 🧹 링크클린 쇼츠(화·금): ai-secretary/data/shorts-queue.json items 중 used:false 맨 앞 1개(대표님이 보낸 현장 영상을 비서실이 다듬어 둔 것 — README '🎬 링크클린 현장 쇼츠' 참고). 제목·설명·태그는 그 항목 그대로(설명 끝 "제주 청소 문의 064-763-4545 · www.linkclean.co.kr"). 올린 뒤 used:true, url 기록. 대기열이 비었으면 건너뛰고 저녁 보고에 "🎬 링크클린 쇼츠 대기열 비었어요 — 현장 영상 보내 주세요" 한 줄(note).
+- 유튜브 정책(2026.7 양산형 콘텐츠 강화): 같은 틀만 바꿔 찍어 내는 영상은 수익화 심사에서 불리 — 살림 쇼츠는 매번 주제·첫 장 문구·구성을 바꾸고, 링크클린 쇼츠는 실제 현장 영상만.
+- status.json items.youtube = {"done","at","note":"살림1·링크클린1 처럼","detail":"제목 · 링크 줄마다"}.
+
 ## D. 보고 — 알림 없음
 - 알림·메시지는 보내지 않는다(대표님 11/20: "아침과 저녁에 보고로만 하자") — 결과는 status.json 해당 키의 detail 에 빠짐없이(글 전문·주소·답글 내용) 남기고, 18:57 저녁 보고나 다음 날 07:17 아침 보고가 모아서 보고한다. 못 한 것은 done:false 와 fix{why,act,you}(쉬운 말)로 남긴다.
 - 이 근무는 저녁 보고(18:57) 뒤에 돌기 때문에, 결과는 ai-secretary/data/night-report.json 에 통째로 {"date":오늘,"at":"HH:MM","posted":[채널별 성공/건너뜀과 이유 한 줄씩],"naverPlace":{"title","body"}(대표님이 직접 올리거나 앱에서 승인할 플레이스 글, 없으면 null),"reviewDrafts":[리뷰 답글 초안],"commentDrafts":[{target,text}],"replies":[단 답글·맞팔 요약],"salim":[살림기록소 결과 한 줄씩 — 저녁 글 첫 줄·주소, 쿠팡 링크 준비, 어제 쿠팡 클릭·구매(금액은 쓰지 않음), 최근 조회수 중앙값, 📎 직접 올릴 것],"problems":[문제 한 줄씩 + 대표님 할 일]} 로 써 두면 다음 날 07:17 아침 보고가 '🌙 어젯밤'으로 보고한다. 공개 저장소이므로 고객 이름·전화번호·금액 금지.

@@ -94,3 +94,6 @@ status.json items.appcare 로 '비서들이 한 일'에 표시. 공개 저장소
 
 ## 📸 대표님 생활용품 사진 → 살림기록소 쿠팡 글 (11/21)
 대표님이 어느 대화에서든 집 생활용품 사진을 보내면: 위치정보(EXIF) 지우고 1600px로 줄여 ai-secretary/data/salim/userphotos/<YYYY-MM-DD>-<n>/N.jpg 저장(얼굴·주소·링크클린 흔적 있으면 가리거나 빼기) → 상표·라벨로 제품 확인(모르면 대표님께 제품명 질문) → 쿠팡에서 같은 상품 주소 확인(없으면 쓰지 않고 대표님께 알림 — 다른 상품 링크 금지) → salim.json "photoQueue" 에 {id,date,product,coupang_url,photos:[경로],note:대표님 한마디 또는 null,used:false} 추가 → push. 다음 쿠팡 링크 글이 1순위로 쓴다.
+
+## 🎬 링크클린 현장 쇼츠 (11/21 대표님 "둘 다")
+대표님이 어느 대화에서든 현장 영상(전·후, 작업 장면)을 보내면: ffmpeg로 세로 1080x1920·60초 이하로 다듬고(앞 2초에 큰 글씨 훅 자막 — 예 "10년 묵은 욕실 물때, 30분 뒤 →", 중간 자막 2~3개, 끝 "제주 청소 링크클린"), 소리는 원본 작게 또는 없음, H.264 -preset veryfast → **얼굴·집 주소·차 번호·고객 물건 중 개인 식별되는 것은 가리거나 그 구간을 뺀다**(고객 집 내부라 특히 주의, 애매하면 대표님께 확인) → ai-secretary/data/shorts/<YYYY-MM-DD>-<n>.mp4 저장 → ai-secretary/data/shorts-queue.json items 에 {id,date,file,title(#shorts 포함, '제주'+청소 종류 키워드),description,tags,used:false} 추가 → push. 저녁 홍보가 화·금에 하나씩 링크클린 유튜브에 올린다. 금지어('스카이차량','벌집클린')·지어낸 이야기·가격 금지.
