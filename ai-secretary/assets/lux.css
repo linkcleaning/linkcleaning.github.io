@@ -40,3 +40,18 @@ header.lux-head .lux-mark { position: absolute; right: -46px; top: 54px; width: 
 .fs-head { font-weight: 800; color: #B3362C; }
 .fs-list { margin-top: 6px; } .fs-list li + li { margin-top: 4px; }
 .fs-none { margin-top: 4px; color: #8A8173; }
+/* 글씨 또렷하게 (대표님 11/22 "글씨 색상이 흐리게 느껴진다") — 회색 글씨 한 단계씩 진하게 */
+.text-slate-300{color:#2F3136 !important}
+.text-slate-400{color:#4A4D55 !important}
+.text-slate-500{color:#62656D !important}
+.text-slate-600{color:#7E818A !important}
+.text-\[\#6B6E76\]{color:#4A4D55 !important}
+.text-\[\#B0B3BA\]{color:#7E818A !important}
+.text-white\/50{color:rgba(255,255,255,.75) !important}
+.text-white\/60{color:rgba(255,255,255,.82) !important}
+.text-white\/70{color:rgba(255,255,255,.86) !important}
+.text-white\/80{color:rgba(255,255,255,.92) !important}
+.text-white\/85{color:rgba(255,255,255,.96) !important}
+body{-webkit-font-smoothing:antialiased}
+header.lux-head p > .text-\[\#45474D\]{color:#E3DCCB !important}
+header.lux-head p.leading-snug{color:#F6F1E6 !important}
