@@ -542,7 +542,7 @@ function relTitle(a,b,B,A){
   const k=a+','+b;
   if(k==='1,1'){const ab=birthNum(A),bb=birthNum(B);if((ab===9999||bb===9999||ab===bb)&&A.order&&B.order&&A.order!==B.order){const older=B.order<A.order;return F?(older?(A.gender==='F'?'언니':'누나'):'여동생'):(older?(A.gender==='F'?'오빠':'형'):'남동생');}
   if(ab===9999||bb===9999||ab===bb){const AF=A.gender==='F';return F?(AF?'자매 (언니·여동생)':'누나·여동생'):(AF?'오빠·남동생':'형제 (형·남동생)');}
-    const older=bb<ab;return F?(older?'누나(언니)':'여동생'):(older?'형(오빠)':'남동생');}
+    const older=bb<ab,AF=A.gender==='F';return F?(older?(AF?'언니':'누나'):'여동생'):(older?(AF?'오빠':'형'):'남동생');}
   const T={'2,1':F?'고모':'삼촌 (백부·숙부)','1,2':F?'조카딸(질녀)':'조카(질)','2,2':F?'사촌 자매(종자매)':'사촌 형제(종형제)',
     '3,1':F?'대고모(왕고모)':'종조부 (큰·작은할아버지)','1,3':F?'종손녀':'종손','3,2':F?'당고모':'당숙 (종숙·5촌 아저씨)','2,3':F?'당질녀':'당질 (종질·5촌 조카)',
     '3,3':F?'재종자매 (6촌)':'재종형제 (6촌)','4,1':F?'증대고모':'증종조부','1,4':'증종손','4,2':F?'재종대고모':'재종조부','2,4':'재종손',
