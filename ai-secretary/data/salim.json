@@ -16,7 +16,24 @@
   "file": "data/salim/2026-11-21.mp4",
   "caption": "아침마다 목이 칼칼하다면, 방이 건조한 걸 수도 있어요 🥲\n01 젖은 수건 펼쳐 걸기\n02 빨래는 자는 방에\n03 습도계는 떨어진 곳에\n저장해두세요 📌\n#겨울살림 #실내습도 #살림팁 #건조함 #살림기록소"
  },
- "posted": {},
+ "posted": {
+  "threads1": {
+   "at": "20:58",
+   "url": "https://www.threads.com/@linkdole2026/post/DgALjtcHzJr",
+   "images": true,
+   "text": "반말로 다듬어 올림"
+  },
+  "reel": false,
+  "reel_manual": "📎 직접 올릴 것: 릴스 https://linkcleaning.github.io/ai-secretary/data/salim/2026-11-21.mp4 (캡션은 salim.json reel.caption 그대로)",
+  "yt": {
+   "url": "https://youtube.com/shorts/NM0-EbvtJEI",
+   "at": "21:03"
+  },
+  "neighbors": 3,
+  "likes": 3,
+  "replies": 0,
+  "at": "21:06"
+ },
  "history": [
   {
    "date": "2026-11-21",
@@ -195,7 +212,7 @@
    "buy": 0
   },
   "2026-11-18": {
-   "click": 4,
+   "click": 0,
    "buy": 0
   },
   "2026-11-19": {
@@ -285,7 +302,41 @@
      "replies": 0,
      "link": false
     }
+   ],
+   "2026-11-21": [
+    {
+     "topic": "귤 보관(아침)",
+     "views": 86,
+     "likes": 0,
+     "replies": 0,
+     "link": false
+    },
+    {
+     "topic": "니트 옷장 보관",
+     "views": 28,
+     "likes": 0,
+     "replies": 0,
+     "link": false
+    },
+    {
+     "topic": "니트 보풀(11/20 아침)",
+     "views": 47,
+     "likes": 0,
+     "replies": 0,
+     "link": false
+    },
+    {
+     "topic": "충전식 보풀제거기(쿠팡)",
+     "views": 5,
+     "likes": 1,
+     "replies": 1,
+     "link": true
+    }
    ]
+  },
+  "2026-11-20": {
+   "click": 0,
+   "buy": 0
   }
  },
  "morning": {
